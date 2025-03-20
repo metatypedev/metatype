@@ -99,13 +99,13 @@ pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
 //     }
 // }
 
-// pub fn default_type_node_base() -> TypeNodeBase {
-//     TypeNodeBase {
-//         title: String::new(),
-//         description: None,
-//         enumeration: None,
-//     }
-// }
+pub fn default_type_node_base() -> tg_schema::TypeNodeBase {
+    tg_schema::TypeNodeBase {
+        title: String::new(),
+        description: None,
+        enumeration: None,
+    }
+}
 
 pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
     let out = tokio::process::Command::new("cargo")

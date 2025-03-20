@@ -14,13 +14,15 @@ mod stubs;
 pub mod types;
 pub mod utils;
 
+use types::input_manifest_page;
+use types::output_manifest_page;
+
 use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
 use crate::*;
 use std::borrow::Cow;
 use std::fmt::Write;
-use types::manifest_page;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.rs", include_str!("static/fdk.rs"))];
 
@@ -167,6 +169,11 @@ impl crate::Plugin for Generator {
     }
 }
 
+struct Maps {
+    input: IndexMap<TypeKey, String>,
+    output: IndexMap<TypeKey, String>,
+}
+
 impl FdkRustTemplate {
     fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: Arc<Typegraph>) -> anyhow::Result<String> {
         let mut mod_rs = GenDestBuf {
@@ -186,10 +193,13 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf, "use types::*;")?;
         writeln!(&mut mod_rs.buf, "pub mod types {{")?;
 
-        let name_memo = {
-            let manif = manifest_page(&tg, false)?;
+        let maps = {
             let mut buffer = String::new();
-            manif.render_all(&mut buffer, &())?;
+
+            let input_manif = input_manifest_page(&tg)?;
+            input_manif.render_all(&mut buffer, &())?;
+
+            let output_manif = output_manifest_page(&tg, false, &input_manif)?;
 
             let types_rs = buffer;
             for line in types_rs.lines() {
@@ -200,7 +210,10 @@ impl FdkRustTemplate {
                 }
             }
 
-            manif.get_cached_refs()
+            Maps {
+                input: input_manif.get_cached_refs(),
+                output: output_manif.get_cached_refs(),
+            }
         };
 
         writeln!(&mut mod_rs.buf, "}}")?;
@@ -220,7 +233,7 @@ impl FdkRustTemplate {
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
-                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &name_memo, &gen_stub_opts)?;
+                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &maps, &gen_stub_opts)?;
                 if let Some(Some(op_name)) =
                     fun.materializer.data.get("op_name").map(|val| val.as_str())
                 {

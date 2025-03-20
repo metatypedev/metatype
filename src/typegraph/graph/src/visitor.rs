@@ -197,7 +197,7 @@ where
             let res = traverse_types_with_path(
                 input,
                 path,
-                RelativePath::Input(inner.clone().into()),
+                RelativePath::input(Arc::downgrade(inner), Default::default()),
                 accumulator,
                 visit_fn,
             );
@@ -212,7 +212,7 @@ where
             let res = traverse_types_with_path(
                 inner.output()?.clone(),
                 path,
-                RelativePath::Output(inner.clone().into()),
+                RelativePath::output(Arc::downgrade(inner), Default::default()),
                 output.accumulator,
                 visit_fn,
             );

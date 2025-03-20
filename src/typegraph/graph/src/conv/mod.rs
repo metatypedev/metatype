@@ -1,4 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-Lice
 
 use crate::naming::NamingEngine;
@@ -6,16 +9,18 @@ use crate::runtimes::{convert_materializer, Materializer};
 use crate::types::{BooleanType, TypeNodeExt, WeakType};
 use crate::{
     convert_function, convert_list, convert_object, convert_optional, convert_union, interlude::*,
-    is_composite, TypeNode as _,
+    is_composite, is_function, TypeNode as _,
 };
 use crate::{FunctionType, IntegerType, ObjectType, Type};
+use dedup::{Deduplication, DuplicationKey};
 use indexmap::IndexMap;
-use map::ValueTypeKind;
 pub use map::{
-    ConversionMap, MapItem, MapValueItem, Path, PathSegment, RelativePath, TypeKey, ValueTypePath,
+    ConversionMap, MapItem, MapValueItem, Path, PathSegment, RelativePath, TypeKey, ValueType,
+    ValueTypePath,
 };
 use tg_schema::runtimes::TGRuntime;
 
+mod dedup;
 mod map;
 
 pub mod interlude {
@@ -58,14 +63,6 @@ impl TypeConversionResult for FinalizedTypeConversion {
 
 impl Conversion {
     fn new(schema: Arc<tg_schema::Typegraph>) -> Conversion {
-        for (idx, node) in schema.types.iter().enumerate() {
-            eprintln!(
-                "#{idx} {} {} children={:?}",
-                node.type_name(),
-                node.base().title,
-                node.children()
-            );
-        }
         let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();
         let materializers = schema
             .materializers
@@ -75,7 +72,7 @@ impl Conversion {
 
         Conversion {
             schema: schema.clone(),
-            conversion_map: ConversionMap::new(schema.types.len()),
+            conversion_map: ConversionMap::new(schema),
             input_types: Default::default(),
             output_types: Default::default(),
             functions: Default::default(),
@@ -104,12 +101,6 @@ impl Conversion {
         let mut ne = naming_engine;
 
         for idx in 0..schema.types.len() {
-            // let range = conv.conversion_map.direct.range((
-            //     Bound::Included(&TypeKey(idx as u32, 0)),
-            //     Bound::Included(&TypeKey(idx as u32, u32::MAX)),
-            // ));
-            // let range: Vec<_> = range.map(|(&k, e)| (k, e)).collect();
-
             match conv
                 .conversion_map
                 .direct
@@ -151,48 +142,72 @@ impl Conversion {
         })
     }
 
-    fn register_type<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
+    fn register_converted_type(
         &mut self,
         rpath: RelativePath,
-        type_idx: u32,
-        convert: C,
-    ) -> Result<Box<dyn TypeConversionResult>> {
-        let key = self.conversion_map.get_next_type_key(type_idx)?;
-        let conv_res = convert(key);
-        let typ = conv_res.get_type();
+        ty: Type,
+        duplicate: bool, // -> recursive
+    ) -> Result<()> {
+        if !duplicate {
+            self.conversion_map.register(rpath.clone(), ty.clone())?;
+            // recursivity will be handled by the finalizer
+        } else if !matches!(ty, Type::Function(_)) {
+            // value type
 
-        if let Some(dupl) = rpath.find_cycle(&self.schema)? {
-            // cycle detected, reuse the existing type
-            let key = self.conversion_map.reverse[&dupl].clone();
-            let ty = self
-                .conversion_map
-                .get(key)
-                .ok_or_else(|| eyre!("type not found for key: {:?}", key))?;
-            self.conversion_map.append(key, rpath.clone())?; // note that it is a cycle??
-            return Ok(finalized_type(ty));
+            let added = self.conversion_map.append(ty.key(), rpath.clone())?;
+            // TODO cycle detection
+            if added {
+                for edge in ty.edges()? {
+                    let child_ty = edge.to;
+                    if let Ok(seg) = edge.kind.try_into() {
+                        self.register_converted_type(rpath.push(seg)?, child_ty, true)?;
+                    }
+                }
+            }
         }
-
-        self.conversion_map.register(rpath.clone(), typ.clone())?;
 
         use RelativePath as RP;
         match rpath {
             RP::Function(fn_idx) => {
-                let func = typ.assert_func()?;
-                self.functions.insert(fn_idx, func.clone());
+                self.functions.insert(fn_idx, ty.assert_func()?.clone());
             }
             RP::NsObject(path) => {
-                let obj = typ.assert_object()?;
-                self.namespace_objects.insert(path.clone(), obj.clone());
+                self.namespace_objects
+                    .insert(path.clone(), ty.assert_object()?.clone());
             }
             RP::Input(_) => {
-                self.input_types.insert(typ.key(), typ.clone());
+                self.input_types.insert(ty.key(), ty.clone());
             }
             RP::Output(_) => {
-                self.output_types.insert(typ.key(), typ.clone());
+                self.output_types.insert(ty.key(), ty.clone());
             }
         }
 
+        Ok(())
+    }
+
+    fn register_type_2<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
+        &mut self,
+        rpath: RelativePath,
+        key: TypeKey,
+        convert: C,
+        duplicate: bool,
+    ) -> Result<Box<dyn TypeConversionResult>> {
+        let conv_res = convert(key);
+        let typ = conv_res.get_type();
+
+        self.register_converted_type(rpath.clone(), typ.clone(), duplicate)?;
+
         Ok(conv_res)
+    }
+
+    fn register_type<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
+        &mut self,
+        rpath: RelativePath,
+        key: TypeKey,
+        convert: C,
+    ) -> Result<Box<dyn TypeConversionResult>> {
+        self.register_type_2(rpath, key, convert, false)
     }
 
     pub fn convert_type(
@@ -205,70 +220,23 @@ impl Conversion {
         let type_node = &schema.types[type_idx as usize];
         use tg_schema::TypeNode as N;
 
-        use RelativePath as RP;
-        match &rpath {
-            RP::NsObject(_) => {
-                if self.conversion_map.get(TypeKey(type_idx, 0)).is_some() {
-                    bail!("cannot re-covert namespace object #{type_idx}: check your typegraph");
-                }
+        let dkey = if !is_function(&schema, type_idx) && is_composite(&schema, type_idx)? {
+            DuplicationKey::from_rpath(&schema, &rpath)
+        } else {
+            // currently, we only generate a single type from each scalar type node
+            Default::default()
+        };
+        let key = match self.conversion_map.deduplicate(type_idx, &dkey)? {
+            Deduplication::Reuse(ty) => {
+                return self.register_type_2(rpath.clone(), ty.key(), |_| finalized_type(ty), true);
             }
-            RP::Function(fn_idx) => {
-                debug_assert_eq!(*fn_idx, type_idx);
-                if let Some(found) = self.conversion_map.get(TypeKey(type_idx, 0)) {
-                    self.conversion_map
-                        .append(TypeKey(type_idx, 0), rpath.clone())?;
-                    debug_assert!(matches!(found, Type::Function(_)));
-                    return Ok(finalized_type(found));
-                }
-            }
-            // TODO improve -- more deduplication
-            RP::Input(vpath) | RP::Output(vpath) => {
-                if !is_composite(&self.schema, type_idx)? {
-                    // currently we only generate a single type from each scalar type node
-                    if let Some(found) = self.conversion_map.get(TypeKey(type_idx, 0)) {
-                        self.conversion_map
-                            .append(TypeKey(type_idx, 0), rpath.clone())?;
-                        return Ok(finalized_type(found));
-                    }
-                } else {
-                    match &mut self.conversion_map.direct[type_idx as usize] {
-                        MapItem::Value(types) => {
-                            // WTF is this???
-                            let found = types.iter().find(|&item| {
-                                matches!(
-                                    (&item.kind, &rpath),
-                                    (ValueTypeKind::Input, RP::Input(_))
-                                        | (ValueTypeKind::Output, RP::Output(_))
-                                ) && item.relative_paths.iter().any(|rp| rp == vpath)
-                            });
-                            if let Some(found) = found {
-                                return Ok(finalized_type(found.ty.clone()));
-                            }
-
-                            if let RP::Input(_) = &rpath {
-                                // TODO is this the only comparison point?
-                                let injection = rpath.get_injection(&schema);
-                                let found = types.iter_mut().find(|item| {
-                                    matches!(&item.kind, ValueTypeKind::Input)
-                                        && item.ty.base().injection.as_ref() == injection.as_ref()
-                                });
-                                if let Some(found) = found {
-                                    found.relative_paths.push(vpath.clone());
-                                    return Ok(finalized_type(found.ty.clone()));
-                                }
-                            }
-                        }
-                        MapItem::Unset => {}
-                        _ => bail!("unexpected type for value type"),
-                    }
-                }
-            }
-        }
+            Deduplication::Register(tkey) => tkey,
+        };
 
         let schema = self.schema.clone();
 
         match type_node {
-            N::Boolean { base } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Boolean { base } => self.register_type(rpath.clone(), key, |key| {
                 finalized_type(Type::Boolean(
                     BooleanType {
                         base: Self::base(key, parent, rpath, base, &schema),
@@ -276,7 +244,7 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::Integer { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Integer { base, data } => self.register_type(rpath.clone(), key, |key| {
                 finalized_type(Type::Integer(
                     IntegerType {
                         base: Self::base(key, parent, rpath, base, &schema),
@@ -289,7 +257,7 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::Float { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Float { base, data } => self.register_type(rpath.clone(), key, |key| {
                 finalized_type(Type::Float(
                     crate::FloatType {
                         base: Self::base(key, parent, rpath, base, &schema),
@@ -302,7 +270,7 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::String { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::String { base, data } => self.register_type(rpath.clone(), key, |key| {
                 finalized_type(Type::String(
                     crate::StringType {
                         base: Self::base(key, parent, rpath, base, &schema),
@@ -315,7 +283,7 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::File { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::File { base, data } => self.register_type(rpath.clone(), key, |key| {
                 finalized_type(Type::File(
                     crate::FileType {
                         base: Self::base(key, parent, rpath, base, &schema),
@@ -326,16 +294,16 @@ impl Conversion {
                     .into(),
                 ))
             }),
-            N::Optional { base, data } => self.register_type(rpath.clone(), type_idx, move |key| {
+            N::Optional { base, data } => self.register_type(rpath.clone(), key, move |key| {
                 convert_optional(parent, key, rpath, base, data, &schema)
             }),
-            N::List { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::List { base, data } => self.register_type(rpath.clone(), key, |key| {
                 convert_list(parent, key, rpath.clone(), base, data, &schema)
             }),
-            N::Object { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Object { base, data } => self.register_type(rpath.clone(), key, |key| {
                 convert_object(parent, key, rpath.clone(), base, data, &schema)
             }),
-            N::Either { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Either { base, data } => self.register_type(rpath.clone(), key, |key| {
                 convert_union(
                     parent,
                     key,
@@ -346,7 +314,7 @@ impl Conversion {
                     true,
                 )
             }),
-            N::Union { base, data } => self.register_type(rpath.clone(), type_idx, |key| {
+            N::Union { base, data } => self.register_type(rpath.clone(), key, |key| {
                 convert_union(
                     parent,
                     key,
@@ -359,7 +327,7 @@ impl Conversion {
             }),
             N::Function { base, data } => {
                 let mat = self.materializers[data.materializer as usize].clone();
-                self.register_type(RelativePath::Function(type_idx), type_idx, |key| {
+                self.register_type(RelativePath::Function(type_idx), key, |key| {
                     convert_function(parent, key, base, data, mat, &schema)
                 })
             }

@@ -6,7 +6,7 @@ mod selections;
 
 use core::fmt::Write;
 
-use fdk_rs::types::{manifest_page, RustType};
+use fdk_rs::types::{input_manifest_page, output_manifest_page, RustType};
 use node_metas::RsNodeMeta;
 use selections::RustSelection;
 use shared::manifest::ManifestPage;
@@ -48,14 +48,16 @@ impl ClienRsGenConfig {
 }
 
 struct Maps {
-    types: IndexMap<TypeKey, String>,
+    input_types: IndexMap<TypeKey, String>,
+    output_types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
 
 struct RsClientManifest {
     tg: Arc<Typegraph>,
-    types: ManifestPage<RustType>,
+    input_types: ManifestPage<RustType>,
+    output_types: ManifestPage<RustType>,
     node_metas: ManifestPage<RsNodeMeta>,
     selections: ManifestPage<RustSelection>,
     maps: Maps,
@@ -63,25 +65,32 @@ struct RsClientManifest {
 
 impl RsClientManifest {
     fn new(tg: Arc<Typegraph>) -> anyhow::Result<Self> {
-        let types = manifest_page(&tg, true)?;
-        types.cache_references(&());
-        let types_memo = types.get_cached_refs();
+        let input_types = input_manifest_page(&tg)?;
+        input_types.cache_references(&());
+        let input_types_memo = input_types.get_cached_refs();
+
+        let output_types = output_manifest_page(&tg, true, &input_types)?;
+
+        output_types.cache_references(&());
+        let output_types_memo = output_types.get_cached_refs();
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build()?;
         node_metas.cache_references(&());
         let node_metas_memo = node_metas.get_cached_refs();
 
         let selections = selections::manifest_page(&tg)?;
-        selections.cache_references(&types_memo);
+        selections.cache_references(&output_types_memo);
         let selections_memo = selections.get_cached_refs();
 
         Ok(Self {
             tg,
-            types,
+            input_types,
+            output_types,
             node_metas,
             selections,
             maps: Maps {
-                types: types_memo,
+                input_types: input_types_memo,
+                output_types: output_types_memo,
                 node_metas: node_metas_memo,
                 selections: selections_memo,
             },
@@ -192,10 +201,11 @@ impl RsClientManifest {
         let methods = self.node_metas.render_all_buffered(&())?;
         with_metas_namespace(dest, methods)?;
 
-        let types = self.types.render_all_buffered(&())?;
+        let mut types = self.input_types.render_all_buffered(&())?;
+        self.output_types.render_all(&mut types, &())?;
         with_types_namespace(dest, types)?;
 
-        self.selections.render_all(dest, &self.maps.types)?;
+        self.selections.render_all(dest, &self.maps.output_types)?;
 
         self.render_query_graph(dest)?;
 
@@ -254,11 +264,11 @@ impl QueryGraph {{
 
             let node_name = path.join("_");
             let method_name = node_name.to_snek_case();
-            let out_ty_name = self.maps.types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.maps.output_types.get(&ty.output()?.key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()?
-                .map(|ty| self.maps.types.get(&ty.key()).unwrap());
+                .map(|ty| self.maps.input_types.get(&ty.key()).unwrap());
 
             let select_ty = self.maps.selections.get(&ty.output()?.key());
 
@@ -293,17 +303,17 @@ impl QueryGraph {{
                     write!(
                         dest,
                         r#"
-        pub fn {method_name}(
-            &self,{args_row}
-        ) -> UnselectedNode<{select_ty}, {select_ty}<HasAlias>, {marker_ty}, {out_ty_name}>
-        {{
-            UnselectedNode {{
-                root_name: "{node_name}".into(),
-                root_meta: node_metas::{meta_method},
-                args: {arg_value},
-                _marker: PhantomData,
-            }}
-        }}"#
+    pub fn {method_name}(
+        &self,{args_row}
+    ) -> UnselectedNode<{select_ty}, {select_ty}<HasAlias>, {marker_ty}, {out_ty_name}>
+    {{
+        UnselectedNode {{
+            root_name: "{node_name}".into(),
+            root_meta: node_metas::{meta_method},
+            args: {arg_value},
+            _marker: PhantomData,
+        }}
+    }}"#
                     )?;
                 }
                 None => {
@@ -314,26 +324,26 @@ impl QueryGraph {{
                     write!(
                         dest,
                         r#"
-        pub fn {method_name}(
-            &self,{args_row}
-        ) -> {node_ty}<{out_ty_name}>
-        {{
-            let nodes = selection_to_node_set(
-                SelectionErasedMap(
-                    [(
-                        "{node_name}".into(),
-                        {arg_value},
-                    )]
-                    .into(),
-                ),
-                &[
-                    ("{node_name}".into(), node_metas::{meta_method} as NodeMetaFn),
-                ].into(),
-                "$q".into(),
-            )
-            .unwrap();
-            {node_ty}(nodes.into_iter().next().unwrap(), PhantomData)
-        }}"#
+    pub fn {method_name}(
+        &self,{args_row}
+    ) -> {node_ty}<{out_ty_name}>
+    {{
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "{node_name}".into(),
+                    {arg_value},
+                )]
+                .into(),
+            ),
+            &[
+                ("{node_name}".into(), node_metas::{meta_method} as NodeMetaFn),
+            ].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        {node_ty}(nodes.into_iter().next().unwrap(), PhantomData)
+    }}"#
                     )?;
                 }
             };

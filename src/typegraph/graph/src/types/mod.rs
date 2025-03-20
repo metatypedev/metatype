@@ -111,9 +111,9 @@ pub trait TypeNodeExt: TypeNode {
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
     fn key(&self) -> TypeKey;
-    // fn is_input(&self) -> bool;
-    // fn is_output(&self) -> bool;
-    // fn is_namespace(&self) -> bool;
+    fn injection(&self) -> Option<&InjectionNode> {
+        self.base().injection.as_ref()
+    }
 }
 
 impl<N> TypeNodeExt for N
@@ -144,17 +144,9 @@ where
         self.base().key
     }
 
-    // fn is_input(&self) -> bool {
-    //     self.base().key.is_input()
-    // }
-    //
-    // fn is_output(&self) -> bool {
-    //     self.base().key.is_output()
-    // }
-
-    // fn is_namespace(&self) -> bool {
-    //     self.base().key.is_namespace()
-    // }
+    fn injection(&self) -> Option<&InjectionNode> {
+        self.base().injection.as_ref()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -253,6 +245,13 @@ pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> Result<bool> {
         N::Function { .. } => bail!("function type isn't composite or scalar"),
         N::Any { .. } => unimplemented!("Any type support not implemented"),
     }
+}
+
+pub fn is_function(tg: &tg_schema::Typegraph, idx: u32) -> bool {
+    matches!(
+        &tg.types[idx as usize],
+        tg_schema::TypeNode::Function { .. }
+    )
 }
 
 impl Type {

@@ -1,12 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use indexmap::{IndexMap, IndexSet};
 use tg_schema::InjectionNode;
 
-use crate::interlude::*;
-use crate::{Arc, FunctionType, ObjectType, Type, TypeNode, TypeNodeExt as _, Weak, Wrap as _};
+use crate::{interlude::*, EdgeKind};
+use crate::{Arc, FunctionType, ObjectType, Type, TypeNode, TypeNodeExt as _, Weak};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+
+use super::dedup::DuplicationKey;
 
 pub type Path = Vec<PathSegment>;
 
@@ -19,7 +22,7 @@ impl std::fmt::Debug for TypeKey {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum ValueTypeKind {
     Input,
     Output,
@@ -27,9 +30,43 @@ pub enum ValueTypeKind {
 
 #[derive(Debug)]
 pub struct MapValueItem {
-    pub kind: ValueTypeKind,
     pub ty: Type,
-    pub relative_paths: Vec<ValueTypePath>,
+    pub relative_paths: IndexSet<ValueTypePath>,
+}
+
+#[derive(Debug)]
+pub struct ValueType {
+    pub default: Option<MapValueItem>,
+    // duplication
+    pub variants: IndexMap<DuplicationKey, MapValueItem>,
+}
+
+impl ValueType {
+    pub fn get(&self, variant_idx: u32) -> Option<&MapValueItem> {
+        let variant_idx = variant_idx as usize;
+        if variant_idx == 0 {
+            self.default.as_ref()
+        } else {
+            self.variants
+                .get_index(variant_idx - 1)
+                .map(|(_, item)| item)
+        }
+    }
+
+    pub fn get_mut(&mut self, ordinal: u32) -> Option<&mut MapValueItem> {
+        let ordinal = ordinal as usize;
+        if ordinal == 0 {
+            self.default.as_mut()
+        } else {
+            self.variants
+                .get_index_mut(ordinal - 1)
+                .map(|(_, item)| item)
+        }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.default.is_none() && self.variants.is_empty()
+    }
 }
 
 #[derive(Debug)]
@@ -37,11 +74,11 @@ pub enum MapItem {
     Unset,
     Namespace(Arc<ObjectType>, Vec<Arc<str>>),
     Function(Arc<FunctionType>),
-    Value(Vec<MapValueItem>),
+    Value(ValueType),
 }
 
 impl MapItem {
-    pub fn as_value(&self) -> Option<&[MapValueItem]> {
+    pub fn as_value(&self) -> Option<&ValueType> {
         match self {
             Self::Value(v) => Some(v),
             _ => None,
@@ -51,15 +88,18 @@ impl MapItem {
 
 #[derive(Debug)]
 pub struct ConversionMap {
+    // pub schema: Arc<tg_schema::Typegraph>,
     pub direct: Vec<MapItem>,
     pub reverse: HashMap<RelativePath, TypeKey>,
 }
 
 impl ConversionMap {
-    pub fn new(type_count: usize) -> Self {
+    pub fn new(schema: Arc<tg_schema::Typegraph>) -> Self {
+        let type_count = schema.types.len();
         let mut direct = Vec::with_capacity(type_count);
         direct.resize_with(type_count, || MapItem::Unset);
         Self {
+            // schema,
             direct,
             reverse: Default::default(),
         }
@@ -78,7 +118,15 @@ impl ConversionMap {
             }
             Some(MapItem::Value(value_types)) => {
                 let ordinal = key.1 as usize;
-                value_types.get(ordinal).map(|item| item.ty.clone())
+                if ordinal == 0 {
+                    value_types.default.as_ref().map(|item| item.ty.clone())
+                } else {
+                    let index = ordinal - 1;
+                    value_types
+                        .variants
+                        .get_index(index)
+                        .map(|(_, item)| item.ty.clone())
+                }
             }
             None => None, // unreachable
         }
@@ -95,22 +143,46 @@ impl ConversionMap {
                 RelativePath::NsObject(path) => {
                     MapItem::Namespace(node.assert_object()?.clone(), path.clone())
                 }
-                RelativePath::Input(_) => MapItem::Value(vec![MapValueItem {
-                    kind: ValueTypeKind::Input,
-                    ty: node.clone(),
-                    relative_paths: vec![rpath
-                        .clone()
-                        .try_into()
-                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
-                }]),
-                RelativePath::Output(_) => MapItem::Value(vec![MapValueItem {
-                    kind: ValueTypeKind::Output,
-                    ty: node.clone(),
-                    relative_paths: vec![rpath
-                        .clone()
-                        .try_into()
-                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
-                }]),
+                RelativePath::Input(_) => {
+                    let dkey = DuplicationKey::from(&node);
+                    if dkey.is_empty() || !node.is_composite()? {
+                        MapItem::Value(ValueType {
+                            default: Some(MapValueItem {
+                                ty: node.clone(),
+                                relative_paths: std::iter::once(rpath.clone().try_into().map_err(
+                                    |e| eyre!("relative path is not a value type: {:?}", e),
+                                )?)
+                                .collect(),
+                            }),
+                            variants: Default::default(),
+                        })
+                    } else {
+                        let variant = MapValueItem {
+                            ty: node.clone(),
+                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
+                                |e| eyre!("relative path is not a value type: {:?}", e),
+                            )?)
+                            .collect(),
+                        };
+                        let variants = std::iter::once((dkey, variant)).collect();
+                        MapItem::Value(ValueType {
+                            default: None,
+                            variants,
+                        })
+                    }
+                }
+                RelativePath::Output(_) => {
+                    MapItem::Value(ValueType {
+                        default: Some(MapValueItem {
+                            ty: node.clone(),
+                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
+                                |e| eyre!("relative path is not a value type: {:?}", e),
+                            )?)
+                            .collect(),
+                        }),
+                        variants: Default::default(),
+                    })
+                }
             },
             MapItem::Namespace(_, _) => {
                 bail!("unexpected duplicate namespace type: {:?}", key)
@@ -118,23 +190,36 @@ impl ConversionMap {
             MapItem::Function(_) => {
                 bail!("unexpected duplicate function type: {:?}", key)
             }
-            MapItem::Value(mut value_types) => {
-                if key.1 != value_types.len() as u32 {
-                    bail!("unexpected ordinal number: {:?}", key);
+            MapItem::Value(mut value_type) => {
+                let rpath: ValueTypePath = rpath
+                    .clone()
+                    .try_into()
+                    .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?;
+                let dkey = DuplicationKey::from(&node);
+                if key.1 == 0 {
+                    debug_assert!(dkey.is_empty());
+                    if value_type.default.is_some() {
+                        bail!("duplicate default value type: {:?}", key);
+                    }
+                    value_type.default = Some(MapValueItem {
+                        ty: node.clone(),
+                        relative_paths: std::iter::once(rpath).collect(),
+                    });
+                } else {
+                    debug_assert!(!dkey.is_empty());
+                    let index = key.1 - 1;
+                    if index != value_type.variants.len() as u32 {
+                        bail!("unexpected ordinal number for type registration: {:?}", key);
+                    }
+                    value_type.variants.insert(
+                        dkey,
+                        MapValueItem {
+                            ty: node.clone(),
+                            relative_paths: std::iter::once(rpath).collect(),
+                        },
+                    );
                 }
-                value_types.push(MapValueItem {
-                    kind: match rpath {
-                        RelativePath::Input(_) => ValueTypeKind::Input,
-                        RelativePath::Output(_) => ValueTypeKind::Output,
-                        _ => bail!("unexpected value type kind: {:?}", rpath),
-                    },
-                    ty: node.clone(),
-                    relative_paths: vec![rpath
-                        .clone()
-                        .try_into()
-                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?],
-                });
-                MapItem::Value(value_types)
+                MapItem::Value(value_type)
             }
         };
         self.direct[key.0 as usize] = item;
@@ -147,47 +232,35 @@ impl ConversionMap {
         Ok(())
     }
 
-    pub fn append(&mut self, key: TypeKey, rpath: RelativePath) -> Result<()> {
+    /// Append a relative path to a value type with key `key`.
+    /// Returns true if the relative path was appended, false if it was already present.
+    pub fn append(&mut self, key: TypeKey, rpath: RelativePath) -> Result<bool> {
+        let TypeKey(idx, variant) = key;
         let entry = self
             .direct
-            .get_mut(key.0 as usize)
+            .get_mut(idx as usize)
             .ok_or_else(|| eyre!("type index out of bound"))?;
         match entry {
-            MapItem::Value(value_types) => {
-                let ordinal = key.1 as usize;
-                let item = value_types.get_mut(ordinal).ok_or_else(|| {
+            MapItem::Value(value_type) => {
+                let item = value_type.get_mut(variant).ok_or_else(|| {
                     eyre!("value type not found: local index out of bound: {:?}", key)
                 })?;
-                item.relative_paths.push(
+                let added = item.relative_paths.insert(
                     rpath
                         .clone()
                         .try_into()
                         .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?,
                 );
+                if !added {
+                    return Ok(false);
+                }
             }
             _ => bail!("unexpected map item: {:?}", key),
         }
 
         self.reverse.insert(rpath, key);
 
-        Ok(())
-    }
-
-    pub fn get_next_type_key(&self, type_idx: u32) -> Result<TypeKey> {
-        match self.direct.get(type_idx as usize) {
-            Some(MapItem::Unset) => Ok(TypeKey(type_idx, 0)),
-            Some(MapItem::Namespace(_, _)) => {
-                bail!("unexpected duplicate namespace type: {:?}", type_idx)
-            }
-            Some(MapItem::Function(_)) => {
-                bail!("unexpected duplicate function type: {:?}", type_idx)
-            }
-            Some(MapItem::Value(value_types)) => {
-                let ordinal = value_types.len() as u32;
-                Ok(TypeKey(type_idx, ordinal))
-            }
-            None => bail!("type index out of bounds: {:?}", type_idx),
-        }
+        Ok(true)
     }
 }
 
@@ -197,6 +270,19 @@ pub enum PathSegment {
     ListItem,
     OptionalItem,
     UnionVariant(u32),
+}
+
+impl TryFrom<EdgeKind> for PathSegment {
+    type Error = EdgeKind;
+    fn try_from(value: EdgeKind) -> Result<Self, Self::Error> {
+        match value {
+            EdgeKind::ObjectProperty(key) => Ok(Self::ObjectProp(key)),
+            EdgeKind::ListItem => Ok(Self::ListItem),
+            EdgeKind::OptionalItem => Ok(Self::OptionalItem),
+            EdgeKind::UnionVariant(idx) => Ok(Self::UnionVariant(idx as u32)),
+            _ => Err(value),
+        }
+    }
 }
 
 impl PathSegment {
@@ -330,6 +416,7 @@ impl PathSegment {
 #[derive(Debug, Clone)]
 pub struct ValueTypePath {
     pub owner: Weak<FunctionType>,
+    pub branch: ValueTypeKind,
     pub path: Path,
 }
 
@@ -344,34 +431,25 @@ impl ValueTypePath {
         Ok(acc)
     }
 
-    pub fn find_cycle(
-        &self,
-        root_type: Type,
-        schema: &tg_schema::Typegraph,
-    ) -> Result<Option<ValueTypePath>> {
-        // precondition: self.path.len() > 2
-        let indices = self.to_indices(root_type, schema)?;
-        let last = indices.last().unwrap();
-        Ok(indices[..indices.len() - 1]
-            .iter()
-            .position(|idx| idx == last)
-            .map(|idx| {
-                let path = self.path[..idx].to_vec();
-                ValueTypePath {
-                    owner: self.owner.clone(),
-                    path,
-                }
-            }))
-    }
-}
-
-impl From<Arc<FunctionType>> for ValueTypePath {
-    fn from(owner: Arc<FunctionType>) -> Self {
-        Self {
-            owner: Arc::downgrade(&owner),
-            path: Default::default(),
-        }
-    }
+    // pub fn find_cycle(
+    //     &self,
+    //     root_type: Type,
+    //     schema: &tg_schema::Typegraph,
+    // ) -> Result<Option<ValueTypePath>> {
+    //     // precondition: self.path.len() > 2
+    //     let indices = self.to_indices(root_type, schema)?;
+    //     let last = indices.last().unwrap();
+    //     Ok(indices[..indices.len() - 1]
+    //         .iter()
+    //         .position(|idx| idx == last)
+    //         .map(|idx| {
+    //             let path = self.path[..idx].to_vec();
+    //             ValueTypePath {
+    //                 owner: self.owner.clone(),
+    //                 path,
+    //             }
+    //         }))
+    // }
 }
 
 impl PartialEq for ValueTypePath {
@@ -448,11 +526,19 @@ impl RelativePath {
     }
 
     pub fn input(owner: Weak<FunctionType>, path: Path) -> Self {
-        Self::Input(ValueTypePath { owner, path })
+        Self::Input(ValueTypePath {
+            owner,
+            path,
+            branch: ValueTypeKind::Input,
+        })
     }
 
     pub fn output(owner: Weak<FunctionType>, path: Path) -> Self {
-        Self::Output(ValueTypePath { owner, path })
+        Self::Output(ValueTypePath {
+            owner,
+            path,
+            branch: ValueTypeKind::Output,
+        })
     }
 
     pub fn is_input(&self) -> bool {
@@ -476,43 +562,43 @@ impl RelativePath {
         }
     }
 
-    pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Result<Option<RelativePath>> {
-        use RelativePath as RP;
-        match self {
-            RP::Function(_) => Ok(None),
-            RP::NsObject(_) => Ok(None),
-            RP::Input(p) => {
-                if p.path.len() <= 2 {
-                    Ok(None)
-                } else {
-                    Ok(p.find_cycle(
-                        p.owner
-                            .upgrade()
-                            .ok_or_else(|| eyre!("no strong pointer for type"))?
-                            .input()?
-                            .wrap(),
-                        schema,
-                    )?
-                    .map(|p| RP::Input(p)))
-                }
-            }
-            RP::Output(p) => {
-                if p.path.len() <= 2 {
-                    Ok(None)
-                } else {
-                    Ok(p.find_cycle(
-                        p.owner
-                            .upgrade()
-                            .ok_or_else(|| eyre!("no strong pointer for type"))?
-                            .output()?
-                            .clone(),
-                        schema,
-                    )?
-                    .map(|p| RP::Output(p)))
-                }
-            }
-        }
-    }
+    // pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Result<Option<RelativePath>> {
+    //     use RelativePath as RP;
+    //     match self {
+    //         RP::Function(_) => Ok(None),
+    //         RP::NsObject(_) => Ok(None),
+    //         RP::Input(p) => {
+    //             if p.path.len() <= 2 {
+    //                 Ok(None)
+    //             } else {
+    //                 Ok(p.find_cycle(
+    //                     p.owner
+    //                         .upgrade()
+    //                         .ok_or_else(|| eyre!("no strong pointer for type"))?
+    //                         .input()?
+    //                         .wrap(),
+    //                     schema,
+    //                 )?
+    //                 .map(|p| RP::Input(p)))
+    //             }
+    //         }
+    //         RP::Output(p) => {
+    //             if p.path.len() <= 2 {
+    //                 Ok(None)
+    //             } else {
+    //                 Ok(p.find_cycle(
+    //                     p.owner
+    //                         .upgrade()
+    //                         .ok_or_else(|| eyre!("no strong pointer for type"))?
+    //                         .output()?
+    //                         .clone(),
+    //                     schema,
+    //                 )?
+    //                 .map(|p| RP::Output(p)))
+    //             }
+    //         }
+    //     }
+    // }
 
     pub fn get_injection(&self, schema: &tg_schema::Typegraph) -> Option<InjectionNode> {
         match self {
@@ -568,6 +654,7 @@ impl RelativePath {
                 Self::Input(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
+                    branch: ValueTypeKind::Input,
                 })
             }
             Self::Output(k) => {
@@ -576,6 +663,7 @@ impl RelativePath {
                 Self::Output(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
+                    branch: ValueTypeKind::Output,
                 })
             }
             Self::Function(_) => {

@@ -3,8 +3,9 @@
 
 use std::collections::HashMap;
 
+use crate::conv::ValueType;
 use crate::interlude::*;
-use crate::{conv::MapValueItem, Arc, FunctionType, ObjectType, Type, TypeNode as _};
+use crate::{Arc, FunctionType, ObjectType, Type, TypeNode as _};
 
 #[derive(Default)]
 pub struct NameRegistry {
@@ -26,7 +27,7 @@ impl NameRegistry {
 }
 
 pub trait NamingEngine {
-    fn name_value_types(&mut self, types: &[MapValueItem]) -> Result<()>;
+    fn name_value_types(&mut self, types: &ValueType) -> Result<()>;
     fn name_function(&mut self, function: &Arc<FunctionType>) -> Result<()>;
     fn name_ns_object(&mut self, ns_object: &Arc<ObjectType>) -> Result<()>;
     fn registry(&mut self) -> &mut NameRegistry;
@@ -43,22 +44,17 @@ mod default {
     }
 
     impl NamingEngine for DefaultNamingEngine {
-        fn name_value_types(&mut self, range: &[MapValueItem]) -> Result<()> {
-            match range.len() {
-                0 => {
-                    unreachable!("no registered type");
-                }
-                1 => {
-                    let first = range.iter().next().unwrap();
-                    self.registry()
-                        .register(first.ty.title().to_owned(), first.ty.clone())?;
-                }
-                _ => {
-                    for (idx, item) in range.iter().enumerate() {
-                        self.registry()
-                            .register(format!("{}_{}", item.ty.title(), idx), item.ty.clone())?;
-                    }
-                }
+        fn name_value_types(&mut self, value_type: &ValueType) -> Result<()> {
+            if value_type.is_empty() {
+                unreachable!("no registered type");
+            }
+            if let Some(item) = value_type.default.as_ref() {
+                self.registry()
+                    .register(item.ty.title().to_owned(), item.ty.clone())?;
+            }
+            for (idx, item) in value_type.variants.values().enumerate() {
+                self.registry()
+                    .register(format!("{}_{}", item.ty.title(), idx + 1), item.ty.clone())?;
             }
             Ok(())
         }

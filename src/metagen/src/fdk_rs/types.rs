@@ -498,6 +498,9 @@ pub enum Alias {
         item: TypeKey,
         boxed: bool,
     },
+    Plain {
+        name: String,
+    },
 }
 
 #[derive(Debug)]
@@ -523,6 +526,7 @@ pub enum RustType {
         name: String,
         derive: Derive,
         variants: Vec<(String, TypeKey)>,
+        partial: bool,
     },
 }
 
@@ -571,6 +575,7 @@ impl TypeRenderer for RustType {
                                 alias_name, container_name, inner_name
                             )
                         }
+                        _ => unreachable!(),
                     }
                 } else {
                     Ok(())
@@ -610,7 +615,13 @@ impl TypeRenderer for RustType {
                 name,
                 derive,
                 variants,
+                partial,
             } => {
+                let name = if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                };
                 RustType::render_derive(out, &derive)?;
                 writeln!(out, "#[serde(untagged)]")?;
                 writeln!(out, "pub enum {} {{", name)?;
@@ -639,6 +650,7 @@ impl TypeRenderer for RustType {
                         Alias::Container { name, item, boxed } => {
                             self.container_def(name, item, *boxed, page, ctx)
                         }
+                        Alias::Plain { name } => name.clone(),
                     }
                 }
             }
@@ -649,7 +661,13 @@ impl TypeRenderer for RustType {
                     name.clone()
                 }
             }
-            Self::Enum { name, .. } => name.clone(),
+            Self::Enum { name, partial, .. } => {
+                if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                }
+            }
         })
     }
 }
@@ -836,6 +854,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                         serde: true,
                     },
                     variants,
+                    partial,
                 }
             }
 
@@ -856,7 +875,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
     }
 }
 
-pub fn manifest_page(tg: &Typegraph, partial_out_types: bool) -> Result<ManifestPage<RustType>> {
+pub fn input_manifest_page(tg: &Typegraph) -> Result<ManifestPage<RustType>> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.input_types.iter() {
@@ -867,12 +886,37 @@ pub fn manifest_page(tg: &Typegraph, partial_out_types: bool) -> Result<Manifest
         }
     }
 
+    let res: ManifestPage<RustType> = map.into();
+    res.cache_references(&());
+
+    Ok(res)
+}
+
+pub fn output_manifest_page(
+    tg: &Typegraph,
+    partial: bool,
+    input_page: &ManifestPage<RustType>,
+) -> Result<ManifestPage<RustType>> {
+    let mut map = IndexMap::new();
+
     for (key, ty) in tg.output_types.iter() {
-        let typespec = get_typespec(ty, partial_out_types)?;
+        let partial = partial && ty.is_composite()?;
+        if !partial {
+            // alias to input type if exists
+            if let Some(inp_ref) = input_page.get_ref(&ty.key(), &()) {
+                let alias = Alias::Plain {
+                    name: inp_ref.clone(),
+                };
+                let typespec = RustType::Alias { alias, name: None };
+                map.insert(key.clone(), typespec);
+                continue;
+            }
+        }
+        let typespec = get_typespec(ty, partial)?;
         map.insert(key.clone(), typespec);
     }
 
-    let res: ManifestPage<RustType> = map.into();
+    let res = ManifestPage::from(map);
     res.cache_references(&());
 
     Ok(res)

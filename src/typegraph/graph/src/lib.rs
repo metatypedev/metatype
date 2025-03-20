@@ -18,7 +18,7 @@ mod interlude {
     };
 }
 
-use conv::{MapValueItem, TypeKey};
+use conv::{TypeKey, ValueType};
 use indexmap::IndexMap;
 use interlude::*;
 use naming::DefaultNamingEngine;
@@ -31,7 +31,7 @@ pub use types::*;
 pub enum MapItem {
     Namespace(Arc<ObjectType>, Vec<Arc<str>>),
     Function(Arc<FunctionType>),
-    Value(Vec<MapValueItem>),
+    Value(ValueType),
 }
 
 impl TryFrom<conv::MapItem> for MapItem {
@@ -63,10 +63,11 @@ pub struct Typegraph {
 
 impl Typegraph {
     pub fn find_type(&self, key: TypeKey) -> Option<Type> {
-        match self.conversion_map.get(key.0 as usize)? {
+        let TypeKey(idx, variant) = key;
+        match self.conversion_map.get(idx as usize)? {
             MapItem::Namespace(object, _) => Some(object.wrap()),
             MapItem::Function(function) => Some(function.wrap()),
-            MapItem::Value(value) => Some(value[key.1 as usize].ty.clone()),
+            MapItem::Value(value) => Some(value.get(variant).unwrap().ty.clone()),
         }
     }
 }

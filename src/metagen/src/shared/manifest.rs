@@ -35,10 +35,9 @@ impl NameMemo for IndexMap<TypeKey, String> {
 }
 
 #[derive(Debug)]
-pub struct ManifestPage<R: TypeRenderer> {
-    // pub map: HashMap<TypeKey, R>,
-    pub map: IndexMap<TypeKey, R>,
-    pub reference_cache: RwLock<IndexMap<TypeKey, Option<String>>>,
+pub struct ManifestPage<R: TypeRenderer, K: std::hash::Hash = TypeKey> {
+    pub map: IndexMap<K, R>,
+    pub reference_cache: RwLock<IndexMap<K, Option<String>>>,
 }
 
 impl<S: TypeRenderer> From<IndexMap<TypeKey, S>> for ManifestPage<S> {

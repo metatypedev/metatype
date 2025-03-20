@@ -16,17 +16,17 @@ fn main() -> Result<(), BoxErr> {
         // blocking reqwest uses tokio under the hood
         let gql_sync = api1.graphql_sync();
         let res3 = gql_sync.query((
-            api1.get_user().select_aliased(User0Selections {
+            api1.get_user().select_aliased(UserSelections {
                 posts: alias([
                     (
                         "post1",
-                        select(Post0Selections {
+                        select(PostSelections {
                             id: get(),
                             slug: get(),
                             title: get(),
                         }),
                     ),
-                    ("post2", select(Post0Selections { id: get(), ..all() })),
+                    ("post2", select(PostSelections { id: get(), ..all() })),
                 ]),
                 ..all()
             }),
@@ -36,7 +36,7 @@ fn main() -> Result<(), BoxErr> {
 
         let prepared_m = gql_sync.prepare_mutation(|args| {
             (
-                api1.scalar_args(args.get("post", |val: types::Post2| val)),
+                api1.scalar_args(args.get("post", |val: types::Post| val)),
                 api1.composite_no_args().select(all()),
                 api1.composite_args(
                     args.get("id", |id: String| types::RootCompositeArgsFnInput { id }),
@@ -49,7 +49,7 @@ fn main() -> Result<(), BoxErr> {
         let res2 = prepared_clone.perform([
             (
                 "post",
-                serde_json::json!(types::Post0Partial {
+                serde_json::json!(types::PostPartial {
                     id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     slug: Some("".into()),
                     title: Some("".into()),
@@ -69,17 +69,17 @@ fn main() -> Result<(), BoxErr> {
             let gql = api1.graphql();
             let prepared_q = gql.prepare_query(|_args| {
                 (
-                    api1.get_user().select_aliased(User0Selections {
+                    api1.get_user().select_aliased(UserSelections {
                         posts: alias([
                             (
                                 "post1",
-                                select(Post0Selections {
+                                select(PostSelections {
                                     id: get(),
                                     slug: get(),
                                     title: get(),
                                 }),
                             ),
-                            ("post2", select(Post0Selections { id: get(), ..all() })),
+                            ("post2", select(PostSelections { id: get(), ..all() })),
                         ]),
                         ..all()
                     }),
@@ -93,7 +93,7 @@ fn main() -> Result<(), BoxErr> {
 
             let res4 = gql
                 .mutation((
-                    api1.scalar_args(types::Post2 {
+                    api1.scalar_args(types::Post {
                         id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                         slug: "".into(),
                         title: "".into(),
@@ -168,7 +168,7 @@ fn main() -> Result<(), BoxErr> {
 
             let res7a = gql.query(api1.get_posts().select(all())).await?;
             let res7b = gql
-                .mutation(api1.scalar_args(types::Post2 {
+                .mutation(api1.scalar_args(types::Post {
                     id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                     slug: "".into(),
                     title: "".into(),
@@ -177,7 +177,7 @@ fn main() -> Result<(), BoxErr> {
             let res7c = gql
                 .prepare_query(|args| {
                     api1.identity(
-                        args.get("num", |val: i64| types::RootIdentityFnInput0 { input: val }),
+                        args.get("num", |val: i64| types::RootIdentityFnInput { input: val }),
                     )
                     .select(all())
                 })?
@@ -186,7 +186,7 @@ fn main() -> Result<(), BoxErr> {
             let res7d = gql
                 .prepare_mutation(|args| {
                     api1.identity_update(
-                        args.get("num", |val: i64| types::RootIdentityFnInput0 { input: val }),
+                        args.get("num", |val: i64| types::RootIdentityFnInput { input: val }),
                     )
                     .select(all())
                 })?
