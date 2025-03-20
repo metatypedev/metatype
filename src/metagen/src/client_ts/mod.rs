@@ -62,11 +62,11 @@ impl TsClientManifest {
         types.cache_references(&());
         let types_memo = types.get_cached_refs();
 
-        let node_metas = MetasPageBuilder::new(tg.clone())?.build()?;
+        let node_metas = MetasPageBuilder::new(tg.clone())?.build();
         node_metas.cache_references(&());
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg)?;
+        let selections = selections::manifest_page(&tg);
         selections.cache_references(&());
         let selections_memo = selections.get_cached_refs();
 
@@ -189,7 +189,7 @@ const nodeMetas = {{
     }
 
     fn render_query_graph(&self, out: &mut impl Write) -> anyhow::Result<()> {
-        let gql_types = get_gql_types(&self.tg)?;
+        let gql_types = get_gql_types(&self.tg);
 
         write!(
             out,
@@ -231,7 +231,7 @@ export class QueryGraph extends _QueryGraphBase {{
             let (_, ty) = func?;
             use heck::ToLowerCamelCase;
 
-            let node_name = ty.name()?;
+            let node_name = ty.name();
             let method_name = node_name.to_lower_camel_case();
             let out_ty_name = self.maps.types.get(&ty.output().key()).unwrap();
 

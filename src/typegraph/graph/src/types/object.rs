@@ -50,24 +50,22 @@ impl TypeNode for Arc<ObjectType> {
         "object"
     }
 
-    fn children(&self) -> Result<Vec<Type>> {
-        Ok(self
-            .properties()
+    fn children(&self) -> Vec<Type> {
+        self.properties()
             .values()
             .map(|p| p.type_.clone())
-            .collect())
+            .collect()
     }
 
-    fn edges(&self) -> Result<Vec<Edge>> {
-        Ok(self
-            .properties()
+    fn edges(&self) -> Vec<Edge> {
+        self.properties()
             .iter()
             .map(|(name, prop)| Edge {
                 from: WeakType::Object(Arc::downgrade(self)),
                 to: prop.type_.clone(),
                 kind: EdgeKind::ObjectProperty(name.clone()),
             })
-            .collect())
+            .collect()
     }
 }
 

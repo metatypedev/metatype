@@ -133,11 +133,11 @@ impl TypeRenderer for TsSelection {
     }
 }
 
-pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelection>> {
+pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
-        if !ty.is_composite()? {
+        if !ty.is_composite() {
             continue;
         }
 
@@ -153,14 +153,14 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
                 let mut props = Vec::with_capacity(ty_props.len());
                 for (prop_name, prop) in ty_props {
                     let prop_name = normalize_struct_prop_name(prop_name);
-                    let select_ty = selection_for_field(&prop.type_)?;
+                    let select_ty = selection_for_field(&prop.type_);
                     props.push((prop_name, select_ty));
                 }
                 map.insert(
                     *key,
                     TsSelection::Object(Object {
                         props,
-                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
                     }),
                 );
             }
@@ -168,10 +168,10 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
                 let ty_variants = ty.variants();
                 let mut variants = Vec::with_capacity(ty_variants.len());
                 for variant in ty_variants {
-                    if !variant.is_composite()? {
+                    if !variant.is_composite() {
                         continue;
                     }
-                    let selection = selection_for_field(variant)?;
+                    let selection = selection_for_field(variant);
                     variants.push(UnionVariant {
                         ty: variant.title().to_string(),
                         select_ty: selection,
@@ -180,7 +180,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
                 map.insert(
                     *key,
                     TsSelection::Union(Union {
-                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
                         variants,
                     }),
                 );
@@ -188,5 +188,5 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
         }
     }
 
-    Ok(map.into())
+    map.into()
 }

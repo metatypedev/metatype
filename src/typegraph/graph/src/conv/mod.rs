@@ -157,7 +157,7 @@ impl Conversion {
             let added = self.conversion_map.append(ty.key(), rpath.clone())?;
             // TODO cycle detection
             if added {
-                for edge in ty.edges()? {
+                for edge in ty.edges() {
                     let child_ty = edge.to;
                     if let Ok(seg) = edge.kind.try_into() {
                         self.register_converted_type(rpath.push(seg)?, child_ty, true)?;

@@ -196,10 +196,10 @@ impl FdkRustTemplate {
         let maps = {
             let mut buffer = String::new();
 
-            let input_manif = input_manifest_page(&tg)?;
+            let input_manif = input_manifest_page(&tg);
             input_manif.render_all(&mut buffer, &())?;
 
-            let output_manif = output_manifest_page(&tg, false, &input_manif)?;
+            let output_manif = output_manifest_page(&tg, false, &input_manif);
 
             let types_rs = buffer;
             for line in types_rs.lines() {

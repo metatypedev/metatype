@@ -148,10 +148,10 @@ impl TypeRenderer for TsType {
     }
 }
 
-fn get_typespec(ty: &Type) -> Result<TsType> {
+fn get_typespec(ty: &Type) -> TsType {
     if type_body_required(ty) {
-        let name = Some(normalize_type_title(&ty.name()?));
-        Ok(match ty {
+        let name = Some(normalize_type_title(&ty.name()));
+        match ty {
             Type::Boolean(_) => TsType::builtin("boolean", name),
             Type::Integer(_) => TsType::builtin("number", name),
             Type::Float(_) => TsType::builtin("number", name),
@@ -239,9 +239,9 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
             }
 
             Type::Function(_) => unreachable!("unexpected function type"),
-        })
+        }
     } else {
-        Ok(TsType::builtin(
+        TsType::builtin(
             match ty {
                 Type::Boolean(_) => "boolean",
                 Type::Integer(_) | Type::Float(_) => "number",
@@ -250,7 +250,7 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
                 _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
             },
             None,
-        ))
+        )
     }
 }
 
@@ -263,16 +263,13 @@ pub fn manifest_page(tg: &Typegraph) -> Result<ManifestPage<TsType>> {
                 continue;
             }
         }
-        let typespec = get_typespec(ty)?;
-        match map.insert(key.clone(), typespec) {
-            Some(_) => bail!("duplicate type key: {:?}", key),
-            None => (),
-        }
+        let typespec = get_typespec(ty);
+        map.insert(key.clone(), typespec);
     }
 
     for (key, ty) in tg.output_types.iter() {
-        let typespec = get_typespec(ty)?;
-        map.insert(key.clone(), typespec); //
+        let typespec = get_typespec(ty);
+        map.insert(key.clone(), typespec);
     }
 
     let res: ManifestPage<TsType> = map.into();

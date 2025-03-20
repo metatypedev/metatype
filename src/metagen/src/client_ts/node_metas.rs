@@ -205,10 +205,10 @@ pub enum TsNodeMeta {
 }
 
 impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
-    fn build_meta(&self, key: TypeKey) -> Result<TsNodeMeta> {
+    fn build_meta(&self, key: TypeKey) -> TsNodeMeta {
         let ty = self.tg.find_type(key).unwrap();
 
-        Ok(match ty {
+        match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
@@ -219,7 +219,7 @@ impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
             Type::Object(ty) => self.build_object(ty.clone()),
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
-        })
+        }
     }
 }
 
@@ -249,7 +249,7 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
 
         TsNodeMeta::Object(Object {
             props,
-            name: normalize_type_title(&ty.name().unwrap()).to_pascal_case(),
+            name: normalize_type_title(&ty.name()).to_pascal_case(),
         })
     }
 
@@ -257,21 +257,19 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         let mut variants = vec![];
         for variant in ty.variants().iter() {
             let key = variant.key();
-            // if variant.is_composite()? {
             self.push(key);
-            // }
             variants.push(key);
         }
         let variants = variants
             .into_iter()
             .map(|key| {
                 let ty = self.tg.find_type(key).unwrap();
-                (ty.name().unwrap(), key)
+                (ty.name(), key)
             })
             .collect::<IndexMap<_, _>>();
 
         TsNodeMeta::Union(Union {
-            name: normalize_type_title(&ty.name().unwrap()),
+            name: normalize_type_title(&ty.name()),
             variants,
         })
     }
@@ -294,7 +292,7 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
-            name: normalize_type_title(&ty.name().unwrap()),
+            name: normalize_type_title(&ty.name()),
         })
     }
 }

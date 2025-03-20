@@ -734,10 +734,10 @@ impl RustType {
     }
 }
 
-fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
+fn get_typespec(ty: &Type, partial: bool) -> RustType {
     if type_body_required(ty) {
-        let name = Some(normalize_type_title(&ty.name()?));
-        Ok(match ty {
+        let name = Some(normalize_type_title(&ty.name()));
+        match ty {
             Type::Boolean(_) => RustType::builtin("bool", name),
             Type::Integer(_) => RustType::builtin("i64", name),
             Type::Float(_) => RustType::builtin("f64", name),
@@ -761,14 +761,14 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                     RustType::container(
                         "Option",
                         item_ty.key().clone(),
-                        item_ty.is_composite()?, // TODO is_cyclic
+                        item_ty.is_composite(), // TODO is_cyclic
                         None,
                     )
                 } else {
                     RustType::container(
                         "Option",
                         item_ty.key().clone(),
-                        item_ty.is_composite()?, // TODO is_cyclic
+                        item_ty.is_composite(), // TODO is_cyclic
                         name,
                     )
                 }
@@ -788,7 +788,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                     RustType::container(
                         container_name,
                         item_ty.key().clone(),
-                        item_ty.is_composite()?, // TODO is_cyclic
+                        item_ty.is_composite(), // TODO is_cyclic
                         None,
                     )
                 } else {
@@ -800,7 +800,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                     RustType::container(
                         container_name,
                         item_ty.key().clone(),
-                        item_ty.is_composite()?, // TODO is_cyclic
+                        item_ty.is_composite(), // TODO is_cyclic
                         name,
                     )
                 }
@@ -826,7 +826,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                     })
                     .collect();
                 RustType::Struct {
-                    name: normalize_type_title(&ty.name()?),
+                    name: normalize_type_title(&ty.name()),
                     derive: Derive {
                         debug: true,
                         serde: true,
@@ -840,15 +840,10 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                 let variants = ty
                     .variants()
                     .iter()
-                    .map(|variant| {
-                        (
-                            variant.name().unwrap().to_pascal_case(),
-                            variant.key().clone(),
-                        )
-                    })
+                    .map(|variant| (variant.name().to_pascal_case(), variant.key().clone()))
                     .collect();
                 RustType::Enum {
-                    name: normalize_type_title(&ty.name()?),
+                    name: normalize_type_title(&ty.name()),
                     derive: Derive {
                         debug: true,
                         serde: true,
@@ -859,9 +854,9 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
             }
 
             Type::Function(_) => unreachable!("unexpected function type"),
-        })
+        }
     } else {
-        Ok(RustType::builtin(
+        RustType::builtin(
             match ty {
                 Type::Boolean(_) => "bool",
                 Type::Integer(_) => "i64",
@@ -871,36 +866,33 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                 _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
             },
             None,
-        ))
+        )
     }
 }
 
-pub fn input_manifest_page(tg: &Typegraph) -> Result<ManifestPage<RustType>> {
+pub fn input_manifest_page(tg: &Typegraph) -> ManifestPage<RustType> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.input_types.iter() {
-        let typespec = get_typespec(ty, false)?;
-        match map.insert(key.clone(), typespec) {
-            None => {}
-            Some(_) => bail!("duplicate type key: {:?}", key),
-        }
+        let typespec = get_typespec(ty, false);
+        map.insert(key.clone(), typespec);
     }
 
     let res: ManifestPage<RustType> = map.into();
     res.cache_references(&());
 
-    Ok(res)
+    res
 }
 
 pub fn output_manifest_page(
     tg: &Typegraph,
     partial: bool,
     input_page: &ManifestPage<RustType>,
-) -> Result<ManifestPage<RustType>> {
+) -> ManifestPage<RustType> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
-        let partial = partial && ty.is_composite()?;
+        let partial = partial && ty.is_composite();
         if !partial {
             // alias to input type if exists
             if let Some(inp_ref) = input_page.get_ref(&ty.key(), &()) {
@@ -912,12 +904,12 @@ pub fn output_manifest_page(
                 continue;
             }
         }
-        let typespec = get_typespec(ty, partial)?;
+        let typespec = get_typespec(ty, partial);
         map.insert(key.clone(), typespec);
     }
 
     let res = ManifestPage::from(map);
     res.cache_references(&());
 
-    Ok(res)
+    res
 }

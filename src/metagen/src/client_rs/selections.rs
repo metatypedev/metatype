@@ -169,11 +169,11 @@ impl RustSelection {
     }
 }
 
-pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelection>> {
+pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
-        if !ty.is_composite()? {
+        if !ty.is_composite() {
             continue;
         }
         match ty {
@@ -190,7 +190,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
                     .map(|(prop_name, prop)| {
                         (
                             normalize_struct_prop_name(prop_name),
-                            selection_for_field(&prop.type_).unwrap(),
+                            selection_for_field(&prop.type_),
                         )
                         //
                     })
@@ -199,21 +199,21 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
                     *key,
                     RustSelection::Struct {
                         props,
-                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
                     },
                 );
             }
             Type::Union(ty) => {
                 let mut variants = vec![];
                 for variant in ty.variants() {
-                    if !variant.is_composite()? {
+                    if !variant.is_composite() {
                         continue;
                     }
                     let struct_prop_name = normalize_struct_prop_name(&variant.title());
-                    let selection = selection_for_field(variant).unwrap();
+                    let selection = selection_for_field(variant);
                     variants.push(UnionProp {
                         name: struct_prop_name,
-                        variant_ty: variant.name()?.to_string(), // FIXME normalized??
+                        variant_ty: variant.name().to_string(), // FIXME normalized??
                         select_ty: selection,
                     });
                 }
@@ -221,13 +221,12 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
                     *key,
                     RustSelection::Union {
                         variants,
-                        name: format!("{}Selections", normalize_type_title(&ty.name()?)),
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
                     },
                 );
             }
         }
     }
 
-    let res: ManifestPage<_> = map.into();
-    Ok(res)
+    map.into()
 }

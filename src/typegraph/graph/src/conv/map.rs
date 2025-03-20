@@ -145,7 +145,7 @@ impl ConversionMap {
                 }
                 RelativePath::Input(_) => {
                     let dkey = DuplicationKey::from(&node);
-                    if dkey.is_empty() || !node.is_composite()? {
+                    if dkey.is_empty() || !node.is_composite() {
                         MapItem::Value(ValueType {
                             default: Some(MapValueItem {
                                 ty: node.clone(),

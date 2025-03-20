@@ -211,10 +211,10 @@ pub fn {ty_name}() -> NodeMeta {{
 }
 
 impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
-    fn build_meta(&self, key: TypeKey) -> Result<RsNodeMeta> {
+    fn build_meta(&self, key: TypeKey) -> RsNodeMeta {
         let ty = self.tg.find_type(key).unwrap();
         debug_assert_eq!(ty.key(), key);
-        Ok(match ty {
+        match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
@@ -225,7 +225,7 @@ impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
             Type::Object(ty) => self.build_object(ty.clone()),
-        })
+        }
     }
 }
 
@@ -255,21 +255,21 @@ impl RsMetasExt for MetasPageBuilder {
 
         RsNodeMeta::Object(Object {
             props,
-            name: normalize_type_title(&ty.name().unwrap()),
+            name: normalize_type_title(&ty.name()),
         })
     }
 
     fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta {
         let mut variants = IndexMap::new();
         for variant in ty.variants().iter() {
-            if variant.is_composite().unwrap() {
+            if variant.is_composite() {
                 let key = variant.key();
                 self.push(key);
-                variants.insert(variant.name().unwrap(), key);
+                variants.insert(variant.name(), key);
             }
         }
         if !variants.is_empty() {
-            let name = normalize_type_title(&ty.name().unwrap());
+            let name = normalize_type_title(&ty.name());
             // TODO named_types???
             RsNodeMeta::Union(Union { variants, name })
         } else {
@@ -285,7 +285,7 @@ impl RsMetasExt for MetasPageBuilder {
         let props = if !props.is_empty() {
             let mut res = BTreeMap::new();
             for (name, prop) in props.iter() {
-                res.insert(name.clone(), prop.type_.name().unwrap());
+                res.insert(name.clone(), prop.type_.name());
             }
             Some(res)
         } else {
@@ -298,7 +298,7 @@ impl RsMetasExt for MetasPageBuilder {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
-            name: normalize_type_title(&ty.name().unwrap()),
+            name: normalize_type_title(&ty.name()),
         })
     }
 }

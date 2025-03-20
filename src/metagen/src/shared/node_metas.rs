@@ -7,7 +7,7 @@ use crate::interlude::*;
 use super::manifest::{ManifestPage, TypeRenderer};
 
 pub trait MetaFactory<M> {
-    fn build_meta(&self, key: TypeKey) -> Result<M>;
+    fn build_meta(&self, key: TypeKey) -> M;
 }
 
 pub struct MetasPageBuilder {
@@ -31,7 +31,7 @@ impl MetasPageBuilder {
     }
 }
 impl MetasPageBuilder {
-    pub fn build<M>(self) -> Result<ManifestPage<M>>
+    pub fn build<M>(self) -> ManifestPage<M>
     where
         M: TypeRenderer,
         Self: MetaFactory<M>,
@@ -48,12 +48,12 @@ impl MetasPageBuilder {
                 if map.contains_key(&key) {
                     continue;
                 }
-                map.insert(key, self.build_meta(key)?);
+                map.insert(key, self.build_meta(key));
             } else {
                 break;
             }
         }
 
-        Ok(map.into())
+        map.into()
     }
 }

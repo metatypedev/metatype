@@ -10,7 +10,7 @@ use indexmap::IndexSet;
 use typegraph::{conv::TypeKey, FunctionType, TypeNodeExt as _, Wrap as _};
 
 /// get the types that could be referenced in the GraphQL queries
-pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<TypeKey, String>> {
+pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
     let mut res: IndexMap<TypeKey, _> = Default::default();
 
     // top level input types for variables
@@ -19,7 +19,7 @@ pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<TypeKey, String>> {
         let props = inp_type.properties();
         res.reserve(props.len());
         for prop in props.values() {
-            let gql_ty = get_gql_type(&prop.type_, prop.as_id, false)?;
+            let gql_ty = get_gql_type(&prop.type_, prop.as_id, false);
             res.insert(prop.type_.key(), gql_ty);
         }
     }
@@ -29,8 +29,8 @@ pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<TypeKey, String>> {
         match ty {
             Type::Union(ty) => {
                 for variant in ty.variants() {
-                    if variant.is_composite()? {
-                        res.insert(variant.key(), get_gql_type(&variant, false, false)?);
+                    if variant.is_composite() {
+                        res.insert(variant.key(), get_gql_type(&variant, false, false));
                     }
                 }
             }
@@ -38,7 +38,7 @@ pub fn get_gql_types(tg: &Typegraph) -> Result<IndexMap<TypeKey, String>> {
         }
     }
 
-    Ok(res)
+    res
 }
 
 pub struct RenderManifest {
@@ -69,7 +69,7 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
         let out_key = out.key();
         // return_types.insert(out_name.clone());
 
-        let select_ty = if func.output().is_composite()? {
+        let select_ty = if func.output().is_composite() {
             let _ = node_metas.insert(out_key.clone());
             selections.insert(out_key.clone());
             Some(out_key)
@@ -84,7 +84,7 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
     }
 
     for func in tg.functions.values() {
-        arg_types.insert(func.input().name()?);
+        arg_types.insert(func.input().name());
     }
 
     Ok(RenderManifest {
@@ -104,8 +104,8 @@ pub enum SelectionTy {
     CompositeArgs { arg_ty: TypeKey, select_ty: TypeKey },
 }
 
-pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
-    Ok(match ty {
+pub fn selection_for_field(ty: &Type) -> SelectionTy {
+    match ty {
         Type::Boolean(_) | Type::Float(_) | Type::Integer(_) | Type::String(_) | Type::File(_) => {
             SelectionTy::Scalar
         }
@@ -115,7 +115,7 @@ pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
             } else {
                 None
             };
-            match (arg_ty, selection_for_field(t.output())?) {
+            match (arg_ty, selection_for_field(t.output())) {
                 (None, SelectionTy::Scalar) => SelectionTy::Scalar,
                 (Some(arg_ty), SelectionTy::Scalar) => SelectionTy::ScalarArgs { arg_ty },
                 (None, SelectionTy::Composite { select_ty }) => {
@@ -130,12 +130,12 @@ pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
             }
         }
 
-        Type::Optional(t) => selection_for_field(t.item())?,
-        Type::List(t) => selection_for_field(t.item())?,
+        Type::Optional(t) => selection_for_field(t.item()),
+        Type::List(t) => selection_for_field(t.item()),
         Type::Object(t) => SelectionTy::Composite { select_ty: t.key() },
         Type::Union(t) => {
             let variants = t.variants();
-            match selection_for_field(&variants[0])? {
+            match selection_for_field(&variants[0]) {
                 SelectionTy::Scalar => SelectionTy::Scalar,
                 SelectionTy::Composite { .. } => SelectionTy::Composite { select_ty: t.key() },
                 SelectionTy::CompositeArgs { .. } | SelectionTy::ScalarArgs { .. } => {
@@ -143,5 +143,5 @@ pub fn selection_for_field(ty: &Type) -> Result<SelectionTy> {
                 }
             }
         }
-    })
+    }
 }

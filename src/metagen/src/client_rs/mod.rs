@@ -65,20 +65,20 @@ struct RsClientManifest {
 
 impl RsClientManifest {
     fn new(tg: Arc<Typegraph>) -> anyhow::Result<Self> {
-        let input_types = input_manifest_page(&tg)?;
+        let input_types = input_manifest_page(&tg);
         input_types.cache_references(&());
         let input_types_memo = input_types.get_cached_refs();
 
-        let output_types = output_manifest_page(&tg, true, &input_types)?;
+        let output_types = output_manifest_page(&tg, true, &input_types);
 
         output_types.cache_references(&());
         let output_types_memo = output_types.get_cached_refs();
 
-        let node_metas = MetasPageBuilder::new(tg.clone())?.build()?;
+        let node_metas = MetasPageBuilder::new(tg.clone())?.build();
         node_metas.cache_references(&());
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg)?;
+        let selections = selections::manifest_page(&tg);
         selections.cache_references(&output_types_memo);
         let selections_memo = selections.get_cached_refs();
 
@@ -214,7 +214,7 @@ impl RsClientManifest {
     }
 
     fn render_query_graph<'a>(&self, dest: &mut impl Write) -> anyhow::Result<()> {
-        let gql_types = get_gql_types(&self.tg)?;
+        let gql_types = get_gql_types(&self.tg);
 
         write!(
             dest,
@@ -229,7 +229,7 @@ impl QueryGraph {{
 
         for (key, gql_ty) in gql_types.into_iter() {
             // let ty_name = name_memo.get(&key).unwrap();
-            let ty_name = self.tg.find_type(key).unwrap().name().unwrap();
+            let ty_name = self.tg.find_type(key).unwrap().name();
             write!(
                 dest,
                 r#"

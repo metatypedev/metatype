@@ -97,17 +97,17 @@ pub trait TypeNode {
     fn base(&self) -> &TypeBase;
     fn tag(&self) -> &'static str;
 
-    fn children(&self) -> Result<Vec<Type>> {
-        Ok(vec![])
+    fn children(&self) -> Vec<Type> {
+        vec![]
     }
-    fn edges(&self) -> Result<Vec<Edge>> {
-        Ok(vec![])
+    fn edges(&self) -> Vec<Edge> {
+        vec![]
     }
 }
 
 pub trait TypeNodeExt: TypeNode {
     fn idx(&self) -> u32;
-    fn name(&self) -> Result<Arc<str>>;
+    fn name(&self) -> Arc<str>;
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
     fn key(&self) -> TypeKey;
@@ -124,12 +124,12 @@ where
         self.base().type_idx
     }
 
-    fn name(&self) -> Result<Arc<str>> {
+    fn name(&self) -> Arc<str> {
         self.base()
             .name
             .get()
             .cloned()
-            .ok_or_else(|| eyre!("name not initialized for type {:?}", self.key()))
+            .expect("name not initialized on type")
     }
 
     fn parent(&self) -> Option<Type> {
@@ -179,37 +179,19 @@ impl Type {
         }
     }
 
-    pub fn is_composite(&self) -> Result<bool> {
+    pub fn is_composite(&self) -> bool {
         match self {
             Type::Boolean(_)
             | Type::Integer(_)
             | Type::Float(_)
             | Type::String(_)
-            | Type::File(_) => Ok(false),
-            Type::Object(_) => Ok(true),
-            Type::Optional(t) => t
-                .item
-                .get()
-                .ok_or_else(|| eyre!("item type not initialized on optional"))?
-                .is_composite(),
-            Type::List(t) => t
-                .item
-                .get()
-                .ok_or_else(|| eyre!("item type not initialized on list"))?
-                .is_composite(),
-            Type::Union(t) => {
-                let variants = t
-                    .variants
-                    .get()
-                    .ok_or_else(|| eyre!("variants not initialized on union"))?;
-                for v in variants.iter() {
-                    if v.is_composite()? {
-                        return Ok(true);
-                    }
-                }
-                Ok(false)
-            }
-            Type::Function(_) => bail!("function type isn't composite or scalar"),
+            | Type::File(_) => false,
+            Type::Object(_) => true,
+            Type::Optional(t) => t.item().is_composite(),
+            Type::List(t) => t.item().is_composite(),
+            Type::Union(t) => t.variants().iter().any(|v| v.is_composite()),
+            // ??
+            Type::Function(t) => t.output().is_composite(),
         }
     }
 }

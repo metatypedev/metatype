@@ -34,13 +34,12 @@ impl TypeNode for Arc<UnionType> {
         }
     }
 
-    fn children(&self) -> Result<Vec<Type>> {
-        Ok(self.variants().to_vec())
+    fn children(&self) -> Vec<Type> {
+        self.variants().to_vec()
     }
 
-    fn edges(&self) -> Result<Vec<Edge>> {
-        Ok(self
-            .variants()
+    fn edges(&self) -> Vec<Edge> {
+        self.variants()
             .iter()
             .enumerate()
             .map(|(v, t)| Edge {
@@ -48,7 +47,7 @@ impl TypeNode for Arc<UnionType> {
                 to: t.clone(),
                 kind: EdgeKind::UnionVariant(v),
             })
-            .collect())
+            .collect()
     }
 }
 

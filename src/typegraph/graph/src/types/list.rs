@@ -28,16 +28,16 @@ impl TypeNode for Arc<ListType> {
         "list"
     }
 
-    fn children(&self) -> Result<Vec<Type>> {
-        Ok(vec![self.item().clone()])
+    fn children(&self) -> Vec<Type> {
+        vec![self.item().clone()]
     }
 
-    fn edges(&self) -> Result<Vec<Edge>> {
-        Ok(vec![Edge {
+    fn edges(&self) -> Vec<Edge> {
+        vec![Edge {
             from: WeakType::List(Arc::downgrade(self)),
             to: self.item().clone(),
             kind: EdgeKind::ListItem,
-        }])
+        }]
     }
 }
 

@@ -60,15 +60,12 @@ impl TypeNode for Arc<FunctionType> {
         "function"
     }
 
-    fn children(&self) -> Result<Vec<Type>> {
-        Ok(vec![
-            Type::Object(self.input().clone()),
-            self.output().clone(),
-        ])
+    fn children(&self) -> Vec<Type> {
+        vec![Type::Object(self.input().clone()), self.output().clone()]
     }
 
-    fn edges(&self) -> Result<Vec<Edge>> {
-        Ok(vec![
+    fn edges(&self) -> Vec<Edge> {
+        vec![
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
                 to: Type::Object(self.input().clone()),
@@ -79,7 +76,7 @@ impl TypeNode for Arc<FunctionType> {
                 to: self.output().clone(),
                 kind: EdgeKind::FunctionOutput,
             },
-        ])
+        ]
     }
 }
 

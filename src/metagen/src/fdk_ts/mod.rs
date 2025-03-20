@@ -101,9 +101,9 @@ impl FdkTypescriptTemplate {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let inp_ty = utils::normalize_type_title(&fun.input().name()?);
-                let out_ty = utils::normalize_type_title(&fun.output().name()?);
-                let type_name: String = utils::normalize_type_title(&fun.name()?);
+                let inp_ty = utils::normalize_type_title(&fun.input().name());
+                let out_ty = utils::normalize_type_title(&fun.output().name());
+                let type_name: String = utils::normalize_type_title(&fun.name());
                 writeln!(
                     &mut fdk_ts,
                     "export type {type_name}Handler = Handler<{inp_ty}, {out_ty}>;"
