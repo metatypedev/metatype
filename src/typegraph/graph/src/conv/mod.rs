@@ -135,7 +135,7 @@ impl Conversion {
                 .conversion_map
                 .direct
                 .into_iter()
-                .map(|item| crate::MapItem::try_from(item))
+                .map(TryFrom::try_from)
                 .collect::<Result<Vec<_>>>()?,
             materializers: conv.materializers,
             runtimes: conv.runtimes,

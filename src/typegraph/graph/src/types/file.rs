@@ -25,9 +25,9 @@ impl TypeNode for Arc<FileType> {
 
 impl FileType {
     pub fn is_plain(&self) -> bool {
-        match (self.min_size, self.max_size, self.mime_types.as_ref()) {
-            (None, None, None) => true,
-            _ => false,
-        }
+        matches!(
+            (self.min_size, self.max_size, self.mime_types.as_ref()),
+            (None, None, None)
+        )
     }
 }

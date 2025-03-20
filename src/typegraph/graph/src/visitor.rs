@@ -234,9 +234,8 @@ impl PathExt for [Edge] {
                 edge.from
                     .upgrade()
                     .ok_or_eyre("failed to upgrade weak ptr")?
-                    .key()
-                    .clone(),
-                edge.to.key().clone(),
+                    .key(),
+                edge.to.key(),
             )) {
                 return Ok(true);
             }

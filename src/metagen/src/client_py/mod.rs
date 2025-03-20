@@ -240,7 +240,8 @@ fn render_data_types(
     name_mapper: Arc<NameMapper>,
 ) -> anyhow::Result<NameMemo> {
     let tg = name_mapper.tg.clone();
-    let mut renderer = TypeRenderer::new(name_mapper.tg.clone(), Arc::new(types::PyTypeRenderer {}));
+    let mut renderer =
+        TypeRenderer::new(name_mapper.tg.clone(), Arc::new(types::PyTypeRenderer {}));
     for &ty_id in &manifest.arg_types {
         _ = renderer.render(&tg.named[&ty_id])?;
     }

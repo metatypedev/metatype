@@ -27,15 +27,15 @@ impl TypeNode for Arc<IntegerType> {
 
 impl IntegerType {
     pub fn is_plain(&self) -> bool {
-        match (
-            self.minimum,
-            self.maximum,
-            self.exclusive_minimum,
-            self.exclusive_maximum,
-            self.multiple_of,
-        ) {
-            (None, None, None, None, None) => true,
-            _ => false,
-        }
+        matches!(
+            (
+                self.minimum,
+                self.maximum,
+                self.exclusive_minimum,
+                self.exclusive_maximum,
+                self.multiple_of,
+            ),
+            (None, None, None, None, None)
+        )
     }
 }

@@ -548,24 +548,15 @@ impl RelativePath {
     }
 
     pub fn is_input(&self) -> bool {
-        match self {
-            Self::Input(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Input(_))
     }
 
     pub fn is_output(&self) -> bool {
-        match self {
-            Self::Output(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::Output(_))
     }
 
     pub fn is_namespace(&self) -> bool {
-        match self {
-            Self::NsObject(_) => true,
-            _ => false,
-        }
+        matches!(self, Self::NsObject(_))
     }
 
     // pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Result<Option<RelativePath>> {

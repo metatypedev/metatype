@@ -222,7 +222,9 @@ pub struct FuncParams {
 
 pub trait Handler {
     fn init_typegraph(params: TypegraphInitParams) -> Result<(), super::Error>;
-    fn serialize_typegraph(params: SerializeParams) -> Result<(String, Vec<Artifact>), super::Error>;
+    fn serialize_typegraph(
+        params: SerializeParams,
+    ) -> Result<(String, Vec<Artifact>), super::Error>;
     fn with_injection(type_id: TypeId, injection: String) -> Result<TypeId, super::Error>;
     fn with_config(type_id: TypeId, config: String) -> Result<TypeId, super::Error>;
     fn refb(name: String, attributes: Option<String>) -> Result<TypeId, super::Error>;
@@ -240,13 +242,22 @@ pub trait Handler {
     fn extend_struct(tpe: TypeId, props: Vec<(String, TypeId)>) -> Result<TypeId, super::Error>;
     fn get_type_repr(id: TypeId) -> Result<String, super::Error>;
     fn funcb(data: TypeFunc) -> Result<TypeId, super::Error>;
-    fn get_transform_data(resolver_input: TypeId, transform_tree: String) -> Result<TransformData, super::Error>;
+    fn get_transform_data(
+        resolver_input: TypeId,
+        transform_tree: String,
+    ) -> Result<TransformData, super::Error>;
     fn register_policy(pol: Policy) -> Result<PolicyId, super::Error>;
     fn with_policy(type_id: TypeId, policy_chain: Vec<PolicySpec>) -> Result<TypeId, super::Error>;
     fn get_public_policy() -> Result<(PolicyId, String), super::Error>;
     fn get_internal_policy() -> Result<(PolicyId, String), super::Error>;
-    fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String), super::Error>;
+    fn register_context_policy(
+        key: String,
+        check: ContextCheck,
+    ) -> Result<(PolicyId, String), super::Error>;
     fn rename_type(tpe: TypeId, new_name: String) -> Result<TypeId, super::Error>;
-    fn expose(fns: Vec<(String, TypeId)>, default_policy: Option<Vec<PolicySpec>>) -> Result<(), super::Error>;
+    fn expose(
+        fns: Vec<(String, TypeId)>,
+        default_policy: Option<Vec<PolicySpec>>,
+    ) -> Result<(), super::Error>;
     fn set_seed(seed: Option<u32>) -> Result<(), super::Error>;
 }

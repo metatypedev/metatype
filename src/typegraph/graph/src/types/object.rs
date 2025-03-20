@@ -124,13 +124,10 @@ impl TypeConversionResult for ObjectTypeConversionResult {
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
 
-            let injection = injections
-                .as_ref()
-                .map(|inj| match inj {
-                    InjectionNode::Parent { children } => children.get(name.as_ref()).cloned(),
-                    _ => None,
-                })
-                .flatten();
+            let injection = injections.as_ref().and_then(|inj| match inj {
+                InjectionNode::Parent { children } => children.get(name.as_ref()).cloned(),
+                _ => None,
+            });
 
             properties.insert(
                 name,

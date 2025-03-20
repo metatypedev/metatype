@@ -27,15 +27,15 @@ impl TypeNode for Arc<StringType> {
 
 impl StringType {
     pub fn is_plain(&self) -> bool {
-        match (
-            self.min_length,
-            self.max_length,
-            self.pattern.as_ref(),
-            self.format.clone(),
-        ) {
-            (None, None, None, None) => true,
-            _ => false,
-        }
+        matches!(
+            (
+                self.min_length,
+                self.max_length,
+                self.pattern.as_ref(),
+                self.format.clone(),
+            ),
+            (None, None, None, None)
+        )
     }
 
     pub fn format_only(&self) -> Option<tg_schema::StringFormat> {
