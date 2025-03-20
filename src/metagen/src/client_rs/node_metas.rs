@@ -214,26 +214,26 @@ impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
     fn build_meta(&self, key: TypeKey) -> Result<RsNodeMeta> {
         let ty = self.tg.find_type(key).unwrap();
         debug_assert_eq!(ty.key(), key);
-        match ty {
+        Ok(match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
             | Type::String(_)
-            | Type::File(_) => Ok(RsNodeMeta::Scalar),
-            Type::Optional(ty) => Ok(self.alias(ty.item()?.key())),
-            Type::List(ty) => Ok(self.alias(ty.item()?.key())),
+            | Type::File(_) => RsNodeMeta::Scalar,
+            Type::Optional(ty) => self.alias(ty.item().key()),
+            Type::List(ty) => self.alias(ty.item().key()),
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
             Type::Object(ty) => self.build_object(ty.clone()),
-        }
+        })
     }
 }
 
 trait RsMetasExt {
     fn alias(&self, key: TypeKey) -> RsNodeMeta;
-    fn build_func(&self, ty: Arc<FunctionType>) -> Result<RsNodeMeta>;
-    fn build_object(&self, ty: Arc<ObjectType>) -> Result<RsNodeMeta>;
-    fn build_union(&self, ty: Arc<UnionType>) -> Result<RsNodeMeta>;
+    fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta;
+    fn build_object(&self, ty: Arc<ObjectType>) -> RsNodeMeta;
+    fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta;
 }
 
 impl RsMetasExt for MetasPageBuilder {
@@ -242,8 +242,8 @@ impl RsMetasExt for MetasPageBuilder {
         RsNodeMeta::Alias { target: key }
     }
 
-    fn build_object(&self, ty: Arc<ObjectType>) -> Result<RsNodeMeta> {
-        let props = ty.properties()?;
+    fn build_object(&self, ty: Arc<ObjectType>) -> RsNodeMeta {
+        let props = ty.properties();
         let props = props
             .iter()
             .map(|(name, prop)| {
@@ -253,39 +253,39 @@ impl RsMetasExt for MetasPageBuilder {
             })
             .collect::<IndexMap<_, _>>();
 
-        Ok(RsNodeMeta::Object(Object {
+        RsNodeMeta::Object(Object {
             props,
-            name: normalize_type_title(&ty.name()?),
-        }))
+            name: normalize_type_title(&ty.name().unwrap()),
+        })
     }
 
-    fn build_union(&self, ty: Arc<UnionType>) -> Result<RsNodeMeta> {
+    fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta {
         let mut variants = IndexMap::new();
-        for variant in ty.variants()?.iter() {
-            if variant.is_composite()? {
+        for variant in ty.variants().iter() {
+            if variant.is_composite().unwrap() {
                 let key = variant.key();
                 self.push(key);
-                variants.insert(variant.name()?, key);
+                variants.insert(variant.name().unwrap(), key);
             }
         }
-        Ok(if !variants.is_empty() {
+        if !variants.is_empty() {
             let name = normalize_type_title(&ty.name().unwrap());
             // TODO named_types???
             RsNodeMeta::Union(Union { variants, name })
         } else {
             RsNodeMeta::Scalar
-        })
+        }
     }
 
-    fn build_func(&self, ty: Arc<FunctionType>) -> Result<RsNodeMeta> {
-        let out_key = ty.output()?.key();
+    fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta {
+        let out_key = ty.output().key();
         self.push(out_key);
 
-        let props = ty.input()?.properties()?;
+        let props = ty.input().properties();
         let props = if !props.is_empty() {
             let mut res = BTreeMap::new();
             for (name, prop) in props.iter() {
-                res.insert(name.clone(), prop.type_.name()?);
+                res.insert(name.clone(), prop.type_.name().unwrap());
             }
             Some(res)
         } else {
@@ -294,11 +294,11 @@ impl RsMetasExt for MetasPageBuilder {
 
         // TODO input_files
 
-        Ok(RsNodeMeta::Function(Function {
+        RsNodeMeta::Function(Function {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
             name: normalize_type_title(&ty.name().unwrap()),
-        }))
+        })
     }
 }

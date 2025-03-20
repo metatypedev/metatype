@@ -170,7 +170,7 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
             }
             Type::File(_) => TsType::builtin("File", name),
             Type::Optional(ty) => {
-                let item_ty = ty.item()?;
+                let item_ty = ty.item();
                 if ty.default_value.is_none() && ty.title().starts_with("optional_") {
                     TsType::Alias {
                         alias: Alias::Optional(item_ty.key()),
@@ -184,7 +184,7 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
                 }
             }
             Type::List(ty) => {
-                let item_ty = ty.item()?;
+                let item_ty = ty.item();
                 if matches!((ty.max_items, ty.min_items), (None, None))
                     && ty.title().starts_with("list_")
                 {
@@ -208,7 +208,7 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
 
             Type::Object(ty) => {
                 let props = ty
-                    .properties()?
+                    .properties()
                     .iter()
                     .map(|(name, prop)| {
                         let ty = prop.type_.key();
@@ -228,7 +228,7 @@ fn get_typespec(ty: &Type) -> Result<TsType> {
 
             Type::Union(ty) => {
                 let variants = ty
-                    .variants()?
+                    .variants()
                     .iter()
                     .map(|variant| variant.key())
                     .collect::<Vec<_>>();
@@ -259,7 +259,7 @@ pub fn manifest_page(tg: &Typegraph) -> Result<ManifestPage<TsType>> {
 
     for (key, ty) in tg.input_types.iter() {
         if let Type::Object(ty) = ty {
-            if ty.properties()?.is_empty() {
+            if ty.properties().is_empty() {
                 continue;
             }
         }

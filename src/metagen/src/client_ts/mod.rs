@@ -233,13 +233,13 @@ export class QueryGraph extends _QueryGraphBase {{
 
             let node_name = ty.name()?;
             let method_name = node_name.to_lower_camel_case();
-            let out_ty_name = self.maps.types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.maps.types.get(&ty.output().key()).unwrap();
 
             let arg_ty = ty
-                .non_empty_input()?
+                .non_empty_input()
                 .map(|ty| self.maps.types.get(&ty.key()))
                 .flatten();
-            let select_ty = self.maps.selections.get(&ty.output()?.key());
+            let select_ty = self.maps.selections.get(&ty.output().key());
 
             let args_row = match (arg_ty, select_ty) {
                 (Some(arg_ty), Some(select_ty)) => {
@@ -252,7 +252,7 @@ export class QueryGraph extends _QueryGraphBase {{
                 (None, None) => "".into(),
             };
 
-            let args_selection = match (ty.non_empty_input()?, select_ty) {
+            let args_selection = match (ty.non_empty_input(), select_ty) {
                 (Some(_), Some(_)) => "[args, select]",
                 (Some(_), None) => "args",
                 (None, Some(_)) => "select",

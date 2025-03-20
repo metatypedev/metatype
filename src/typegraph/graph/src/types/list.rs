@@ -14,15 +14,8 @@ pub struct ListType {
 }
 
 impl ListType {
-    pub fn item(&self) -> Result<&Type> {
-        match self.item.get() {
-            Some(item) => Ok(item),
-            None => bail!(
-                "list item uninitialized: key={:?}; parent_key={:?}",
-                self.base.key,
-                self.base.parent.upgrade().map(|p| p.key())
-            ),
-        }
+    pub fn item(&self) -> &Type {
+        self.item.get().expect("item type uninitialized on list")
     }
 }
 
@@ -36,13 +29,13 @@ impl TypeNode for Arc<ListType> {
     }
 
     fn children(&self) -> Result<Vec<Type>> {
-        Ok(vec![self.item()?.clone()])
+        Ok(vec![self.item().clone()])
     }
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(vec![Edge {
             from: WeakType::List(Arc::downgrade(self)),
-            to: self.item()?.clone(),
+            to: self.item().clone(),
             kind: EdgeKind::ListItem,
         }])
     }

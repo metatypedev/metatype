@@ -149,7 +149,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
             | Type::File(_) => unreachable!("scalars don't get to have selections"),
             Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
             Type::Object(ty) => {
-                let ty_props = ty.properties()?;
+                let ty_props = ty.properties();
                 let mut props = Vec::with_capacity(ty_props.len());
                 for (prop_name, prop) in ty_props {
                     let prop_name = normalize_struct_prop_name(prop_name);
@@ -165,7 +165,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<TsSelecti
                 );
             }
             Type::Union(ty) => {
-                let ty_variants = ty.variants()?;
+                let ty_variants = ty.variants();
                 let mut variants = Vec::with_capacity(ty_variants.len());
                 for variant in ty_variants {
                     if !variant.is_composite()? {

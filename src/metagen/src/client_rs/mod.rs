@@ -264,13 +264,13 @@ impl QueryGraph {{
 
             let node_name = path.join("_");
             let method_name = node_name.to_snek_case();
-            let out_ty_name = self.maps.output_types.get(&ty.output()?.key()).unwrap();
+            let out_ty_name = self.maps.output_types.get(&ty.output().key()).unwrap();
 
             let arg_ty = ty
-                .non_empty_input()?
+                .non_empty_input()
                 .map(|ty| self.maps.input_types.get(&ty.key()).unwrap());
 
-            let select_ty = self.maps.selections.get(&ty.output()?.key());
+            let select_ty = self.maps.selections.get(&ty.output().key());
 
             let (marker_ty, node_ty) = match ty.effect() {
                 EffectType::Read => ("QueryMarker", "QueryNode"),

@@ -14,10 +14,10 @@ pub struct UnionType {
 }
 
 impl UnionType {
-    pub fn variants(&self) -> Result<&Vec<Type>> {
+    pub fn variants(&self) -> &[Type] {
         self.variants
             .get()
-            .ok_or_else(|| eyre!("variants uninitialized on union"))
+            .expect("variants uninitialized on union")
     }
 }
 
@@ -35,12 +35,12 @@ impl TypeNode for Arc<UnionType> {
     }
 
     fn children(&self) -> Result<Vec<Type>> {
-        Ok(self.variants()?.clone())
+        Ok(self.variants().to_vec())
     }
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(self
-            .variants()?
+            .variants()
             .iter()
             .enumerate()
             .map(|(v, t)| Edge {

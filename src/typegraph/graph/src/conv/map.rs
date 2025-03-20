@@ -291,7 +291,7 @@ impl PathSegment {
         match self {
             PathSegment::ObjectProp(key) => match ty {
                 Type::Object(obj) => {
-                    let prop = obj.properties()?.get(key).ok_or_else(|| {
+                    let prop = obj.properties().get(key).ok_or_else(|| {
                         eyre!("cannot apply path segment: property '{}' not found", key)
                     })?;
                     Ok(prop.type_.clone())
@@ -302,14 +302,14 @@ impl PathSegment {
                 ),
             },
             PathSegment::ListItem => match ty {
-                Type::List(list) => Ok(list.item()?.clone()),
+                Type::List(list) => Ok(list.item().clone()),
                 _ => bail!(
                     "cannot apply path segment: expected list type, got {:?}",
                     ty.tag()
                 ),
             },
             PathSegment::OptionalItem => match ty {
-                Type::Optional(opt) => Ok(opt.item()?.clone()),
+                Type::Optional(opt) => Ok(opt.item().clone()),
                 _ => bail!(
                     "cannot apply path segment: expected optional type, got {:?}",
                     ty.tag()
@@ -317,9 +317,15 @@ impl PathSegment {
             },
             PathSegment::UnionVariant(idx) => match ty {
                 Type::Union(union) => Ok(union
-                    .variants()?
+                    .variants()
                     .get(*idx as usize)
-                    .ok_or_else(|| eyre!("variant #{} not found in union; ty={}", idx, ty.idx()))?
+                    .ok_or_else(|| {
+                        eyre!(
+                            "index out of bounds: variant #{} not found in union; ty={}",
+                            idx,
+                            ty.idx()
+                        )
+                    })?
                     .clone()),
                 _ => bail!(
                     "cannot apply path segment: expected union type, got {:?}",

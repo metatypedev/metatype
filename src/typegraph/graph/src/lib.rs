@@ -114,7 +114,6 @@ impl Iterator for RootFnsIter {
                 self.stack.extend(
                     object
                         .properties()
-                        .unwrap() // TODO
                         .iter()
                         .map(|(name, prop)| StackItem {
                             ty: prop.type_.clone(),
@@ -123,7 +122,8 @@ impl Iterator for RootFnsIter {
                                 path.push(name.clone());
                                 path
                             },
-                        }),
+                        })
+                        .rev(),
                 );
                 self.next()
             }

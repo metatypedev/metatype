@@ -33,11 +33,11 @@ pub fn visit_type(
             format!("\"{hint}\"")
         }
         Type::Optional(ty) => {
-            let item_hint = visit_type(tera, memo, ty.item()?, tg)?.hint;
+            let item_hint = visit_type(tera, memo, ty.item(), tg)?.hint;
             format!("Union[{item_hint}, None]")
         }
         Type::List(ty) => {
-            let item_hint = visit_type(tera, memo, ty.item()?, tg)?.hint;
+            let item_hint = visit_type(tera, memo, ty.item(), tg)?.hint;
             format!("List[{item_hint}]")
         }
         Type::Function(_) => "".to_string(),
@@ -64,7 +64,7 @@ fn visit_object(
 
         memo.allocate(hint.clone());
 
-        for (name, prop) in ty.properties()?.iter() {
+        for (name, prop) in ty.properties().iter() {
             let type_repr = visit_type(tera, memo, &prop.type_, tg)?.hint;
             fields_repr.push(format!("{name}: {type_repr}"));
         }
@@ -95,7 +95,7 @@ fn visit_union(
     tg: &Typegraph,
 ) -> anyhow::Result<TypeGenerated> {
     if let Type::Union(ty) = tpe {
-        let variants = ty.variants()?;
+        let variants = ty.variants();
         let mut variants_repr = std::collections::BTreeSet::new();
         for ty in variants.iter() {
             let type_repr = visit_type(tera, memo, ty, tg)?.hint;

@@ -755,7 +755,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
             }
             Type::File(_) => RustType::builtin("super::FileId", name),
             Type::Optional(ty) => {
-                let item_ty = ty.item()?;
+                let item_ty = ty.item();
                 if ty.default_value.is_none() && ty.title().starts_with("optional_") {
                     // no alias -- inline
                     RustType::container(
@@ -774,7 +774,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
                 }
             }
             Type::List(ty) => {
-                let item_ty = ty.item()?;
+                let item_ty = ty.item();
                 if matches!((ty.min_items, ty.max_items), (None, None))
                     && ty.title().starts_with("list_")
                 {
@@ -808,7 +808,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
 
             Type::Object(ty) => {
                 let props = ty
-                    .properties()?
+                    .properties()
                     .iter()
                     .map(|(prop_name, prop)| {
                         let name = normalize_struct_prop_name(prop_name);
@@ -838,7 +838,7 @@ fn get_typespec(ty: &Type, partial: bool) -> Result<RustType> {
 
             Type::Union(ty) => {
                 let variants = ty
-                    .variants()?
+                    .variants()
                     .iter()
                     .map(|variant| {
                         (

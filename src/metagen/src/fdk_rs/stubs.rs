@@ -19,10 +19,10 @@ pub fn gen_stub(
 ) -> anyhow::Result<String> {
     let inp_ty = maps
         .input
-        .get(&fun.input()?.key())
+        .get(&fun.input().key())
         .map(|s| s.as_str())
         .unwrap_or("()");
-    let out_ty = maps.output.get(&fun.output()?.key()).unwrap();
+    let out_ty = maps.output.get(&fun.output().key()).unwrap();
     let title = &fun.name()?;
     let trait_name: String = normalize_type_title(title);
     // FIXME: use hash or other stable id

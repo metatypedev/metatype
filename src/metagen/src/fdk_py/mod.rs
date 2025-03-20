@@ -295,8 +295,8 @@ fn gen_required_objects(
     tg: &Typegraph,
 ) -> anyhow::Result<RequiredObjects> {
     let mut memo = Memo::new();
-    let input = fun.input()?;
-    let output = fun.output()?;
+    let input = fun.input();
+    let output = fun.output();
 
     let input_name = input.base().title.to_pascal_case();
     let output_name = output.base().title.to_pascal_case();

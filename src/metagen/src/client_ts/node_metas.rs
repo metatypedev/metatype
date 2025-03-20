@@ -208,26 +208,26 @@ impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
     fn build_meta(&self, key: TypeKey) -> Result<TsNodeMeta> {
         let ty = self.tg.find_type(key).unwrap();
 
-        match ty {
+        Ok(match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
             | Type::String(_)
-            | Type::File(_) => Ok(TsNodeMeta::Scalar),
-            Type::Optional(ty) => Ok(self.alias(ty.item()?.key())),
-            Type::List(ty) => Ok(self.alias(ty.item()?.key())),
+            | Type::File(_) => TsNodeMeta::Scalar,
+            Type::Optional(ty) => self.alias(ty.item().key()),
+            Type::List(ty) => self.alias(ty.item().key()),
+            Type::Object(ty) => self.build_object(ty.clone()),
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
-            Type::Object(ty) => self.build_object(ty.clone()),
-        }
+        })
     }
 }
 
 trait TsMetasPageBuilderExt {
     fn alias(&self, key: TypeKey) -> TsNodeMeta;
-    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta>;
-    fn build_union(&self, ty: Arc<UnionType>) -> Result<TsNodeMeta>;
-    fn build_func(&self, ty: Arc<FunctionType>) -> Result<TsNodeMeta>;
+    fn build_object(&self, ty: Arc<ObjectType>) -> TsNodeMeta;
+    fn build_union(&self, ty: Arc<UnionType>) -> TsNodeMeta;
+    fn build_func(&self, ty: Arc<FunctionType>) -> TsNodeMeta;
 }
 
 impl TsMetasPageBuilderExt for MetasPageBuilder {
@@ -236,8 +236,8 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         TsNodeMeta::Alias { target: key }
     }
 
-    fn build_object(&self, ty: Arc<ObjectType>) -> Result<TsNodeMeta> {
-        let props = ty.properties()?;
+    fn build_object(&self, ty: Arc<ObjectType>) -> TsNodeMeta {
+        let props = ty.properties();
         let props = props
             .iter()
             .map(|(name, prop)| {
@@ -247,15 +247,15 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
             })
             .collect::<IndexMap<_, _>>();
 
-        Ok(TsNodeMeta::Object(Object {
+        TsNodeMeta::Object(Object {
             props,
             name: normalize_type_title(&ty.name().unwrap()).to_pascal_case(),
-        }))
+        })
     }
 
-    fn build_union(&self, ty: Arc<UnionType>) -> Result<TsNodeMeta> {
+    fn build_union(&self, ty: Arc<UnionType>) -> TsNodeMeta {
         let mut variants = vec![];
-        for variant in ty.variants()?.iter() {
+        for variant in ty.variants().iter() {
             let key = variant.key();
             // if variant.is_composite()? {
             self.push(key);
@@ -264,23 +264,23 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         }
         let variants = variants
             .into_iter()
-            .map(|key| -> Result<_> {
+            .map(|key| {
                 let ty = self.tg.find_type(key).unwrap();
-                Ok((ty.name()?, key))
+                (ty.name().unwrap(), key)
             })
-            .collect::<Result<IndexMap<_, _>>>()?;
+            .collect::<IndexMap<_, _>>();
 
-        Ok(TsNodeMeta::Union(Union {
+        TsNodeMeta::Union(Union {
             name: normalize_type_title(&ty.name().unwrap()),
             variants,
-        }))
+        })
     }
 
-    fn build_func(&self, ty: Arc<FunctionType>) -> Result<TsNodeMeta> {
-        let out_key = ty.output()?.key();
+    fn build_func(&self, ty: Arc<FunctionType>) -> TsNodeMeta {
+        let out_key = ty.output().key();
         self.push(out_key);
 
-        let props = ty.input()?.properties()?;
+        let props = ty.input().properties();
         let props = (!props.is_empty()).then(|| {
             props
                 .iter()
@@ -290,11 +290,11 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
 
         // TODO input_files
 
-        Ok(TsNodeMeta::Function(Function {
+        TsNodeMeta::Function(Function {
             return_ty: out_key,
             argument_fields: props,
             input_files: None,
             name: normalize_type_title(&ty.name().unwrap()),
-        }))
+        })
     }
 }

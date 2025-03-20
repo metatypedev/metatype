@@ -101,14 +101,8 @@ impl FdkTypescriptTemplate {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                // let inp_ty = ty_name_memo
-                //     .get(&fun.input().name())
-                //     .context("input type for function not found")?;
-                // let out_ty = ty_name_memo
-                //     .get(&fun.output().name())
-                //     .context("output type for function not found")?;
-                let inp_ty = utils::normalize_type_title(&fun.input()?.name()?);
-                let out_ty = utils::normalize_type_title(&fun.output()?.name()?);
+                let inp_ty = utils::normalize_type_title(&fun.input().name()?);
+                let out_ty = utils::normalize_type_title(&fun.output().name()?);
                 let type_name: String = utils::normalize_type_title(&fun.name()?);
                 writeln!(
                     &mut fdk_ts,

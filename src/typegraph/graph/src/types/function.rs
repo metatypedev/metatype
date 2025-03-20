@@ -23,25 +23,20 @@ pub struct FunctionType {
 }
 
 impl FunctionType {
-    pub fn input(&self) -> Result<&Arc<ObjectType>> {
-        self.input
-            .get()
-            .ok_or_else(|| eyre!("function input uninitialized; ty={:?}", self.base.key))
+    pub fn input(&self) -> &Arc<ObjectType> {
+        self.input.get().expect("function input uninitialized")
     }
-    // TODO this should be the default
-    pub fn non_empty_input(&self) -> Result<Option<&Arc<ObjectType>>> {
-        let input = self.input()?;
-        Ok(if input.properties()?.is_empty() {
+    pub fn non_empty_input(&self) -> Option<&Arc<ObjectType>> {
+        let input = self.input();
+        if input.properties().is_empty() {
             None
         } else {
             Some(input)
-        })
+        }
     }
 
-    pub fn output(&self) -> Result<&Type> {
-        self.output
-            .get()
-            .ok_or_else(|| eyre!("function output uninitialized; ty={:?}", self.base.key))
+    pub fn output(&self) -> &Type {
+        self.output.get().expect("function output uninitialized")
     }
 
     pub fn effect(&self) -> tg_schema::EffectType {
@@ -67,8 +62,8 @@ impl TypeNode for Arc<FunctionType> {
 
     fn children(&self) -> Result<Vec<Type>> {
         Ok(vec![
-            Type::Object(self.input()?.clone()),
-            self.output()?.clone(),
+            Type::Object(self.input().clone()),
+            self.output().clone(),
         ])
     }
 
@@ -76,12 +71,12 @@ impl TypeNode for Arc<FunctionType> {
         Ok(vec![
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
-                to: Type::Object(self.input()?.clone()),
+                to: Type::Object(self.input().clone()),
                 kind: EdgeKind::FunctionInput,
             },
             Edge {
                 from: WeakType::Function(Arc::downgrade(self)),
-                to: self.output()?.clone(),
+                to: self.output().clone(),
                 kind: EdgeKind::FunctionOutput,
             },
         ])

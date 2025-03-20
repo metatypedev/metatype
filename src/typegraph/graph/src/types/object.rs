@@ -8,13 +8,12 @@ use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{policies::PolicyRef, Arc, Lazy};
-use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ObjectProperty {
     pub type_: Type,
     pub policies: Vec<PolicyRef>,
-    pub injection: Option<InjectionNode>, // TODO
+    pub injection: Option<InjectionNode>,
     pub outjection: Option<()>,
     pub required: bool,
     pub as_id: bool,
@@ -23,22 +22,22 @@ pub struct ObjectProperty {
 #[derive(Debug)]
 pub struct ObjectType {
     pub base: TypeBase,
-    pub(crate) properties: Lazy<HashMap<Arc<str>, ObjectProperty>>,
+    pub(crate) properties: Lazy<IndexMap<Arc<str>, ObjectProperty>>,
 }
 
 impl ObjectType {
-    pub fn properties(&self) -> Result<&HashMap<Arc<str>, ObjectProperty>> {
+    pub fn properties(&self) -> &IndexMap<Arc<str>, ObjectProperty> {
         self.properties
             .get()
-            .ok_or_else(|| eyre!("object properties uninitialized: ty={:?}", self.base.key))
+            .expect("object properties uninitialized")
     }
 
-    pub fn non_empty(self: Arc<Self>) -> Result<Option<Arc<Self>>> {
-        Ok(if self.as_ref().properties()?.is_empty() {
+    pub fn non_empty(self: Arc<Self>) -> Option<Arc<Self>> {
+        if self.as_ref().properties().is_empty() {
             None
         } else {
             Some(self)
-        })
+        }
     }
 }
 
@@ -53,7 +52,7 @@ impl TypeNode for Arc<ObjectType> {
 
     fn children(&self) -> Result<Vec<Type>> {
         Ok(self
-            .properties()?
+            .properties()
             .values()
             .map(|p| p.type_.clone())
             .collect())
@@ -61,7 +60,7 @@ impl TypeNode for Arc<ObjectType> {
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(self
-            .properties()?
+            .properties()
             .iter()
             .map(|(name, prop)| Edge {
                 from: WeakType::Object(Arc::downgrade(self)),
@@ -109,7 +108,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
     }
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
-        let mut properties = HashMap::with_capacity(self.properties.len());
+        let mut properties = IndexMap::with_capacity(self.properties.len());
 
         let mut results = Vec::new();
 

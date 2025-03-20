@@ -57,10 +57,8 @@ pub fn filter_stubbed_funcs(
 
 pub fn get_gql_type(ty: &Type, as_id: bool, optional: bool) -> Result<String> {
     let name = match ty {
-        Type::Optional(ty) => return get_gql_type(ty.item()?, false, true),
-        Type::List(ty) => {
-            get_gql_type(ty.item()?, false, true).map(|item| format!("[{}]", item))?
-        }
+        Type::Optional(ty) => return get_gql_type(ty.item(), false, true),
+        Type::List(ty) => get_gql_type(ty.item(), false, true).map(|item| format!("[{}]", item))?,
         Type::String(_ty) => {
             if as_id {
                 "ID".into()

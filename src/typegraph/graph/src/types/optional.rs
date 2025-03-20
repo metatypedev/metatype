@@ -13,10 +13,10 @@ pub struct OptionalType {
 }
 
 impl OptionalType {
-    pub fn item(&self) -> Result<&Type> {
+    pub fn item(&self) -> &Type {
         self.item
             .get()
-            .ok_or_else(|| eyre!("item type uninitialized on optional"))
+            .expect("item type uninitialized on optional")
     }
 }
 
@@ -30,13 +30,13 @@ impl TypeNode for Arc<OptionalType> {
     }
 
     fn children(&self) -> Result<Vec<Type>> {
-        Ok(vec![self.item()?.clone()])
+        Ok(vec![self.item().clone()])
     }
 
     fn edges(&self) -> Result<Vec<Edge>> {
         Ok(vec![Edge {
             from: WeakType::Optional(Arc::downgrade(self)),
-            to: self.item()?.clone(),
+            to: self.item().clone(),
             kind: EdgeKind::OptionalItem,
         }])
     }

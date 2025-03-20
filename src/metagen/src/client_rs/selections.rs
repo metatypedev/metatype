@@ -185,7 +185,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
             Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
             Type::Object(ty) => {
                 let props = ty
-                    .properties()?
+                    .properties()
                     .iter()
                     .map(|(prop_name, prop)| {
                         (
@@ -205,7 +205,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> Result<ManifestPage<RustSelec
             }
             Type::Union(ty) => {
                 let mut variants = vec![];
-                for variant in ty.variants()? {
+                for variant in ty.variants() {
                     if !variant.is_composite()? {
                         continue;
                     }
