@@ -5,6 +5,7 @@
 // SPDX-Lice
 
 use crate::naming::NamingEngine;
+use crate::policies::{convert_policy, convert_policy_spec, Policy, PolicySpec};
 use crate::runtimes::{convert_materializer, Materializer};
 use crate::types::{BooleanType, TypeNodeExt, WeakType};
 use crate::{
@@ -36,8 +37,9 @@ pub struct Conversion {
     output_types: IndexMap<TypeKey, Type>,
     functions: IndexMap<u32, Arc<FunctionType>>,
     namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
-    materializers: Vec<Materializer>,
     runtimes: Vec<Arc<TGRuntime>>,
+    materializers: Vec<Materializer>,
+    policies: Vec<Policy>,
 }
 
 pub trait TypeConversionResult {
@@ -66,10 +68,16 @@ impl TypeConversionResult for FinalizedTypeConversion {
 impl Conversion {
     fn new(schema: Arc<tg_schema::Typegraph>) -> Conversion {
         let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();
-        let materializers = schema
+        let materializers: Vec<_> = schema
             .materializers
             .iter()
-            .map(|mat| convert_materializer(&runtimes, mat.clone()))
+            .map(|mat| convert_materializer(&runtimes, &mat))
+            .collect();
+
+        let policies = schema
+            .policies
+            .iter()
+            .map(|pol| convert_policy(&materializers, pol))
             .collect();
 
         Conversion {
@@ -81,6 +89,7 @@ impl Conversion {
             namespace_objects: Default::default(),
             materializers,
             runtimes,
+            policies,
         }
     }
 
@@ -139,8 +148,8 @@ impl Conversion {
                 .into_iter()
                 .map(TryFrom::try_from)
                 .collect::<Result<Vec<_>>>()?,
-            materializers: conv.materializers,
             runtimes: conv.runtimes,
+            materializers: conv.materializers,
         })
     }
 
@@ -357,5 +366,12 @@ impl Conversion {
             description: base.description.clone(),
             injection: rpath.get_injection(schema),
         }
+    }
+
+    pub fn convert_policies(&self, policies: &[tg_schema::PolicyIndices]) -> Vec<PolicySpec> {
+        policies
+            .iter()
+            .map(|pol| convert_policy_spec(&self.policies, pol))
+            .collect()
     }
 }

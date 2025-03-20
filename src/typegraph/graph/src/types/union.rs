@@ -76,7 +76,7 @@ pub(crate) fn convert_union(
 
 pub struct UnionTypeConversionResult {
     ty: Arc<UnionType>,
-    variants: Vec<u32>, // TODO reference
+    variants: Vec<u32>,
     rpath: RelativePath,
 }
 

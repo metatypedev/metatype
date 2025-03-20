@@ -11,16 +11,18 @@ pub struct MaterializerNode {
     pub name: String,
     pub runtime: Runtime,
     pub effect: Effect,
+    // TODO this should be a more specific type
+    // - as there might be some references to other materializers
     pub data: IndexMap<String, Value>,
 }
 
-pub fn convert_materializer(runtimes: &[Runtime], mat: tg_schema::Materializer) -> Materializer {
+pub fn convert_materializer(runtimes: &[Runtime], mat: &tg_schema::Materializer) -> Materializer {
     let runtime = runtimes[mat.runtime as usize].clone();
     Arc::new(MaterializerNode {
-        name: mat.name,
+        name: mat.name.clone(),
         runtime,
-        effect: mat.effect,
-        data: mat.data,
+        effect: mat.effect.clone(),
+        data: mat.data.clone(),
     })
 }
 

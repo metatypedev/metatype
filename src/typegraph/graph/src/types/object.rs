@@ -6,13 +6,13 @@ use tg_schema::InjectionNode;
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
+use crate::policies::PolicySpec;
 use crate::{interlude::*, TypeNodeExt as _};
-use crate::{policies::PolicyRef, Arc, Lazy};
 
 #[derive(Debug)]
 pub struct ObjectProperty {
     pub type_: Type,
-    pub policies: Vec<PolicyRef>,
+    pub policies: Vec<PolicySpec>,
     pub injection: Option<InjectionNode>,
     pub outjection: Option<()>,
     pub required: bool,
@@ -89,15 +89,17 @@ pub(crate) fn convert_object(
         required: data.required.clone(),
         id: data.id.clone(),
         rpath,
+        policies: data.policies.clone(),
     })
 }
 
 pub struct ObjectTypeConversionResult {
     ty: Arc<ObjectType>,
-    properties: IndexMap<String, u32>, // TODO reference
+    properties: IndexMap<String, u32>,
     required: Vec<String>,
     id: Vec<String>,
     rpath: RelativePath,
+    policies: IndexMap<String, Vec<tg_schema::PolicyIndices>>,
 }
 
 impl TypeConversionResult for ObjectTypeConversionResult {
@@ -129,11 +131,17 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                 _ => None,
             });
 
+            let policies = self
+                .policies
+                .get(name.as_ref())
+                .map(|pp| conv.convert_policies(pp))
+                .unwrap_or_default();
+
             properties.insert(
                 name,
                 ObjectProperty {
                     type_: res.get_type(),
-                    policies: Default::default(), // TODO
+                    policies,
                     injection,
                     outjection: None, // TODO
                     required,

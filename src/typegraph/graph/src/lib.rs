@@ -65,8 +65,8 @@ pub struct Typegraph {
     pub namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
     pub named: HashMap<Arc<str>, Type>,
     pub conversion_map: Vec<MapItem>,
-    pub materializers: Vec<Materializer>,
     pub runtimes: Vec<Arc<TGRuntime>>,
+    pub materializers: Vec<Materializer>,
 }
 
 impl Typegraph {
