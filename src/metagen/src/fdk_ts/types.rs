@@ -209,8 +209,8 @@ fn get_typespec(ty: &Type) -> TsType {
                     .properties()
                     .iter()
                     .map(|(name, prop)| {
-                        let ty = prop.type_.key();
-                        let optional = matches!(prop.type_, Type::Optional(_));
+                        let ty = prop.ty.key();
+                        let optional = matches!(prop.ty, Type::Optional(_));
                         ObjectProp {
                             name: normalize_struct_prop_name(&name[..]),
                             ty,

@@ -190,7 +190,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
                     .map(|(prop_name, prop)| {
                         (
                             normalize_struct_prop_name(prop_name),
-                            selection_for_field(&prop.type_),
+                            selection_for_field(&prop.ty),
                         )
                         //
                     })

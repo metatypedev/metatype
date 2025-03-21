@@ -248,7 +248,7 @@ impl RsMetasExt for MetasPageBuilder {
         let props = props
             .iter()
             .map(|(name, prop)| {
-                let prop_key = prop.type_.key();
+                let prop_key = prop.ty.key();
                 self.push(prop_key);
                 (name.clone(), prop_key)
             })
@@ -285,7 +285,7 @@ impl RsMetasExt for MetasPageBuilder {
         let props = if !props.is_empty() {
             let mut res = BTreeMap::new();
             for (name, prop) in props.iter() {
-                res.insert(name.clone(), prop.type_.name());
+                res.insert(name.clone(), prop.ty.name());
             }
             Some(res)
         } else {

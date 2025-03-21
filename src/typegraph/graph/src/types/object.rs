@@ -11,7 +11,7 @@ use crate::{interlude::*, TypeNodeExt as _};
 
 #[derive(Debug)]
 pub struct ObjectProperty {
-    pub type_: Type,
+    pub ty: Type,
     pub policies: Vec<PolicySpec>,
     pub injection: Option<InjectionNode>,
     pub outjection: Option<()>,
@@ -51,10 +51,7 @@ impl TypeNode for Arc<ObjectType> {
     }
 
     fn children(&self) -> Vec<Type> {
-        self.properties()
-            .values()
-            .map(|p| p.type_.clone())
-            .collect()
+        self.properties().values().map(|p| p.ty.clone()).collect()
     }
 
     fn edges(&self) -> Vec<Edge> {
@@ -62,7 +59,7 @@ impl TypeNode for Arc<ObjectType> {
             .iter()
             .map(|(name, prop)| Edge {
                 from: WeakType::Object(Arc::downgrade(self)),
-                to: prop.type_.clone(),
+                to: prop.ty.clone(),
                 kind: EdgeKind::ObjectProperty(name.clone()),
             })
             .collect()
@@ -139,7 +136,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
             properties.insert(
                 name,
                 ObjectProperty {
-                    type_: res.get_type(),
+                    ty: res.get_type(),
                     policies,
                     injection,
                     outjection: None, // TODO

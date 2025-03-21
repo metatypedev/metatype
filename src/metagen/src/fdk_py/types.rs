@@ -65,7 +65,7 @@ fn visit_object(
         memo.allocate(hint.clone());
 
         for (name, prop) in ty.properties().iter() {
-            let type_repr = visit_type(tera, memo, &prop.type_, tg)?.hint;
+            let type_repr = visit_type(tera, memo, &prop.ty, tg)?.hint;
             fields_repr.push(format!("{name}: {type_repr}"));
         }
 

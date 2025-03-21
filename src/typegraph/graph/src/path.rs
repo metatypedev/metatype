@@ -40,7 +40,7 @@ impl PathSegment {
                     let prop = obj.properties().get(key).ok_or_else(|| {
                         eyre!("cannot apply path segment: property '{}' not found", key)
                     })?;
-                    Ok(prop.type_.clone())
+                    Ok(prop.ty.clone())
                 }
                 _ => bail!(
                     "cannot apply path segment: expected object type, got {:?}",

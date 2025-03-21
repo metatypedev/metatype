@@ -81,7 +81,7 @@ impl Conversion {
 
         Conversion {
             schema: schema.clone(),
-            conversion_map: ConversionMap::new(schema),
+            conversion_map: ConversionMap::new(&schema),
             input_types: Default::default(),
             output_types: Default::default(),
             functions: Default::default(),

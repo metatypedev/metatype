@@ -153,7 +153,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
                 let mut props = Vec::with_capacity(ty_props.len());
                 for (prop_name, prop) in ty_props {
                     let prop_name = normalize_struct_prop_name(prop_name);
-                    let select_ty = selection_for_field(&prop.type_);
+                    let select_ty = selection_for_field(&prop.ty);
                     props.push((prop_name, select_ty));
                 }
                 map.insert(

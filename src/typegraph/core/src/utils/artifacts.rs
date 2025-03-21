@@ -25,7 +25,6 @@ impl ArtifactsExt for FsContext {
         deps: Vec<PathBuf>,
     ) -> Result<Vec<PathBuf>> {
         let mut registered_deps = vec![];
-        eprintln!("registering artifact: {:?}; deps={:?}", entry, deps);
         self.register_artifact(tg, entry)?;
         for dep in deps {
             let artifacts = self.list_files(&[dep.to_string_lossy().to_string()]);

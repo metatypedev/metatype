@@ -334,9 +334,9 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                         StructProp {
                             name,
                             rename,
-                            ty: prop.type_.key(),
-                            optional: matches!(&prop.type_, Type::Optional(_)),
-                            boxed: prop.type_.is_composite(), // TODO is_cyclic
+                            ty: prop.ty.key(),
+                            optional: matches!(&prop.ty, Type::Optional(_)),
+                            boxed: prop.ty.is_composite(), // TODO is_cyclic
                         }
                     })
                     .collect();

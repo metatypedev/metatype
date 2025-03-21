@@ -6,7 +6,7 @@ use crate::{Type, TypeNodeExt as _};
 use super::dedup::DuplicationKey;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct TypeKey(pub u32, pub u32); // Type idx and an ordinal number
+pub struct TypeKey(pub u32, pub u32); // Type idx and an variant id (duplicate id)
 
 impl std::fmt::Debug for TypeKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

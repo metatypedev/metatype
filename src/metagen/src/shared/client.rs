@@ -19,8 +19,8 @@ pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
         let props = inp_type.properties();
         res.reserve(props.len());
         for prop in props.values() {
-            let gql_ty = get_gql_type(&prop.type_, prop.as_id, false);
-            res.insert(prop.type_.key(), gql_ty);
+            let gql_ty = get_gql_type(&prop.ty, prop.as_id, false);
+            res.insert(prop.ty.key(), gql_ty);
         }
     }
 

@@ -124,7 +124,7 @@ impl Iterator for RootFnsIter {
                         .properties()
                         .iter()
                         .map(|(name, prop)| StackItem {
-                            ty: prop.type_.clone(),
+                            ty: prop.ty.clone(),
                             path: {
                                 let mut path = item.path.clone();
                                 path.push(name.clone());

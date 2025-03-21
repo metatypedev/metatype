@@ -139,9 +139,9 @@ where
         Type::Object(inner) => {
             let mut accumulator = Some(accumulator);
             for (key, prop) in inner.properties() {
-                path.push(edge(&prop.type_, EdgeKind::ObjectProperty(key.clone())));
+                path.push(edge(&prop.ty, EdgeKind::ObjectProperty(key.clone())));
                 let output = traverse_types_with_path(
-                    prop.type_.clone(),
+                    prop.ty.clone(),
                     path,
                     relative_path.push(PathSegment::ObjectProp(key.clone()))?,
                     accumulator.take().unwrap(),

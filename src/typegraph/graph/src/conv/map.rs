@@ -77,18 +77,16 @@ impl MapItem {
 
 #[derive(Debug)]
 pub struct ConversionMap {
-    // pub schema: Arc<tg_schema::Typegraph>,
     pub direct: Vec<MapItem>,
     pub reverse: HashMap<RelativePath, TypeKey>,
 }
 
 impl ConversionMap {
-    pub fn new(schema: Arc<tg_schema::Typegraph>) -> Self {
+    pub fn new(schema: &tg_schema::Typegraph) -> Self {
         let type_count = schema.types.len();
         let mut direct = Vec::with_capacity(type_count);
         direct.resize_with(type_count, || MapItem::Unset);
         Self {
-            // schema,
             direct,
             reverse: Default::default(),
         }

@@ -242,7 +242,7 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         let props = props
             .iter()
             .map(|(name, prop)| {
-                let key = prop.type_.key();
+                let key = prop.ty.key();
                 self.push(key);
                 (name.clone(), key)
             })
@@ -279,7 +279,7 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         let props = (!props.is_empty()).then(|| {
             props
                 .iter()
-                .map(|(name, prop)| (name.clone(), prop.type_.key()))
+                .map(|(name, prop)| (name.clone(), prop.ty.key()))
                 .collect::<IndexMap<_, _>>()
         });
 
