@@ -56,37 +56,44 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn RootUploadFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("file".into(), "FileBf9b7()".into()),
-                    (
-                        "path".into(),
-                        "RootUploadFnInputPathString25e51Optional()".into(),
-                    ),
-                ]
-                .into(),
-            ),
-            ..RootUploadFnOutput()()
-        }
-    }
     pub fn RootUploadManyFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
                     (
-                        "prefix".into(),
-                        "RootUploadManyFnInputPrefixString25e51Optional()".into(),
+                        "files".into(),
+                        "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
                     ),
                     (
-                        "files".into(),
-                        "RootUploadManyFnInputFilesFileBf9b7List()".into(),
+                        "prefix".into(),
+                        "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
                     ),
                 ]
                 .into(),
             ),
-            ..RootUploadFnOutput()()
+            input_files: Some(PathToInputFiles(&[TypePath(&[
+                TypePathSegment::ObjectProp("files"),
+                TypePathSegment::ArrayItem,
+            ])])),
+            ..scalar()
+        }
+    }
+    pub fn RootUploadFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("file".into(), "file_bf9b7".into()),
+                    (
+                        "path".into(),
+                        "root_upload_fn_input_path_string_25e51_optional".into(),
+                    ),
+                ]
+                .into(),
+            ),
+            input_files: Some(PathToInputFiles(&[TypePath(&[
+                TypePathSegment::ObjectProp("file"),
+            ])])),
+            ..scalar()
         }
     }
 }
@@ -95,7 +102,65 @@ impl QueryGraph {
     pub fn new(addr: Url) -> Self {
         Self {
             addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([].into()),
+            ty_to_gql_ty_map: std::sync::Arc::new(
+                [
+                    ("file_bf9b7".into(), "file_bf9b7!".into()),
+                    (
+                        "root_upload_fn_input_path_string_25e51_optional".into(),
+                        "String".into(),
+                    ),
+                    (
+                        "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
+                        "String".into(),
+                    ),
+                    (
+                        "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
+                        "[file_bf9b7!]!".into(),
+                    ),
+                ]
+                .into(),
+            ),
         }
+    }
+
+    pub fn upload(
+        &self,
+        args: impl Into<NodeArgs<RootUploadFnInput>>,
+    ) -> MutationNode<RootUploadFnOutput> {
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "upload".into(),
+                    SelectionErased::ScalarArgs(args.into().into()),
+                )]
+                .into(),
+            ),
+            &[("upload".into(), node_metas::RootUploadFn as NodeMetaFn)].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        MutationNode(nodes.into_iter().next().unwrap(), PhantomData)
+    }
+    pub fn upload_many(
+        &self,
+        args: impl Into<NodeArgs<RootUploadManyFnInput>>,
+    ) -> MutationNode<RootUploadFnOutput> {
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "uploadMany".into(),
+                    SelectionErased::ScalarArgs(args.into().into()),
+                )]
+                .into(),
+            ),
+            &[(
+                "uploadMany".into(),
+                node_metas::RootUploadManyFn as NodeMetaFn,
+            )]
+            .into(),
+            "$q".into(),
+        )
+        .unwrap();
+        MutationNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
 }

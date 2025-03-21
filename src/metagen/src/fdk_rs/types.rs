@@ -565,7 +565,7 @@ impl TypeRenderer for RustType {
                             let inner_name = if *boxed {
                                 format!("Box<{}>", inner_name)
                             } else {
-                                inner_name.into()
+                                inner_name
                             };
                             writeln!(
                                 out,
@@ -620,16 +620,11 @@ impl TypeRenderer for RustType {
                 } else {
                     name.clone()
                 };
-                RustType::render_derive(out, &derive)?;
+                RustType::render_derive(out, derive)?;
                 writeln!(out, "#[serde(untagged)]")?;
                 writeln!(out, "pub enum {} {{", name)?;
                 for (var_name, ty) in variants.iter() {
-                    writeln!(
-                        out,
-                        "    {}({}),",
-                        var_name,
-                        page.get_ref(&ty, ctx).unwrap()
-                    )?;
+                    writeln!(out, "    {}({}),", var_name, page.get_ref(ty, ctx).unwrap())?;
                 }
                 writeln!(out, "}}")
             }
@@ -683,7 +678,7 @@ impl RustType {
         let inner_name = if boxed {
             format!("Box<{}>", inner_name)
         } else {
-            inner_name.into()
+            inner_name
         };
         format!("{}<{}>", name, inner_name)
     }
@@ -758,14 +753,14 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     // no alias -- inline
                     RustType::container(
                         "Option",
-                        item_ty.key().clone(),
+                        item_ty.key(),
                         item_ty.is_composite(), // TODO is_cyclic
                         None,
                     )
                 } else {
                     RustType::container(
                         "Option",
-                        item_ty.key().clone(),
+                        item_ty.key(),
                         item_ty.is_composite(), // TODO is_cyclic
                         name,
                     )
@@ -785,7 +780,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     };
                     RustType::container(
                         container_name,
-                        item_ty.key().clone(),
+                        item_ty.key(),
                         item_ty.is_composite(), // TODO is_cyclic
                         None,
                     )
@@ -797,7 +792,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     };
                     RustType::container(
                         container_name,
-                        item_ty.key().clone(),
+                        item_ty.key(),
                         item_ty.is_composite(), // TODO is_cyclic
                         name,
                     )
@@ -818,7 +813,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                         StructProp {
                             name,
                             rename,
-                            ty: prop.type_.key().clone(),
+                            ty: prop.type_.key(),
                             optional: matches!(&prop.type_, Type::Optional(_)),
                         }
                     })
@@ -838,7 +833,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                 let variants = ty
                     .variants()
                     .iter()
-                    .map(|variant| (variant.name().to_pascal_case(), variant.key().clone()))
+                    .map(|variant| (variant.name().to_pascal_case(), variant.key()))
                     .collect();
                 RustType::Enum {
                     name: normalize_type_title(&ty.name()),
@@ -873,7 +868,7 @@ pub fn input_manifest_page(tg: &Typegraph) -> ManifestPage<RustType> {
 
     for (key, ty) in tg.input_types.iter() {
         let typespec = get_typespec(ty, false);
-        map.insert(key.clone(), typespec);
+        map.insert(*key, typespec);
     }
 
     let res: ManifestPage<RustType> = map.into();
@@ -898,12 +893,12 @@ pub fn output_manifest_page(
                     name: inp_ref.clone(),
                 };
                 let typespec = RustType::Alias { alias, name: None };
-                map.insert(key.clone(), typespec);
+                map.insert(*key, typespec);
                 continue;
             }
         }
         let typespec = get_typespec(ty, partial);
-        map.insert(key.clone(), typespec);
+        map.insert(*key, typespec);
     }
 
     let res = ManifestPage::from(map);

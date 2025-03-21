@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::conv::dedup::DuplicationKey;
 use crate::conv::key::TypeKeyEx;
 use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
@@ -478,5 +481,34 @@ impl RelativePath {
                 bail!("unexpected segment pushed on function {:?}", segment);
             }
         })
+    }
+
+    pub(crate) fn pop(&self) -> Self {
+        match self {
+            Self::NsObject(path) => {
+                let mut path = path.clone();
+                path.pop();
+                Self::NsObject(path)
+            }
+            Self::Input(k) => {
+                let mut path = k.path.clone();
+                path.pop();
+                Self::Input(ValueTypePath {
+                    owner: k.owner.clone(),
+                    path,
+                    branch: ValueTypeKind::Input,
+                })
+            }
+            Self::Output(k) => {
+                let mut path = k.path.clone();
+                path.pop();
+                Self::Output(ValueTypePath {
+                    owner: k.owner.clone(),
+                    path,
+                    branch: ValueTypeKind::Output,
+                })
+            }
+            Self::Function(_) => self.clone(),
+        }
     }
 }

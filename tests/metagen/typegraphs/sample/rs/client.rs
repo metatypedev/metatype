@@ -26,6 +26,85 @@ impl QueryGraph {
 //
 // --- --- Typegraph types --- --- //
 //
+use types::*;
+pub mod types {
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootGetUserFnInput {
+    }
+    pub type UserIdStringUuid = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post {
+        pub id: UserIdStringUuid,
+        pub slug: String,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInput {
+        pub id: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInput {
+        pub input: i64,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct UserPartial {
+        pub id: Option<UserIdStringUuid>,
+        pub email: Option<UserEmailStringEmail>,
+        pub posts: Option<UserPostsPostList>,
+    }
+    pub type UserEmailStringEmail = String;
+    pub type UserPostsPostList = Vec<Box<PostPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PostPartial {
+        pub id: Option<UserIdStringUuid>,
+        pub slug: Option<String>,
+        pub title: Option<String>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootScalarUnionFnOutput {
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootCompositeUnionFnOutputPartial {
+        Post(PostPartial),
+        User(UserPartial),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[serde(untagged)]
+    pub enum RootMixedUnionFnOutputPartial {
+        Post(PostPartial),
+        User(UserPartial),
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputPartial {
+        pub scalar: Option<i64>,
+        pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
+        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
+        pub value: Option<i64>,
+        pub nested: Option<RootNestedCompositeFnOutputCompositeStructNestedStructPartial>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
+        pub inner: Option<i64>,
+    }
+    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputListStructPartial {
+        pub value: Option<i64>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInputPartial {
+        pub input: Option<i64>,
+    }
+}
 
 #[allow(non_snake_case)]
 mod node_metas {
@@ -253,85 +332,6 @@ mod node_metas {
         }
     }
 
-}
-use types::*;
-pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput {
-    }
-    pub type UserIdStringUuid = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post {
-        pub id: UserIdStringUuid,
-        pub slug: String,
-        pub title: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInput {
-        pub input: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct UserPartial {
-        pub id: Option<UserIdStringUuid>,
-        pub email: Option<UserEmailStringEmail>,
-        pub posts: Option<UserPostsPostList>,
-    }
-    pub type UserEmailStringEmail = String;
-    pub type UserPostsPostList = Vec<Box<PostPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct PostPartial {
-        pub id: Option<UserIdStringUuid>,
-        pub slug: Option<String>,
-        pub title: Option<String>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootScalarUnionFnOutput {
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootCompositeUnionFnOutputPartial {
-        Post(PostPartial),
-        User(UserPartial),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum RootMixedUnionFnOutputPartial {
-        Post(PostPartial),
-        User(UserPartial),
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputPartial {
-        pub scalar: Option<i64>,
-        pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
-        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
-        pub value: Option<i64>,
-        pub nested: Option<RootNestedCompositeFnOutputCompositeStructNestedStructPartial>,
-    }
-    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
-        pub inner: Option<i64>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputListStructPartial {
-        pub value: Option<i64>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInputPartial {
-        pub input: Option<i64>,
-    }
 }
 #[derive(Default, Debug)]
 pub struct UserSelections<ATy = NoAlias> {
@@ -570,4 +570,3 @@ impl QueryGraph {
         }
     }
 }
-

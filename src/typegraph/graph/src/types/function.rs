@@ -132,13 +132,6 @@ impl TypeConversionResult for FunctionTypeConversionResult {
             self.input_idx,
             RelativePath::input(owner_fn.clone(), vec![]),
         )?;
-
-        let mut output_res = conv.convert_type(
-            weak.clone(),
-            self.output_idx,
-            RelativePath::output(owner_fn.clone(), vec![]),
-        )?;
-
         match &input_res.get_type() {
             Type::Object(input) => {
                 self.ty.input.set(input.clone()).map_err(|_| {
@@ -150,15 +143,19 @@ impl TypeConversionResult for FunctionTypeConversionResult {
             }
             _ => bail!("expected object type for function input"),
         }
+        input_res.finalize(conv)?;
+
+        let mut output_res = conv.convert_type(
+            weak.clone(),
+            self.output_idx,
+            RelativePath::output(owner_fn.clone(), vec![]),
+        )?;
         self.ty.output.set(output_res.get_type()).map_err(|_| {
             eyre!(
                 "OnceLock: cannot set function output type more than once; key={:?}",
                 self.ty.key()
             )
         })?;
-        // TODO materializer
-
-        input_res.finalize(conv)?;
         output_res.finalize(conv)?;
 
         Ok(())

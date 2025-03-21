@@ -192,16 +192,12 @@ impl RsClientManifest {
 
         render_static(dest)?;
 
-        // let map = manifest_page(&self.tg, true)?;
-        // let types_rs = map.render_all_buffered(&())?;
-        // let name_memo = map.get_cached_refs();
-
-        let methods = self.node_metas.render_all_buffered(&())?;
-        with_metas_namespace(dest, methods)?;
-
         let mut types = self.input_types.render_all_buffered(&())?;
         self.output_types.render_all(&mut types, &())?;
         with_types_namespace(dest, types)?;
+
+        let methods = self.node_metas.render_all_buffered(&())?;
+        with_metas_namespace(dest, methods)?;
 
         self.selections.render_all(dest, &self.maps.output_types)?;
 
@@ -211,7 +207,7 @@ impl RsClientManifest {
         Ok(())
     }
 
-    fn render_query_graph<'a>(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+    fn render_query_graph(&self, dest: &mut impl Write) -> anyhow::Result<()> {
         let gql_types = get_gql_types(&self.tg);
 
         write!(
@@ -226,7 +222,6 @@ impl QueryGraph {{
         )?;
 
         for (key, gql_ty) in gql_types.into_iter() {
-            // let ty_name = name_memo.get(&key).unwrap();
             let ty_name = self.tg.find_type(key).unwrap().name();
             write!(
                 dest,

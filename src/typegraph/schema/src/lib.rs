@@ -212,4 +212,40 @@ impl Typegraph {
         }
         type_idx
     }
+
+    pub fn is_composite(&self, idx: u32) -> bool {
+        let node = &self.types[idx as usize];
+        use TypeNode as N;
+        match node {
+            N::Boolean { .. }
+            | N::Integer { .. }
+            | N::Float { .. }
+            | N::String { .. }
+            | N::File { .. } => false,
+            N::Object { .. } => true,
+            N::Optional { data, .. } => self.is_composite(data.item),
+            N::List { data, .. } => self.is_composite(data.items),
+            N::Union {
+                data: UnionTypeData { any_of: variants },
+                ..
+            }
+            | N::Either {
+                data: EitherTypeData { one_of: variants },
+                ..
+            } => {
+                for v in variants.iter() {
+                    if self.is_composite(*v) {
+                        return true;
+                    }
+                }
+                false
+            }
+            N::Function { data, .. } => self.is_composite(data.output),
+            N::Any { .. } => unimplemented!("Any type support not implemented"),
+        }
+    }
+
+    pub fn is_function(&self, idx: u32) -> bool {
+        matches!(&self.types[idx as usize], TypeNode::Function { .. })
+    }
 }

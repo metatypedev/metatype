@@ -73,7 +73,7 @@ impl<R: TypeRenderer> ManifestPage<R> {
         self.reference_cache
             .write()
             .unwrap()
-            .insert(key.clone(), name.clone());
+            .insert(*key, name.clone());
         name
     }
 
@@ -95,7 +95,7 @@ impl<R: TypeRenderer> ManifestPage<R> {
             .read()
             .unwrap()
             .iter()
-            .filter_map(|(k, v)| v.clone().map(|v| (k.clone(), v)))
+            .filter_map(|(k, v)| v.clone().map(|v| (*k, v)))
             .collect()
     }
 }

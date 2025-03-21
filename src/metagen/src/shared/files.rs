@@ -83,7 +83,7 @@ impl TryFrom<&Vec<PathSegment>> for TypePath {
     fn try_from(tg_path: &Vec<PathSegment>) -> Result<Self, Self::Error> {
         let inner = tg_path
             .iter()
-            .map(|seg| ObjectPathSegment::try_from(seg))
+            .map(ObjectPathSegment::try_from)
             .collect::<Result<Vec<_>>>()?;
         Ok(Self(inner))
     }
@@ -102,13 +102,14 @@ pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
     }
 }
 
-pub fn get_path_to_files(root: &Type) -> Result<HashMap<u32, Vec<TypePath>>> {
+pub fn get_path_to_files(tg: &Typegraph) -> Result<HashMap<u32, Vec<TypePath>>> {
+    let root = tg.root.clone();
     typegraph::visitor::traverse_types(
-        root.clone(),
+        root.wrap(),
         RelativePath::root(),
         Default::default(),
         |n, acc| -> Result<VisitNext, anyhow::Error> {
-            if n.path.is_cyclic()? {
+            if n.path.is_cyclic() {
                 return Ok(VisitNext::Stop);
             }
             match &n.ty {
@@ -124,4 +125,36 @@ pub fn get_path_to_files(root: &Type) -> Result<HashMap<u32, Vec<TypePath>>> {
             }
         },
     )
+}
+
+#[derive(Debug)]
+enum Infallible {}
+impl From<eyre::ErrReport> for Infallible {
+    fn from(e: eyre::ErrReport) -> Self {
+        unreachable!("{:?}", e)
+    }
+}
+
+pub fn get_path_to_files_2(func: Arc<FunctionType>) -> Vec<TypePath> {
+    typegraph::visitor::traverse_types(
+        func.input().clone().wrap(),
+        RelativePath::input(Arc::downgrade(&func), Default::default()),
+        Default::default(),
+        |n, paths: &mut Vec<_>| -> Result<VisitNext, Infallible> {
+            if n.path.is_cyclic() {
+                return Ok(VisitNext::Stop);
+            }
+            match &n.ty {
+                Type::Function(_) => Ok(VisitNext::Siblings),
+                Type::File(_) => {
+                    if let RelativePath::Input(key) = &n.relative_path {
+                        paths.push((&key.path).try_into().unwrap());
+                    }
+                    Ok(VisitNext::Siblings)
+                }
+                _ => Ok(VisitNext::Children),
+            }
+        },
+    )
+    .unwrap()
 }

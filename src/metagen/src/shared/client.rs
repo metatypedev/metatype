@@ -26,15 +26,12 @@ pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
 
     // non scalar union variants for type selection
     for ty in tg.output_types.values() {
-        match ty {
-            Type::Union(ty) => {
-                for variant in ty.variants() {
-                    if variant.is_composite() {
-                        res.insert(variant.key(), get_gql_type(&variant, false, false));
-                    }
+        if let Type::Union(ty) = ty {
+            for variant in ty.variants() {
+                if variant.is_composite() {
+                    res.insert(variant.key(), get_gql_type(variant, false, false));
                 }
             }
-            _ => {}
         }
     }
 
@@ -70,8 +67,8 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
         // return_types.insert(out_name.clone());
 
         let select_ty = if func.output().is_composite() {
-            let _ = node_metas.insert(out_key.clone());
-            selections.insert(out_key.clone());
+            let _ = node_metas.insert(out_key);
+            selections.insert(out_key);
             Some(out_key)
         } else {
             None
@@ -92,7 +89,7 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
         selections,
         node_metas,
         tg: tg.clone(),
-        input_files: get_path_to_files(&tg.root.clone().wrap())?.into(),
+        input_files: get_path_to_files(&tg)?.into(),
     })
 }
 

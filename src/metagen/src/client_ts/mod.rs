@@ -198,8 +198,7 @@ export class QueryGraph extends _QueryGraphBase {{
     super({{"#
         )?;
         for (key, gql_ty) in gql_types.into_iter() {
-            // TODO
-            let ty_name = self.maps.types.get(&key).unwrap();
+            let ty_name = self.tg.find_type(key).unwrap().name();
             write!(
                 out,
                 r#"
@@ -227,17 +226,16 @@ export class QueryGraph extends _QueryGraphBase {{
 
     fn render_meta_functions(&self, out: &mut impl Write) -> anyhow::Result<()> {
         for func in self.tg.root_functions() {
-            let (_, ty) = func?;
+            let (path, ty) = func?;
             use heck::ToLowerCamelCase;
 
-            let node_name = ty.name();
+            let node_name = path.join("_");
             let method_name = node_name.to_lower_camel_case();
             let out_ty_name = self.maps.types.get(&ty.output().key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()
-                .map(|ty| self.maps.types.get(&ty.key()))
-                .flatten();
+                .and_then(|ty| self.maps.types.get(&ty.key()));
             let select_ty = self.maps.selections.get(&ty.output().key());
 
             let args_row = match (arg_ty, select_ty) {

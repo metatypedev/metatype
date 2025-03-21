@@ -3,7 +3,6 @@
 
 use std::{path::Path, process::Command, sync::Arc};
 
-use color_eyre::Result;
 use typegraph::{TypeNode as _, TypeNodeExt as _};
 
 #[test]
@@ -31,7 +30,7 @@ fn test_expanded_graph() -> color_eyre::Result<()> {
     let schema: tg_schema::Typegraph = serde_json::from_str(&schema)?;
     let schema: Arc<_> = schema.into();
 
-    let tg = typegraph::Typegraph::from(schema.clone());
+    let tg = typegraph::Typegraph::try_from(schema.clone())?;
 
     println!("namespaces");
     for (ns, obj) in tg.namespace_objects.iter() {

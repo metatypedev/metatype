@@ -82,14 +82,14 @@ impl TypeConversionResult for OptionalTypeConversionResult {
             self.rpath.push(PathSegment::OptionalItem)?,
         )?;
 
+        item.finalize(conv)?;
+
         self.ty.item.set(item.get_type()).map_err(|_| {
             eyre!(
                 "OnceLock: cannot set optional item more than once; key={:?}",
                 self.ty.key()
             )
         })?;
-
-        item.finalize(conv)?;
 
         Ok(())
     }

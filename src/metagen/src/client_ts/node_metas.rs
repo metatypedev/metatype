@@ -8,6 +8,7 @@ use typegraph::{FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
 use super::{
     shared::{
+        files::{get_path_to_files_2, serialize_typepaths_json},
         manifest::{ManifestPage, TypeRenderer},
         node_metas::*,
     },
@@ -254,24 +255,20 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
     }
 
     fn build_union(&self, ty: Arc<UnionType>) -> TsNodeMeta {
-        let mut variants = vec![];
+        let mut variants = IndexMap::new();
         for variant in ty.variants().iter() {
-            let key = variant.key();
-            self.push(key);
-            variants.push(key);
+            if variant.is_composite() {
+                let key = variant.key();
+                self.push(key);
+                variants.insert(variant.name(), key);
+            }
         }
-        let variants = variants
-            .into_iter()
-            .map(|key| {
-                let ty = self.tg.find_type(key).unwrap();
-                (ty.name(), key)
-            })
-            .collect::<IndexMap<_, _>>();
-
-        TsNodeMeta::Union(Union {
-            name: normalize_type_title(&ty.name()),
-            variants,
-        })
+        if variants.is_empty() {
+            TsNodeMeta::Scalar
+        } else {
+            let name = normalize_type_title(&ty.name());
+            TsNodeMeta::Union(Union { name, variants })
+        }
     }
 
     fn build_func(&self, ty: Arc<FunctionType>) -> TsNodeMeta {
@@ -286,12 +283,12 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
                 .collect::<IndexMap<_, _>>()
         });
 
-        // TODO input_files
+        let input_files = get_path_to_files_2(ty.clone());
 
         TsNodeMeta::Function(Function {
             return_ty: out_key,
             argument_fields: props,
-            input_files: None,
+            input_files: serialize_typepaths_json(&input_files),
             name: normalize_type_title(&ty.name()),
         })
     }

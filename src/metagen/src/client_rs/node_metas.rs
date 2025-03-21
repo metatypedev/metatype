@@ -5,6 +5,7 @@ use std::fmt::Write;
 
 use typegraph::{FunctionType, ObjectType};
 
+use super::shared::files::{get_path_to_files_2, TypePath};
 use super::shared::manifest::{ManifestPage, TypeRenderer};
 use super::shared::node_metas::{MetaFactory, MetasPageBuilder};
 use super::utils::normalize_type_title;
@@ -95,7 +96,7 @@ pub fn {ty_name}() -> NodeMeta {{
             ["#
         )?;
         for (key, prop) in self.props.iter() {
-            let node_ref = page.get_ref(&prop, ctx).unwrap();
+            let node_ref = page.get_ref(prop, ctx).unwrap();
             write!(
                 dest,
                 r#"
@@ -268,12 +269,11 @@ impl RsMetasExt for MetasPageBuilder {
                 variants.insert(variant.name(), key);
             }
         }
-        if !variants.is_empty() {
-            let name = normalize_type_title(&ty.name());
-            // TODO named_types???
-            RsNodeMeta::Union(Union { variants, name })
-        } else {
+        if variants.is_empty() {
             RsNodeMeta::Scalar
+        } else {
+            let name = normalize_type_title(&ty.name());
+            RsNodeMeta::Union(Union { variants, name })
         }
     }
 
@@ -292,13 +292,25 @@ impl RsMetasExt for MetasPageBuilder {
             None
         };
 
-        // TODO input_files
+        let input_files = get_path_to_files_2(ty.clone());
 
         RsNodeMeta::Function(Function {
             return_ty: out_key,
             argument_fields: props,
-            input_files: None,
+            input_files: serialize_files(&input_files),
             name: normalize_type_title(&ty.name()),
         })
     }
+}
+
+fn serialize_files(paths: &[TypePath]) -> Option<String> {
+    (!paths.is_empty())
+        .then_some(paths)
+        .map(|files| {
+            files
+                .iter()
+                .map(|path| path.serialize_rs())
+                .collect::<Vec<_>>()
+        })
+        .and_then(|files| (!files.is_empty()).then(|| format!("[TypePath({})]", files.join(", "))))
 }

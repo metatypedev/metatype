@@ -209,7 +209,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
                     if !variant.is_composite() {
                         continue;
                     }
-                    let struct_prop_name = normalize_struct_prop_name(&variant.title());
+                    let struct_prop_name = normalize_struct_prop_name(variant.title());
                     let selection = selection_for_field(variant);
                     variants.push(UnionProp {
                         name: struct_prop_name,

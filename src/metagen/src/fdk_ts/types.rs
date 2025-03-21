@@ -148,25 +148,25 @@ impl TypeRenderer for TsType {
 
 fn get_typespec(ty: &Type) -> TsType {
     if type_body_required(ty) {
-        let name = Some(normalize_type_title(&ty.name()));
+        let name = normalize_type_title(&ty.name());
         match ty {
-            Type::Boolean(_) => TsType::builtin("boolean", name),
-            Type::Integer(_) => TsType::builtin("number", name),
-            Type::Float(_) => TsType::builtin("number", name),
+            Type::Boolean(_) => TsType::builtin("boolean", Some(name)),
+            Type::Integer(_) => TsType::builtin("number", Some(name)),
+            Type::Float(_) => TsType::builtin("number", Some(name)),
             Type::String(ty) => {
                 if let Some(variants) = &ty.enumeration {
                     TsType::LiteralEnum {
-                        name: name.unwrap(),
+                        name,
                         variants: variants.clone(),
                     }
                 } else if let Some(format) = ty.format_only() {
                     let ty_name = normalize_type_title(&format!("string_{format}_{}", ty.idx()));
                     TsType::builtin("string", Some(ty_name))
                 } else {
-                    TsType::builtin("string", name)
+                    TsType::builtin("string", Some(name))
                 }
             }
-            Type::File(_) => TsType::builtin("File", name),
+            Type::File(_) => TsType::builtin("File", Some(name)),
             Type::Optional(ty) => {
                 let item_ty = ty.item();
                 if ty.default_value.is_none() && ty.title().starts_with("optional_") {
@@ -177,7 +177,7 @@ fn get_typespec(ty: &Type) -> TsType {
                 } else {
                     TsType::Alias {
                         alias: Alias::Optional(item_ty.key()),
-                        name,
+                        name: Some(name),
                     }
                 }
             }
@@ -199,7 +199,7 @@ fn get_typespec(ty: &Type) -> TsType {
                             name: "Array",
                             item: item_ty.key(),
                         },
-                        name,
+                        name: Some(name),
                     }
                 }
             }
@@ -219,7 +219,7 @@ fn get_typespec(ty: &Type) -> TsType {
                     })
                     .collect::<Vec<_>>();
                 TsType::Object {
-                    name: name.unwrap(),
+                    name,
                     properties: props,
                 }
             }
@@ -230,10 +230,7 @@ fn get_typespec(ty: &Type) -> TsType {
                     .iter()
                     .map(|variant| variant.key())
                     .collect::<Vec<_>>();
-                TsType::Enum {
-                    name: name.unwrap(),
-                    variants,
-                }
+                TsType::Enum { name, variants }
             }
 
             Type::Function(_) => unreachable!("unexpected function type"),
@@ -262,12 +259,12 @@ pub fn manifest_page(tg: &Typegraph) -> Result<ManifestPage<TsType>> {
             }
         }
         let typespec = get_typespec(ty);
-        map.insert(key.clone(), typespec);
+        map.insert(*key, typespec);
     }
 
     for (key, ty) in tg.output_types.iter() {
         let typespec = get_typespec(ty);
-        map.insert(key.clone(), typespec);
+        map.insert(*key, typespec);
     }
 
     let res: ManifestPage<TsType> = map.into();

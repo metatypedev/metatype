@@ -196,46 +196,6 @@ impl Type {
     }
 }
 
-// TODO move to (...)
-pub fn is_composite(tg: &tg_schema::Typegraph, idx: u32) -> Result<bool> {
-    let node = &tg.types[idx as usize];
-    use tg_schema::TypeNode as N;
-    match node {
-        N::Boolean { .. }
-        | N::Integer { .. }
-        | N::Float { .. }
-        | N::String { .. }
-        | N::File { .. } => Ok(false),
-        N::Object { .. } => Ok(true),
-        N::Optional { data, .. } => is_composite(tg, data.item),
-        N::List { data, .. } => is_composite(tg, data.items),
-        N::Union {
-            data: tg_schema::UnionTypeData { any_of: variants },
-            ..
-        }
-        | N::Either {
-            data: tg_schema::EitherTypeData { one_of: variants },
-            ..
-        } => {
-            for v in variants.iter() {
-                if is_composite(tg, *v)? {
-                    return Ok(true);
-                }
-            }
-            Ok(false)
-        }
-        N::Function { .. } => bail!("function type isn't composite or scalar"),
-        N::Any { .. } => unimplemented!("Any type support not implemented"),
-    }
-}
-
-pub fn is_function(tg: &tg_schema::Typegraph, idx: u32) -> bool {
-    matches!(
-        &tg.types[idx as usize],
-        tg_schema::TypeNode::Function { .. }
-    )
-}
-
 impl Type {
     pub fn as_object(&self) -> Option<&Arc<ObjectType>> {
         match self {

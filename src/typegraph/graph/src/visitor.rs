@@ -5,7 +5,6 @@ use crate::{
     interlude::*,
     path::{PathSegment, RelativePath},
 };
-use color_eyre::eyre::OptionExt as _;
 
 use crate::{Edge, EdgeKind, Type, TypeNodeExt as _};
 
@@ -223,23 +222,17 @@ where
 }
 
 pub trait PathExt {
-    fn is_cyclic(&self) -> Result<bool>;
+    fn is_cyclic(&self) -> bool;
 }
 
 impl PathExt for [Edge] {
-    fn is_cyclic(&self) -> Result<bool> {
+    fn is_cyclic(&self) -> bool {
         let mut seen = std::collections::HashSet::new();
         for edge in self {
-            if !seen.insert((
-                edge.from
-                    .upgrade()
-                    .ok_or_eyre("failed to upgrade weak ptr")?
-                    .key(),
-                edge.to.key(),
-            )) {
-                return Ok(true);
+            if !seen.insert((edge.from.upgrade().unwrap().key(), edge.to.key())) {
+                return true;
             }
         }
-        Ok(false)
+        false
     }
 }

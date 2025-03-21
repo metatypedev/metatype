@@ -7,9 +7,9 @@ typegates:
 metagen:
   targets:
     main:
-      # - generator: client_ts
-      #   path: ./ts/
-      #   typegraph_path: ../sample.ts
+      - generator: client_ts
+        path: ./ts/
+        typegraph_path: ../sample.ts
       # - generator: client_py
       #   path: ./py/
       #   typegraph_path: ../sample.ts
@@ -18,11 +18,11 @@ metagen:
         typegraph_path: ../sample.ts
         # skip_cargo_toml: true
         skip_lib_rs: true
-      # - generator: client_rs
-      #   path: ./rs_upload/
-      #   typegraph_path: ../file_upload_sample.ts
-      #   # skip_cargo_toml: true
-      #   skip_lib_rs: true
+      - generator: client_rs
+        path: ./rs_upload/
+        typegraph_path: ../file_upload_sample.ts
+        # skip_cargo_toml: true
+        skip_lib_rs: true
       # - generator: client_py
       #   path: ./py_upload/
       #   typegraph_path: ../file_upload_sample.ts

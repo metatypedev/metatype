@@ -110,19 +110,18 @@ impl TypeConversionResult for ObjectTypeConversionResult {
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let mut properties = IndexMap::with_capacity(self.properties.len());
 
-        let mut results = Vec::new();
-
         let weak = self.ty.clone().wrap().downgrade();
 
         let injections = &self.ty.base.injection;
 
         for (name, &idx) in self.properties.iter() {
             let name: Arc<str> = name.clone().into();
-            let res = conv.convert_type(
+            let mut res = conv.convert_type(
                 weak.clone(),
                 idx,
                 self.rpath.push(PathSegment::ObjectProp(name.clone()))?,
             )?;
+            res.finalize(conv)?;
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
 
@@ -148,7 +147,6 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                     as_id,
                 },
             );
-            results.push(res);
         }
 
         self.ty.properties.set(properties).map_err(|_| {
@@ -157,10 +155,6 @@ impl TypeConversionResult for ObjectTypeConversionResult {
                 self.ty.key()
             )
         })?;
-
-        for res in results.iter_mut() {
-            res.finalize(conv)?;
-        }
 
         Ok(())
     }

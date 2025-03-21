@@ -10,12 +10,11 @@ use crate::runtimes::{convert_materializer, Materializer};
 use crate::types::{BooleanType, TypeNodeExt, WeakType};
 use crate::{
     convert_function, convert_list, convert_object, convert_optional, convert_union, interlude::*,
-    is_composite, is_function, TypeNode as _,
+    TypeNode as _,
 };
 use crate::{FunctionType, IntegerType, ObjectType, Type};
 use dedup::{Deduplication, DuplicationKey};
 use indexmap::IndexMap;
-use key::TypeKeyEx;
 pub use map::{ConversionMap, MapItem, MapValueItem, ValueType};
 use tg_schema::runtimes::TGRuntime;
 
@@ -71,7 +70,7 @@ impl Conversion {
         let materializers: Vec<_> = schema
             .materializers
             .iter()
-            .map(|mat| convert_materializer(&runtimes, &mat))
+            .map(|mat| convert_materializer(&runtimes, mat))
             .collect();
 
         let policies = schema
@@ -167,15 +166,13 @@ impl Conversion {
 
             let added = self.conversion_map.append(ty.key(), rpath.clone())?;
             if added {
-                for edge in ty.edges() {
-                    let child_ty = edge.to;
-                    let xkey = TypeKeyEx::from(&child_ty);
-                    // cyclic
-                    if rpath.contains(&self.schema.types, &xkey) {
-                        continue;
-                    }
-                    if let Ok(seg) = edge.kind.try_into() {
-                        self.register_converted_type(rpath.push(seg)?, child_ty, true)?;
+                let cyclic = rpath.pop().contains(&self.schema.types, &From::from(&ty));
+                if !cyclic {
+                    for edge in ty.edges() {
+                        let child_ty = edge.to;
+                        if let Ok(seg) = edge.kind.try_into() {
+                            self.register_converted_type(rpath.push(seg)?, child_ty, true)?;
+                        }
                     }
                 }
             }
@@ -235,7 +232,7 @@ impl Conversion {
         let type_node = &schema.types[type_idx as usize];
         use tg_schema::TypeNode as N;
 
-        let dkey = if !is_function(&schema, type_idx) && is_composite(&schema, type_idx)? {
+        let dkey = if !schema.is_function(type_idx) && schema.is_composite(type_idx) {
             DuplicationKey::from_rpath(&schema, &rpath)
         } else {
             // currently, we only generate a single type from each scalar type node

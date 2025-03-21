@@ -23,14 +23,15 @@ function _selectionToNodeSet(
 
     const { argumentTypes, subNodes, variants, inputFiles } = metaFn();
 
-    const nodeInstances =
-      nodeSelection instanceof Alias
-        ? nodeSelection.aliases()
-        : { [nodeName]: nodeSelection };
+    const nodeInstances = nodeSelection instanceof Alias
+      ? nodeSelection.aliases()
+      : { [nodeName]: nodeSelection };
 
-    for (const [instanceName, instanceSelection] of Object.entries(
-      nodeInstances,
-    )) {
+    for (
+      const [instanceName, instanceSelection] of Object.entries(
+        nodeInstances,
+      )
+    ) {
       if (!instanceSelection && !selectAll) {
         continue;
       }
@@ -137,10 +138,10 @@ function _selectionToNodeSet(
             const variant_select = subSelections[variantTy];
             const nodes = variant_select
               ? _selectionToNodeSet(
-                  variant_select as Selection,
-                  variant_meta.subNodes,
-                  `${parentPath}.${instanceName}.variant(${variantTy})`,
-                )
+                variant_select as Selection,
+                variant_meta.subNodes,
+                `${parentPath}.${instanceName}.variant(${variantTy})`,
+              )
               : [];
             nodes.push({
               nodeName: "__typename",
@@ -207,17 +208,14 @@ export class MutationNode<Out> {
   }
 }
 
-type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O>
-  ? O
+type SelectNodeOut<T> = T extends QueryNode<infer O> | MutationNode<infer O> ? O
   : never;
-type QueryOut<T> =
-  T extends Record<string, QueryNode<unknown> | MutationNode<unknown>>
-    ? {
-        [K in keyof T]: SelectNodeOut<T[K]>;
-      }
-    : T extends QueryNode<unknown> | MutationNode<unknown>
-      ? SelectNodeOut<T>
-      : never;
+type QueryOut<T> = T extends
+  Record<string, QueryNode<unknown> | MutationNode<unknown>> ? {
+    [K in keyof T]: SelectNodeOut<T[K]>;
+  }
+  : T extends QueryNode<unknown> | MutationNode<unknown> ? SelectNodeOut<T>
+  : never;
 
 type TypePath = ("?" | "[]" | `.${string}`)[];
 type ValuePath = ("" | `[${number}]` | `.${string}`)[];
@@ -450,10 +448,9 @@ function convertQueryNodeGql(
   variables: Map<string, NodeArgValue>,
   files: Map<string, File>,
 ) {
-  let out =
-    node.nodeName == node.instanceName
-      ? node.nodeName
-      : `${node.instanceName}: ${node.nodeName}`;
+  let out = node.nodeName == node.instanceName
+    ? node.nodeName
+    : `${node.instanceName}: ${node.nodeName}`;
 
   const args = node.args;
   if (args && Object.keys(args).length > 0) {
@@ -483,29 +480,35 @@ function convertQueryNodeGql(
   const subNodes = node.subNodes;
   if (subNodes) {
     if (Array.isArray(subNodes)) {
-      out = `${out} { ${subNodes
-        .map((node) =>
-          convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-        )
-        .join(" ")} }`;
+      out = `${out} { ${
+        subNodes
+          .map((node) =>
+            convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+          )
+          .join(" ")
+      } }`;
     } else {
-      out = `${out} { ${Object.entries(subNodes)
-        .map(([variantTy, subNodes]) => {
-          let gqlTy = typeToGqlTypeMap[variantTy];
-          if (!gqlTy) {
-            throw new Error(
-              `unreachable: no graphql type found for variant ${variantTy}`,
-            );
-          }
-          gqlTy = gqlTy.replace(/[!]+$/, "");
+      out = `${out} { ${
+        Object.entries(subNodes)
+          .map(([variantTy, subNodes]) => {
+            let gqlTy = typeToGqlTypeMap[variantTy];
+            if (!gqlTy) {
+              throw new Error(
+                `unreachable: no graphql type found for variant ${variantTy}`,
+              );
+            }
+            gqlTy = gqlTy.replace(/[!]+$/, "");
 
-          return `... on ${gqlTy} {${subNodes
-            .map((node) =>
-              convertQueryNodeGql(typeToGqlTypeMap, node, variables, files),
-            )
-            .join(" ")}}`;
-        })
-        .join(" ")} }`;
+            return `... on ${gqlTy} {${
+              subNodes
+                .map((node) =>
+                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                )
+                .join(" ")
+            }}`;
+          })
+          .join(" ")
+      } }`;
     }
   }
   return out;
@@ -678,14 +681,12 @@ export class GraphQLTransport {
     const isNode = query instanceof QueryNode;
     const { variables, doc } = buildGql(
       this.typeToGqlTypeMap,
-      isNode
-        ? { value: query.inner() }
-        : Object.fromEntries(
-            Object.entries(query).map(([key, val]) => [
-              key,
-              (val as QueryNode<unknown>).inner(),
-            ]),
-          ),
+      isNode ? { value: query.inner() } : Object.fromEntries(
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as QueryNode<unknown>).inner(),
+        ]),
+      ),
       "query",
       name,
     );
@@ -716,14 +717,12 @@ export class GraphQLTransport {
     const isNode = query instanceof MutationNode;
     const { variables, doc, files } = buildGql(
       this.typeToGqlTypeMap,
-      isNode
-        ? { value: query.inner() }
-        : Object.fromEntries(
-            Object.entries(query).map(([key, val]) => [
-              key,
-              (val as MutationNode<unknown>).inner(),
-            ]),
-          ),
+      isNode ? { value: query.inner() } : Object.fromEntries(
+        Object.entries(query).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
+      ),
       "mutation",
       name,
     );
@@ -803,18 +802,16 @@ export class PreparedRequest<
   ) {
     const args = new PreparedArgs<T>();
     const dryRunNode = fun(args);
-    const isSingleNode =
-      dryRunNode instanceof QueryNode || dryRunNode instanceof MutationNode;
+    const isSingleNode = dryRunNode instanceof QueryNode ||
+      dryRunNode instanceof MutationNode;
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
-      isSingleNode
-        ? { value: dryRunNode.inner() }
-        : Object.fromEntries(
-            Object.entries(dryRunNode).map(([key, val]) => [
-              key,
-              (val as MutationNode<unknown>).inner(),
-            ]),
-          ),
+      isSingleNode ? { value: dryRunNode.inner() } : Object.fromEntries(
+        Object.entries(dryRunNode).map(([key, val]) => [
+          key,
+          (val as MutationNode<unknown>).inner(),
+        ]),
+      ),
       ty,
       name,
     );
@@ -903,136 +900,12 @@ const nodeMetas = {
     return {};
   },
   
-  Post(): NodeMeta {
+  RootIdentityUpdateFn(): NodeMeta {
     return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["slug", nodeMetas.scalar],
-        ["title", nodeMetas.scalar],
-      ],
-    };
-  },
-  User(): NodeMeta {
-    return {
-      subNodes: [
-        ["id", nodeMetas.scalar],
-        ["email", nodeMetas.scalar],
-        ["posts", nodeMetas.Post],
-      ],
-    };
-  },
-  RootGetUserFn(): NodeMeta {
-    return {
-      ...nodeMetas.User(),
-    };
-  },
-  RootGetPostsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootScalarNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-    };
-  },
-  RootScalarArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
+      ...nodeMetas.RootIdentityFnInput(),
       argumentTypes: {
-        id: "UserIdStringUuid",
-        slug: "StringE1a43",
-        title: "StringE1a43",
+        input: "scalar",
       },
-    };
-  },
-  RootCompositeNoArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-    };
-  },
-  RootCompositeArgsFn(): NodeMeta {
-    return {
-      ...nodeMetas.Post(),
-      argumentTypes: {
-        id: "StringE1a43",
-      },
-    };
-  },
-  RootScalarUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.scalar(),
-      argumentTypes: {
-        id: "StringE1a43",
-      },
-    };
-  },
-  RootCompositeUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootCompositeUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootCompositeUnionFnOutput(),
-      argumentTypes: {
-        id: "StringE1a43",
-      },
-    };
-  },
-  RootMixedUnionFnOutput(): NodeMeta {
-    return {
-      variants: [
-        ["post", nodeMetas.Post],
-        ["user", nodeMetas.User],
-      ],
-    };
-  },
-  RootMixedUnionFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootMixedUnionFnOutput(),
-      argumentTypes: {
-        id: "StringE1a43",
-      },
-    };
-  },
-  RootNestedCompositeFnOutputCompositeStructNestedStruct(): NodeMeta {
-    return {
-      subNodes: [
-        ["inner", nodeMetas.scalar],
-      ],
-    };
-  },
-  RootNestedCompositeFnOutputCompositeStruct(): NodeMeta {
-    return {
-      subNodes: [
-        ["value", nodeMetas.scalar],
-        ["nested", nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct],
-      ],
-    };
-  },
-  RootNestedCompositeFnOutputListStruct(): NodeMeta {
-    return {
-      subNodes: [
-        ["value", nodeMetas.scalar],
-      ],
-    };
-  },
-  RootNestedCompositeFnOutput(): NodeMeta {
-    return {
-      subNodes: [
-        ["scalar", nodeMetas.scalar],
-        ["composite", nodeMetas.RootNestedCompositeFnOutputCompositeStruct],
-        ["list", nodeMetas.RootNestedCompositeFnOutputListStruct],
-      ],
-    };
-  },
-  RootNestedCompositeFn(): NodeMeta {
-    return {
-      ...nodeMetas.RootNestedCompositeFnOutput(),
     };
   },
   RootIdentityFnInput(): NodeMeta {
@@ -1046,22 +919,146 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootIdentityFnInput(),
       argumentTypes: {
-        input: "Integer64be4",
+        input: "scalar",
       },
     };
   },
-  RootIdentityUpdateFn(): NodeMeta {
+  RootNestedCompositeFn(): NodeMeta {
     return {
-      ...nodeMetas.RootIdentityFnInput(),
+      ...nodeMetas.RootNestedCompositeFnOutput(),
+    };
+  },
+  RootNestedCompositeFnOutput(): NodeMeta {
+    return {
+      subNodes: [
+        ["scalar", nodeMetas.scalar],
+        ["composite", nodeMetas.RootNestedCompositeFnOutputCompositeStruct],
+        ["list", nodeMetas.RootNestedCompositeFnOutputListStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputListStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputCompositeStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["value", nodeMetas.scalar],
+        ["nested", nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct],
+      ],
+    };
+  },
+  RootNestedCompositeFnOutputCompositeStructNestedStruct(): NodeMeta {
+    return {
+      subNodes: [
+        ["inner", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootMixedUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootMixedUnionFnOutput(),
       argumentTypes: {
-        input: "Integer64be4",
+        id: "scalar",
       },
+    };
+  },
+  RootMixedUnionFnOutput(): NodeMeta {
+    return {
+      variants: [
+        ["post", nodeMetas.Post],
+        ["user", nodeMetas.User],
+      ],
+    };
+  },
+  User(): NodeMeta {
+    return {
+      subNodes: [
+        ["id", nodeMetas.scalar],
+        ["email", nodeMetas.scalar],
+        ["posts", nodeMetas.Post],
+      ],
+    };
+  },
+  Post(): NodeMeta {
+    return {
+      subNodes: [
+        ["id", nodeMetas.scalar],
+        ["slug", nodeMetas.scalar],
+        ["title", nodeMetas.scalar],
+      ],
+    };
+  },
+  RootCompositeUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.RootCompositeUnionFnOutput(),
+      argumentTypes: {
+        id: "scalar",
+      },
+    };
+  },
+  RootCompositeUnionFnOutput(): NodeMeta {
+    return {
+      variants: [
+        ["post", nodeMetas.Post],
+        ["user", nodeMetas.User],
+      ],
+    };
+  },
+  RootScalarUnionFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "scalar",
+      },
+    };
+  },
+  RootCompositeArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+      argumentTypes: {
+        id: "scalar",
+      },
+    };
+  },
+  RootCompositeNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootScalarArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+      argumentTypes: {
+        id: "scalar",
+        slug: "scalar",
+        title: "scalar",
+      },
+    };
+  },
+  RootScalarNoArgsFn(): NodeMeta {
+    return {
+      ...nodeMetas.scalar(),
+    };
+  },
+  RootGetPostsFn(): NodeMeta {
+    return {
+      ...nodeMetas.Post(),
+    };
+  },
+  RootGetUserFn(): NodeMeta {
+    return {
+      ...nodeMetas.User(),
     };
   },
 };
-export type UserIdStringUuid = string;
+export type StringUuid4 = string;
 export type Post = {
-  id: UserIdStringUuid;
+  id: StringUuid4;
   slug: string;
   title: string;
 };
@@ -1071,13 +1068,13 @@ export type RootCompositeArgsFnInput = {
 export type RootIdentityFnInput = {
   input: number;
 };
-export type UserEmailStringEmail = string;
-export type UserPostsPostList = Array<Post>;
 export type User = {
-  id: UserIdStringUuid;
-  email: UserEmailStringEmail;
+  id: StringUuid4;
+  email: StringEmail5;
   posts: UserPostsPostList;
 };
+export type StringEmail5 = string;
+export type UserPostsPostList = Array<Post>;
 export type RootScalarUnionFnOutput =
   | (string)
   | (number);
@@ -1089,80 +1086,70 @@ export type RootMixedUnionFnOutput =
   | (User)
   | (string)
   | (number);
-export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
-  inner: number;
-};
-export type RootNestedCompositeFnOutputCompositeStruct = {
-  value: number;
-  nested: RootNestedCompositeFnOutputCompositeStructNestedStruct;
-};
-export type RootNestedCompositeFnOutputListStruct = {
-  value: number;
-};
-export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
 export type RootNestedCompositeFnOutput = {
   scalar: number;
   composite: RootNestedCompositeFnOutputCompositeStruct;
   list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
 };
-
-export type PostSelections = {
-  _?: SelectionFlags;
-  id?: ScalarSelectNoArgs;
-  slug?: ScalarSelectNoArgs;
-  title?: ScalarSelectNoArgs;
+export type RootNestedCompositeFnOutputCompositeStruct = {
+  value: number;
+  nested: RootNestedCompositeFnOutputCompositeStructNestedStruct;
+};
+export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
+  inner: number;
+};
+export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
+export type RootNestedCompositeFnOutputListStruct = {
+  value: number;
 };
 export type UserSelections = {
-  _?: SelectionFlags;
   id?: ScalarSelectNoArgs;
   email?: ScalarSelectNoArgs;
   posts?: CompositeSelectNoArgs<PostSelections>;
 };
+export type PostSelections = {
+  id?: ScalarSelectNoArgs;
+  slug?: ScalarSelectNoArgs;
+  title?: ScalarSelectNoArgs;
+};
 export type RootCompositeUnionFnOutputSelections = {
-  _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
 };
 export type RootMixedUnionFnOutputSelections = {
-  _?: SelectionFlags;
   "post"?: CompositeSelectNoArgs<PostSelections>;
   "user"?: CompositeSelectNoArgs<UserSelections>;
 };
-export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
-  _?: SelectionFlags;
-  inner?: ScalarSelectNoArgs;
-};
-export type RootNestedCompositeFnOutputCompositeStructSelections = {
-  _?: SelectionFlags;
-  value?: ScalarSelectNoArgs;
-  nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
-};
-export type RootNestedCompositeFnOutputListStructSelections = {
-  _?: SelectionFlags;
-  value?: ScalarSelectNoArgs;
-};
 export type RootNestedCompositeFnOutputSelections = {
-  _?: SelectionFlags;
   scalar?: ScalarSelectNoArgs;
   composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
   list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
+export type RootNestedCompositeFnOutputCompositeStructSelections = {
+  value?: ScalarSelectNoArgs;
+  nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
+};
+export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
+  inner?: ScalarSelectNoArgs;
+};
+export type RootNestedCompositeFnOutputListStructSelections = {
+  value?: ScalarSelectNoArgs;
+};
 export type RootIdentityFnInputSelections = {
-  _?: SelectionFlags;
   input?: ScalarSelectNoArgs;
 };
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "UserIdStringUuid": "String!",
-      "StringE1a43": "String!",
-      "Integer64be4": "Int!",
+      "user_id_string_uuid": "ID!",
+      "string_e1a43": "String!",
+      "integer_64be4": "Int!",
       "post": "post!",
       "user": "user!",
     });
   }
-    
+            
   getUser(select: UserSelections): QueryNode<User> {
     const inner = _selectionToNodeSet(
       { "getUser": select },

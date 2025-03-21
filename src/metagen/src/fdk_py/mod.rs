@@ -302,7 +302,7 @@ fn gen_required_objects(
     let output_name = output.base().title.to_pascal_case();
 
     let _input_hint = types::visit_type(tera, &mut memo, &Type::Object(input.clone()), tg)?.hint;
-    let output_hint = types::visit_type(tera, &mut memo, &output, tg)?.hint;
+    let output_hint = types::visit_type(tera, &mut memo, output, tg)?.hint;
 
     let (fn_name, _) = get_module_infos(fun, tg)?;
     match output {

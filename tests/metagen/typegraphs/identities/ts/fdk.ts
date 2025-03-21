@@ -36,28 +36,19 @@ export type Handler<In, Out> = (
 export type PrimitivesArgs = {
   data: Primitives;
 };
-export type CompositesArgs = {
-  data: Composites;
-};
-export type Cycles1Args = {
-  data: Cycles1;
-};
-export type SimpleCycles1Args = {
-  data: SimpleCycles1;
-};
 export type Primitives = {
+  str: PrimitivesStrString;
   "enum": PrimitivesEnumStringEnum;
-  date: StringDate11;
+  uuid: StringUuid6;
+  email: StringEmail7;
   ean: StringEan8;
+  json: StringJson9;
+  uri: StringUri10;
+  date: StringDate11;
   datetime: StringDateTime12;
   int: PrimitivesIntInteger;
-  uuid: StringUuid6;
-  json: StringJson9;
-  email: StringEmail7;
   float: PrimitivesFloatFloat;
   "boolean": PrimitivesBooleanBoolean;
-  uri: StringUri10;
-  str: PrimitivesStrString;
 };
 export type PrimitivesStrString = string;
 export type PrimitivesEnumStringEnum =
@@ -75,38 +66,43 @@ export type StringDateTime12 = string;
 export type PrimitivesIntInteger = number;
 export type PrimitivesFloatFloat = number;
 export type PrimitivesBooleanBoolean = boolean;
+export type CompositesArgs = {
+  data: Composites;
+};
 export type Composites = {
+  opt?: CompositesOptPrimitivesStrStringOptional;
+  either: CompositesEitherEither;
   union: CompositesUnionUnion;
   list: CompositesListPrimitivesStrStringList;
-  either: CompositesEitherEither;
-  opt?: CompositesOptPrimitivesStrStringOptional;
 };
 export type CompositesOptPrimitivesStrStringOptional = (PrimitivesStrString) | null | undefined;
 export type CompositesEitherEither =
   | (Primitives)
   | (Branch2);
+export type Branch2 = {
+  branch2: PrimitivesStrString;
+};
 export type CompositesUnionUnion =
   | (Branch4)
   | (PrimitivesIntInteger)
   | (PrimitivesStrString)
   | (StringEmail25);
-export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
-export type Branch2 = {
-  branch2: PrimitivesStrString;
-};
 export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
-export type StringEmail25 = string;
 export type CompositesUnionUnionT0StringEnum =
 
   | "grey"
   | "beige";
+export type StringEmail25 = string;
+export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
+export type Cycles1Args = {
+  data: Cycles1;
+};
 export type Cycles1 = {
   phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
   list3?: Cycles1List3Cycles1List3Cycles3ListOptional;
 };
 export type Cycles1To2Cycles2Optional = (Cycles2) | null | undefined;
-export type Cycles1List3Cycles1List3Cycles3ListOptional = (Cycles1List3Cycles3List) | null | undefined;
 export type Cycles2 =
   | (Cycles3)
   | (Cycles1);
@@ -114,18 +110,22 @@ export type Cycles3 =
   | (Branch33A)
   | (Branch33B);
 export type Branch33A = {
-  to1?: Branch33ATo1Cycles1Optional;
   phantom3a?: CompositesOptPrimitivesStrStringOptional;
+  to1?: Branch33ATo1Cycles1Optional;
 };
+export type Branch33ATo1Cycles1Optional = (Cycles1) | null | undefined;
 export type Branch33B = {
   phantom3b?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
 };
-export type Branch33ATo1Cycles1Optional = (Cycles1) | null | undefined;
+export type Cycles1List3Cycles1List3Cycles3ListOptional = (Cycles1List3Cycles3List) | null | undefined;
 export type Cycles1List3Cycles3List = Array<Cycles3>;
+export type SimpleCycles1Args = {
+  data: SimpleCycles1;
+};
 export type SimpleCycles1 = {
-  to2?: SimpleCycles1To2SimpleCycles2Optional;
   phantom1?: CompositesOptPrimitivesStrStringOptional;
+  to2?: SimpleCycles1To2SimpleCycles2Optional;
 };
 export type SimpleCycles1To2SimpleCycles2Optional = (SimpleCycles2) | null | undefined;
 export type SimpleCycles2 = {
