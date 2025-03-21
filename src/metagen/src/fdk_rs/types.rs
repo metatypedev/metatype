@@ -2,491 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::manifest::{ManifestPage, TypeRenderer};
-use super::utils::*;
+use super::{indent_lines_into, utils::*};
 use crate::interlude::*;
 use crate::shared::types::type_body_required;
 use heck::ToPascalCase as _;
 use std::fmt::Write;
-
-// #[cfg(test)]
-// mod test {
-//     use typegraph::{conv::Key, Arc, StringType, TypeBase, WeakType};
-//
-//     use crate::tests::default_type_node_base;
-//
-//     use super::*;
-//
-//     fn type_base(idx: u32, title: String) -> TypeBase {
-//         let res = TypeBase {
-//             type_idx: idx,
-//             parent: WeakType::Object(Default::default()),
-//             title: title.clone(),
-//             description: None,
-//             key: Key::Output(Default::default()),
-//             name: Default::default(),
-//         };
-//         res.name.set(Arc::new(title.into()));
-//         res
-//     }
-//
-//     #[test]
-//     fn ty_generation_test() -> anyhow::Result<()> {
-//         let cases = [
-//             (
-//                 "kitchen_sink",
-//                 vec![
-//                     TypeNode::String {
-//                         data: StringTypeData {
-//                             format: None,
-//                             pattern: None,
-//                             min_length: None,
-//                             max_length: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_str".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::List {
-//                         data: ListTypeData {
-//                             items: 0,
-//                             max_items: None,
-//                             min_items: None,
-//                             unique_items: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_str_list".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::List {
-//                         data: ListTypeData {
-//                             items: 0,
-//                             max_items: None,
-//                             min_items: None,
-//                             unique_items: Some(true),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_str_set".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Optional {
-//                         data: OptionalTypeData {
-//                             item: 0,
-//                             default_value: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_str_maybe".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Integer {
-//                         data: IntegerTypeData {
-//                             maximum: None,
-//                             multiple_of: None,
-//                             exclusive_minimum: None,
-//                             exclusive_maximum: None,
-//                             minimum: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_int".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Float {
-//                         data: FloatTypeData {
-//                             maximum: None,
-//                             multiple_of: None,
-//                             exclusive_minimum: None,
-//                             exclusive_maximum: None,
-//                             minimum: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_float".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Boolean {
-//                         base: TypeNodeBase {
-//                             title: "my_bool".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::File {
-//                         data: FileTypeData {
-//                             min_size: None,
-//                             max_size: None,
-//                             mime_types: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_file".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [
-//                                 ("myString".to_string(), 0),
-//                                 ("list".to_string(), 1),
-//                                 ("optional".to_string(), 3),
-//                             ]
-//                             .into_iter()
-//                             .collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             // FIXME: remove required
-//                             required: vec![],
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_obj".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Either {
-//                         data: EitherTypeData {
-//                             one_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8],
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_either".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Union {
-//                         data: UnionTypeData {
-//                             any_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "my_union".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                 ],
-//                 "MyUnion",
-//                 r#"pub type MyStr = String;
-// pub type MyStrList = Vec<MyStr>;
-// pub type MyStrSet = std::collections::HashSet<MyStr>;
-// pub type MyStrMaybe = Option<MyStr>;
-// pub type MyInt = i64;
-// pub type MyFloat = f64;
-// pub type MyBool = bool;
-// pub type MyFile = super::FileId;
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct MyObj {
-//     #[serde(rename = "myString")]
-//     pub my_string: MyStr,
-//     pub list: MyStrList,
-//     pub optional: MyStrMaybe,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// #[serde(untagged)]
-// pub enum MyEither {
-//     MyStr(MyStr),
-//     MyStrList(MyStrList),
-//     MyStrSet(MyStrSet),
-//     MyStrMaybe(MyStrMaybe),
-//     MyInt(MyInt),
-//     MyFloat(MyFloat),
-//     MyBool(MyBool),
-//     MyFile(MyFile),
-//     MyObj(MyObj),
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// #[serde(untagged)]
-// pub enum MyUnion {
-//     MyStr(MyStr),
-//     MyStrList(MyStrList),
-//     MyStrSet(MyStrSet),
-//     MyStrMaybe(MyStrMaybe),
-//     MyInt(MyInt),
-//     MyFloat(MyFloat),
-//     MyBool(MyBool),
-//     MyFile(MyFile),
-//     MyObj(MyObj),
-//     MyEither(MyEither),
-// }
-// "#,
-//             ),
-//             (
-//                 "alias_avoidance",
-//                 vec![
-//                     TypeNode::String {
-//                         data: StringTypeData {
-//                             format: None,
-//                             pattern: None,
-//                             min_length: None,
-//                             max_length: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "string_0".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::List {
-//                         data: ListTypeData {
-//                             items: 0,
-//                             max_items: None,
-//                             min_items: None,
-//                             unique_items: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "list_1".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::List {
-//                         data: ListTypeData {
-//                             items: 0,
-//                             max_items: None,
-//                             min_items: None,
-//                             unique_items: Some(true),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "list_2".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Optional {
-//                         data: OptionalTypeData {
-//                             item: 0,
-//                             default_value: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "optional_3".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Integer {
-//                         data: IntegerTypeData {
-//                             maximum: None,
-//                             multiple_of: None,
-//                             exclusive_minimum: None,
-//                             exclusive_maximum: None,
-//                             minimum: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "integer_4".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Float {
-//                         data: FloatTypeData {
-//                             maximum: None,
-//                             multiple_of: None,
-//                             exclusive_minimum: None,
-//                             exclusive_maximum: None,
-//                             minimum: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "float_5".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Boolean {
-//                         base: TypeNodeBase {
-//                             title: "boolean_6".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::File {
-//                         data: FileTypeData {
-//                             min_size: None,
-//                             max_size: None,
-//                             mime_types: None,
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "file_7".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                 ],
-//                 "super::FileId",
-//                 r#""#,
-//             ),
-//             (
-//                 "cycles_obj",
-//                 vec![
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
-//                             id: vec![],
-//                             required: ["obj_b"].into_iter().map(Into::into).collect(),
-//                             policies: Default::default(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjA".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("obj_c".to_string(), 2)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["obj_c"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjB".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("obj_a".to_string(), 0)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["obj_a"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjC".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                 ],
-//                 "ObjC",
-//                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjB {
-//     pub obj_c: ObjC,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjA {
-//     pub obj_b: ObjB,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjC {
-//     pub obj_a: Box<ObjA>,
-// }
-// "#,
-//             ),
-//             (
-//                 "cycles_union",
-//                 vec![
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["obj_b"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjA".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("union_c".to_string(), 2)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["union_c"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjB".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Union {
-//                         data: UnionTypeData { any_of: vec![0] },
-//                         base: TypeNodeBase {
-//                             title: "CUnion".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                 ],
-//                 "CUnion",
-//                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjB {
-//     pub union_c: CUnion,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjA {
-//     pub obj_b: ObjB,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// #[serde(untagged)]
-// pub enum CUnion {
-//     ObjA(Box<ObjA>),
-// }
-// "#,
-//             ),
-//             (
-//                 "cycles_either",
-//                 vec![
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("obj_b".to_string(), 1)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["obj_b"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjA".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Object {
-//                         data: ObjectTypeData {
-//                             properties: [("either_c".to_string(), 2)].into_iter().collect(),
-//                             policies: Default::default(),
-//                             id: vec![],
-//                             required: ["either_c"].into_iter().map(Into::into).collect(),
-//                         },
-//                         base: TypeNodeBase {
-//                             title: "ObjB".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                     TypeNode::Either {
-//                         data: EitherTypeData { one_of: vec![0] },
-//                         base: TypeNodeBase {
-//                             title: "CEither".into(),
-//                             ..default_type_node_base()
-//                         },
-//                     },
-//                 ],
-//                 "CEither",
-//                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjB {
-//     pub either_c: CEither,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// pub struct ObjA {
-//     pub obj_b: ObjB,
-// }
-// #[derive(Debug, serde::Serialize, serde::Deserialize)]
-// #[serde(untagged)]
-// pub enum CEither {
-//     ObjA(Box<ObjA>),
-// }
-// "#,
-//             ),
-//         ];
-//         for (test_name, nodes, name, test_out) in cases {
-//             let mut renderer = TypeRenderer::new(
-//                 nodes.iter().cloned().map(Arc::new).collect::<Vec<_>>(),
-//                 Arc::new(RustTypeRenderer {
-//                     derive_serde: true,
-//                     derive_debug: true,
-//                     all_fields_optional: false,
-//                 }),
-//             );
-//             let gen_name = renderer.render(nodes.len() as u32 - 1)?;
-//             let (real_out, _) = renderer.finalize();
-//
-//             pretty_assertions::assert_eq!(
-//                 &gen_name[..],
-//                 name,
-//                 "{test_name}: generated unexpected type name"
-//             );
-//             pretty_assertions::assert_eq!(
-//                 real_out,
-//                 test_out,
-//                 "{test_name}: output buffer was not equal for {name}",
-//             );
-//         }
-//         Ok(())
-//     }
-// }
 
 #[derive(Debug)]
 pub enum Alias {
@@ -534,6 +54,7 @@ pub struct StructProp {
     rename: Option<String>,
     ty: TypeKey,
     optional: bool,
+    boxed: bool,
 }
 
 type Context = ();
@@ -597,12 +118,12 @@ impl TypeRenderer for RustType {
                     if let Some(rename) = &prop.rename {
                         writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
                     }
-                    let ty_ref = page.get_ref(&prop.ty, ctx).unwrap();
-                    let ty_ref = if *partial && !prop.optional {
-                        format!("Option<{}>", ty_ref)
-                    } else {
-                        ty_ref
-                    };
+                    let mut ty_ref = page.get_ref(&prop.ty, ctx).unwrap();
+                    if *partial && !prop.optional {
+                        ty_ref = format!("Option<{}>", ty_ref)
+                    } else if prop.boxed {
+                        ty_ref = format!("Box<{}>", ty_ref)
+                    }
 
                     writeln!(out, "    pub {}: {},", prop.name, ty_ref)?;
                 }
@@ -815,6 +336,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                             rename,
                             ty: prop.type_.key(),
                             optional: matches!(&prop.type_, Type::Optional(_)),
+                            boxed: prop.type_.is_composite(), // TODO is_cyclic
                         }
                     })
                     .collect();
@@ -905,4 +427,611 @@ pub fn output_manifest_page(
     res.cache_references(&());
 
     res
+}
+
+pub fn render_types(
+    out: &mut impl Write,
+    inp_page: &ManifestPage<RustType>,
+    out_page: &ManifestPage<RustType>,
+) -> std::fmt::Result {
+    writeln!(out, "use types::*;")?;
+    writeln!(out, "pub mod types {{")?;
+
+    let mut buffer = String::new();
+    render_types_raw(&mut buffer, inp_page, out_page)?;
+    indent_lines_into(out, &buffer, "    ")?;
+
+    writeln!(out, "}}")?;
+    Ok(())
+}
+
+pub fn render_types_raw(
+    out: &mut impl Write,
+    inp_page: &ManifestPage<RustType>,
+    out_page: &ManifestPage<RustType>,
+) -> std::fmt::Result {
+    inp_page.render_all(out, &())?;
+    out_page.render_all(out, &())?;
+
+    Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::tests::default_type_node_base;
+
+    fn create_typegraph(
+        tg_name: String,
+        test_types: Vec<tg_schema::TypeNode>,
+    ) -> Result<Arc<Typegraph>> {
+        let types = {
+            use tg_schema::*;
+            let mut types = vec![
+                TypeNode::Object {
+                    base: TypeNodeBase {
+                        title: format!("tg_{}", tg_name),
+                        ..default_type_node_base()
+                    },
+                    data: ObjectTypeData {
+                        properties: [("root".to_string(), 1)].into_iter().collect(),
+                        policies: Default::default(),
+                        id: vec![],
+                        required: vec![],
+                        additional_props: false,
+                    },
+                },
+                TypeNode::Function {
+                    data: FunctionTypeData {
+                        input: 2,
+                        output: 3,
+                        parameter_transform: None,
+                        materializer: 0,
+                        injections: Default::default(),
+                        outjections: Default::default(),
+                        rate_calls: Default::default(),
+                        rate_weight: Default::default(),
+                        runtime_config: Default::default(),
+                    },
+                    base: TypeNodeBase {
+                        title: "MyFunction".into(),
+                        ..default_type_node_base()
+                    },
+                },
+                TypeNode::Object {
+                    base: TypeNodeBase {
+                        title: "MyInput".into(),
+                        ..default_type_node_base()
+                    },
+                    data: ObjectTypeData {
+                        properties: [].into_iter().collect(),
+                        policies: Default::default(),
+                        id: vec![],
+                        required: vec![],
+                        additional_props: false,
+                    },
+                },
+                TypeNode::Object {
+                    base: TypeNodeBase {
+                        title: "MyOutput".into(),
+                        ..default_type_node_base()
+                    },
+                    data: ObjectTypeData {
+                        properties: test_types
+                            .iter()
+                            .enumerate()
+                            .map(|(idx, ty)| (ty.base().title.clone(), idx as u32 + 4))
+                            .collect(),
+                        policies: Default::default(),
+                        id: vec![],
+                        required: vec![],
+                        additional_props: false,
+                    },
+                },
+            ];
+
+            types.extend(test_types);
+
+            types
+        };
+
+        let schema = tg_schema::Typegraph {
+            types,
+            runtimes: vec![tg_schema::runtimes::TGRuntime::Known(
+                tg_schema::runtimes::KnownRuntime::Deno(
+                    tg_schema::runtimes::deno::DenoRuntimeData {
+                        worker: "default".to_string(),
+                        permissions: Default::default(),
+                    },
+                ),
+            )],
+            materializers: vec![tg_schema::Materializer {
+                name: "default".into(),
+                runtime: 0,
+                effect: tg_schema::Effect {
+                    effect: None,
+                    idempotent: true,
+                },
+                data: Default::default(),
+            }],
+            policies: Default::default(),
+            meta: Default::default(),
+            deps: Default::default(),
+            path: None,
+        };
+
+        let tg: Typegraph = Arc::new(schema).try_into()?;
+
+        Ok(Arc::new(tg))
+    }
+
+    #[test]
+    fn ty_generation_test() -> anyhow::Result<()> {
+        use tg_schema::*;
+        let cases = [
+            (
+                "kitchen_sink",
+                vec![
+                    TypeNode::String {
+                        data: StringTypeData {
+                            format: None,
+                            pattern: None,
+                            min_length: None,
+                            max_length: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_str".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 4,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_str_list".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 4,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: Some(true),
+                        },
+                        base: TypeNodeBase {
+                            title: "my_str_set".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Optional {
+                        data: OptionalTypeData {
+                            item: 4,
+                            default_value: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_str_maybe".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Integer {
+                        data: IntegerTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_int".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Float {
+                        data: FloatTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_float".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Boolean {
+                        base: TypeNodeBase {
+                            title: "my_bool".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::File {
+                        data: FileTypeData {
+                            min_size: None,
+                            max_size: None,
+                            mime_types: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_file".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [
+                                ("myString".to_string(), 4),
+                                ("list".to_string(), 5),
+                                ("optional".to_string(), 7),
+                            ]
+                            .into_iter()
+                            .collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: vec![],
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_obj".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Either {
+                        data: EitherTypeData {
+                            one_of: vec![4, 5, 6, 7, 8, 9, 10, 11, 12],
+                        },
+                        base: TypeNodeBase {
+                            title: "my_either".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Union {
+                        data: UnionTypeData {
+                            any_of: vec![4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+                        },
+                        base: TypeNodeBase {
+                            title: "my_union".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "MyUnion",
+                r#"pub type MyStr = String;
+pub type MyStrList = Vec<MyStr>;
+pub type MyStrSet = std::collections::HashSet<MyStr>;
+pub type MyStrMaybe = Option<MyStr>;
+pub type MyInt = i64;
+pub type MyFloat = f64;
+pub type MyBool = bool;
+pub type MyFile = super::FileId;
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct MyObj {
+    #[serde(rename = "myString")]
+    pub my_string: MyStr,
+    pub list: MyStrList,
+    pub optional: MyStrMaybe,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum MyEither {
+    MyStr(MyStr),
+    MyStrList(MyStrList),
+    MyStrSet(MyStrSet),
+    MyStrMaybe(MyStrMaybe),
+    MyInt(MyInt),
+    MyFloat(MyFloat),
+    MyBool(MyBool),
+    MyFile(MyFile),
+    MyObj(MyObj),
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum MyUnion {
+    MyStr(MyStr),
+    MyStrList(MyStrList),
+    MyStrSet(MyStrSet),
+    MyStrMaybe(MyStrMaybe),
+    MyInt(MyInt),
+    MyFloat(MyFloat),
+    MyBool(MyBool),
+    MyFile(MyFile),
+    MyObj(MyObj),
+    MyEither(MyEither),
+}
+"#,
+            ),
+            (
+                "alias_avoidance",
+                vec![
+                    TypeNode::String {
+                        data: StringTypeData {
+                            format: None,
+                            pattern: None,
+                            min_length: None,
+                            max_length: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "string_0".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 4,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "list_1".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::List {
+                        data: ListTypeData {
+                            items: 4,
+                            max_items: None,
+                            min_items: None,
+                            unique_items: Some(true),
+                        },
+                        base: TypeNodeBase {
+                            title: "list_2".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Optional {
+                        data: OptionalTypeData {
+                            item: 4,
+                            default_value: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "optional_3".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Integer {
+                        data: IntegerTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "integer_4".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Float {
+                        data: FloatTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "float_5".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Boolean {
+                        base: TypeNodeBase {
+                            title: "boolean_6".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::File {
+                        data: FileTypeData {
+                            min_size: None,
+                            max_size: None,
+                            mime_types: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "file_7".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "super::FileId",
+                r#""#,
+            ),
+            (
+                "cycles_obj",
+                vec![
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
+                            id: vec![],
+                            required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            policies: Default::default(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjA".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("obj_c".to_string(), 6)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["obj_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjB".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("obj_a".to_string(), 4)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["obj_a"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjC".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "ObjC",
+                r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjA {
+    pub obj_b: Box<ObjB>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjB {
+    pub obj_c: Box<ObjC>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjC {
+    pub obj_a: Box<ObjA>,
+}
+"#,
+            ),
+            (
+                "cycles_union",
+                vec![
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjA".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("union_c".to_string(), 6)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["union_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjB".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Union {
+                        data: UnionTypeData { any_of: vec![4] },
+                        base: TypeNodeBase {
+                            title: "CUnion".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "CUnion",
+                r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjA {
+    pub obj_b: Box<ObjB>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjB {
+    pub union_c: Box<CUnion>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum CUnion {
+    ObjA(ObjA),
+}
+"#,
+            ),
+            (
+                "cycles_either",
+                vec![
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["obj_b"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjA".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: [("either_c".to_string(), 6)].into_iter().collect(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: ["either_c"].into_iter().map(Into::into).collect(),
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "ObjB".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                    TypeNode::Either {
+                        data: EitherTypeData { one_of: vec![4] },
+                        base: TypeNodeBase {
+                            title: "CEither".into(),
+                            ..default_type_node_base()
+                        },
+                    },
+                ],
+                "CEither",
+                r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjA {
+    pub obj_b: Box<ObjB>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjB {
+    pub either_c: Box<CEither>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(untagged)]
+pub enum CEither {
+    ObjA(ObjA),
+}
+"#,
+            ),
+        ];
+        for (test_name, nodes, name, test_out) in cases {
+            // TODO
+            // let config = Arc::new(RustTypeRenderer {
+            //     derive_serde: true,
+            //     derive_debug: true,
+            //     all_fields_optional: false,
+            // });
+
+            let tg = create_typegraph(name.into(), nodes)?;
+            let inp_page = input_manifest_page(&tg);
+            let mut out_page = output_manifest_page(&tg, false, &inp_page);
+            let first = *out_page.map.first().unwrap().0;
+            out_page.map.shift_remove(&first);
+
+            let real_out = out_page.render_all_buffered(&())?;
+
+            // pretty_assertions::assert_eq!(
+            //     &gen_name[..],
+            //     name,
+            //     "{test_name}: generated unexpected type name"
+            // );
+            pretty_assertions::assert_eq!(
+                real_out,
+                test_out,
+                "{test_name}: output buffer was not equal for {name}",
+            );
+        }
+        Ok(())
+    }
 }

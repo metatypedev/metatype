@@ -25,3 +25,25 @@ impl Write for GenDestBuf {
 pub struct GenDestFs {
     pub files: HashMap<String, GenDestBuf>,
 } */
+
+#[allow(dead_code)]
+pub fn indent_lines(s: &str, indent: &str) -> Result<String, core::fmt::Error> {
+    let mut result = String::new();
+    indent_lines_into(&mut result, s, indent)?;
+    Ok(result)
+}
+
+pub fn indent_lines_into(
+    out: &mut impl Write,
+    source: &str,
+    indent: &str,
+) -> Result<(), core::fmt::Error> {
+    for line in source.lines() {
+        if !line.is_empty() {
+            writeln!(out, "{}{}", indent, line)?;
+        } else {
+            writeln!(out)?;
+        }
+    }
+    Ok(())
+}

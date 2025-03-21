@@ -16,6 +16,7 @@ pub mod utils;
 
 use types::input_manifest_page;
 use types::output_manifest_page;
+use types::render_types;
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -190,32 +191,16 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf, "#![cfg_attr(rustfmt, rustfmt_skip)]")?;
         writeln!(&mut mod_rs.buf)?;
         self.gen_static(&mut mod_rs)?;
-        writeln!(&mut mod_rs.buf, "use types::*;")?;
-        writeln!(&mut mod_rs.buf, "pub mod types {{")?;
 
-        let maps = {
-            let input_manif = input_manifest_page(&tg);
-            let mut buffer = input_manif.render_all_buffered(&())?;
+        let inp_page = input_manifest_page(&tg);
+        let out_page = output_manifest_page(&tg, false, &inp_page);
+        render_types(&mut mod_rs.buf, &inp_page, &out_page)?;
 
-            let output_manif = output_manifest_page(&tg, false, &input_manif);
-            output_manif.render_all(&mut buffer, &())?;
-
-            let types_rs = buffer;
-            for line in types_rs.lines() {
-                if !line.is_empty() {
-                    writeln!(&mut mod_rs.buf, "    {line}")?;
-                } else {
-                    writeln!(&mut mod_rs.buf)?;
-                }
-            }
-
-            Maps {
-                input: input_manif.get_cached_refs(),
-                output: output_manif.get_cached_refs(),
-            }
+        let maps = Maps {
+            input: inp_page.get_cached_refs(),
+            output: out_page.get_cached_refs(),
         };
 
-        writeln!(&mut mod_rs.buf, "}}")?;
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
         writeln!(&mut mod_rs.buf, "    use super::*;")?;
         {
