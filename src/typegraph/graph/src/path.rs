@@ -32,7 +32,6 @@ impl TryFrom<EdgeKind> for PathSegment {
 }
 
 impl PathSegment {
-    // Typed error?
     pub fn apply(&self, ty: &Type) -> Result<Type> {
         match self {
             PathSegment::ObjectProp(key) => match ty {
@@ -196,26 +195,6 @@ impl ValueTypePath {
         }
         Ok(acc)
     }
-
-    // pub fn find_cycle(
-    //     &self,
-    //     root_type: Type,
-    //     schema: &tg_schema::Typegraph,
-    // ) -> Result<Option<ValueTypePath>> {
-    //     // precondition: self.path.len() > 2
-    //     let indices = self.to_indices(root_type, schema)?;
-    //     let last = indices.last().unwrap();
-    //     Ok(indices[..indices.len() - 1]
-    //         .iter()
-    //         .position(|idx| idx == last)
-    //         .map(|idx| {
-    //             let path = self.path[..idx].to_vec();
-    //             ValueTypePath {
-    //                 owner: self.owner.clone(),
-    //                 path,
-    //             }
-    //         }))
-    // }
 }
 
 impl PartialEq for ValueTypePath {
@@ -372,44 +351,6 @@ impl RelativePath {
             }
         }
     }
-
-    // pub fn find_cycle(&self, schema: &tg_schema::Typegraph) -> Result<Option<RelativePath>> {
-    //     use RelativePath as RP;
-    //     match self {
-    //         RP::Function(_) => Ok(None),
-    //         RP::NsObject(_) => Ok(None),
-    //         RP::Input(p) => {
-    //             if p.path.len() <= 2 {
-    //                 Ok(None)
-    //             } else {
-    //                 Ok(p.find_cycle(
-    //                     p.owner
-    //                         .upgrade()
-    //                         .ok_or_else(|| eyre!("no strong pointer for type"))?
-    //                         .input()?
-    //                         .wrap(),
-    //                     schema,
-    //                 )?
-    //                 .map(|p| RP::Input(p)))
-    //             }
-    //         }
-    //         RP::Output(p) => {
-    //             if p.path.len() <= 2 {
-    //                 Ok(None)
-    //             } else {
-    //                 Ok(p.find_cycle(
-    //                     p.owner
-    //                         .upgrade()
-    //                         .ok_or_else(|| eyre!("no strong pointer for type"))?
-    //                         .output()?
-    //                         .clone(),
-    //                     schema,
-    //                 )?
-    //                 .map(|p| RP::Output(p)))
-    //             }
-    //         }
-    //     }
-    // }
 
     pub fn get_injection(&self, schema: &tg_schema::Typegraph) -> Option<InjectionNode> {
         match self {

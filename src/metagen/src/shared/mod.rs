@@ -24,25 +24,6 @@ pub fn filter_stubbed_funcs(
     tg: &Typegraph,
     stubbed_runtimes: &[String],
 ) -> anyhow::Result<Vec<Arc<FunctionType>>> {
-    // let stubbed_runtimes = stubbed_runtimes
-    //     .iter()
-    //     .map(|rt_name| {
-    //         tg.runtimes
-    //             .iter()
-    //             .position(|rt| rt_name == rt.name())
-    //             .map(|idx| (idx as u32, Arc::new(tg.runtimes[idx].clone())))
-    //             .with_context(|| format!("runtime {rt_name} not found in typegraph"))
-    //     })
-    //     .collect::<Result<IndexMap<_, _>, _>>()?;
-    // let stubbed_materializers = tg
-    //     .materializers
-    //     .iter()
-    //     .enumerate()
-    //     // TODO: consider filtering out non "function" mats
-    //     .filter(|(_, mat)| stubbed_runtimes.contains_key(&mat.runtime))
-    //     .map(|(id, _)| id as u32)
-    //     .collect::<IndexSet<_>>();
-
     let stubbed_runtimes: HashSet<_> = stubbed_runtimes.iter().map(|t| t.as_str()).collect();
 
     let stubbed_funcs = tg
