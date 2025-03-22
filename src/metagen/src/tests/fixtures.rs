@@ -3,6 +3,108 @@
 
 use crate::interlude::*;
 
+pub fn create_typegraph(
+    tg_name: String,
+    test_types: Vec<tg_schema::TypeNode>,
+) -> Result<Arc<Typegraph>> {
+    let types = {
+        use tg_schema::*;
+        let mut types = vec![
+            TypeNode::Object {
+                base: TypeNodeBase {
+                    title: format!("tg_{}", tg_name),
+                    ..default_type_node_base()
+                },
+                data: ObjectTypeData {
+                    properties: [("root".to_string(), 1)].into_iter().collect(),
+                    policies: Default::default(),
+                    id: vec![],
+                    required: vec![],
+                    additional_props: false,
+                },
+            },
+            TypeNode::Function {
+                data: FunctionTypeData {
+                    input: 2,
+                    output: 3,
+                    parameter_transform: None,
+                    materializer: 0,
+                    injections: Default::default(),
+                    outjections: Default::default(),
+                    rate_calls: Default::default(),
+                    rate_weight: Default::default(),
+                    runtime_config: Default::default(),
+                },
+                base: TypeNodeBase {
+                    title: "MyFunction".into(),
+                    ..default_type_node_base()
+                },
+            },
+            TypeNode::Object {
+                base: TypeNodeBase {
+                    title: "MyInput".into(),
+                    ..default_type_node_base()
+                },
+                data: ObjectTypeData {
+                    properties: [].into_iter().collect(),
+                    policies: Default::default(),
+                    id: vec![],
+                    required: vec![],
+                    additional_props: false,
+                },
+            },
+            TypeNode::Object {
+                base: TypeNodeBase {
+                    title: "MyOutput".into(),
+                    ..default_type_node_base()
+                },
+                data: ObjectTypeData {
+                    properties: test_types
+                        .iter()
+                        .enumerate()
+                        .map(|(idx, ty)| (ty.base().title.clone(), idx as u32 + 4))
+                        .collect(),
+                    policies: Default::default(),
+                    id: vec![],
+                    required: vec![],
+                    additional_props: false,
+                },
+            },
+        ];
+
+        types.extend(test_types);
+
+        types
+    };
+
+    let schema = tg_schema::Typegraph {
+        types,
+        runtimes: vec![tg_schema::runtimes::TGRuntime::Known(
+            tg_schema::runtimes::KnownRuntime::Deno(tg_schema::runtimes::deno::DenoRuntimeData {
+                worker: "default".to_string(),
+                permissions: Default::default(),
+            }),
+        )],
+        materializers: vec![tg_schema::Materializer {
+            name: "default".into(),
+            runtime: 0,
+            effect: tg_schema::Effect {
+                effect: None,
+                idempotent: true,
+            },
+            data: Default::default(),
+        }],
+        policies: Default::default(),
+        meta: Default::default(),
+        deps: Default::default(),
+        path: None,
+    };
+
+    let tg: Typegraph = Arc::new(schema).try_into()?;
+
+    Ok(Arc::new(tg))
+}
+
 pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(

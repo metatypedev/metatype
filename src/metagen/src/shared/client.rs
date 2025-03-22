@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use crate::{interlude::*, shared::get_gql_type};
 
-use super::files::{get_path_to_files, TypePath};
+use super::files::TypePath;
 use indexmap::IndexSet;
 use typegraph::FunctionType;
 
@@ -89,7 +89,8 @@ pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
         selections,
         node_metas,
         tg: tg.clone(),
-        input_files: get_path_to_files(&tg)?.into(),
+        // input_files: get_path_to_files(&tg)?.into(),
+        input_files: Default::default(),
     })
 }
 

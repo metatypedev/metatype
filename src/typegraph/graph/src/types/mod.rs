@@ -1,7 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{conv::key::TypeKey, interlude::*};
+use crate::{
+    conv::key::TypeKey,
+    interlude::*,
+    visitor::{Infallible, PathExt as _, VisitNext},
+};
 use enum_dispatch::enum_dispatch;
 
 mod boolean;
@@ -111,9 +115,8 @@ pub trait TypeNodeExt: TypeNode {
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
     fn key(&self) -> TypeKey;
-    fn injection(&self) -> Option<&InjectionNode> {
-        self.base().injection.as_ref()
-    }
+    fn injection(&self) -> Option<&InjectionNode>;
+    fn is_descendant_of(&self, other: &Type) -> bool;
 }
 
 impl<N> TypeNodeExt for N
@@ -146,6 +149,21 @@ where
 
     fn injection(&self) -> Option<&InjectionNode> {
         self.base().injection.as_ref()
+    }
+
+    fn is_descendant_of(&self, other: &Type) -> bool {
+        let key = self.key();
+        crate::visitor::traverse_types(other.clone(), false, |node, acc| -> Result<_, Infallible> {
+            Ok(if node.path.is_cyclic() {
+                VisitNext::Stop
+            } else if node.ty.key() == key {
+                *acc = true;
+                VisitNext::Stop
+            } else {
+                VisitNext::Children
+            })
+        })
+        .unwrap()
     }
 }
 

@@ -90,7 +90,7 @@ impl FdkTypescriptTemplate {
         let dest: &mut GenDestBuf = &mut fdk_ts;
         let tg = tg.clone();
         let manif = manifest_page(&tg)?;
-        manif.render_all(dest, &())?;
+        manif.render_all(dest)?;
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config

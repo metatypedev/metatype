@@ -10,12 +10,12 @@ use crate::interlude::*;
 use super::manifest::{ManifestPage, TypeRenderer};
 
 pub trait MetaFactory<M> {
-    fn build_meta(&self, key: TypeKey) -> M;
+    fn build_meta(&self, ty: Type) -> M;
 }
 
 pub struct MetasPageBuilder {
     pub tg: Arc<Typegraph>,
-    stack: RefCell<Vec<TypeKey>>,
+    stack: RefCell<Vec<Type>>,
 }
 
 impl MetasPageBuilder {
@@ -23,20 +23,20 @@ impl MetasPageBuilder {
         let mut stack = vec![];
         for root_fn in tg.root_functions() {
             let (_, func_ty) = root_fn?;
-            stack.push(func_ty.key());
+            stack.push(func_ty.wrap());
         }
         let stack = RefCell::new(stack);
         Ok(Self { tg, stack })
     }
 
-    pub fn push(&self, key: TypeKey) {
-        self.stack.borrow_mut().push(key);
+    pub fn push(&self, ty: Type) {
+        self.stack.borrow_mut().push(ty);
     }
 }
 impl MetasPageBuilder {
     pub fn build<M>(self) -> ManifestPage<M>
     where
-        M: TypeRenderer,
+        M: TypeRenderer<Extras = ()>,
         Self: MetaFactory<M>,
     {
         let mut map = IndexMap::new();
@@ -47,16 +47,22 @@ impl MetasPageBuilder {
                 stack.pop()
             };
 
-            if let Some(key) = next {
-                if map.contains_key(&key) {
+            if let Some(ty) = next {
+                if map.contains_key(&ty.key()) {
                     continue;
                 }
-                map.insert(key, self.build_meta(key));
+                map.insert(ty.key(), self.build_meta(ty.clone()));
+                // for child_ty in ty.children() {
+                //     self.stack.borrow_mut().push(child_ty);
+                // }
             } else {
                 break;
             }
         }
 
-        map.into()
+        let res: ManifestPage<M> = map.into();
+        res.cache_references();
+
+        res
     }
 }

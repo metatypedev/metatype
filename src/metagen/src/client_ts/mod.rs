@@ -58,15 +58,15 @@ struct TsClientManifest {
 impl TsClientManifest {
     fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
         let types = manifest_page(&tg)?;
-        types.cache_references(&());
+        types.cache_references();
         let types_memo = types.get_cached_refs();
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build();
-        node_metas.cache_references(&());
+        node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
         let selections = selections::manifest_page(&tg);
-        selections.cache_references(&());
+        selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 
         Ok(Self {
@@ -158,14 +158,14 @@ impl TsClientManifest {
         writeln!(out, "{}", include_str!("static/mod.ts"))?;
 
         let mut types_buffer = String::new();
-        self.types.render_all(&mut types_buffer, &())?;
+        self.types.render_all(&mut types_buffer)?;
 
-        Self::render_node_metas(out, self.node_metas.render_all_buffered(&())?)?;
+        Self::render_node_metas(out, self.node_metas.render_all_buffered()?)?;
 
         out.write_str(&types_buffer)?;
         let _ = types_buffer;
 
-        self.selections.render_all(out, &())?;
+        self.selections.render_all(out)?;
 
         self.render_query_graph(out)?;
 

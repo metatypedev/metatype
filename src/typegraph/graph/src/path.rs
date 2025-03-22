@@ -4,7 +4,7 @@
 use crate::conv::dedup::DuplicationKey;
 use crate::conv::key::TypeKeyEx;
 use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
-use crate::{TypeNode as _, TypeNodeExt as _};
+use crate::{Edge, TypeNode as _, TypeNodeExt as _};
 use std::hash::{Hash, Hasher};
 use tg_schema::InjectionNode;
 
@@ -420,6 +420,72 @@ impl RelativePath {
             }
             Self::Function(_) => {
                 bail!("unexpected segment pushed on function {:?}", segment);
+            }
+        })
+    }
+
+    pub(crate) fn push_edge(&self, edge: &Edge) -> Result<Self> {
+        if let Type::Function(func) = &edge.to {
+            return Ok(Self::Function(func.idx()));
+        }
+
+        Ok(match self {
+            Self::NsObject(path) => {
+                let mut path = path.clone();
+                match &edge.kind {
+                    EdgeKind::ObjectProperty(key) => {
+                        path.push(Arc::clone(key));
+                        Self::NsObject(path)
+                    }
+                    _ => bail!("unexpected edge pushed on namespace {:?}", edge.kind),
+                }
+            }
+            Self::Input(k) => {
+                let mut path = k.path.clone();
+                path.push(edge.kind.clone().try_into().map_err(|_| {
+                    eyre!(
+                        "unexpected edge kind pushed on input rpath: {:?}",
+                        edge.kind
+                    )
+                })?);
+                Self::Input(ValueTypePath {
+                    owner: k.owner.clone(),
+                    path,
+                    branch: ValueTypeKind::Input,
+                })
+            }
+            Self::Output(k) => {
+                let mut path = k.path.clone();
+                path.push(edge.kind.clone().try_into().map_err(|_| {
+                    eyre!(
+                        "unexpected edge kind pushed on output rpath: {:?}",
+                        edge.kind
+                    )
+                })?);
+                Self::Output(ValueTypePath {
+                    owner: k.owner.clone(),
+                    path,
+                    branch: ValueTypeKind::Output,
+                })
+            }
+            Self::Function(_) => {
+                let func = edge.from.upgrade().unwrap();
+                let func = func.assert_func().unwrap();
+                let owner = Arc::downgrade(func);
+
+                match &edge.kind {
+                    EdgeKind::FunctionInput => Self::Input(ValueTypePath {
+                        owner,
+                        branch: ValueTypeKind::Input,
+                        path: Default::default(),
+                    }),
+                    EdgeKind::FunctionOutput => Self::Output(ValueTypePath {
+                        owner,
+                        branch: ValueTypeKind::Output,
+                        path: Default::default(),
+                    }),
+                    _ => bail!("unexpected edge pushed on function {:?}", edge.kind),
+                }
             }
         })
     }

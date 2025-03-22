@@ -20,13 +20,13 @@ fn main() -> Result<(), BoxErr> {
                 posts: alias([
                     (
                         "post1",
-                        select(Post0Selections {
+                        select(PostSelections {
                             id: get(),
                             slug: get(),
                             title: get(),
                         }),
                     ),
-                    ("post2", select(Post0Selections { id: get(), ..all() })),
+                    ("post2", select(PostSelections { id: get(), ..all() })),
                 ]),
                 ..all()
             }),
@@ -35,7 +35,7 @@ fn main() -> Result<(), BoxErr> {
         ))?;
         let prepared_m = gql_sync.prepare_mutation(|args| {
             (
-                api1.scalar_args(args.get("post", |val: types::Post2| val)),
+                api1.scalar_args(args.get("post", |val: types::Post| val)),
                 api1.composite_no_args().select(all()),
                 api1.composite_args(
                     args.get("id", |id: String| types::RootCompositeArgsFnInput { id }),
@@ -48,7 +48,7 @@ fn main() -> Result<(), BoxErr> {
         let res2 = prepared_clone.perform([
             (
                 "post",
-                serde_json::json!(types::Post0Partial {
+                serde_json::json!(types::PostPartial {
                     id: Some("94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into()),
                     slug: Some("".into()),
                     title: Some("".into()),
@@ -72,13 +72,13 @@ fn main() -> Result<(), BoxErr> {
                         posts: alias([
                             (
                                 "post1",
-                                select(Post0Selections {
+                                select(PostSelections {
                                     id: get(),
                                     slug: get(),
                                     title: get(),
                                 }),
                             ),
-                            ("post2", select(Post0Selections { id: get(), ..all() })),
+                            ("post2", select(PostSelections { id: get(), ..all() })),
                         ]),
                         ..all()
                     }),
@@ -92,7 +92,7 @@ fn main() -> Result<(), BoxErr> {
 
             let res4 = gql
                 .mutation((
-                    api1.scalar_args(types::Post2 {
+                    api1.scalar_args(types::Post {
                         id: "94be5420-8c4a-4e67-b4f4-e1b2b54832a2".into(),
                         slug: "".into(),
                         title: "".into(),

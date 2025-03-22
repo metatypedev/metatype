@@ -904,7 +904,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootIdentityFnInput(),
       argumentTypes: {
-        input: "scalar",
+        input: "integer_64be4",
       },
     };
   },
@@ -919,7 +919,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootIdentityFnInput(),
       argumentTypes: {
-        input: "scalar",
+        input: "integer_64be4",
       },
     };
   },
@@ -963,7 +963,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootMixedUnionFnOutput(),
       argumentTypes: {
-        id: "scalar",
+        id: "string_e1a43",
       },
     };
   },
@@ -997,7 +997,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.RootCompositeUnionFnOutput(),
       argumentTypes: {
-        id: "scalar",
+        id: "string_e1a43",
       },
     };
   },
@@ -1013,7 +1013,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "scalar",
+        id: "string_e1a43",
       },
     };
   },
@@ -1021,7 +1021,7 @@ const nodeMetas = {
     return {
       ...nodeMetas.Post(),
       argumentTypes: {
-        id: "scalar",
+        id: "string_e1a43",
       },
     };
   },
@@ -1034,9 +1034,9 @@ const nodeMetas = {
     return {
       ...nodeMetas.scalar(),
       argumentTypes: {
-        id: "scalar",
-        slug: "scalar",
-        title: "scalar",
+        id: "user_id_string_uuid",
+        slug: "string_e1a43",
+        title: "string_e1a43",
       },
     };
   },

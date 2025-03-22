@@ -36,14 +36,3 @@ pub fn type_body_required(ty: &Type) -> bool {
         _ => true,
     }
 }
-
-pub trait NameMemo {
-    fn get(&self, key: TypeKey) -> Option<&str>;
-}
-
-pub struct EmptyNameMemo;
-impl NameMemo for EmptyNameMemo {
-    fn get(&self, _key: TypeKey) -> Option<&str> {
-        None
-    }
-}

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::interlude::*;
-use std::collections::HashMap;
 use typegraph::visitor::{PathExt as _, VisitNext};
 
 #[derive(Debug)]
@@ -102,43 +101,18 @@ pub fn serialize_typepaths_json(typepaths: &[TypePath]) -> Option<String> {
     }
 }
 
-pub fn get_path_to_files(tg: &Typegraph) -> Result<HashMap<u32, Vec<TypePath>>> {
-    let root = tg.root.clone();
-    typegraph::visitor::traverse_types(
-        root.wrap(),
-        RelativePath::root(),
-        Default::default(),
-        |n, acc| -> Result<VisitNext, anyhow::Error> {
-            if n.path.is_cyclic() {
-                return Ok(VisitNext::Stop);
-            }
-            match &n.ty {
-                Type::File(_) => {
-                    if let RelativePath::Input(key) = &n.relative_path {
-                        let fn_idx = key.owner.upgrade().unwrap().idx();
-                        let entry = acc.entry(fn_idx).or_default();
-                        entry.push((&key.path).try_into().unwrap());
-                    }
-                    Ok(VisitNext::Siblings)
-                }
-                _ => Ok(VisitNext::Children),
-            }
-        },
-    )
-}
-
 #[derive(Debug)]
-enum Infallible {}
+pub enum Infallible {}
 impl From<eyre::ErrReport> for Infallible {
     fn from(e: eyre::ErrReport) -> Self {
         unreachable!("{:?}", e)
     }
 }
 
-pub fn get_path_to_files_2(func: Arc<FunctionType>) -> Vec<TypePath> {
+pub fn get_path_to_files(func: Arc<FunctionType>) -> Vec<TypePath> {
+    let root_rpath = RelativePath::input(Arc::downgrade(&func), Default::default());
     typegraph::visitor::traverse_types(
         func.input().clone().wrap(),
-        RelativePath::input(Arc::downgrade(&func), Default::default()),
         Default::default(),
         |n, paths: &mut Vec<_>| -> Result<VisitNext, Infallible> {
             if n.path.is_cyclic() {
@@ -147,7 +121,9 @@ pub fn get_path_to_files_2(func: Arc<FunctionType>) -> Vec<TypePath> {
             match &n.ty {
                 Type::Function(_) => Ok(VisitNext::Siblings),
                 Type::File(_) => {
-                    if let RelativePath::Input(key) = &n.relative_path {
+                    if let RelativePath::Input(key) =
+                        n.path.to_rpath(Some(root_rpath.clone())).unwrap()
+                    {
                         paths.push((&key.path).try_into().unwrap());
                     }
                     Ok(VisitNext::Siblings)

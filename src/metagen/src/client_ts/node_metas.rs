@@ -8,7 +8,7 @@ use typegraph::{FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 
 use super::{
     shared::{
-        files::{get_path_to_files_2, serialize_typepaths_json},
+        files::{get_path_to_files, serialize_typepaths_json},
         manifest::{ManifestPage, TypeRenderer},
         node_metas::*,
     },
@@ -16,32 +16,25 @@ use super::{
 };
 use crate::interlude::*;
 
-type Context = ();
-
 impl TypeRenderer for TsNodeMeta {
-    type Context = Context;
+    type Extras = ();
 
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<Self>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
         match self {
             Self::Scalar => {}
             Self::Alias { .. } => {}
-            Self::Object(obj) => obj.render(dest, page, ctx)?,
-            Self::Function(func) => func.render(dest, page, ctx)?,
-            Self::Union(union) => union.render(dest, page, ctx)?,
+            Self::Object(obj) => obj.render(dest, page)?,
+            Self::Function(func) => func.render(dest, page)?,
+            Self::Union(union) => union.render(dest, page)?,
         }
 
         Ok(())
     }
 
-    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Context) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
         match self {
             Self::Scalar => Some("scalar".to_string()),
-            Self::Alias { target } => page.get_ref(target, ctx),
+            Self::Alias { target } => page.get_ref(target),
             Self::Object(obj) => Some(obj.name.clone()),
             Self::Function(func) => Some(func.name.clone()),
             Self::Union(union) => Some(union.name.clone()),
@@ -56,12 +49,7 @@ pub struct Object {
 }
 
 impl Object {
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<TsNodeMeta>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsNodeMeta>) -> std::fmt::Result {
         let name = &self.name;
         let props = &self.props;
         write!(
@@ -72,7 +60,7 @@ impl Object {
       subNodes: ["#
         )?;
         for (prop_name, prop_ty) in props {
-            let node_ref = page.get_ref(prop_ty, ctx).unwrap();
+            let node_ref = page.get_ref(prop_ty).unwrap();
 
             write!(
                 dest,
@@ -98,12 +86,7 @@ pub struct Union {
 }
 
 impl Union {
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<TsNodeMeta>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsNodeMeta>) -> std::fmt::Result {
         let name = &self.name;
         let variants = &self.variants;
         write!(
@@ -114,7 +97,7 @@ impl Union {
       variants: ["#
         )?;
         for (variant_name, variant_key) in variants {
-            let node_ref = page.get_ref(variant_key, ctx).unwrap();
+            let node_ref = page.get_ref(variant_key).unwrap();
             write!(
                 dest,
                 r#"
@@ -135,20 +118,15 @@ impl Union {
 #[derive(Debug)]
 pub struct Function {
     return_ty: TypeKey,
-    argument_fields: Option<IndexMap<Arc<str>, TypeKey>>,
-    input_files: Option<String>, // WTF
+    argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
+    input_files: Option<String>,
     name: String,
 }
 
 impl Function {
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<TsNodeMeta>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsNodeMeta>) -> std::fmt::Result {
         let name = &self.name;
-        let return_name = page.get_ref(&self.return_ty, ctx).unwrap();
+        let return_name = page.get_ref(&self.return_ty).unwrap();
         write!(
             dest,
             r#"
@@ -164,8 +142,6 @@ impl Function {
             )?;
 
             for (key, ty) in fields {
-                // huh?
-                let ty = page.get_ref(ty, ctx).unwrap();
                 write!(
                     dest,
                     r#"
@@ -206,17 +182,15 @@ pub enum TsNodeMeta {
 }
 
 impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
-    fn build_meta(&self, key: TypeKey) -> TsNodeMeta {
-        let ty = self.tg.find_type(key).unwrap();
-
+    fn build_meta(&self, ty: Type) -> TsNodeMeta {
         match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
             | Type::String(_)
             | Type::File(_) => TsNodeMeta::Scalar,
-            Type::Optional(ty) => self.alias(ty.item().key()),
-            Type::List(ty) => self.alias(ty.item().key()),
+            Type::Optional(ty) => self.alias(ty.item().clone()),
+            Type::List(ty) => self.alias(ty.item().clone()),
             Type::Object(ty) => self.build_object(ty.clone()),
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
@@ -225,15 +199,16 @@ impl MetaFactory<TsNodeMeta> for MetasPageBuilder {
 }
 
 trait TsMetasPageBuilderExt {
-    fn alias(&self, key: TypeKey) -> TsNodeMeta;
+    fn alias(&self, ty: Type) -> TsNodeMeta;
     fn build_object(&self, ty: Arc<ObjectType>) -> TsNodeMeta;
     fn build_union(&self, ty: Arc<UnionType>) -> TsNodeMeta;
     fn build_func(&self, ty: Arc<FunctionType>) -> TsNodeMeta;
 }
 
 impl TsMetasPageBuilderExt for MetasPageBuilder {
-    fn alias(&self, key: TypeKey) -> TsNodeMeta {
-        self.push(key);
+    fn alias(&self, ty: Type) -> TsNodeMeta {
+        let key = ty.key();
+        self.push(ty);
         TsNodeMeta::Alias { target: key }
     }
 
@@ -243,7 +218,7 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
             .iter()
             .map(|(name, prop)| {
                 let key = prop.ty.key();
-                self.push(key);
+                self.push(prop.ty.clone());
                 (name.clone(), key)
             })
             .collect::<IndexMap<_, _>>();
@@ -259,9 +234,9 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
         for variant in ty.variants().iter() {
             if variant.is_composite() {
                 let key = variant.key();
-                self.push(key);
                 variants.insert(variant.name(), key);
             }
+            self.push(variant.clone());
         }
         if variants.is_empty() {
             TsNodeMeta::Scalar
@@ -272,18 +247,19 @@ impl TsMetasPageBuilderExt for MetasPageBuilder {
     }
 
     fn build_func(&self, ty: Arc<FunctionType>) -> TsNodeMeta {
-        let out_key = ty.output().key();
-        self.push(out_key);
+        let out = ty.output();
+        let out_key = out.key();
+        self.push(out.clone());
 
         let props = ty.input().properties();
         let props = (!props.is_empty()).then(|| {
             props
                 .iter()
-                .map(|(name, prop)| (name.clone(), prop.ty.key()))
-                .collect::<IndexMap<_, _>>()
+                .map(|(name, prop)| (name.clone(), prop.ty.name()))
+                .collect::<BTreeMap<_, _>>()
         });
 
-        let input_files = get_path_to_files_2(ty.clone());
+        let input_files = get_path_to_files(ty.clone());
 
         TsNodeMeta::Function(Function {
             return_ty: out_key,

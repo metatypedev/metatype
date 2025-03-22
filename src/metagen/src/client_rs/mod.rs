@@ -6,9 +6,9 @@ mod selections;
 
 use core::fmt::Write;
 
-use fdk_rs::types::{input_manifest_page, output_manifest_page, RustType};
+use fdk_rs::types::{RustTypesConfig, RustTypesSubmanifest};
 use node_metas::RsNodeMeta;
-use selections::RustSelection;
+use selections::RustSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
@@ -54,36 +54,33 @@ struct Maps {
 
 struct RsClientManifest {
     tg: Arc<Typegraph>,
-    input_types: ManifestPage<RustType>,
-    output_types: ManifestPage<RustType>,
+    types: RustTypesSubmanifest,
     node_metas: ManifestPage<RsNodeMeta>,
-    selections: ManifestPage<RustSelection>,
+    selections: RustSelectionManifestPage,
     maps: Maps,
 }
 
 impl RsClientManifest {
     fn new(tg: Arc<Typegraph>) -> anyhow::Result<Self> {
-        let input_types = input_manifest_page(&tg);
-        input_types.cache_references(&());
-        let input_types_memo = input_types.get_cached_refs();
-
-        let output_types = output_manifest_page(&tg, true, &input_types);
-
-        output_types.cache_references(&());
-        let output_types_memo = output_types.get_cached_refs();
+        let types = RustTypesConfig::default()
+            .partial_output_types(true)
+            .derive_serde(true)
+            .derive_debug(true)
+            .build_manifest(&tg);
+        let input_types_memo = types.inputs.get_cached_refs();
+        let output_types_memo = types.outputs.get_cached_refs();
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build();
-        node_metas.cache_references(&());
+        node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg);
-        selections.cache_references(&output_types_memo);
+        let selections = selections::manifest_page(&tg, input_types_memo.clone());
+        selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 
         Ok(Self {
             tg,
-            input_types,
-            output_types,
+            types,
             node_metas,
             selections,
             maps: Maps {
@@ -192,14 +189,12 @@ impl RsClientManifest {
 
         render_static(dest)?;
 
-        let mut types = self.input_types.render_all_buffered(&())?;
-        self.output_types.render_all(&mut types, &())?;
-        with_types_namespace(dest, types)?;
+        self.types.render_full(dest)?;
 
-        let methods = self.node_metas.render_all_buffered(&())?;
+        let methods = self.node_metas.render_all_buffered()?;
         with_metas_namespace(dest, methods)?;
 
-        self.selections.render_all(dest, &self.maps.output_types)?;
+        self.selections.render_all(dest)?;
 
         self.render_query_graph(dest)?;
 
@@ -349,18 +344,6 @@ impl QueryGraph {{
 fn render_static(out: &mut impl Write) -> core::fmt::Result {
     let client_rs = include_str!("static/client.rs");
     write!(out, "{}", client_rs)?;
-    Ok(())
-}
-
-fn with_types_namespace(dest: &mut impl Write, types: String) -> std::fmt::Result {
-    writeln!(dest, "use types::*;")?;
-    writeln!(dest, "pub mod types {{")?;
-
-    for line in types.lines() {
-        writeln!(dest, "    {line}")?;
-    }
-
-    writeln!(dest, "}}")?;
     Ok(())
 }
 

@@ -21,7 +21,7 @@ pub enum Alias {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Derive {
     debug: bool,
     serde: bool,
@@ -57,16 +57,10 @@ pub struct StructProp {
     boxed: bool,
 }
 
-type Context = ();
-
 impl TypeRenderer for RustType {
-    type Context = Context;
-    fn render(
-        &self,
-        out: &mut impl Write,
-        page: &ManifestPage<Self>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    type Extras = Derive;
+
+    fn render(&self, out: &mut impl Write, page: &RustTypeManifestPage) -> std::fmt::Result {
         match self {
             Self::Alias {
                 alias,
@@ -82,7 +76,7 @@ impl TypeRenderer for RustType {
                             item,
                             boxed,
                         } => {
-                            let inner_name = page.get_ref(item, ctx).unwrap();
+                            let inner_name = page.get_ref(item).unwrap();
                             let inner_name = if *boxed {
                                 format!("Box<{}>", inner_name)
                             } else {
@@ -118,7 +112,7 @@ impl TypeRenderer for RustType {
                     if let Some(rename) = &prop.rename {
                         writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
                     }
-                    let mut ty_ref = page.get_ref(&prop.ty, ctx).unwrap();
+                    let mut ty_ref = page.get_ref(&prop.ty).unwrap();
                     if *partial && !prop.optional {
                         ty_ref = format!("Option<{}>", ty_ref)
                     } else if prop.boxed {
@@ -145,14 +139,14 @@ impl TypeRenderer for RustType {
                 writeln!(out, "#[serde(untagged)]")?;
                 writeln!(out, "pub enum {} {{", name)?;
                 for (var_name, ty) in variants.iter() {
-                    writeln!(out, "    {}({}),", var_name, page.get_ref(ty, ctx).unwrap())?;
+                    writeln!(out, "    {}({}),", var_name, page.get_ref(ty).unwrap())?;
                 }
                 writeln!(out, "}}")
             }
         }
     }
 
-    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Context) -> Option<String> {
+    fn get_reference_expr(&self, page: &RustTypeManifestPage) -> Option<String> {
         Some(match self {
             Self::Alias { name, alias } => {
                 if let Some(name) = name {
@@ -162,7 +156,7 @@ impl TypeRenderer for RustType {
                     match alias {
                         Alias::BuiltIn(name) => name.to_string(),
                         Alias::Container { name, item, boxed } => {
-                            self.container_def(name, item, *boxed, page, ctx)
+                            self.container_def(name, item, *boxed, page)
                         }
                         Alias::Plain { name } => name.clone(),
                     }
@@ -192,10 +186,9 @@ impl RustType {
         name: &str,
         item: &TypeKey,
         boxed: bool,
-        page: &ManifestPage<Self>,
-        ctx: &Context,
+        page: &RustTypeManifestPage,
     ) -> String {
-        let inner_name = page.get_ref(item, ctx).unwrap();
+        let inner_name = page.get_ref(item).unwrap();
         let inner_name = if boxed {
             format!("Box<{}>", inner_name)
         } else {
@@ -331,12 +324,16 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                         } else {
                             None
                         };
+                        let (optional, boxed) = match &prop.ty {
+                            Type::Optional(_) => (true, false),
+                            _ => (false, ty.is_descendant_of(&prop.ty)),
+                        };
                         StructProp {
                             name,
                             rename,
                             ty: prop.ty.key(),
-                            optional: matches!(&prop.ty, Type::Optional(_)),
-                            boxed: prop.ty.is_composite(), // TODO is_cyclic
+                            optional,
+                            boxed,
                         }
                     })
                     .collect();
@@ -385,185 +382,122 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
     }
 }
 
-pub fn input_manifest_page(tg: &Typegraph) -> ManifestPage<RustType> {
-    let mut map = IndexMap::new();
+type Extras = Derive;
 
-    for (key, ty) in tg.input_types.iter() {
-        let typespec = get_typespec(ty, false);
-        map.insert(*key, typespec);
-    }
+pub type RustTypeManifestPage = ManifestPage<RustType, Extras>;
 
-    let res: ManifestPage<RustType> = map.into();
-    res.cache_references(&());
-
-    res
+pub struct RustTypesSubmanifest {
+    pub inputs: RustTypeManifestPage,
+    pub outputs: RustTypeManifestPage,
 }
 
-pub fn output_manifest_page(
-    tg: &Typegraph,
-    partial: bool,
-    input_page: &ManifestPage<RustType>,
-) -> ManifestPage<RustType> {
-    let mut map = IndexMap::new();
+#[derive(Default)]
+pub struct RustTypesConfig {
+    partial_output_types: bool,
+    derive_serde: bool,
+    derive_debug: bool,
+}
 
-    for (key, ty) in tg.output_types.iter() {
-        let partial = partial && ty.is_composite();
-        if !partial {
-            // alias to input type if exists
-            if let Some(inp_ref) = input_page.get_ref(&ty.key(), &()) {
-                let alias = Alias::Plain {
-                    name: inp_ref.clone(),
-                };
-                let typespec = RustType::Alias { alias, name: None };
-                map.insert(*key, typespec);
-                continue;
-            }
+impl RustTypesConfig {
+    pub fn partial_output_types(mut self, value: bool) -> Self {
+        self.partial_output_types = value;
+        self
+    }
+
+    pub fn derive_serde(mut self, value: bool) -> Self {
+        self.derive_serde = value;
+        self
+    }
+
+    pub fn derive_debug(mut self, value: bool) -> Self {
+        self.derive_debug = value;
+        self
+    }
+
+    pub fn build_manifest(&self, tg: &Typegraph) -> RustTypesSubmanifest {
+        let gen_config = Derive {
+            serde: self.derive_serde,
+            debug: self.derive_debug,
+        };
+        RustTypesSubmanifest::new(tg, self.partial_output_types, gen_config)
+    }
+}
+
+impl RustTypesSubmanifest {
+    fn new(tg: &Typegraph, partial_output_types: bool, gen_config: Extras) -> Self {
+        let inputs = Self::input_page(tg, gen_config.clone());
+        let outputs = Self::output_page(tg, partial_output_types, &inputs, gen_config);
+        outputs.cache_references();
+        Self { inputs, outputs }
+    }
+
+    fn input_page(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
+
+        for (key, ty) in tg.input_types.iter() {
+            let typespec = get_typespec(ty, false);
+            map.insert(*key, typespec);
         }
-        let typespec = get_typespec(ty, partial);
-        map.insert(*key, typespec);
+
+        let res: RustTypeManifestPage = ManifestPage::with_extras(map, gen_config);
+        res.cache_references();
+
+        res
     }
 
-    let res = ManifestPage::from(map);
-    res.cache_references(&());
+    fn output_page(
+        tg: &Typegraph,
+        partial: bool,
+        input_page: &RustTypeManifestPage,
+        gen_config: Extras,
+    ) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
 
-    res
-}
+        for (key, ty) in tg.output_types.iter() {
+            let partial = partial && ty.is_composite();
+            if !partial {
+                // alias to input type if exists
+                if let Some(inp_ref) = input_page.get_ref(&ty.key()) {
+                    let alias = Alias::Plain {
+                        name: inp_ref.clone(),
+                    };
+                    let typespec = RustType::Alias { alias, name: None };
+                    map.insert(*key, typespec);
+                    continue;
+                }
+            }
+            let typespec = get_typespec(ty, partial);
+            map.insert(*key, typespec);
+        }
 
-pub fn render_types(
-    out: &mut impl Write,
-    inp_page: &ManifestPage<RustType>,
-    out_page: &ManifestPage<RustType>,
-) -> std::fmt::Result {
-    writeln!(out, "use types::*;")?;
-    writeln!(out, "pub mod types {{")?;
+        let res = ManifestPage::with_extras(map, gen_config);
+        res.cache_references();
 
-    let mut buffer = String::new();
-    render_types_raw(&mut buffer, inp_page, out_page)?;
-    indent_lines_into(out, &buffer, "    ")?;
+        res
+    }
 
-    writeln!(out, "}}")?;
-    Ok(())
-}
+    pub fn render_all(&self, out: &mut impl Write) -> std::fmt::Result {
+        self.inputs.render_all(out)?;
+        self.outputs.render_all(out)
+    }
 
-pub fn render_types_raw(
-    out: &mut impl Write,
-    inp_page: &ManifestPage<RustType>,
-    out_page: &ManifestPage<RustType>,
-) -> std::fmt::Result {
-    inp_page.render_all(out, &())?;
-    out_page.render_all(out, &())?;
+    pub fn render_full(&self, out: &mut impl Write) -> std::fmt::Result {
+        writeln!(out, "use types::*;")?;
+        writeln!(out, "pub mod types {{")?;
 
-    Ok(())
+        let mut buffer = String::new();
+        self.render_all(&mut buffer)?;
+        indent_lines_into(out, &buffer, "    ")?;
+
+        writeln!(out, "}}")?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::tests::default_type_node_base;
-
-    fn create_typegraph(
-        tg_name: String,
-        test_types: Vec<tg_schema::TypeNode>,
-    ) -> Result<Arc<Typegraph>> {
-        let types = {
-            use tg_schema::*;
-            let mut types = vec![
-                TypeNode::Object {
-                    base: TypeNodeBase {
-                        title: format!("tg_{}", tg_name),
-                        ..default_type_node_base()
-                    },
-                    data: ObjectTypeData {
-                        properties: [("root".to_string(), 1)].into_iter().collect(),
-                        policies: Default::default(),
-                        id: vec![],
-                        required: vec![],
-                        additional_props: false,
-                    },
-                },
-                TypeNode::Function {
-                    data: FunctionTypeData {
-                        input: 2,
-                        output: 3,
-                        parameter_transform: None,
-                        materializer: 0,
-                        injections: Default::default(),
-                        outjections: Default::default(),
-                        rate_calls: Default::default(),
-                        rate_weight: Default::default(),
-                        runtime_config: Default::default(),
-                    },
-                    base: TypeNodeBase {
-                        title: "MyFunction".into(),
-                        ..default_type_node_base()
-                    },
-                },
-                TypeNode::Object {
-                    base: TypeNodeBase {
-                        title: "MyInput".into(),
-                        ..default_type_node_base()
-                    },
-                    data: ObjectTypeData {
-                        properties: [].into_iter().collect(),
-                        policies: Default::default(),
-                        id: vec![],
-                        required: vec![],
-                        additional_props: false,
-                    },
-                },
-                TypeNode::Object {
-                    base: TypeNodeBase {
-                        title: "MyOutput".into(),
-                        ..default_type_node_base()
-                    },
-                    data: ObjectTypeData {
-                        properties: test_types
-                            .iter()
-                            .enumerate()
-                            .map(|(idx, ty)| (ty.base().title.clone(), idx as u32 + 4))
-                            .collect(),
-                        policies: Default::default(),
-                        id: vec![],
-                        required: vec![],
-                        additional_props: false,
-                    },
-                },
-            ];
-
-            types.extend(test_types);
-
-            types
-        };
-
-        let schema = tg_schema::Typegraph {
-            types,
-            runtimes: vec![tg_schema::runtimes::TGRuntime::Known(
-                tg_schema::runtimes::KnownRuntime::Deno(
-                    tg_schema::runtimes::deno::DenoRuntimeData {
-                        worker: "default".to_string(),
-                        permissions: Default::default(),
-                    },
-                ),
-            )],
-            materializers: vec![tg_schema::Materializer {
-                name: "default".into(),
-                runtime: 0,
-                effect: tg_schema::Effect {
-                    effect: None,
-                    idempotent: true,
-                },
-                data: Default::default(),
-            }],
-            policies: Default::default(),
-            meta: Default::default(),
-            deps: Default::default(),
-            path: None,
-        };
-
-        let tg: Typegraph = Arc::new(schema).try_into()?;
-
-        Ok(Arc::new(tg))
-    }
+    use crate::tests::{create_typegraph, default_type_node_base};
 
     #[test]
     fn ty_generation_test() -> anyhow::Result<()> {
@@ -1014,12 +948,11 @@ pub enum CEither {
             // });
 
             let tg = create_typegraph(name.into(), nodes)?;
-            let inp_page = input_manifest_page(&tg);
-            let mut out_page = output_manifest_page(&tg, false, &inp_page);
-            let first = *out_page.map.first().unwrap().0;
-            out_page.map.shift_remove(&first);
+            let mut manifest = RustTypesConfig::default().build_manifest(&tg);
+            let first = *manifest.outputs.map.first().unwrap().0;
+            manifest.outputs.map.shift_remove(&first);
 
-            let real_out = out_page.render_all_buffered(&())?;
+            let real_out = manifest.outputs.render_all_buffered()?;
 
             // pretty_assertions::assert_eq!(
             //     &gen_name[..],

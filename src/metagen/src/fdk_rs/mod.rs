@@ -14,9 +14,7 @@ mod stubs;
 pub mod types;
 pub mod utils;
 
-use types::input_manifest_page;
-use types::output_manifest_page;
-use types::render_types;
+use types::RustTypesConfig;
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -192,13 +190,15 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf)?;
         self.gen_static(&mut mod_rs)?;
 
-        let inp_page = input_manifest_page(&tg);
-        let out_page = output_manifest_page(&tg, false, &inp_page);
-        render_types(&mut mod_rs.buf, &inp_page, &out_page)?;
+        let manifest = RustTypesConfig::default()
+            .derive_serde(true)
+            .derive_debug(true)
+            .build_manifest(&tg);
+        manifest.render_full(&mut mod_rs.buf)?;
 
         let maps = Maps {
-            input: inp_page.get_cached_refs(),
-            output: out_page.get_cached_refs(),
+            input: manifest.inputs.get_cached_refs(),
+            output: manifest.outputs.get_cached_refs(),
         };
 
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;

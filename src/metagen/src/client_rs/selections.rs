@@ -30,30 +30,23 @@ pub enum RustSelection {
     },
 }
 
-type Context = IndexMap<TypeKey, String>;
-
 impl TypeRenderer for RustSelection {
-    type Context = Context;
+    type Extras = Extras;
 
-    fn render(
-        &self,
-        out: &mut impl Write,
-        page: &ManifestPage<Self>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, out: &mut impl Write, page: &ManifestPage<Self, Extras>) -> std::fmt::Result {
         match self {
             Self::Struct { name, props } => {
-                self.render_for_struct(out, name, props, page, ctx)?;
+                self.render_for_struct(out, name, props, page)?;
             }
             Self::Union { name, variants } => {
-                self.render_for_union(out, name, variants, page, ctx)?;
+                self.render_for_union(out, name, variants, page)?;
             }
         }
 
         Ok(())
     }
 
-    fn get_reference_expr(&self, _page: &ManifestPage<Self>, _ctx: &Context) -> Option<String> {
+    fn get_reference_expr(&self, _page: &ManifestPage<Self, Extras>) -> Option<String> {
         match self {
             Self::Struct { name, .. } | Self::Union { name, .. } => Some(name.clone()),
         }
@@ -66,33 +59,30 @@ impl RustSelection {
         dest: &mut impl Write,
         name: &str,
         props: &[(String, SelectionTy)],
-        page: &ManifestPage<Self>,
-        ctx: &Context,
+        page: &ManifestPage<Self, Extras>,
     ) -> std::fmt::Result {
         // derive prop
         writeln!(dest, "#[derive(Default, Debug)]")?;
         writeln!(dest, "pub struct {name}<ATy = NoAlias> {{")?;
 
-        let types_memo = ctx;
         for (name, select_ty) in props {
             use SelectionTy as S;
             match select_ty {
                 S::Scalar => writeln!(dest, r#"    pub {name}: ScalarSelect<ATy>,"#)?,
                 S::ScalarArgs { arg_ty } => {
-                    let types_memo = ctx;
-                    let arg_ty = types_memo.get(arg_ty).unwrap();
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
                     writeln!(dest, r#"    pub {name}: ScalarSelectArgs<{arg_ty}, ATy>,"#)?
                 }
                 S::Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, ATy>,"#
                     )?
                 }
                 S::CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = types_memo.get(arg_ty).unwrap();
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, ATy>,"#
@@ -118,14 +108,12 @@ impl RustSelection {
         dest: &mut impl Write,
         name: &str,
         props: &[UnionProp],
-        page: &ManifestPage<Self>,
-        ctx: &Context,
+        page: &ManifestPage<Self, Extras>,
     ) -> std::fmt::Result {
         // derive prop
         writeln!(dest, "#[derive(Default, Debug)]")?;
         writeln!(dest, "pub struct {name}<ATy = NoAlias> {{")?;
 
-        let types_memo = ctx;
         for UnionProp {
             name,
             select_ty,
@@ -140,15 +128,15 @@ impl RustSelection {
                     unreachable!()
                 }
                 Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, NoAlias>,"#
                     )?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = types_memo.get(arg_ty).unwrap();
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, NoAlias>,"#
@@ -169,7 +157,14 @@ impl RustSelection {
     }
 }
 
-pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
+pub struct Extras {
+    input_types: IndexMap<TypeKey, String>,
+}
+
+pub fn manifest_page(
+    tg: &typegraph::Typegraph,
+    input_types: IndexMap<TypeKey, String>,
+) -> ManifestPage<RustSelection, Extras> {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
@@ -228,5 +223,7 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<RustSelection> {
         }
     }
 
-    map.into()
+    ManifestPage::with_extras(map, Extras { input_types })
 }
+
+pub type RustSelectionManifestPage = ManifestPage<RustSelection, Extras>;

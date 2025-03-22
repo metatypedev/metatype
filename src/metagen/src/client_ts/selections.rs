@@ -22,28 +22,23 @@ pub struct Object {
 }
 
 impl Object {
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<TsSelection>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsSelection>) -> std::fmt::Result {
         writeln!(dest, "export type {} = {{", self.name)?;
         for (name, select_ty) in &self.props {
             use SelectionTy::*;
             match select_ty {
                 Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs;"#)?,
                 ScalarArgs { arg_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
+                    let arg_ty = page.get_ref(arg_ty).unwrap();
                     writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>;"#)?
                 }
                 Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>;"#)?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let arg_ty = page.get_ref(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
                         r#"  {name}?: CompositeSelectArgs<{arg_ty}, {select_ty}>;"#
@@ -69,12 +64,7 @@ pub struct Union {
 }
 
 impl Union {
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<TsSelection>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsSelection>) -> std::fmt::Result {
         writeln!(dest, "export type {} = {{", self.name)?;
         for variant in &self.variants {
             use SelectionTy::*;
@@ -85,7 +75,7 @@ impl Union {
                     unreachable!()
                 }
                 Composite { select_ty } => {
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     let variant_ty = &variant.ty;
                     writeln!(
                         dest,
@@ -93,8 +83,8 @@ impl Union {
                     )?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = page.get_ref(arg_ty, ctx).unwrap();
-                    let select_ty = page.get_ref(select_ty, ctx).unwrap();
+                    let arg_ty = page.get_ref(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
                     let variant_ty = &variant.ty;
                     writeln!(
                         dest,
@@ -108,24 +98,17 @@ impl Union {
     }
 }
 
-type Context = ();
-
 impl TypeRenderer for TsSelection {
-    type Context = Context;
+    type Extras = ();
 
-    fn render(
-        &self,
-        dest: &mut impl Write,
-        page: &ManifestPage<Self>,
-        ctx: &Context,
-    ) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
         match self {
-            TsSelection::Object(obj) => obj.render(dest, page, ctx),
-            TsSelection::Union(union) => union.render(dest, page, ctx),
+            TsSelection::Object(obj) => obj.render(dest, page),
+            TsSelection::Union(union) => union.render(dest, page),
         }
     }
 
-    fn get_reference_expr(&self, _page: &ManifestPage<Self>, _ctx: &Context) -> Option<String> {
+    fn get_reference_expr(&self, _page: &ManifestPage<Self>) -> Option<String> {
         match self {
             TsSelection::Object(obj) => Some(obj.name.clone()),
             TsSelection::Union(union) => Some(union.name.clone()),

@@ -5,7 +5,7 @@ use std::fmt::Write;
 
 use typegraph::{FunctionType, ObjectType};
 
-use super::shared::files::{get_path_to_files_2, TypePath};
+use super::shared::files::{get_path_to_files, TypePath};
 use super::shared::manifest::{ManifestPage, TypeRenderer};
 use super::shared::node_metas::{MetaFactory, MetasPageBuilder};
 use super::utils::normalize_type_title;
@@ -40,35 +40,29 @@ pub struct Function {
     input_files: Option<String>,
 }
 
-type Context = ();
-
 impl TypeRenderer for RsNodeMeta {
-    type Context = Context;
-    fn render(
-        &self,
-        out: &mut impl Write,
-        page: &ManifestPage<Self>,
-        ctx: &Self::Context,
-    ) -> std::fmt::Result {
+    type Extras = ();
+
+    fn render(&self, out: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
         match self {
             Self::Alias { .. } | Self::Scalar => {}
             Self::Object(obj) => {
-                obj.render(page, ctx, out)?;
+                obj.render(page, out)?;
             }
             Self::Union(union) => {
-                union.render(page, ctx, out)?;
+                union.render(page, out)?;
             }
             Self::Function(func) => {
-                func.render(page, ctx, out)?;
+                func.render(page, out)?;
             }
         }
 
         Ok(())
     }
 
-    fn get_reference_expr(&self, page: &ManifestPage<Self>, ctx: &Self::Context) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
         match self {
-            Self::Alias { target } => page.get_ref(target, ctx),
+            Self::Alias { target } => page.get_ref(target),
             Self::Scalar => Some("scalar".to_string()),
             Self::Object(obj) => Some(obj.name.clone()),
             Self::Union(union) => Some(union.name.clone()),
@@ -81,7 +75,6 @@ impl Object {
     pub fn render(
         &self,
         page: &ManifestPage<RsNodeMeta>,
-        ctx: &Context,
         dest: &mut impl Write,
     ) -> std::fmt::Result {
         let ty_name = &self.name;
@@ -96,7 +89,7 @@ pub fn {ty_name}() -> NodeMeta {{
             ["#
         )?;
         for (key, prop) in self.props.iter() {
-            let node_ref = page.get_ref(prop, ctx).unwrap();
+            let node_ref = page.get_ref(prop).unwrap();
             write!(
                 dest,
                 r#"
@@ -120,7 +113,6 @@ impl Union {
     pub fn render(
         &self,
         page: &ManifestPage<RsNodeMeta>,
-        ctx: &Context,
         dest: &mut impl Write,
     ) -> std::fmt::Result {
         let ty_name = &self.name;
@@ -135,7 +127,7 @@ pub fn {ty_name}() -> NodeMeta {{
             ["#
         )?;
         for (key, prop) in &self.variants {
-            let node_ref = page.get_ref(prop, ctx).unwrap();
+            let node_ref = page.get_ref(prop).unwrap();
             write!(
                 dest,
                 r#"
@@ -159,7 +151,6 @@ impl Function {
     pub fn render(
         &self,
         page: &ManifestPage<RsNodeMeta>,
-        ctx: &Context,
         dest: &mut impl Write,
     ) -> std::fmt::Result {
         let ty_name = &self.name;
@@ -199,7 +190,7 @@ pub fn {ty_name}() -> NodeMeta {{
         input_files: Some(PathToInputFiles(&{input_files})),"#
             )?;
         }
-        let return_node = page.get_ref(&self.return_ty, ctx).unwrap();
+        let return_node = page.get_ref(&self.return_ty).unwrap();
         write!(
             dest,
             r#"
@@ -212,17 +203,15 @@ pub fn {ty_name}() -> NodeMeta {{
 }
 
 impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
-    fn build_meta(&self, key: TypeKey) -> RsNodeMeta {
-        let ty = self.tg.find_type(key).unwrap();
-        debug_assert_eq!(ty.key(), key);
+    fn build_meta(&self, ty: Type) -> RsNodeMeta {
         match ty {
             Type::Boolean(_)
             | Type::Float(_)
             | Type::Integer(_)
             | Type::String(_)
             | Type::File(_) => RsNodeMeta::Scalar,
-            Type::Optional(ty) => self.alias(ty.item().key()),
-            Type::List(ty) => self.alias(ty.item().key()),
+            Type::Optional(ty) => self.alias(ty.item().clone()),
+            Type::List(ty) => self.alias(ty.item().clone()),
             Type::Union(ty) => self.build_union(ty.clone()),
             Type::Function(ty) => self.build_func(ty.clone()),
             Type::Object(ty) => self.build_object(ty.clone()),
@@ -231,15 +220,16 @@ impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
 }
 
 trait RsMetasExt {
-    fn alias(&self, key: TypeKey) -> RsNodeMeta;
+    fn alias(&self, ty: Type) -> RsNodeMeta;
     fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta;
     fn build_object(&self, ty: Arc<ObjectType>) -> RsNodeMeta;
     fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta;
 }
 
 impl RsMetasExt for MetasPageBuilder {
-    fn alias(&self, key: TypeKey) -> RsNodeMeta {
-        self.push(key);
+    fn alias(&self, ty: Type) -> RsNodeMeta {
+        let key = ty.key();
+        self.push(ty);
         RsNodeMeta::Alias { target: key }
     }
 
@@ -248,9 +238,8 @@ impl RsMetasExt for MetasPageBuilder {
         let props = props
             .iter()
             .map(|(name, prop)| {
-                let prop_key = prop.ty.key();
-                self.push(prop_key);
-                (name.clone(), prop_key)
+                self.push(prop.ty.clone());
+                (name.clone(), prop.ty.key())
             })
             .collect::<IndexMap<_, _>>();
 
@@ -265,9 +254,9 @@ impl RsMetasExt for MetasPageBuilder {
         for variant in ty.variants().iter() {
             if variant.is_composite() {
                 let key = variant.key();
-                self.push(key);
                 variants.insert(variant.name(), key);
             }
+            self.push(variant.clone());
         }
         if variants.is_empty() {
             RsNodeMeta::Scalar
@@ -278,8 +267,9 @@ impl RsMetasExt for MetasPageBuilder {
     }
 
     fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta {
-        let out_key = ty.output().key();
-        self.push(out_key);
+        let out = ty.output();
+        let out_key = out.key();
+        self.push(out.clone());
 
         let props = ty.input().properties();
         let props = if !props.is_empty() {
@@ -292,7 +282,7 @@ impl RsMetasExt for MetasPageBuilder {
             None
         };
 
-        let input_files = get_path_to_files_2(ty.clone());
+        let input_files = get_path_to_files(ty.clone());
 
         RsNodeMeta::Function(Function {
             return_ty: out_key,
