@@ -12,7 +12,7 @@ pub mod visitor;
 mod interlude {
     pub use std::sync::Arc;
     pub use std::sync::Weak;
-    pub type Lazy<T> = std::sync::OnceLock<T>;
+    pub type Once<T> = std::sync::OnceLock<T>;
     pub use color_eyre::{
         eyre::{bail, eyre},
         Result,

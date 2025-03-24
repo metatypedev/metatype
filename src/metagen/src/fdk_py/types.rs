@@ -213,12 +213,11 @@ impl ManifestEntry for PyType {
 
     fn get_reference_expr(&self, page: &ManifestPage<Self, Self::Extras>) -> Option<String> {
         match self {
-            PyType::Alias(alias) => Some(
-                alias
-                    .name
-                    .clone()
-                    .unwrap_or_else(|| alias.target_name(page, alias.container)),
-            ),
+            PyType::Alias(alias) => Some(if let Some(name) = &alias.name {
+                name.clone()
+            } else {
+                alias.target_name(page, alias.container)
+            }),
             PyType::LiteralEnum(literal_enum) => Some(literal_enum.name.clone()),
             PyType::Object(object) => Some(object.name.clone()),
             PyType::Union(union) => Some(union.name.clone()),

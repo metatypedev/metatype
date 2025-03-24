@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
-use crate::{conv::interlude::*, Arc, Lazy};
+use crate::{conv::interlude::*, Arc, Once};
 use crate::{interlude::*, TypeNodeExt as _};
 
 #[derive(Debug)]
 pub struct OptionalType {
     pub base: TypeBase,
-    pub(crate) item: Lazy<Type>,
+    pub(crate) item: Once<Type>,
     pub default_value: Option<serde_json::Value>,
 }
 

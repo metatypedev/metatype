@@ -22,7 +22,7 @@ pub struct ObjectProperty {
 #[derive(Debug)]
 pub struct ObjectType {
     pub base: TypeBase,
-    pub(crate) properties: Lazy<IndexMap<Arc<str>, ObjectProperty>>,
+    pub(crate) properties: Once<IndexMap<Arc<str>, ObjectProperty>>,
 }
 
 impl ObjectType {

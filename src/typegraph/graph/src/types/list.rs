@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType, Wrap as _};
-use crate::{conv::interlude::*, interlude::*, Arc, Lazy};
+use crate::{conv::interlude::*, interlude::*, Arc, Once};
 
 #[derive(Debug)]
 pub struct ListType {
     pub base: TypeBase,
-    pub(crate) item: Lazy<Type>,
+    pub(crate) item: Once<Type>,
     pub min_items: Option<u32>,
     pub max_items: Option<u32>,
     pub unique_items: bool,

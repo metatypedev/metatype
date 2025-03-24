@@ -76,7 +76,7 @@ pub struct TypeBase {
     pub type_idx: u32,
     pub key: TypeKey,
     pub title: String,
-    pub name: Lazy<Arc<str>>,
+    pub name: Once<Arc<str>>,
     pub description: Option<String>,
     pub injection: Option<InjectionNode>,
 }

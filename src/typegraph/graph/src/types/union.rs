@@ -4,12 +4,12 @@
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
 use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
-use crate::{Arc, Lazy};
+use crate::{Arc, Once};
 
 #[derive(Debug)]
 pub struct UnionType {
     pub base: TypeBase,
-    pub(crate) variants: Lazy<Vec<Type>>,
+    pub(crate) variants: Once<Vec<Type>>,
     pub either: bool,
 }
 

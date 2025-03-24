@@ -6,15 +6,15 @@ use crate::conv::interlude::*;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{
     runtimes::{Materializer, MaterializerNode, Runtime},
-    Arc, Lazy,
+    Arc, Once,
 };
 use tg_schema::parameter_transform::FunctionParameterTransform;
 
 #[derive(Debug)]
 pub struct FunctionType {
     pub base: TypeBase,
-    pub(crate) input: Lazy<Arc<ObjectType>>,
-    pub(crate) output: Lazy<Type>,
+    pub(crate) input: Once<Arc<ObjectType>>,
+    pub(crate) output: Once<Type>,
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub runtime_config: serde_json::Value, // TODO should not this be removed?
     pub materializer: Materializer,

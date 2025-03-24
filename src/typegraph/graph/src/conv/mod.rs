@@ -29,6 +29,7 @@ pub mod interlude {
 }
 use interlude::*;
 
+/// Conversion state; used when converting a `tg_schema::Typegraph` into a `crate::Typegraph`
 pub struct Conversion {
     schema: Arc<tg_schema::Typegraph>,
     conversion_map: ConversionMap,
