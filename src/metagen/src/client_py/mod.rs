@@ -160,9 +160,9 @@ impl ClientPyManifest {
     pub(super) fn render_client(
         &self,
         dest: &mut impl Write,
-        _hostcall: bool,
+        hostcall: bool,
     ) -> anyhow::Result<()> {
-        render_static(dest)?;
+        render_static(dest, hostcall)?;
 
         with_metas_namespace(dest, &self.node_metas.render_all_buffered()?)?;
         self.types.render_all(dest)?;
@@ -267,9 +267,13 @@ class QueryGraph(QueryGraphBase):
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut impl Write) -> core::fmt::Result {
+fn render_static(dest: &mut impl Write, hostcall: bool) -> anyhow::Result<()> {
     let client_py = include_str!("static/client.py");
-    writeln!(dest, "{}", client_py)?;
+    crate::utils::processed_write(
+        dest,
+        client_py,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 

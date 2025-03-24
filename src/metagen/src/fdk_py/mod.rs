@@ -120,7 +120,6 @@ impl FdkPythonTemplate {
                 let out_ty = ty_name_memo
                     .get(&fun.output().key())
                     .ok_or_eyre("output type for function not found")?;
-                // let type_name: String = client_py::utils::normalize_type_title(&base.title);
                 writeln!(
                     &mut fdk_py,
                     r#"

@@ -45,7 +45,7 @@ pub struct GenDestFs {
 /// * `Ok(())` if processing was successful
 /// * `Err` if there are unmatched or unclosed directives
 pub fn processed_write(
-    dest: &mut GenDestBuf,
+    dest: &mut impl Write,
     input: &str,
     flags: &BTreeMap<String, bool>,
 ) -> eyre::Result<()> {
