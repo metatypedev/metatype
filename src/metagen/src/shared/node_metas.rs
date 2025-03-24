@@ -7,7 +7,7 @@ use typegraph::TypeNodeExt as _;
 
 use crate::interlude::*;
 
-use super::manifest::{ManifestPage, TypeRenderer};
+use super::manifest::{ManifestEntry, ManifestPage};
 
 pub trait MetaFactory<M> {
     fn build_meta(&self, ty: Type) -> M;
@@ -36,7 +36,7 @@ impl MetasPageBuilder {
 impl MetasPageBuilder {
     pub fn build<M>(self) -> ManifestPage<M>
     where
-        M: TypeRenderer<Extras = ()>,
+        M: ManifestEntry<Extras = ()>,
         Self: MetaFactory<M>,
     {
         let mut map = IndexMap::new();

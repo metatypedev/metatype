@@ -234,7 +234,7 @@ impl QueryGraph {{
     "#
         )?;
 
-        self.render_meta_functions(dest)?;
+        self.render_root_functions(dest)?;
 
         writeln!(
             dest,
@@ -245,7 +245,7 @@ impl QueryGraph {{
         Ok(())
     }
 
-    fn render_meta_functions(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+    fn render_root_functions(&self, dest: &mut impl Write) -> anyhow::Result<()> {
         for func in self.tg.root_functions() {
             let (path, ty) = func?;
             use heck::ToSnekCase;

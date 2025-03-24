@@ -6,7 +6,7 @@ use std::fmt::Write;
 use typegraph::TypeNodeExt as _;
 
 use super::{
-    shared::manifest::{ManifestPage, TypeRenderer},
+    shared::manifest::{ManifestEntry, ManifestPage},
     utils::*,
 };
 use crate::{interlude::*, shared::client::*};
@@ -30,7 +30,7 @@ pub enum RustSelection {
     },
 }
 
-impl TypeRenderer for RustSelection {
+impl ManifestEntry for RustSelection {
     type Extras = Extras;
 
     fn render(&self, out: &mut impl Write, page: &ManifestPage<Self, Extras>) -> std::fmt::Result {

@@ -654,7 +654,6 @@ Meta.test(
         expected: expectedSchema,
       },
       {
-        skip: true,
         name: "client_py",
         command: $`python3 main.py`.cwd(join(scriptsPath, "py")),
         expected: expectedSchema,

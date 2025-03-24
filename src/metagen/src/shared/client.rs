@@ -1,13 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
 use crate::{interlude::*, shared::get_gql_type};
-
-use super::files::TypePath;
-use indexmap::IndexSet;
-use typegraph::FunctionType;
 
 /// get the types that could be referenced in the GraphQL queries
 pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
@@ -36,62 +30,6 @@ pub fn get_gql_types(tg: &Typegraph) -> IndexMap<TypeKey, String> {
     }
 
     res
-}
-
-pub struct RenderManifest {
-    pub tg: Arc<Typegraph>,
-    pub node_metas: IndexSet<TypeKey>,
-    pub selections: IndexSet<TypeKey>,
-    pub root_fns: Vec<RootFn>,
-    pub input_files: Arc<HashMap<u32, Vec<TypePath>>>,
-}
-
-pub struct RootFn {
-    pub path: Vec<Arc<str>>, // non empty
-    pub type_: Arc<FunctionType>,
-    pub select_ty: Option<TypeKey>,
-}
-
-/// Collect upfront all the items we need to render
-pub fn get_manifest(tg: Arc<Typegraph>) -> Result<RenderManifest> {
-    let mut root_fns = vec![];
-    let mut selections = IndexSet::new();
-    let mut node_metas = IndexSet::new();
-    let mut arg_types = IndexSet::new();
-
-    for root_fn in tg.root_functions() {
-        let (path, func) = root_fn?;
-        let _ = node_metas.insert(func.key());
-        let out = func.output();
-        let out_key = out.key();
-        // return_types.insert(out_name.clone());
-
-        let select_ty = if func.output().is_composite() {
-            let _ = node_metas.insert(out_key);
-            selections.insert(out_key);
-            Some(out_key)
-        } else {
-            None
-        };
-        root_fns.push(RootFn {
-            path,
-            type_: func,
-            select_ty,
-        })
-    }
-
-    for func in tg.functions.values() {
-        arg_types.insert(func.input().name());
-    }
-
-    Ok(RenderManifest {
-        root_fns,
-        selections,
-        node_metas,
-        tg: tg.clone(),
-        // input_files: get_path_to_files(&tg)?.into(),
-        input_files: Default::default(),
-    })
 }
 
 #[derive(Debug)]

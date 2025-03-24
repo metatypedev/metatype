@@ -9,14 +9,14 @@ use typegraph::{FunctionType, ObjectType, TypeNodeExt as _, UnionType};
 use super::{
     shared::{
         files::{get_path_to_files, serialize_typepaths_json},
-        manifest::{ManifestPage, TypeRenderer},
+        manifest::{ManifestEntry, ManifestPage},
         node_metas::*,
     },
     utils::normalize_type_title,
 };
 use crate::interlude::*;
 
-impl TypeRenderer for TsNodeMeta {
+impl ManifestEntry for TsNodeMeta {
     type Extras = ();
 
     fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {

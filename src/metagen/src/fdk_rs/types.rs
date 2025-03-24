@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::manifest::{ManifestPage, TypeRenderer};
+use super::manifest::{ManifestEntry, ManifestPage};
 use super::{indent_lines_into, utils::*};
 use crate::interlude::*;
 use crate::shared::types::type_body_required;
@@ -57,7 +57,7 @@ pub struct StructProp {
     boxed: bool,
 }
 
-impl TypeRenderer for RustType {
+impl ManifestEntry for RustType {
     type Extras = Derive;
 
     fn render(&self, out: &mut impl Write, page: &RustTypeManifestPage) -> std::fmt::Result {

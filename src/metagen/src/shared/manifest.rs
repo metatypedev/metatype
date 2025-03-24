@@ -1,32 +1,40 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+//! Code generations are specified in a pre-computed manifest.
+//! Each manifest is a collection of one or more manifest pages.
+//! Each manifest page is a collection of manifest entries.
+
 use crate::interlude::*;
 use indexmap::IndexMap;
 use std::{fmt::Write, sync::RwLock};
 
-pub trait TypeRenderer: Sized + std::fmt::Debug {
+pub trait ManifestEntry: Sized + std::fmt::Debug {
     type Extras;
     fn render(
         &self,
         out: &mut impl Write,
         page: &ManifestPage<Self, Self::Extras>,
     ) -> std::fmt::Result;
-    /// get reference expression for the generated type;
-    /// it is either a type name or a more complex expression if there type is not explicitly
-    /// rendered
+    /// Get reference expression for the generated entity for this manifest entry;
+    /// The reference is either a simple identifier or a more complex expression
+    /// when the entity has not been specifically named.
     fn get_reference_expr(&self, page: &ManifestPage<Self, Self::Extras>) -> Option<String>;
 }
 
 #[derive(Debug)]
-pub struct ManifestPage<R: TypeRenderer, E = (), K: std::hash::Hash = TypeKey> {
-    pub map: IndexMap<K, R>,
-    pub reference_cache: RwLock<IndexMap<K, Option<String>>>,
+pub struct ManifestPage<R, E = ()>
+where
+    R: ManifestEntry<Extras = E>,
+{
+    pub map: IndexMap<TypeKey, R>,
+    pub reference_cache: RwLock<IndexMap<TypeKey, Option<String>>>,
     pub extras: E,
 }
 
-impl<S: TypeRenderer, E> From<IndexMap<TypeKey, S>> for ManifestPage<S, E>
+impl<S, E> From<IndexMap<TypeKey, S>> for ManifestPage<S, E>
 where
+    S: ManifestEntry<Extras = E>,
     E: Default,
 {
     fn from(map: IndexMap<TypeKey, S>) -> Self {
@@ -40,7 +48,7 @@ where
 
 impl<R, E> ManifestPage<R, E>
 where
-    R: TypeRenderer<Extras = E>,
+    R: ManifestEntry<Extras = E>,
 {
     pub fn with_extras(map: IndexMap<TypeKey, R>, extras: E) -> Self {
         Self {

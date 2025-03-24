@@ -3,7 +3,7 @@
 
 use std::fmt::Write;
 
-use super::manifest::{ManifestPage, TypeRenderer};
+use super::manifest::{ManifestEntry, ManifestPage};
 use super::shared::types::type_body_required;
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::interlude::*;
@@ -52,7 +52,7 @@ pub struct ObjectProp {
     optional: bool,
 }
 
-impl TypeRenderer for TsType {
+impl ManifestEntry for TsType {
     type Extras = ();
 
     fn render(&self, out: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {

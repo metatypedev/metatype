@@ -34,7 +34,7 @@ mod fdk_rs;
 // mod fdk_substantial;
 mod fdk_ts;
 
-// mod client_py;
+mod client_py;
 mod client_rs;
 mod client_ts;
 
@@ -49,7 +49,7 @@ pub use shared::FdkTemplate;
 
 pub use fdk_py::DEFAULT_TEMPLATE as FDK_PY_DEFAULT_TEMPLATE;
 pub use fdk_rs::DEFAULT_TEMPLATE as FDK_RS_DEFAULT_TEMPLATE;
-// pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
+pub use fdk_ts::DEFAULT_TEMPLATE as FDK_TS_DEFAULT_TEMPLATE;
 
 /// This implements a command object pattern API for generator
 /// implementations to access the external world. See [InputResolver].
@@ -186,16 +186,16 @@ impl GeneratorRunner {
                         },
                     },
                 ),
-                // (
-                //     "client_py".to_string(),
-                //     GeneratorRunner {
-                //         op: |workspace_path: &Path, val| {
-                //             let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
-                //             let generator = client_py::Generator::new(config)?;
-                //             Ok(Box::new(generator))
-                //         },
-                //     },
-                // ),
+                (
+                    "client_py".to_string(),
+                    GeneratorRunner {
+                        op: |workspace_path: &Path, val| {
+                            let config = client_py::ClientPyGenConfig::from_json(val, workspace_path)?;
+                            let generator = client_py::Generator::new(config)?;
+                            Ok(Box::new(generator))
+                        },
+                    },
+                ),
                 (
                     "client_rs".to_string(),
                     GeneratorRunner {

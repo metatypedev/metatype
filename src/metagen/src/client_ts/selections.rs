@@ -5,7 +5,7 @@ use std::fmt::Write;
 
 use typegraph::TypeNodeExt as _;
 
-use super::shared::manifest::{ManifestPage, TypeRenderer};
+use super::shared::manifest::{ManifestEntry, ManifestPage};
 use super::utils::*;
 use crate::{interlude::*, shared::client::*};
 
@@ -98,7 +98,7 @@ impl Union {
     }
 }
 
-impl TypeRenderer for TsSelection {
+impl ManifestEntry for TsSelection {
     type Extras = ();
 
     fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {

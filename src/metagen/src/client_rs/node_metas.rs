@@ -6,7 +6,7 @@ use std::fmt::Write;
 use typegraph::{FunctionType, ObjectType};
 
 use super::shared::files::{get_path_to_files, TypePath};
-use super::shared::manifest::{ManifestPage, TypeRenderer};
+use super::shared::manifest::{ManifestEntry, ManifestPage};
 use super::shared::node_metas::{MetaFactory, MetasPageBuilder};
 use super::utils::normalize_type_title;
 use crate::interlude::*;
@@ -40,7 +40,7 @@ pub struct Function {
     input_files: Option<String>,
 }
 
-impl TypeRenderer for RsNodeMeta {
+impl ManifestEntry for RsNodeMeta {
     type Extras = ();
 
     fn render(&self, out: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
