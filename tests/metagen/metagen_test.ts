@@ -714,7 +714,6 @@ Meta.test(
       },
       {
         name: "client_py_upload",
-        skip: true,
         command: $`bash -c "python main.py"`.cwd(
           join(scriptsPath, "py_upload"),
         ),
