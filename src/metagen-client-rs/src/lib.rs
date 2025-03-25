@@ -1,11 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-mod args;
-mod files;
-mod graphql;
-mod nodes;
-mod selection;
+pub mod args;
+mod common;
+#[cfg(feature = "graphql")]
+pub mod files;
+#[cfg(feature = "graphql")]
+pub mod graphql;
+pub mod hostcall;
+pub mod nodes;
+pub mod selection;
 
 mod interlude {
     pub use serde::{Deserialize, Serialize};
@@ -23,11 +27,14 @@ mod interlude {
 
 pub mod prelude {
     pub use crate::args::*;
+    pub use crate::common::*;
+    #[cfg(feature = "graphql")]
     pub use crate::files::*;
+    #[cfg(feature = "graphql")]
     pub use crate::graphql::*;
     pub use crate::interlude::BoxErr;
     pub use crate::nodes::*;
     pub use crate::selection::*;
     pub use crate::{impl_selection_traits, impl_union_selection_traits};
-    pub use reqwest::Url;
+    pub use url::Url;
 }

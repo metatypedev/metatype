@@ -33,7 +33,6 @@ where
     }
 }
 
-#[derive(Debug)]
 pub enum NodeArgsMerged {
     Inline(HashMap<CowStr, NodeArgValue>),
     Placeholder {
@@ -68,13 +67,11 @@ pub(crate) fn check_node_args(
     Ok(instance_args)
 }
 
-#[derive(Debug)]
 pub struct NodeArgValue {
     pub type_name: CowStr,
     pub value: serde_json::Value,
 }
 
-#[derive(Debug)]
 pub struct PreparedArgs;
 
 impl PreparedArgs {

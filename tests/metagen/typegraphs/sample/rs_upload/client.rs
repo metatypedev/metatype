@@ -4,6 +4,27 @@
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
+pub mod transports {
+    use super::*;
+
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> metagen_client::graphql::GraphQlTransportReqwest {
+        metagen_client::graphql::GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+
+    #[cfg(not(target_family = "wasm"))]
+    pub fn graphql_sync(
+        qg: &QueryGraph,
+        addr: Url,
+    ) -> metagen_client::graphql::GraphQlTransportReqwestSync {
+        metagen_client::graphql::GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+}
+
 //
 // --- --- QueryGraph types --- --- //
 //
@@ -11,22 +32,13 @@ use metagen_client::prelude::*;
 #[derive(Clone)]
 pub struct QueryGraph {
     ty_to_gql_ty_map: TyToGqlTyMap,
-    addr: Url,
-}
-
-impl QueryGraph {
-    pub fn graphql(&self) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
-    pub fn graphql_sync(&self) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
 }
 
 //
 // --- --- Typegraph types --- --- //
 //
 use types::*;
+#[allow(unused)]
 pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInput {
@@ -98,31 +110,29 @@ mod node_metas {
     }
 }
 
-impl QueryGraph {
-    pub fn new(addr: Url) -> Self {
-        Self {
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new(
-                [
-                    ("file_bf9b7".into(), "file_bf9b7!".into()),
-                    (
-                        "root_upload_fn_input_path_string_25e51_optional".into(),
-                        "String".into(),
-                    ),
-                    (
-                        "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
-                        "String".into(),
-                    ),
-                    (
-                        "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
-                        "[file_bf9b7!]!".into(),
-                    ),
-                ]
-                .into(),
-            ),
-        }
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new(
+            [
+                ("file_bf9b7".into(), "file_bf9b7!".into()),
+                (
+                    "root_upload_fn_input_path_string_25e51_optional".into(),
+                    "String".into(),
+                ),
+                (
+                    "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
+                    "String".into(),
+                ),
+                (
+                    "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
+                    "[file_bf9b7!]!".into(),
+                ),
+            ]
+            .into(),
+        ),
     }
-
+}
+impl QueryGraph {
     pub fn upload(
         &self,
         args: impl Into<NodeArgs<RootUploadFnInput>>,

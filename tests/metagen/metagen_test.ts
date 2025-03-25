@@ -522,13 +522,15 @@ Meta.test("fdk table suite", async (metaTest) => {
       0,
     );
   });
+
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
+
   for (const prefix of ["rs", "ts", "py"]) {
-    if (prefix !== "py") {
-      continue;
-    }
+    // if (prefix !== "py") {
+    //   continue;
+    // }
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {

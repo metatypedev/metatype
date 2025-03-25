@@ -65,6 +65,7 @@ impl ManifestEntry for RustType {
             Self::Alias {
                 alias,
                 name: alias_name,
+                ..
             } => {
                 if let Some(alias_name) = alias_name {
                     match alias {
@@ -136,6 +137,7 @@ impl ManifestEntry for RustType {
                     name.clone()
                 };
                 RustType::render_derive(out, derive)?;
+                writeln!(out, "#[allow(clippy::large_enum_variant)]")?;
                 writeln!(out, "#[serde(untagged)]")?;
                 writeln!(out, "pub enum {} {{", name)?;
                 for (var_name, ty) in variants.iter() {
@@ -241,13 +243,21 @@ impl RustType {
     }
 }
 
+fn name_with_suffix(name: &str, partial: bool) -> String {
+    if partial {
+        format!("{}Partial", name)
+    } else {
+        name.to_string()
+    }
+}
+
 fn get_typespec(ty: &Type, partial: bool) -> RustType {
     if type_body_required(ty) {
-        let name = Some(normalize_type_title(&ty.name()));
+        let name = normalize_type_title(&ty.name());
         match ty {
-            Type::Boolean(_) => RustType::builtin("bool", name),
-            Type::Integer(_) => RustType::builtin("i64", name),
-            Type::Float(_) => RustType::builtin("f64", name),
+            Type::Boolean(_) => RustType::builtin("bool", Some(name)),
+            Type::Integer(_) => RustType::builtin("i64", Some(name)),
+            Type::Float(_) => RustType::builtin("f64", Some(name)),
             Type::String(ty) => {
                 if let (Some(format), true) = (ty.format_only(), ty.title().starts_with("string_"))
                 {
@@ -257,31 +267,33 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     )));
                     RustType::builtin("String", name)
                 } else {
-                    RustType::builtin("String", name)
+                    RustType::builtin("String", Some(name))
                 }
             }
-            Type::File(_) => RustType::builtin("super::FileId", name),
+            Type::File(_) => RustType::builtin("super::FileId", Some(name)),
             Type::Optional(ty) => {
                 let item_ty = ty.item();
+                let is_composite = item_ty.is_composite();
                 if ty.default_value.is_none() && ty.title().starts_with("optional_") {
                     // no alias -- inline
                     RustType::container(
                         "Option",
                         item_ty.key(),
-                        item_ty.is_composite(), // TODO is_cyclic
+                        is_composite, // TODO is_cyclic
                         None,
                     )
                 } else {
                     RustType::container(
                         "Option",
                         item_ty.key(),
-                        item_ty.is_composite(), // TODO is_cyclic
-                        name,
+                        is_composite, // TODO is_cyclic
+                        Some(name_with_suffix(&name, partial && is_composite)),
                     )
                 }
             }
             Type::List(ty) => {
                 let item_ty = ty.item();
+                let is_composite = item_ty.is_composite();
                 if matches!((ty.min_items, ty.max_items), (None, None))
                     && ty.title().starts_with("list_")
                 {
@@ -295,7 +307,7 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     RustType::container(
                         container_name,
                         item_ty.key(),
-                        item_ty.is_composite(), // TODO is_cyclic
+                        is_composite, // TODO is_cyclic
                         None,
                     )
                 } else {
@@ -307,8 +319,8 @@ fn get_typespec(ty: &Type, partial: bool) -> RustType {
                     RustType::container(
                         container_name,
                         item_ty.key(),
-                        item_ty.is_composite(), // TODO is_cyclic
-                        name,
+                        is_composite, // TODO is_cyclic
+                        Some(name_with_suffix(&name, partial && is_composite)),
                     )
                 }
             }
@@ -483,6 +495,7 @@ impl RustTypesSubmanifest {
 
     pub fn render_full(&self, out: &mut impl Write) -> std::fmt::Result {
         writeln!(out, "use types::*;")?;
+        writeln!(out, "#[allow(unused)]")?;
         writeln!(out, "pub mod types {{")?;
 
         let mut buffer = String::new();

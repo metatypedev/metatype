@@ -4,6 +4,28 @@
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
+pub mod transports {
+    use super::*;
+
+    pub fn graphql(qg: &QueryGraph, addr: Url) -> metagen_client::graphql::GraphQlTransportReqwest {
+        metagen_client::graphql::GraphQlTransportReqwest::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+
+    #[cfg(not(target_family = "wasm"))]
+    pub fn graphql_sync(
+        qg: &QueryGraph,
+        addr: Url,
+    ) -> metagen_client::graphql::GraphQlTransportReqwestSync {
+        metagen_client::graphql::GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
+    }
+
+}
+
 //
 // --- --- QueryGraph types --- --- //
 //
@@ -11,22 +33,13 @@ use metagen_client::prelude::*;
 #[derive(Clone)]
 pub struct QueryGraph {
     ty_to_gql_ty_map: TyToGqlTyMap,
-    addr: Url,
-}
-
-impl QueryGraph {
-    pub fn graphql(&self) -> GraphQlTransportReqwest {
-        GraphQlTransportReqwest::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
-    pub fn graphql_sync(&self) -> GraphQlTransportReqwestSync {
-        GraphQlTransportReqwestSync::new(self.addr.clone(), self.ty_to_gql_ty_map.clone())
-    }
 }
 
 //
 // --- --- Typegraph types --- --- //
 //
 use types::*;
+#[allow(unused)]
 pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootGetUserFnInput {
@@ -50,10 +63,10 @@ pub mod types {
     pub struct UserPartial {
         pub id: Option<UserIdStringUuid>,
         pub email: Option<UserEmailStringEmail>,
-        pub posts: Option<UserPostsPostList>,
+        pub posts: Option<UserPostsPostListPartial>,
     }
     pub type UserEmailStringEmail = String;
-    pub type UserPostsPostList = Vec<Box<PostPartial>>;
+    pub type UserPostsPostListPartial = Vec<Box<PostPartial>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PostPartial {
         pub id: Option<UserIdStringUuid>,
@@ -61,18 +74,21 @@ pub mod types {
         pub title: Option<String>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum RootScalarUnionFnOutput {
         StringE1a43(String),
         Integer64be4(i64),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum RootCompositeUnionFnOutputPartial {
         Post(PostPartial),
         User(UserPartial),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum RootMixedUnionFnOutputPartial {
         Post(PostPartial),
@@ -84,7 +100,7 @@ pub mod types {
     pub struct RootNestedCompositeFnOutputPartial {
         pub scalar: Option<i64>,
         pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
-        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList>,
+        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputCompositeStructPartial {
@@ -95,7 +111,7 @@ pub mod types {
     pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
         pub inner: Option<i64>,
     }
-    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
+    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootNestedCompositeFnOutputListStructPartial {
         pub value: Option<i64>,
@@ -388,21 +404,19 @@ pub struct RootIdentityFnInputSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(RootIdentityFnInputSelections, input);
 
-impl QueryGraph {
-
-    pub fn new(addr: Url) -> Self {
-        Self {
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new([
-                ("user_id_string_uuid".into(), "ID!".into()),
-                ("string_e1a43".into(), "String!".into()),
-                ("integer_64be4".into(), "Int!".into()),
-                ("post".into(), "post!".into()),
-                ("user".into(), "user!".into()),
-            ].into()),
-        }
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new([
+            ("user_id_string_uuid".into(), "ID!".into()),
+            ("string_e1a43".into(), "String!".into()),
+            ("integer_64be4".into(), "Int!".into()),
+            ("post".into(), "post!".into()),
+            ("user".into(), "user!".into()),
+        ].into()),
     }
-    
+}
+    impl QueryGraph{
+
     pub fn get_user(
         &self,
     ) -> UnselectedNode<UserSelections, UserSelections<HasAlias>, QueryMarker, UserPartial>

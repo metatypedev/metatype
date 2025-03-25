@@ -5,7 +5,7 @@ use crate::selection::{selection_to_node_set, SelectionErased, SelectionErasedMa
 
 use crate::{
     args::{NodeArgsErased, NodeArgsMerged},
-    files::PathToInputFiles,
+    common::PathToInputFiles,
     interlude::*,
     selection::CompositeSelection,
 };
@@ -21,7 +21,6 @@ pub struct NodeMeta {
     pub input_files: Option<PathToInputFiles>,
 }
 
-#[derive(Debug)]
 pub enum SubNodes {
     None,
     Atomic(Vec<SelectNodeErased>),
@@ -29,7 +28,6 @@ pub enum SubNodes {
 }
 
 /// The final form of the nodes used in queries.
-#[derive(Debug)]
 pub struct SelectNodeErased {
     pub node_name: CowStr,
     pub instance_name: CowStr,

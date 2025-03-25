@@ -31,6 +31,12 @@ pub struct MatBuilder {
     handlers: HashMap<String, ErasedHandler>,
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -74,7 +80,15 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {};
+        // metagen-genif HOSTCALL
+        let qg = query_graph();
+        // metagen-endif
+        let cx = Ctx {
+            // metagen-genif HOSTCALL
+            host: transports::hostcall(&qg),
+            qg,
+            // metagen-endif
+        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -85,7 +99,25 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
-pub struct Ctx {}
+// metagen-genif IGNORE
+// these are stubs to items that come from client.rs
+pub struct QueryGraph;
+fn query_graph() -> QueryGraph {
+    QueryGraph
+}
+mod transports {
+    pub fn hostcall(_qg: &super::QueryGraph) -> metagen_client::hostcall::HostcallTransport {
+        todo!()
+    }
+}
+// metagen-endif
+
+pub struct Ctx {
+    // metagen-genif HOSTCALL
+    pub qg: QueryGraph,
+    pub host: metagen_client::hostcall::HostcallTransport,
+    // metagen-endif
+}
 
 impl Ctx {
     pub fn gql<O>(

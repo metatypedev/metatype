@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{borrow::Cow, fmt::Write};
+use std::collections::HashSet;
+use std::{borrow::Cow, cell::RefCell, fmt::Write};
 
 use crate::interlude::*;
 use indexmap::IndexMap;
@@ -73,7 +74,7 @@ impl Alias {
     fn target_name(&self, page: &PyTypesPage, container: Option<&'static str>) -> String {
         let inner: Cow<'static, str> = match &self.target {
             AliasTarget::BuiltIn(builtin) => (*builtin).into(), //
-            AliasTarget::Type(ty_key) => page.get_ref(ty_key).unwrap().into(),
+            AliasTarget::Type(ty_key) => page.get_quoted_ref(ty_key).into(),
         };
         if let Some(container) = container {
             if self.quote {
@@ -109,7 +110,7 @@ impl Object {
         let name = &self.name;
         writeln!(dest, r#"{name} = typing.TypedDict("{name}", {{"#)?;
         for prop in self.props.iter() {
-            let ty_ref = page.get_ref(&prop.ty).unwrap();
+            let ty_ref = page.get_quoted_ref(&prop.ty);
             let ty_ref = if prop.quoted {
                 quote_ty_name(ty_ref)
             } else {
@@ -172,7 +173,7 @@ impl Union {
         render_union(
             dest,
             &self.name,
-            self.variants.iter().map(|v| page.get_ref(v).unwrap()),
+            self.variants.iter().map(|v| page.get_quoted_ref(v)),
         )
     }
 }
@@ -193,22 +194,31 @@ pub enum PyType {
     Union(Union),
 }
 
-pub type PyTypesPage = ManifestPage<PyType>;
+#[derive(Default)]
+pub struct Extras {
+    // This will be used to check if a type has already been rendered;
+    // because if it hasn't, references should be quoted.
+    render_history: RefCell<HashSet<String>>,
+}
+
+pub type PyTypesPage = ManifestPage<PyType, Extras>;
 
 impl ManifestEntry for PyType {
-    type Extras = ();
+    type Extras = Extras;
 
-    fn render(
-        &self,
-        out: &mut impl Write,
-        page: &ManifestPage<Self, Self::Extras>,
-    ) -> std::fmt::Result {
+    // FIXME there are a lot of repeated computations here
+    fn render(&self, out: &mut impl Write, page: &PyTypesPage) -> std::fmt::Result {
         match self {
-            PyType::Alias(alias) => alias.render(out, page),
-            PyType::LiteralEnum(literal_enum) => literal_enum.render(out),
-            PyType::Object(object) => object.render(out, page),
-            PyType::Union(union) => union.render(out, page),
+            PyType::Alias(alias) => alias.render(out, page)?,
+            PyType::LiteralEnum(literal_enum) => literal_enum.render(out)?,
+            PyType::Object(object) => object.render(out, page)?,
+            PyType::Union(union) => union.render(out, page)?,
         }
+
+        let ty_name = self.get_reference_expr(page).unwrap();
+        page.register(ty_name);
+
+        Ok(())
     }
 
     fn get_reference_expr(&self, page: &ManifestPage<Self, Self::Extras>) -> Option<String> {
@@ -344,5 +354,17 @@ impl PyTypesPage {
         }
 
         map.into()
+    }
+
+    fn register(&self, name: String) {
+        self.extras.render_history.borrow_mut().insert(name);
+    }
+    fn get_quoted_ref(&self, tkey: &TypeKey) -> String {
+        let ty_ref = self.get_ref(tkey).unwrap();
+        if self.extras.render_history.borrow().contains(&ty_ref) {
+            ty_ref
+        } else {
+            quote_ty_name(ty_ref)
+        }
     }
 }

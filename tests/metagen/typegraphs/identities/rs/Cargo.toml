@@ -1,20 +1,18 @@
-package.name = "metagen_identities_fdk"
-package.edition = "2021"
-package.version = "0.0.1"
-
-[lib]
-path = "lib.rs"
-crate-type = ["cdylib", "rlib"]
-
+[package]
+name = "identities_fdk"
+edition = "2021"
+version = "0.5.1-rc.0"
 [dependencies]
+metagen-client = { path = "/home/natoandro/devel/metatypedev/metatype/src/metagen-client-rs", default-features = false }
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-wit-bindgen = "0.22.0"
-
-[workspace]
-resolver = "2"
-
+wit-bindgen = "0.34"
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
 [profile.release]
 strip = "symbols"
 opt-level = "z"

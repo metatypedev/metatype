@@ -9,6 +9,7 @@ pub mod wit {
     wit_bindgen::generate!({
         pub_export_macro: true,
         
+
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
@@ -84,6 +85,12 @@ pub struct MatBuilder {
     handlers: HashMap<String, ErasedHandler>,
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -127,7 +134,11 @@ impl Router {
         let Some(handler) = self.handlers.get(mat_trait) else {
             return Err(HandleErr::NoHandler);
         };
-        let cx = Ctx {};
+        let qg = query_graph();
+        let cx = Ctx {
+            host: transports::hostcall(&qg),
+            qg,
+        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -138,7 +149,11 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
-pub struct Ctx {}
+
+pub struct Ctx {
+    pub qg: QueryGraph,
+    pub host: metagen_client::hostcall::HostcallTransport,
+}
 
 impl Ctx {
     pub fn gql<O>(
@@ -217,7 +232,41 @@ macro_rules! init_mat {
     };
 }
 // gen-static-end
+use core::marker::PhantomData;
+use metagen_client::prelude::*;
+
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
+pub mod transports {
+    use super::*;
+
+
+
+    pub fn hostcall(qg: &QueryGraph) -> metagen_client::hostcall::HostcallTransport {
+        metagen_client::hostcall::HostcallTransport::new(
+            std::sync::Arc::new(super::hostcall),
+            qg.ty_to_gql_ty_map.clone(),
+        )
+    }
+}
+
+//
+// --- --- QueryGraph types --- --- //
+//
+
+#[derive(Clone)]
+pub struct QueryGraph {
+    ty_to_gql_ty_map: TyToGqlTyMap,
+}
+
+//
+// --- --- Typegraph types --- --- //
+//
 use types::*;
+#[allow(unused)]
 pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesArgs {
@@ -264,6 +313,7 @@ pub mod types {
     }
     pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum CompositesEitherEither {
         Primitives(Primitives),
@@ -274,6 +324,7 @@ pub mod types {
         pub branch2: PrimitivesStrString,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum CompositesUnionUnion {
         Branch4(Branch4),
@@ -297,12 +348,14 @@ pub mod types {
     }
     pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum Cycles2 {
         Cycles3(Cycles3),
         Cycles1(Cycles1),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum Cycles3 {
         Branch33A(Branch33A),
@@ -343,6 +396,554 @@ pub mod types {
         pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
     pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
+}
+
+#[allow(non_snake_case)]
+mod node_metas {
+    use super::*;
+    pub fn scalar() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: None,
+            input_files: None,
+        }
+    }    
+    pub fn RsSimpleCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "simple_cycles_1".into()),
+                ].into()
+            ),
+            ..SimpleCycles1()
+        }
+    }
+    pub fn SimpleCycles1() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom1".into(), scalar as NodeMetaFn),
+                    ("to2".into(), SimpleCycles2 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn SimpleCycles2() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom2".into(), scalar as NodeMetaFn),
+                    ("to3".into(), SimpleCycles3 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn SimpleCycles3() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom3".into(), scalar as NodeMetaFn),
+                    ("to1".into(), SimpleCycles1 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RsCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "cycles1".into()),
+                ].into()
+            ),
+            ..Cycles1()
+        }
+    }
+    pub fn Cycles1() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom1".into(), scalar as NodeMetaFn),
+                    ("to2".into(), Cycles2 as NodeMetaFn),
+                    ("list3".into(), Cycles3 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Cycles3() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("branch33A".into(), Branch33A as NodeMetaFn),
+                    ("branch33B".into(), Branch33B as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch33B() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom3b".into(), scalar as NodeMetaFn),
+                    ("to2".into(), Cycles2 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Cycles2() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("cycles3".into(), Cycles3 as NodeMetaFn),
+                    ("cycles1".into(), Cycles1 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch33A() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom3a".into(), scalar as NodeMetaFn),
+                    ("to1".into(), Cycles1 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RsComposites() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn Composites() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("opt".into(), scalar as NodeMetaFn),
+                    ("either".into(), CompositesEitherEither as NodeMetaFn),
+                    ("union".into(), scalar as NodeMetaFn),
+                    ("list".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn CompositesEitherEither() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("primitives".into(), Primitives as NodeMetaFn),
+                    ("branch2".into(), Branch2 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch2() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("branch2".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Primitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("str".into(), scalar as NodeMetaFn),
+                    ("enum".into(), scalar as NodeMetaFn),
+                    ("uuid".into(), scalar as NodeMetaFn),
+                    ("email".into(), scalar as NodeMetaFn),
+                    ("ean".into(), scalar as NodeMetaFn),
+                    ("json".into(), scalar as NodeMetaFn),
+                    ("uri".into(), scalar as NodeMetaFn),
+                    ("date".into(), scalar as NodeMetaFn),
+                    ("datetime".into(), scalar as NodeMetaFn),
+                    ("int".into(), scalar as NodeMetaFn),
+                    ("float".into(), scalar as NodeMetaFn),
+                    ("boolean".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RsPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn TsSimpleCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "simple_cycles_1".into()),
+                ].into()
+            ),
+            ..SimpleCycles1()
+        }
+    }
+    pub fn TsCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "cycles1".into()),
+                ].into()
+            ),
+            ..Cycles1()
+        }
+    }
+    pub fn TsComposites() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn TsPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn PySimpleCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "simple_cycles_1".into()),
+                ].into()
+            ),
+            ..SimpleCycles1()
+        }
+    }
+    pub fn PyCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "cycles1".into()),
+                ].into()
+            ),
+            ..Cycles1()
+        }
+    }
+    pub fn PyComposites() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn PyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+
+}
+#[derive(Default, Debug)]
+pub struct PrimitivesSelections<ATy = NoAlias> {
+    pub str: ScalarSelect<ATy>,
+    pub r#enum: ScalarSelect<ATy>,
+    pub uuid: ScalarSelect<ATy>,
+    pub email: ScalarSelect<ATy>,
+    pub ean: ScalarSelect<ATy>,
+    pub json: ScalarSelect<ATy>,
+    pub uri: ScalarSelect<ATy>,
+    pub date: ScalarSelect<ATy>,
+    pub datetime: ScalarSelect<ATy>,
+    pub int: ScalarSelect<ATy>,
+    pub float: ScalarSelect<ATy>,
+    pub boolean: ScalarSelect<ATy>,
+}
+impl_selection_traits!(PrimitivesSelections, str, r#enum, uuid, email, ean, json, uri, date, datetime, int, float, boolean);
+#[derive(Default, Debug)]
+pub struct Branch2Selections<ATy = NoAlias> {
+    pub branch2: ScalarSelect<ATy>,
+}
+impl_selection_traits!(Branch2Selections, branch2);
+#[derive(Default, Debug)]
+pub struct CompositesEitherEitherSelections<ATy = NoAlias> {
+    pub primitives: CompositeSelect<PrimitivesSelections<ATy>, NoAlias>,
+    pub branch2: CompositeSelect<Branch2Selections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(CompositesEitherEitherSelections, ("primitives", primitives), ("branch2", branch2));
+#[derive(Default, Debug)]
+pub struct CompositesSelections<ATy = NoAlias> {
+    pub opt: ScalarSelect<ATy>,
+    pub either: CompositeSelect<CompositesEitherEitherSelections<ATy>, ATy>,
+    pub union: ScalarSelect<ATy>,
+    pub list: ScalarSelect<ATy>,
+}
+impl_selection_traits!(CompositesSelections, opt, either, union, list);
+#[derive(Default, Debug)]
+pub struct Cycles3Selections<ATy = NoAlias> {
+    pub branch33_a: CompositeSelect<Branch33ASelections<ATy>, NoAlias>,
+    pub branch33_b: CompositeSelect<Branch33BSelections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(Cycles3Selections, ("branch33A", branch33_a), ("branch33B", branch33_b));
+#[derive(Default, Debug)]
+pub struct Cycles1Selections<ATy = NoAlias> {
+    pub phantom1: ScalarSelect<ATy>,
+    pub to2: CompositeSelect<Cycles2Selections<ATy>, ATy>,
+    pub list3: CompositeSelect<Cycles3Selections<ATy>, ATy>,
+}
+impl_selection_traits!(Cycles1Selections, phantom1, to2, list3);
+#[derive(Default, Debug)]
+pub struct Branch33ASelections<ATy = NoAlias> {
+    pub phantom3a: ScalarSelect<ATy>,
+    pub to1: CompositeSelect<Cycles1Selections<ATy>, ATy>,
+}
+impl_selection_traits!(Branch33ASelections, phantom3a, to1);
+#[derive(Default, Debug)]
+pub struct Branch33BSelections<ATy = NoAlias> {
+    pub phantom3b: ScalarSelect<ATy>,
+    pub to2: CompositeSelect<Cycles2Selections<ATy>, ATy>,
+}
+impl_selection_traits!(Branch33BSelections, phantom3b, to2);
+#[derive(Default, Debug)]
+pub struct Cycles2Selections<ATy = NoAlias> {
+    pub cycles3: CompositeSelect<Cycles3Selections<ATy>, NoAlias>,
+    pub cycles1: CompositeSelect<Cycles1Selections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(Cycles2Selections, ("cycles3", cycles3), ("cycles1", cycles1));
+#[derive(Default, Debug)]
+pub struct SimpleCycles1Selections<ATy = NoAlias> {
+    pub phantom1: ScalarSelect<ATy>,
+    pub to2: CompositeSelect<SimpleCycles2Selections<ATy>, ATy>,
+}
+impl_selection_traits!(SimpleCycles1Selections, phantom1, to2);
+#[derive(Default, Debug)]
+pub struct SimpleCycles3Selections<ATy = NoAlias> {
+    pub phantom3: ScalarSelect<ATy>,
+    pub to1: CompositeSelect<SimpleCycles1Selections<ATy>, ATy>,
+}
+impl_selection_traits!(SimpleCycles3Selections, phantom3, to1);
+#[derive(Default, Debug)]
+pub struct SimpleCycles2Selections<ATy = NoAlias> {
+    pub phantom2: ScalarSelect<ATy>,
+    pub to3: CompositeSelect<SimpleCycles3Selections<ATy>, ATy>,
+}
+impl_selection_traits!(SimpleCycles2Selections, phantom2, to3);
+
+pub fn query_graph() -> QueryGraph {
+    QueryGraph {
+        ty_to_gql_ty_map: std::sync::Arc::new([
+            ("primitives".into(), "primitives!".into()),
+            ("composites".into(), "composites!".into()),
+            ("cycles1".into(), "cycles1!".into()),
+            ("simple_cycles_1".into(), "simple_cycles_1!".into()),
+            ("branch2".into(), "branch2!".into()),
+            ("branch33A".into(), "branch33A!".into()),
+            ("branch33B".into(), "branch33B!".into()),
+            ("cycles3".into(), "cycles3!".into()),
+        ].into()),
+    }
+}
+    impl QueryGraph{
+
+    pub fn py_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    {
+        UnselectedNode {
+            root_name: "py_primitives".into(),
+            root_meta: node_metas::PyPrimitives,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn py_composites(
+        &self,
+            args: impl Into<NodeArgs<CompositesArgs>>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    {
+        UnselectedNode {
+            root_name: "py_composites".into(),
+            root_meta: node_metas::PyComposites,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn py_cycles(
+        &self,
+            args: impl Into<NodeArgs<Cycles1Args>>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    {
+        UnselectedNode {
+            root_name: "py_cycles".into(),
+            root_meta: node_metas::PyCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn py_simple_cycles(
+        &self,
+            args: impl Into<NodeArgs<SimpleCycles1Args>>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    {
+        UnselectedNode {
+            root_name: "py_simple_cycles".into(),
+            root_meta: node_metas::PySimpleCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn ts_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    {
+        UnselectedNode {
+            root_name: "ts_primitives".into(),
+            root_meta: node_metas::TsPrimitives,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn ts_composites(
+        &self,
+            args: impl Into<NodeArgs<CompositesArgs>>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    {
+        UnselectedNode {
+            root_name: "ts_composites".into(),
+            root_meta: node_metas::TsComposites,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn ts_cycles(
+        &self,
+            args: impl Into<NodeArgs<Cycles1Args>>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    {
+        UnselectedNode {
+            root_name: "ts_cycles".into(),
+            root_meta: node_metas::TsCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn ts_simple_cycles(
+        &self,
+            args: impl Into<NodeArgs<SimpleCycles1Args>>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    {
+        UnselectedNode {
+            root_name: "ts_simple_cycles".into(),
+            root_meta: node_metas::TsSimpleCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn rs_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    {
+        UnselectedNode {
+            root_name: "rs_primitives".into(),
+            root_meta: node_metas::RsPrimitives,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn rs_composites(
+        &self,
+            args: impl Into<NodeArgs<CompositesArgs>>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    {
+        UnselectedNode {
+            root_name: "rs_composites".into(),
+            root_meta: node_metas::RsComposites,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn rs_cycles(
+        &self,
+            args: impl Into<NodeArgs<Cycles1Args>>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    {
+        UnselectedNode {
+            root_name: "rs_cycles".into(),
+            root_meta: node_metas::RsCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn rs_simple_cycles(
+        &self,
+            args: impl Into<NodeArgs<SimpleCycles1Args>>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    {
+        UnselectedNode {
+            root_name: "rs_simple_cycles".into(),
+            root_meta: node_metas::RsSimpleCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
 }
 pub mod stubs {
     use super::*;

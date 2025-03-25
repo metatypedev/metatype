@@ -45,25 +45,25 @@ impl ClienRsGenConfig {
     }
 }
 
-struct Maps {
-    input_types: IndexMap<TypeKey, String>,
-    output_types: IndexMap<TypeKey, String>,
+pub(super) struct Maps {
+    pub(super) input_types: IndexMap<TypeKey, String>,
+    pub(super) output_types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
 
-struct RsClientManifest {
+pub(super) struct RsClientManifest {
     tg: Arc<Typegraph>,
     types: RustTypesSubmanifest,
     node_metas: ManifestPage<RsNodeMeta>,
     selections: RustSelectionManifestPage,
-    maps: Maps,
+    pub maps: Maps,
 }
 
 impl RsClientManifest {
-    fn new(tg: Arc<Typegraph>) -> anyhow::Result<Self> {
+    pub(super) fn new(tg: Arc<Typegraph>, partial_output_types: bool) -> anyhow::Result<Self> {
         let types = RustTypesConfig::default()
-            .partial_output_types(true)
+            .partial_output_types(partial_output_types)
             .derive_serde(true)
             .derive_debug(true)
             .build_manifest(&tg);
@@ -140,7 +140,7 @@ impl crate::Plugin for Generator {
             _ => bail!("unexpected input type"),
         };
         let mut out = IndexMap::new();
-        let manif = RsClientManifest::new(tg.clone())?;
+        let manif = RsClientManifest::new(tg.clone(), true)?;
         let mut buf = String::new();
         manif.render(&mut buf)?;
         out.insert(
@@ -178,6 +178,10 @@ impl crate::Plugin for Generator {
     }
 }
 
+pub struct GenClientRsOpts {
+    pub hostcall: bool,
+}
+
 impl RsClientManifest {
     fn render(&self, dest: &mut impl Write) -> anyhow::Result<()> {
         writeln!(
@@ -187,7 +191,19 @@ impl RsClientManifest {
         writeln!(dest, "// to be generated again on subsequent metagen runs.")?;
         writeln!(dest)?;
 
-        render_static(dest)?;
+        self.render_client(dest, &GenClientRsOpts { hostcall: false })?;
+
+        writeln!(dest)?;
+
+        Ok(())
+    }
+
+    pub fn render_client(
+        &self,
+        dest: &mut impl Write,
+        opts: &GenClientRsOpts,
+    ) -> anyhow::Result<()> {
+        render_static(dest, opts.hostcall)?;
 
         self.types.render_full(dest)?;
 
@@ -197,8 +213,6 @@ impl RsClientManifest {
         self.selections.render_all(dest)?;
 
         self.render_query_graph(dest)?;
-
-        writeln!(dest)?;
         Ok(())
     }
 
@@ -208,12 +222,9 @@ impl RsClientManifest {
         write!(
             dest,
             r#"
-impl QueryGraph {{
-
-    pub fn new(addr: Url) -> Self {{
-        Self {{
-            addr,
-            ty_to_gql_ty_map: std::sync::Arc::new(["#
+pub fn query_graph() -> QueryGraph {{
+    QueryGraph {{
+        ty_to_gql_ty_map: std::sync::Arc::new(["#
         )?;
 
         for (key, gql_ty) in gql_types.into_iter() {
@@ -221,31 +232,26 @@ impl QueryGraph {{
             write!(
                 dest,
                 r#"
-                ("{ty_name}".into(), "{gql_ty}".into()),"#
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
             )?;
         }
 
         write!(
             dest,
             r#"
-            ].into()),
-        }}
+        ].into()),
     }}
+}}
     "#
         )?;
 
         self.render_root_functions(dest)?;
 
-        writeln!(
-            dest,
-            "
-}}"
-        )?;
-
         Ok(())
     }
 
     fn render_root_functions(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+        writeln!(dest, r#"impl QueryGraph{{"#)?;
         for func in self.tg.root_functions() {
             let (path, ty) = func?;
             use heck::ToSnekCase;
@@ -336,14 +342,24 @@ impl QueryGraph {{
                 }
             };
         }
+        writeln!(
+            dest,
+            "
+}}"
+        )?;
+
         Ok(())
     }
 }
 
 /// Render the common sections like the transports
-fn render_static(out: &mut impl Write) -> core::fmt::Result {
+fn render_static(dest: &mut impl Write, hostcall: bool) -> anyhow::Result<()> {
     let client_rs = include_str!("static/client.rs");
-    write!(out, "{}", client_rs)?;
+    crate::utils::processed_write(
+        dest,
+        client_rs,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
@@ -382,7 +398,7 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
 
     #[cfg(debug_assertions)]
-    let dependency = if is_test {
+    let dependency = {
         use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../metagen-client-rs")
@@ -392,8 +408,6 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
             r#"metagen-client = {{ path = "{client_path}" }}"#,
             client_path = client_path.as_path().to_str().unwrap()
         )
-    } else {
-        "metagen-client.workspace = true".to_string()
     };
 
     #[cfg(not(debug_assertions))]

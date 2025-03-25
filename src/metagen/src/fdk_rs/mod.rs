@@ -14,6 +14,8 @@ mod stubs;
 pub mod types;
 pub mod utils;
 
+use client_rs::GenClientRsOpts;
+use client_rs::RsClientManifest;
 use types::RustTypesConfig;
 
 use crate::interlude::*;
@@ -40,6 +42,8 @@ pub struct FdkRustGenConfig {
     pub skip_cargo_toml: Option<bool>,
     #[garde(skip)]
     pub skip_lib_rs: Option<bool>,
+    #[garde(skip)]
+    pub exclude_client: Option<bool>,
 }
 
 impl FdkRustGenConfig {
@@ -150,7 +154,10 @@ impl crate::Plugin for Generator {
             out.insert(
                 self.config.base.path.join("Cargo.toml"),
                 GeneratedFile {
-                    contents: gen_cargo_toml(Some(&crate_name)),
+                    contents: gen_cargo_toml(
+                        Some(&crate_name),
+                        !self.config.exclude_client.unwrap_or_default(),
+                    ),
                     overwrite: false,
                 },
             );
@@ -188,17 +195,26 @@ impl FdkRustTemplate {
         )?;
         writeln!(&mut mod_rs.buf, "#![cfg_attr(rustfmt, rustfmt_skip)]")?;
         writeln!(&mut mod_rs.buf)?;
-        self.gen_static(&mut mod_rs)?;
+        self.gen_static(&mut mod_rs, config)?;
 
-        let manifest = RustTypesConfig::default()
-            .derive_serde(true)
-            .derive_debug(true)
-            .build_manifest(&tg);
-        manifest.render_full(&mut mod_rs.buf)?;
+        let maps = if config.exclude_client.unwrap_or_default() {
+            let manifest = RustTypesConfig::default()
+                .derive_serde(true)
+                .derive_debug(true)
+                .build_manifest(&tg);
+            manifest.render_full(&mut mod_rs.buf)?;
 
-        let maps = Maps {
-            input: manifest.inputs.get_cached_refs(),
-            output: manifest.outputs.get_cached_refs(),
+            Maps {
+                input: manifest.inputs.get_cached_refs(),
+                output: manifest.outputs.get_cached_refs(),
+            }
+        } else {
+            let manifest = RsClientManifest::new(tg.clone(), false)?;
+            manifest.render_client(&mut mod_rs.buf, &GenClientRsOpts { hostcall: true })?;
+            Maps {
+                input: manifest.maps.input_types,
+                output: manifest.maps.output_types,
+            }
         };
 
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
@@ -238,7 +254,11 @@ impl FdkRustTemplate {
         Ok(mod_rs.buf)
     }
 
-    pub fn gen_static(&self, dest: &mut GenDestBuf) -> core::fmt::Result {
+    pub fn gen_static(
+        &self,
+        dest: &mut GenDestBuf,
+        config: &FdkRustGenConfig,
+    ) -> anyhow::Result<()> {
         let mod_rs = self.mod_rs.clone().into_owned();
         let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
@@ -247,11 +267,19 @@ impl FdkRustTemplate {
 
         let gen_start = "// gen-start\n";
         let wit_start = "// wit-start\n";
-        write!(
-            &mut dest.buf,
-            "{}",
+
+        let flags = [(
+            "HOSTCALL".to_string(),
+            !config.exclude_client.unwrap_or_default(),
+        )]
+        .into_iter()
+        .collect();
+
+        processed_write(
+            dest,
             &mod_rs[mod_rs.find(gen_start).unwrap() + gen_start.len()
-                ..mod_rs.find(wit_start).unwrap()]
+                ..mod_rs.find(wit_start).unwrap()],
+            &flags,
         )?;
 
         writeln!(
@@ -262,10 +290,10 @@ impl FdkRustTemplate {
 
         let gen_end = "// gen-end\n";
         let wit_end = "// wit-end\n";
-        write!(
+        processed_write(
             &mut dest.buf,
-            "{}",
-            &mod_rs[mod_rs.find(wit_end).unwrap() + wit_end.len()..mod_rs.find(gen_end).unwrap()]
+            &mod_rs[mod_rs.find(wit_end).unwrap() + wit_end.len()..mod_rs.find(gen_end).unwrap()],
+            &flags,
         )?;
 
         writeln!(&mut dest.buf, "// gen-static-end")?;
@@ -273,22 +301,53 @@ impl FdkRustTemplate {
     }
 }
 
-pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
-    let cargo_toml = include_str!("static/Cargo.toml");
-    let mut cargo_toml = if let Some(crate_name) = crate_name {
-        const DEF_CRATE_NAME: &str = "metagen_fdk_rs_static";
-        cargo_toml.replace(DEF_CRATE_NAME, crate_name)
-    } else {
-        cargo_toml.to_string()
-    };
-    cargo_toml.push_str(
-        r#"
+fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
+    let crate_name = crate_name.unwrap_or("fdk_rs");
 
+    let dependency = if hostcall {
+        #[cfg(debug_assertions)]
+        {
+            use normpath::PathExt;
+            let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../metagen-client-rs")
+                .normalize()
+                .unwrap();
+            format!(
+                r#"metagen-client = {{ path = "{client_path}", default-features = false }}"#,
+                client_path = client_path.as_path().to_str().unwrap()
+            )
+        }
+
+        #[cfg(not(debug_assertions))]
+        format!(
+            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
+            version = env!("CARGO_PKG_VERSION")
+        )
+    } else {
+        "".to_string()
+    };
+
+    format!(
+        r#"[package]
+name = "{crate_name}"
+edition = "2021"
+version = "0.0.1"
+[dependencies]
+{dependency}
+anyhow = "1"
+serde = {{ version = "1", features = ["derive"] }}
+serde_json = "1"
+wit-bindgen = "0.34"
+# The options after here are configured for crates intended to be
+# wasm artifacts. Remove them if your usage is different
+[lib]
+path = "lib.rs"
+crate-type = ["cdylib", "rlib"]
 [profile.release]
 strip = "symbols"
-opt-level = "z""#,
-    );
-    cargo_toml
+opt-level = "z"
+"#
+    )
 }
 
 pub fn gen_lib_rs() -> String {
@@ -335,6 +394,7 @@ fn e2e() -> anyhow::Result<()> {
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
                         crate_name: None,
+                        exclude_client: None,
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
                             typegraph_path: None,
