@@ -49,6 +49,7 @@ Meta.test("metagen rust builds", async (t) => {
   const typegraphPath = join(import.meta.dirname!, "./typegraphs/metagen.ts");
   const genCratePath = join(tmpDir, "fdk");
 
+  await Deno.mkdir(genCratePath, { recursive: true });
   await Deno.writeTextFile(
     join(tmpDir, "metatype.yml"),
     `
@@ -68,7 +69,7 @@ metagen:
 `,
   );
 
-  // enclose the generated create in a lone workspace
+  // enclose the generated crate in a lone workspace
   // to avoid Cargo from noticing the `metatype/Cargo.toml` worksapce
   await Deno.writeTextFile(
     join(tmpDir, "Cargo.toml"),
@@ -85,6 +86,7 @@ members = ["fdk/"]
           env: {
             MCLI_LOADER_CMD: `deno run -A --config ${denoJson}`,
             RUST_BACKTRACE: "1",
+            METAGEN_CLIENT_RS_TEST: "1",
           },
         },
         ...`-C ${tmpDir} gen`.split(" "),
@@ -287,7 +289,9 @@ members = ["fdk/"]
 //  }
 //});
 
-Meta.test("fdk table suite", async (metaTest) => {
+Meta.test({
+  name: "fdk table suite",
+}, async (metaTest) => {
   const scriptsPath = join(import.meta.dirname!, "typegraphs/identities");
   const genCratePath = join(scriptsPath, "rs");
 
@@ -496,6 +500,9 @@ Meta.test("fdk table suite", async (metaTest) => {
         },
       },
     },
+
+    // FIXME: this is broken in fdk_rs due to the
+    // ambigious unions/either bug
     {
       name: "composites 2",
       query: compositesQuery,
@@ -509,6 +516,43 @@ Meta.test("fdk table suite", async (metaTest) => {
           opt: null,
         } as Record<string, JSONValue>,
       },
+    },
+    {
+      name: "proxy primtives",
+      query: `query ($data: primitives) {
+        data: prefix_primitives(
+          data: $data
+        ) {
+          str
+          enum
+          uuid
+          email
+          ean
+          json
+          uri
+          date
+          datetime
+          int
+          float
+          boolean
+        }
+      }`,
+      vars: {
+        data: {
+          str: "bytes",
+          enum: "tree",
+          uuid: "a963f88a-52f2-46b0-9279-ed2910ac2ca5",
+          email: "contact@example.com",
+          ean: "0799439112766",
+          json: JSON.stringify({ foo: "bar" }),
+          uri: "https://metatype.dev",
+          date: "2024-12-24",
+          datetime: new Date().toISOString(),
+          int: 1,
+          float: 1.0,
+          boolean: true,
+        },
+      } as Record<string, JSONValue>,
     },
   ];
 
@@ -672,6 +716,8 @@ Meta.test(
         //   .env({ "TG_PORT": metaTest.port.toString() });
         const res = await command
           .env({ TG_PORT: metaTest.port.toString() })
+          .stderr("inherit")
+          // .stdout("inherit")
           .text();
         expected.parse(JSON.parse(res));
       });

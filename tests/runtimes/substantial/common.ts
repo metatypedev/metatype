@@ -53,8 +53,6 @@ export function basicTestTemplate(
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
-      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
-      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
 
       cleanup && t.addCleanup(cleanup);
 
@@ -525,8 +523,6 @@ export function childWorkflowTestTemplate(
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
-      // FIXME: typegate.local not available through workers when using ctx.gql on tests?
-      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
 
       cleanup && t.addCleanup(cleanup);
 
@@ -684,7 +680,6 @@ export function inputMutationTemplate(
     },
     async (t) => {
       Deno.env.set("SUB_BACKEND", backendName);
-      Deno.env.set("TEST_OVERRIDE_GQL_ORIGIN", `http://localhost:${t.port}`);
 
       cleanup && t.addCleanup(cleanup);
 

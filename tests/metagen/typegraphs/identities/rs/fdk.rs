@@ -10,6 +10,7 @@ pub mod wit {
         pub_export_macro: true,
         
 
+
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
@@ -91,6 +92,12 @@ impl Default for MatBuilder {
     }
 }
 
+impl Default for MatBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -116,7 +123,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.1-rc.0";
+        static MT_VERSION: &str = "0.5.1-rc.1";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -139,6 +146,11 @@ impl Router {
             host: transports::hostcall(&qg),
             qg,
         };
+        let qg = query_graph();
+        let cx = Ctx {
+            host: transports::hostcall(&qg),
+            qg,
+        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -149,6 +161,11 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
+
+pub struct Ctx {
+    pub qg: QueryGraph,
+    pub host: metagen_client::hostcall::HostcallTransport,
+}
 
 pub struct Ctx {
     pub qg: QueryGraph,
@@ -267,6 +284,7 @@ pub struct QueryGraph {
 //
 use types::*;
 #[allow(unused)]
+#[allow(unused)]
 pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesArgs {
@@ -311,7 +329,6 @@ pub mod types {
         pub union: CompositesUnionUnion,
         pub list: CompositesListPrimitivesStrStringList,
     }
-    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
@@ -1027,11 +1044,32 @@ pub mod stubs {
 
         fn handle(&self, input: SimpleCycles1Args, cx: Ctx) -> anyhow::Result<SimpleCycles1>;
     }
+    pub trait RsProxyPrimitives: Sized + 'static {
+        fn erased(self) -> ErasedHandler {
+            ErasedHandler {
+                mat_id: "rs_proxy_primitives".into(),
+                mat_title: "rs_proxy_primitives".into(),
+                mat_trait: "RsProxyPrimitives".into(),
+                handler_fn: Box::new(move |req, cx| {
+                    let req = serde_json::from_str(req)
+                        .map_err(|err| HandleErr::InJsonErr(format!("{err}")))?;
+                    let res = self
+                        .handle(req, cx)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))?;
+                    serde_json::to_string(&res)
+                        .map_err(|err| HandleErr::HandlerErr(format!("{err}")))
+                }),
+            }
+        }
+
+        fn handle(&self, input: PrimitivesArgs, cx: Ctx) -> anyhow::Result<Primitives>;
+    }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {
             "composites" => "RsComposites",
             "cycles" => "RsCycles",
             "primitives" => "RsPrimitives",
+            "proxy_primitives" => "RsProxyPrimitives",
             "simple_cycles" => "RsSimpleCycles",
             _ => panic!("unrecognized op_name: {op_name}"),
         }

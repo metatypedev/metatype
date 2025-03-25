@@ -3,6 +3,8 @@
 
 use crate::interlude::*;
 
+use crate::interlude::*;
+
 use std::fmt::Write;
 
 /// A generation destination analogous to a single file.

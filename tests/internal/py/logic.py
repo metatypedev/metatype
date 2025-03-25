@@ -1,18 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from .logic_types import Ctx
-import json
+from .fdk import Ctx, handler_remote_sum, RootSumFnInput
 
 
-def remote_sum(inp: dict, ctx: Ctx) -> float:
-    data = ctx.gql(
+@handler_remote_sum
+def remote_sum(inp: RootSumFnInput, ctx: Ctx) -> float:
+    resp = ctx.gql(
         query="""
         query q($first: Float!, $second: Float!) {
              sum(first: $first, second: $second) 
         }
         """,
-        variables=json.dumps(inp),
+        variables=inp,
     )
-    sum = data["sum"]
+    sum = resp["data"]["sum"]
     return sum

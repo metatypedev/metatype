@@ -126,30 +126,39 @@ def identities(g: Graph):
             primitives_args,
             primitives,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="primitives",
         ).rename("py_primitives"),
         py_composites=python.import_(
             composites_args,
             composites,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="composites",
         ).rename("py_composites"),
         py_cycles=python.import_(
             cycles1_args,
             cycles1,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="cycles",
         ).rename("py_cycles"),
         py_simple_cycles=python.import_(
             simple_cycles_1_args,
             simple_cycles_1,
             module="./identities/py/handlers.py",
-            deps=["./identities/py/handlers_types.py"],
+            deps=["./identities/py/fdk.py"],
             name="simple_cycles",
         ).rename("py_simple_cycles"),
+        py_proxy_primitives=python.import_(
+            primitives_args,
+            primitives,
+            module="./identities/py/handlers.py",
+            deps=["./identities/py/fdk.py"],
+            name="proxy_primitives",
+        ).rename("py_proxy_primitives"),
+        #
+        # typescript
         ts_primitives=deno.import_(
             primitives_args,
             primitives,
@@ -178,6 +187,15 @@ def identities(g: Graph):
             deps=["./identities/ts/fdk.ts"],
             name="simple_cycles",
         ).rename("ts_simple_cycles"),
+        ts_proxy_primitives=deno.import_(
+            primitives_args,
+            primitives,
+            module="./identities/ts/handlers.ts",
+            deps=["./identities/ts/fdk.ts"],
+            name="proxy_primitives",
+        ).rename("ts_proxy_primitives"),
+        #
+        # rust
         rs_primitives=wasm.handler(
             primitives_args,
             primitives,
@@ -198,4 +216,9 @@ def identities(g: Graph):
             simple_cycles_1,
             name="simple_cycles",
         ).rename("rs_simple_cycles"),
+        rs_proxy_primitives=wasm.handler(
+            primitives_args,
+            primitives,
+            name="proxy_primitives",
+        ).rename("rs_proxy_primitives"),
     )

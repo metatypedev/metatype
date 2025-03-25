@@ -1,11 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { alias, PreparedArgs, QueryGraph } from "./client.ts";
+import { alias, PreparedArgs, QueryGraph, Transports } from "./client.ts";
 
 const api1 = new QueryGraph();
 
-const gqlClient = api1.graphql(
+const gqlClient = Transports.graphql(
+  api1,
   `http://localhost:${Deno.env.get("TG_PORT")}/sample`,
 );
 
@@ -157,12 +158,12 @@ const res7b = await gqlClient.mutation(
 );
 const res7c = await gqlClient
   .prepareQuery((args) =>
-    api1.identity({ input: args.get("num") }, { input: true }),
+    api1.identity({ input: args.get("num") }, { input: true })
   )
   .perform({ num: 0 });
 const res7d = await gqlClient
   .prepareMutation((args) =>
-    api1.identityUpdate({ input: args.get("num") }, { input: true }),
+    api1.identityUpdate({ input: args.get("num") }, { input: true })
   )
   .perform({ num: 0 });
 

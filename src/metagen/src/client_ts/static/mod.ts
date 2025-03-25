@@ -23,7 +23,15 @@ function _selectionToNodeSet(
     const nodeInstances = nodeSelection instanceof Alias
       ? nodeSelection.aliases()
       : { [nodeName]: nodeSelection };
+    const nodeInstances = nodeSelection instanceof Alias
+      ? nodeSelection.aliases()
+      : { [nodeName]: nodeSelection };
 
+    for (
+      const [instanceName, instanceSelection] of Object.entries(
+        nodeInstances,
+      )
+    ) {
     for (
       const [instanceName, instanceSelection] of Object.entries(
         nodeInstances,
@@ -495,9 +503,29 @@ function convertQueryNodeGql(
               );
             }
             gqlTy = gqlTy.replace(/[!]+$/, "");
+      out = `${out} { ${
+        Object.entries(subNodes)
+          .map(([variantTy, variantSubNodes]) => {
+            let gqlTy = typeToGqlTypeMap[variantTy];
+            if (!gqlTy) {
+              throw new Error(
+                `unreachable: no graphql type found for variant ${variantTy}`,
+              );
+            }
+            gqlTy = gqlTy.replace(/[!]+$/, "");
 
             return `... on ${gqlTy} {${
               subNodes
+                .map((node) =>
+                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                )
+                .join(" ")
+            }}`;
+          })
+          .join(" ")
+      } }`;
+            return `... on ${gqlTy} {${
+              variantSubNodes
                 .map((node) =>
                   convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
                 )
@@ -639,7 +667,7 @@ export class GraphQLTransport {
     private typeToGqlTypeMap: Record<string, string>,
   ) {}
 
-  async #request(
+  protected async request(
     doc: string,
     variables: Record<string, unknown>,
     options: GraphQlTransportOptions,
@@ -687,7 +715,7 @@ export class GraphQLTransport {
       "query",
       name,
     );
-    let result = await this.#request(doc, variables, options ?? {});
+    let result = await this.request(doc, variables, options ?? {});
 
     if (isNode) {
       result = (result as { value: SelectNodeOut<Q> }).value;
@@ -723,7 +751,7 @@ export class GraphQLTransport {
       "mutation",
       name,
     );
-    let result = await this.#request(doc, variables, options ?? {}, files);
+    let result = await this.request(doc, variables, options ?? {}, files);
 
     if (isNode) {
       result = (result as { value: SelectNodeOut<Q> }).value;
@@ -743,8 +771,7 @@ export class GraphQLTransport {
     { name = "" }: { name?: string } = {},
   ): PreparedRequest<T, Q> {
     return new PreparedRequest(
-      this.address,
-      this.options,
+      (doc, vars, opts) => this.request(doc, vars, opts),
       this.typeToGqlTypeMap,
       fun,
       "query",
@@ -763,8 +790,7 @@ export class GraphQLTransport {
     { name = "" }: { name?: string } = {},
   ): PreparedRequest<T, Q> {
     return new PreparedRequest(
-      this.address,
-      this.options,
+      (doc, vars, opts) => this.request(doc, vars, opts),
       this.typeToGqlTypeMap,
       fun,
       "mutation",
@@ -772,6 +798,43 @@ export class GraphQLTransport {
     );
   }
 }
+// metagen-genif HOSTCALL
+
+export class HostcallTransport extends GraphQLTransport {
+  constructor(
+    private gqlFn: (
+      doc: string,
+      variables: Record<string, unknown>,
+    ) => Promise<Record<string, unknown>>,
+    options: GraphQlTransportOptions,
+    typeToGqlTypeMap: Record<string, string>,
+  ) {
+    super(
+      new URL("hostcall://this_url_will_never_be_used"),
+      options,
+      typeToGqlTypeMap,
+    );
+  }
+
+  protected async request(
+    doc: string,
+    variables: Record<string, unknown>,
+    _options: GraphQlTransportOptions,
+    files?: Map<string, File>,
+  ) {
+    if (files && files.size > 0) {
+      throw new Error("no support for file upload on HostcallTransport");
+    }
+    const res = await this.gqlFn(doc, variables);
+    if ("errors" in res) {
+      throw new (Error as ErrorPolyfill)("graphql errors on response", {
+        cause: res.errors,
+      });
+    }
+    return res.data;
+  }
+}
+// metagen-endif
 
 /**
  * Prepares the GraphQL string ahead of time and allows re-use
@@ -790,8 +853,13 @@ export class PreparedRequest<
   private singleNode: boolean;
 
   constructor(
-    private address: URL,
-    private options: GraphQlTransportOptions,
+    // private address: URL,
+    // private options: GraphQlTransportOptions,
+    private gqlFn: (
+      doc: string,
+      variables: Record<string, unknown>,
+      opts: GraphQlTransportOptions,
+    ) => Promise<unknown>,
     typeToGqlTypeMap: Record<string, string>,
     fun: (args: PreparedArgs<T>) => Q,
     ty: "query" | "mutation",
@@ -801,6 +869,7 @@ export class PreparedRequest<
     const dryRunNode = fun(args);
     const isSingleNode = dryRunNode instanceof QueryNode ||
       dryRunNode instanceof MutationNode;
+    // FIXME: file support for prepared requets
     const { doc, variables } = buildGql(
       typeToGqlTypeMap,
       isSingleNode ? { value: dryRunNode.inner() } : Object.fromEntries(
@@ -840,21 +909,12 @@ export class PreparedRequest<
     //   resolvedVariables,
     //   mapping: this.#mappings,
     // });
-    const res = await fetchGql(this.address, this.doc, resolvedVariables, {
-      ...this.options,
+    let result = await this.gqlFn(this.doc, resolvedVariables, {
       ...opts,
     });
-    if ("errors" in res) {
-      throw new (Error as ErrorPolyfill)("graphql errors on response", {
-        cause: res.errors,
-      });
-    }
-    let result = res.data;
-
     if (this.singleNode) {
       result = (result as { value: SelectNodeOut<Q> }).value;
     }
-
     return result as QueryOut<Q>;
   }
 }
@@ -873,20 +933,46 @@ type Json = JsonLiteral | JsonObject | JsonArray;
 type ErrorPolyfill = new (msg: string, payload: unknown) => Error;
 
 /* QueryGraph section */
+// metagen-genif IGNORE
+// type will be sourced from fdk.ts which is guranteed avail
+// when HOSTCALL flag is set
+// deno-lint-ignore no-explicit-any
+type Deployment = any;
+// metagen-endif
 
-class _QueryGraphBase {
-  constructor(private typeNameMapGql: Record<string, string>) {}
-
+export class Transports {
   /**
    * Get the {@link GraphQLTransport} for the typegraph.
    */
-  graphql(addr: URL | string, options?: GraphQlTransportOptions) {
+  static graphql(
+    qg: _QueryGraphBase,
+    addr: URL | string,
+    options?: GraphQlTransportOptions,
+  ) {
     return new GraphQLTransport(
       new URL(addr),
       options ?? {},
-      this.typeNameMapGql,
+      qg.typeNameMapGql,
     );
   }
+  // metagen-genif HOSTCALL
+
+  static hostcall(
+    qg: _QueryGraphBase,
+    tg: Deployment,
+    options?: Pick<GraphQlTransportOptions, "headers">,
+  ) {
+    return new HostcallTransport(
+      (doc, vars) => tg.gql([doc]).run(vars),
+      options ?? {},
+      qg.typeNameMapGql,
+    );
+  }
+  // metagen-endif
+}
+
+class _QueryGraphBase {
+  constructor(public typeNameMapGql: Record<string, string>) {}
 }
 
 // -------------------------------------------------- //

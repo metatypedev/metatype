@@ -3,11 +3,11 @@
 
 import { assert, assertEquals, assertRejects } from "@std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
+import { WitWireHandle } from "@metatype/typegate/runtimes/wit_wire/mod.ts";
 import {
   hostcall,
   HostCallCtx,
-  WitWireHandle,
-} from "@metatype/typegate/runtimes/wit_wire/mod.ts";
+} from "@metatype/typegate/runtimes/wit_wire/hostcall.ts";
 import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import type { ResolverArgs } from "@metatype/typegate/types.ts";
 import { WitWireMatInfo } from "../../../src/typegate/engine/runtime.js";
@@ -49,7 +49,7 @@ Meta.test("Python VM performance", async (t) => {
         wire.handle("test_lambda", {
           a: "test",
           _: {},
-        } as unknown as ResolverArgs),
+        } as unknown as ResolverArgs)
       ),
     );
     const start = performance.now();
@@ -84,7 +84,7 @@ Meta.test("Python VM performance", async (t) => {
       {} as any,
     );
     const samples = [...Array(100).keys()].map((_i) =>
-      wire.handle("test_def", { a: "test", _: {} } as unknown as ResolverArgs),
+      wire.handle("test_def", { a: "test", _: {} } as unknown as ResolverArgs)
     );
     const start = performance.now();
     const items = await Promise.all(samples);
@@ -176,7 +176,7 @@ Meta.test(
           .expectData({
             test: `test${i}`,
           })
-          .on(e),
+          .on(e)
       );
 
       // pre-warming
@@ -358,7 +358,8 @@ Meta.test(
 
 Meta.test(
   {
-    name: "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
+    name:
+      "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
     sanitizeOps: false,
   },
   async (t) => {
@@ -422,7 +423,8 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Python Runtime - Python SDK: typegraph with duplicate artifact uploads",
+    name:
+      "Python Runtime - Python SDK: typegraph with duplicate artifact uploads",
     sanitizeOps: false,
   },
   async (t) => {

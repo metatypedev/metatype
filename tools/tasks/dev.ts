@@ -105,7 +105,11 @@ export default {
   "dev-gate3": {
     desc: "Launch the typegate from meta-cli cmd.",
     inherit: "dev-gate1",
-    fn: ($) => $`cargo run -p meta-cli -F typegate -- typegate`,
+    fn: ($) => $`cargo run -p meta-cli -F typegate -- typegate --main-url file://${
+        $.workingDir.join('./src/typegate/src/main.ts').resolve()
+      } --import-map-url file://${
+        $.workingDir.join('./import_map.json').resolve()
+      }`,
   },
 
   "dev-gate4": {

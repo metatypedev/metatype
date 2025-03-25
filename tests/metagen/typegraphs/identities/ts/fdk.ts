@@ -143,3 +143,4 @@ export type TsPrimitivesHandler = Handler<PrimitivesArgs, Primitives>;
 export type TsCompositesHandler = Handler<CompositesArgs, Composites>;
 export type TsCyclesHandler = Handler<Cycles1Args, Cycles1>;
 export type TsSimpleCyclesHandler = Handler<SimpleCycles1Args, SimpleCycles1>;
+export type TsProxyPrimitivesHandler = Handler<PrimitivesArgs, Primitives>;

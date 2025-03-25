@@ -3,6 +3,8 @@
 
 use core::fmt::Write;
 use std::borrow::Cow;
+use core::fmt::Write;
+use std::borrow::Cow;
 
 use crate::interlude::*;
 use crate::shared::*;
@@ -27,12 +29,31 @@ impl From<FdkTemplate> for FdkPythonTemplate {
         }
     }
 }
+pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.py", include_str!("static/fdk.py"))];
+
+struct FdkPythonTemplate {
+    fdk_py: Cow<'static, str>,
+}
+
+impl From<FdkTemplate> for FdkPythonTemplate {
+    fn from(mut fdk_template: FdkTemplate) -> Self {
+        let fdk_py = fdk_template.entries.swap_remove("fdk.py").unwrap();
+        Self {
+            fdk_py: fdk_py.clone(),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct FdkPythonGenConfig {
     #[serde(flatten)]
     #[garde(dive)]
     pub base: crate::config::FdkGeneratorConfigBase,
+    /// Runtimes to generate stubbed materializer implementations for.
+    #[garde(skip)]
+    pub stubbed_runtimes: Option<Vec<String>>,
+    #[garde(skip)]
+    pub exclude_client: Option<bool>,
     /// Runtimes to generate stubbed materializer implementations for.
     #[garde(skip)]
     pub stubbed_runtimes: Option<Vec<String>>,
@@ -61,7 +82,9 @@ impl Generator {
     pub const INPUT_TG: &'static str = "tg_name";
 
     pub fn new(config: FdkPythonGenConfig) -> Result<Self, garde::Report> {
+    pub fn new(config: FdkPythonGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
+        config.validate()?;
         config.validate()?;
         Ok(Self { config })
     }
@@ -195,6 +218,8 @@ impl crate::Plugin for Generator {
             GeneratorInputResolved::TypegraphFromPath { raw } => raw,
             _ => unreachable!(),
         };
+        let template: FdkPythonTemplate = match inputs.swap_remove("template_dir").unwrap() {
+            GeneratorInputResolved::FdkTemplate { template } => template.into(),
         let template: FdkPythonTemplate = match inputs.swap_remove("template_dir").unwrap() {
             GeneratorInputResolved::FdkTemplate { template } => template.into(),
             _ => unreachable!(),

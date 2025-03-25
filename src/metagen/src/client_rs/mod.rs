@@ -360,6 +360,11 @@ fn render_static(dest: &mut impl Write, hostcall: bool) -> anyhow::Result<()> {
         client_rs,
         &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
     )?;
+    crate::utils::processed_write(
+        dest,
+        client_rs,
+        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
+    )?;
     Ok(())
 }
 
@@ -398,6 +403,7 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
 
     #[cfg(debug_assertions)]
+    let dependency = {
     let dependency = {
         use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))

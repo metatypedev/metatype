@@ -44,6 +44,8 @@ pub struct FdkRustGenConfig {
     pub skip_lib_rs: Option<bool>,
     #[garde(skip)]
     pub exclude_client: Option<bool>,
+    #[garde(skip)]
+    pub exclude_client: Option<bool>,
 }
 
 impl FdkRustGenConfig {
@@ -158,6 +160,10 @@ impl crate::Plugin for Generator {
                         Some(&crate_name),
                         !self.config.exclude_client.unwrap_or_default(),
                     ),
+                    contents: gen_cargo_toml(
+                        Some(&crate_name),
+                        !self.config.exclude_client.unwrap_or_default(),
+                    ),
                     overwrite: false,
                 },
             );
@@ -259,6 +265,11 @@ impl FdkRustTemplate {
         dest: &mut GenDestBuf,
         config: &FdkRustGenConfig,
     ) -> anyhow::Result<()> {
+    pub fn gen_static(
+        &self,
+        dest: &mut GenDestBuf,
+        config: &FdkRustGenConfig,
+    ) -> anyhow::Result<()> {
         let mod_rs = self.mod_rs.clone().into_owned();
         let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
@@ -277,15 +288,30 @@ impl FdkRustTemplate {
 
         processed_write(
             dest,
+
+        let flags = [(
+            "HOSTCALL".to_string(),
+            !config.exclude_client.unwrap_or_default(),
+        )]
+        .into_iter()
+        .collect();
+
+        processed_write(
+            dest,
             &mod_rs[mod_rs.find(gen_start).unwrap() + gen_start.len()
+                ..mod_rs.find(wit_start).unwrap()],
+            &flags,
                 ..mod_rs.find(wit_start).unwrap()],
             &flags,
         )?;
 
-        writeln!(
-            &mut dest.buf,
-            r#"
+        processed_write(
+            dest,
+            &format!(
+                r#"
         inline: "{fdk_wit}""#
+            ),
+            &flags,
         )?;
 
         let gen_end = "// gen-end\n";
@@ -323,7 +349,30 @@ fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
             "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
             version = env!("CARGO_PKG_VERSION")
         )
+fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
+    let crate_name = crate_name.unwrap_or("fdk_rs");
+
+    let dependency = if hostcall {
+        #[cfg(debug_assertions)]
+        {
+            use normpath::PathExt;
+            let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../metagen-client-rs")
+                .normalize()
+                .unwrap();
+            format!(
+                r#"metagen-client = {{ path = "{client_path}", default-features = false }}"#,
+                client_path = client_path.as_path().to_str().unwrap()
+            )
+        }
+
+        #[cfg(not(debug_assertions))]
+        format!(
+            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
+            version = env!("CARGO_PKG_VERSION")
+        )
     } else {
+        "".to_string()
         "".to_string()
     };
 
@@ -345,6 +394,9 @@ path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
 [profile.release]
 strip = "symbols"
+opt-level = "z"
+"#
+    )
 opt-level = "z"
 "#
     )
@@ -394,6 +446,7 @@ fn e2e() -> anyhow::Result<()> {
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
                         crate_name: None,
+                        exclude_client: None,
                         exclude_client: None,
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),
