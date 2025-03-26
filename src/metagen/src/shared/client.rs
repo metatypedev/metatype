@@ -78,10 +78,7 @@ pub fn get_manifest(tg: &Typegraph) -> Result<RenderManifest> {
 
     for node in &tg.types {
         if let TypeNode::Function { data, .. } = node {
-            if matches!(
-                &tg.types[data.input as usize],
-                TypeNode::Object { data, .. } if !data.properties.is_empty()
-            ) {
+            if matches!(&tg.types[data.input as usize], TypeNode::Object { .. }) {
                 arg_types.insert(data.input);
             }
         }

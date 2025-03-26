@@ -56,7 +56,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 
 env("_ecma").install(
   installs.node,
-  ports.pnpm({ version: "v9.15.0" }),
+  ports.pnpm({ version: "v10.6.4" }),
   ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
 );
 
@@ -197,16 +197,18 @@ task(
 task(
   "clean-node",
   ($) =>
-    $.co([
-      $.path("./docs/metatype.dev/node_modules"),
-      $.path("./docs/metatype.dev/build"),
-      $.path("./tests/e2e/nextjs/apollo/node_modules"),
-      $.path("./tests/runtimes/temporal/worker/node_modules"),
-    ].map(async (path) => {
-      if (await path.exists()) {
-        await path.remove({ recursive: true });
-      }
-    })),
+    $.co(
+      [
+        $.path("./docs/metatype.dev/node_modules"),
+        $.path("./docs/metatype.dev/build"),
+        $.path("./tests/e2e/nextjs/apollo/node_modules"),
+        $.path("./tests/runtimes/temporal/worker/node_modules"),
+      ].map(async (path) => {
+        if (await path.exists()) {
+          await path.remove({ recursive: true });
+        }
+      }),
+    ),
   {
     inherit: "_ecma",
     desc: "Remove all node_modules directories in tree and other js artifacts.",

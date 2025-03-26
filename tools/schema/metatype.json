@@ -117,6 +117,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "exclude_client": {
+          "type": "boolean",
+          "description": "Whether to generate metagen client code."
         }
       }
     },
@@ -126,6 +130,10 @@
         "generator": {
           "const": "fdk_py",
           "description": "See: <https://metatype.dev/docs/reference/metagen#fdk_py>."
+        },
+        "exclude_client": {
+          "type": "boolean",
+          "description": "Whether to generate metagen client code."
         }
       }
     },
@@ -143,6 +151,10 @@
               "items": {
                 "type": "string"
               }
+            },
+            "exclude_client": {
+              "type": "boolean",
+              "description": "Whether to generate metagen client code."
             }
           }
         },
