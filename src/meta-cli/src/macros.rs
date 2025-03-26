@@ -10,7 +10,11 @@
 #[macro_export]
 macro_rules! anyhow_to_eyre {
     () => {
-        |err| eyre::format_err!(Box::new(err))
+        |err| {
+            eyre::format_err!(Box::<dyn std::error::Error + Send + Sync + 'static>::from(
+                err
+            ))
+        }
     };
 }
 

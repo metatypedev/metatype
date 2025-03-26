@@ -1,11 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use std::{cell::RefCell, ops::Deref, rc::Rc, str::FromStr, sync::Arc};
 
 use grpc_utils::{get_file_descriptor, get_method_descriptor_proto};
 
-use anyhow::{Context, Result};
 use bytes::{Buf, BufMut};
 use dashmap::DashMap;
 use protobuf::{descriptor::MethodDescriptorProto, reflect::FileDescriptor, MessageDyn};
@@ -146,8 +147,8 @@ pub struct GrpcRegisterInput {
 pub async fn op_grpc_register(
     state: Rc<RefCell<OpState>>,
     #[serde] input: GrpcRegisterInput,
-) -> Result<()> {
-    let client = create_client(&input.endpoint).await?;
+) -> Result<(), OpErr> {
+    let client = create_client(&input.endpoint).await.map_err(OpErr::map())?;
 
     let ctx = {
         let state = state.borrow();
@@ -166,10 +167,11 @@ pub async fn op_grpc_register(
 }
 
 #[deno_core::op2(fast)]
-pub fn op_grpc_unregister(#[state] ctx: &mut Ctx, #[string] client_id: &str) -> Result<()> {
+pub fn op_grpc_unregister(#[state] ctx: &mut Ctx, #[string] client_id: &str) -> Result<(), OpErr> {
     ctx.grpc_clients
         .remove(client_id)
-        .with_context(|| format!("Failed to remove gRPC client with ID: {}", client_id))?;
+        .with_context(|| format!("Failed to remove gRPC client with ID: {}", client_id))
+        .map_err(OpErr::map())?;
 
     Ok(())
 }
@@ -187,7 +189,7 @@ pub struct GrpcCallMethodInput {
 pub async fn op_call_grpc_method(
     state: Rc<RefCell<OpState>>,
     #[serde] input: GrpcCallMethodInput,
-) -> Result<String> {
+) -> Result<String, OpErr> {
     let grpc_clients = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -196,20 +198,23 @@ pub async fn op_call_grpc_method(
 
     let mut grpc_client = grpc_clients
         .get_mut(&input.client_id)
-        .with_context(|| format!("Could not find gRPC client '{}'", &input.client_id))?;
+        .with_context(|| format!("Could not find gRPC client '{}'", &input.client_id))
+        .map_err(OpErr::map())?;
 
-    let file_descriptor = get_file_descriptor(&grpc_client.proto_file_content)?;
+    let file_descriptor =
+        get_file_descriptor(&grpc_client.proto_file_content).map_err(OpErr::map())?;
 
     let method_descriptor_proto =
-        get_method_descriptor_proto(file_descriptor.clone(), &input.method)?;
+        get_method_descriptor_proto(file_descriptor.clone(), &input.method).map_err(OpErr::map())?;
 
     let request_message = method_descriptor_proto.input_type().to_string();
 
-    let req = json2request(input.payload, request_message, file_descriptor.clone())?;
+    let req = json2request(input.payload, request_message, file_descriptor.clone())
+        .map_err(OpErr::map())?;
 
-    let path_query = PathAndQuery::from_str(input.method.as_str())?;
+    let path_query = PathAndQuery::from_str(input.method.as_str()).map_err(OpErr::map())?;
 
-    grpc_client.client.ready().await?;
+    grpc_client.client.ready().await.map_err(OpErr::map())?;
 
     let codec = DynCodec {
         method_descriptor_proto,
@@ -220,7 +225,8 @@ pub async fn op_call_grpc_method(
         .client
         .unary(req, path_query, codec)
         .await
-        .context("Failed to perform unary gRPC call")?;
+        .context("Failed to perform unary gRPC call")
+        .map_err(OpErr::map())?;
 
     let response = response.get_ref().deref();
 

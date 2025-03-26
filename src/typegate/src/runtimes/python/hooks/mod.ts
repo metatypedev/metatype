@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
+import { Meta } from "../../../../engine/runtime.js";
 import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
 import { createArtifactMeta } from "../../utils/deno.ts";
 
@@ -54,7 +55,7 @@ export const codeValidations: PushHandler = async (
           logger.info(
             `Successfully validated Python code at entry point: ${entryPoint.path}`,
           );
-        } catch (err) {
+        } catch (err: any) {
           console.error({ err });
           throw new ValidationFailure(
             `Python code validation error at entry point '${entryPoint.path}': ${err.message}`,

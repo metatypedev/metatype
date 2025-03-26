@@ -20,8 +20,8 @@ pub trait RpcDispatch {
 #[enum_dispatch(RpcDispatch)]
 #[serde(untagged)]
 pub enum RpcCall {
-    Aws(aws::RpcCall),
-    Core(core::RpcCall),
     Runtimes(runtimes::RpcCall),
+    Core(core::RpcCall),
+    Aws(aws::RpcCall),
     Utils(utils::RpcCall),
 }

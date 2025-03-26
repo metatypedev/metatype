@@ -1,6 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// some of the redis types trigger a edition 2024
+// warning. we'll need to deal with it on the 2024
+// update
+#![allow(dependency_on_unit_never_type_fallback)]
+
 use std::sync::Mutex;
 
 use super::{Backend, BackendMetadataWriter, NextRun};

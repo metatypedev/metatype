@@ -52,11 +52,11 @@ export async function handleGraphQL(
   let content: Operations | null = null;
   try {
     content = await parseRequest(request);
-  } catch (e) {
-    if (e instanceof BaseError) {
-      return e.toResponse(headers);
+  } catch (err: any) {
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
     }
-    return badRequest(e.message);
+    return badRequest(err.message);
   }
   const { query, operationName: operationNameRaw, variables } = content;
   const operationName = forceAnyToOption(operationNameRaw);
@@ -120,29 +120,28 @@ export async function handleGraphQL(
     }
 
     return jsonOk({ data: { data: res }, headers });
-  } catch (e) {
-    // throw e;
-    if (e instanceof BaseError) {
-      return e.toResponse(headers);
+  } catch (err: any) {
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
     }
-    if (e instanceof ResolverError) {
-      logger.error(`field err: ${e.message}`);
-      return jsonError({ status: 502, message: e.message, headers });
-    } else if (e instanceof BadContext) {
-      logger.error(`context err: ${e.message}`);
+    if (err instanceof ResolverError) {
+      logger.error(`field err: ${err.message}`);
+      return jsonError({ status: 502, message: err.message, headers });
+    } else if (err instanceof BadContext) {
+      logger.error(`context err: ${err.message}`);
       return jsonError({
         status: Object.keys(context).length === 0 ? 401 : 403,
-        message: e.message,
+        message: err.message,
         headers,
       });
     } else {
-      logger.error(`request err: ${Deno.inspect(e)}`);
-      if (e.cause) {
+      logger.error(`request err: ${Deno.inspect(err)}`);
+      if (err.cause) {
         logger.error(
-          Deno.inspect(e.cause, { strAbbreviateSize: 1024, depth: 10 }),
+          Deno.inspect(err.cause, { strAbbreviateSize: 1024, depth: 10 }),
         );
       }
-      return jsonError({ status: 400, message: e.message, headers });
+      return jsonError({ status: 400, message: err.message, headers });
     }
   }
 }

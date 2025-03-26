@@ -22,11 +22,11 @@ pub struct WasmInput {
 
 #[deno_core::op2]
 #[string]
-pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
+pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String, OpErr> {
     let wasm_relative_path = PathBuf::from(input.wasm);
     let wasm_absolute_path = match env::current_dir() {
         Ok(cwd) => cwd.join(wasm_relative_path),
-        Err(e) => return Err(anyhow::anyhow!(e)),
+        Err(e) => return Err(anyhow::anyhow!(e).into()),
     };
 
     let args: Vec<serde_json::Value> = input
@@ -39,11 +39,13 @@ pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
     let engine = wasmtime::Engine::default();
     let mut store = wasmtime::Store::new(&engine, ());
 
-    let bytes = std::fs::read(wasm_absolute_path)?;
+    let bytes = std::fs::read(wasm_absolute_path).map_err(OpErr::map())?;
     let component = wasmtime::component::Component::new(&engine, bytes)?;
     let linker = wasmtime::component::Linker::new(&engine);
 
-    let instance = linker.instantiate(&mut store, &component)?;
+    let instance = linker
+        .instantiate(&mut store, &component)
+        .map_err(OpErr::map())?;
 
     let func = instance
         .get_func(&mut store, &input.func)
@@ -79,9 +81,9 @@ pub fn op_wasmtime_wit(#[serde] input: WasmInput) -> Result<String> {
 
     match func.call(&mut store, &params, &mut output) {
         Ok(()) => {
-            let value = wasmtime_val_to_value(&output[0])?;
-            serde_json::to_string(&value).map_err(|e| e.into())
+            let value = wasmtime_val_to_value(&output[0]).map_err(OpErr::map())?;
+            serde_json::to_string(&value).map_err(OpErr::map())
         }
-        Err(e) => Err(anyhow::anyhow!(e)),
+        Err(e) => Err(anyhow::anyhow!(e).into()),
     }
 }

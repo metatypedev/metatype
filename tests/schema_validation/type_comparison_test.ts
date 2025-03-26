@@ -7,7 +7,7 @@ Meta.test("type comparison test", async (t) => {
   try {
     const _e = await t.engine("schema_validation/type_comparison.py");
     throw new Error("Expected an error"); // TODO assert
-  } catch (err) {
+  } catch (err: any) {
     if (!err.stderr) {
       throw err;
     }

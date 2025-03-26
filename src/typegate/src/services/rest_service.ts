@@ -89,16 +89,16 @@ export async function handleRest(
       status: 200,
       headers,
     });
-  } catch (e) {
+  } catch (err: any) {
     headers.set("Content-Type", "application/json");
-    if (e instanceof BaseError) {
-      return e.toResponse(headers, false);
+    if (err instanceof BaseError) {
+      return err.toResponse(headers, false);
     }
-    if (e instanceof ResolverError) {
-      logger.error(`field err: ${e.message}`);
+    if (err instanceof ResolverError) {
+      logger.error(`field err: ${err.message}`);
       return new Response(
         JSON.stringify({
-          message: e.message,
+          message: err.message,
           locations: [],
           path: [],
           extensions: { timestamp: new Date().toISOString() },
@@ -108,11 +108,11 @@ export async function handleRest(
           status: 502,
         },
       );
-    } else if (e instanceof BadContext) {
-      logger.error(`context err: ${e.message}`);
+    } else if (err instanceof BadContext) {
+      logger.error(`context err: ${err.message}`);
       return new Response(
         JSON.stringify({
-          message: e.message,
+          message: err.message,
           locations: [],
           path: [],
           extensions: { timestamp: new Date().toISOString() },
@@ -123,10 +123,10 @@ export async function handleRest(
         },
       );
     } else {
-      logger.error(`request err: ${e}`);
+      logger.error(`request err: ${err}`);
       return new Response(
         JSON.stringify({
-          message: e.message,
+          message: err.message,
           locations: [],
           path: [],
           extensions: { timestamp: new Date().toISOString() },
