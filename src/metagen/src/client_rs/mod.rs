@@ -6,7 +6,7 @@ mod selections;
 
 use core::fmt::Write;
 
-use fdk_rs::types::{RustTypesConfig, RustTypesSubmanifest};
+use fdk_rs::types::{OutputTypes, RustTypesConfig, RustTypesSubmanifest};
 use node_metas::RsNodeMeta;
 use selections::RustSelectionManifestPage;
 use shared::manifest::ManifestPage;
@@ -46,8 +46,9 @@ impl ClienRsGenConfig {
 }
 
 pub(super) struct Maps {
-    pub(super) types: IndexMap<TypeKey, String>,
-    pub(super) partial_types: IndexMap<TypeKey, String>,
+    pub(super) input_types: IndexMap<TypeKey, String>,
+    pub(super) output_types: IndexMap<TypeKey, String>,
+    pub(super) partial_output_types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
@@ -60,16 +61,29 @@ pub(super) struct RsClientManifest {
     pub maps: Maps,
 }
 
+pub struct RsClientManifestOpts {
+    pub non_partial_output_types: bool,
+}
+
 impl RsClientManifest {
-    pub(super) fn new(tg: Arc<Typegraph>, partial_output_types: bool) -> anyhow::Result<Self> {
+    pub(super) fn new(tg: Arc<Typegraph>, opts: &RsClientManifestOpts) -> anyhow::Result<Self> {
         let types = RustTypesConfig::default()
-            .partial_output_types(partial_output_types)
+            .output_types(if opts.non_partial_output_types {
+                OutputTypes::Both
+            } else {
+                OutputTypes::Partial
+            })
             .derive_serde(true)
             .derive_debug(true)
             .build_manifest(&tg);
-        let types_memo = types.default.get_cached_refs();
-        let partial_types_memo = types
-            .partial
+        let input_types_memo = types.inputs.get_cached_refs();
+        let output_types_memo = types
+            .outputs
+            .as_ref()
+            .map(|o| o.get_cached_refs())
+            .unwrap_or_default();
+        let partial_output_types_memo = types
+            .partial_outputs
             .as_ref()
             .map(|p| p.get_cached_refs())
             .unwrap_or_default();
@@ -78,7 +92,7 @@ impl RsClientManifest {
         node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg, types_memo.clone());
+        let selections = selections::manifest_page(&tg, input_types_memo.clone());
         selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 
@@ -88,8 +102,9 @@ impl RsClientManifest {
             node_metas,
             selections,
             maps: Maps {
-                types: types_memo,
-                partial_types: partial_types_memo,
+                input_types: input_types_memo,
+                output_types: output_types_memo,
+                partial_output_types: partial_output_types_memo,
                 node_metas: node_metas_memo,
                 selections: selections_memo,
             },
@@ -144,7 +159,12 @@ impl crate::Plugin for Generator {
             _ => bail!("unexpected input type"),
         };
         let mut out = IndexMap::new();
-        let manif = RsClientManifest::new(tg.clone(), true)?;
+        let manif = RsClientManifest::new(
+            tg.clone(),
+            &RsClientManifestOpts {
+                non_partial_output_types: false,
+            },
+        )?;
         let mut buf = String::new();
         manif.render(&mut buf)?;
         out.insert(
@@ -262,11 +282,15 @@ pub fn query_graph() -> QueryGraph {{
 
             let node_name = path.join("_");
             let method_name = node_name.to_snek_case();
-            let out_ty_name = self.maps.partial_types.get(&ty.output().key()).unwrap();
+            let out_ty_name = self
+                .maps
+                .partial_output_types
+                .get(&ty.output().key())
+                .unwrap();
 
             let arg_ty = ty
                 .non_empty_input()
-                .map(|ty| self.maps.types.get(&ty.key()).unwrap());
+                .map(|ty| self.maps.input_types.get(&ty.key()).unwrap());
 
             let select_ty = self.maps.selections.get(&ty.output().key());
 

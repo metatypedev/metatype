@@ -60,68 +60,25 @@ pub mod types {
         pub input: i64,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct User {
-        pub id: UserIdStringUuid,
-        pub email: UserEmailStringEmail,
-        pub posts: UserPostsPostList,
-    }
-    pub type UserEmailStringEmail = String;
-    pub type UserPostsPostList = Vec<Box<Post>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootScalarUnionFnOutput {
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootCompositeUnionFnOutput {
-        Post(Post),
-        User(User),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootMixedUnionFnOutput {
-        Post(Post),
-        User(User),
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutput {
-        pub scalar: i64,
-        pub composite: RootNestedCompositeFnOutputCompositeStruct,
-        pub list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStruct {
-        pub value: i64,
-        pub nested: RootNestedCompositeFnOutputCompositeStructNestedStruct,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructNestedStruct {
-        pub inner: i64,
-    }
-    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Vec<Box<RootNestedCompositeFnOutputListStruct>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputListStruct {
-        pub value: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct UserPartial {
         pub id: Option<UserIdStringUuid>,
         pub email: Option<UserEmailStringEmail>,
         pub posts: Option<UserPostsPostListPartial>,
     }
+    pub type UserEmailStringEmail = String;
     pub type UserPostsPostListPartial = Vec<Box<PostPartial>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PostPartial {
         pub id: Option<UserIdStringUuid>,
         pub slug: Option<String>,
         pub title: Option<String>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum RootScalarUnionFnOutput {
+        StringE1a43(String),
+        Integer64be4(i64),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[allow(clippy::large_enum_variant)]

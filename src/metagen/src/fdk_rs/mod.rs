@@ -16,6 +16,8 @@ pub mod utils;
 
 use client_rs::GenClientRsOpts;
 use client_rs::RsClientManifest;
+use client_rs::RsClientManifestOpts;
+use types::OutputTypes;
 use types::RustTypesConfig;
 
 use crate::interlude::*;
@@ -177,8 +179,9 @@ impl crate::Plugin for Generator {
 
 #[derive(Debug)]
 struct Maps {
-    default: IndexMap<TypeKey, String>,
-    partial: IndexMap<TypeKey, String>,
+    inputs: IndexMap<TypeKey, String>,
+    // partial_outputs: IndexMap<TypeKey, String>,
+    outputs: IndexMap<TypeKey, String>,
 }
 
 impl FdkRustTemplate {
@@ -200,28 +203,39 @@ impl FdkRustTemplate {
 
         let maps = if config.exclude_client.unwrap_or_default() {
             let manifest = RustTypesConfig::default()
+                .output_types(OutputTypes::NonPartial)
                 .derive_serde(true)
                 .derive_debug(true)
                 .build_manifest(&tg);
             manifest.render_full(&mut mod_rs.buf)?;
 
             Maps {
-                default: manifest.default.get_cached_refs(),
-                partial: manifest
-                    .partial
+                inputs: manifest.inputs.get_cached_refs(),
+                outputs: manifest
+                    .outputs
                     .as_ref()
                     .map(|p| p.get_cached_refs())
                     .unwrap_or_default(),
+                // partial_outputs: manifest
+                //     .partial_outputs
+                //     .as_ref()
+                //     .map(|p| p.get_cached_refs())
+                //     .unwrap_or_default(),
             }
         } else {
-            let manifest = RsClientManifest::new(tg.clone(), true)?;
+            let manifest = RsClientManifest::new(
+                tg.clone(),
+                &RsClientManifestOpts {
+                    non_partial_output_types: true,
+                },
+            )?;
             manifest.render_client(&mut mod_rs.buf, &GenClientRsOpts { hostcall: true })?;
             Maps {
-                default: manifest.maps.types,
-                partial: manifest.maps.partial_types,
+                inputs: manifest.maps.input_types,
+                outputs: manifest.maps.output_types,
+                // partial_outputs: manifest.maps.partial_output_types,
             }
         };
-        eprintln!("maps: {maps:#?}");
 
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
         writeln!(&mut mod_rs.buf, "    use super::*;")?;

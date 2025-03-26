@@ -171,7 +171,7 @@ impl TsClientManifest {
         let static_ts = include_str!("static/mod.ts");
         processed_write(
             dest,
-            &static_ts,
+            static_ts,
             &[("HOSTCALL".to_string(), opts.hostcall)]
                 .into_iter()
                 .collect(),

@@ -268,6 +268,7 @@ pub struct QueryGraph {
 use types::*;
 #[allow(unused)]
 pub mod types {
+    // input types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesArgs {
         pub data: Primitives,
@@ -396,6 +397,7 @@ pub mod types {
         pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
     pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
+    // partial output types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesPartial {
         pub str: Option<PrimitivesStrString>,
@@ -482,6 +484,7 @@ pub mod types {
         pub phantom2: CompositesOptPrimitivesStrStringOptional,
         pub to3: SimpleCycles2To3SimpleCycles3OptionalPartial,
     }
+    // output types
 }
 
 #[allow(non_snake_case)]

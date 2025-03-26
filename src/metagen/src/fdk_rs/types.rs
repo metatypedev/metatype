@@ -6,7 +6,6 @@ use super::{indent_lines_into, utils::*};
 use crate::interlude::*;
 use crate::shared::types::type_body_required;
 use heck::ToPascalCase as _;
-use indexmap::map::Entry;
 use std::fmt::Write;
 
 #[derive(Debug)]
@@ -242,6 +241,150 @@ impl RustType {
             name,
         }
     }
+
+    fn new(ty: &Type, partial: bool) -> RustType {
+        if type_body_required(ty) {
+            let name = normalize_type_title(&ty.name());
+            match ty {
+                Type::Boolean(_) => RustType::builtin("bool", Some(name)),
+                Type::Integer(_) => RustType::builtin("i64", Some(name)),
+                Type::Float(_) => RustType::builtin("f64", Some(name)),
+                Type::String(ty) => {
+                    if let (Some(format), true) =
+                        (ty.format_only(), ty.title().starts_with("string_"))
+                    {
+                        let name = Some(normalize_type_title(&format!(
+                            "string_{format}_{}",
+                            ty.idx()
+                        )));
+                        RustType::builtin("String", name)
+                    } else {
+                        RustType::builtin("String", Some(name))
+                    }
+                }
+                Type::File(_) => RustType::builtin("super::FileId", Some(name)),
+                Type::Optional(ty) => {
+                    let item_ty = ty.item();
+                    let is_composite = item_ty.is_composite();
+                    if ty.default_value.is_none() && ty.title().starts_with("optional_") {
+                        // no alias -- inline
+                        RustType::container(
+                            "Option",
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            None,
+                        )
+                    } else {
+                        RustType::container(
+                            "Option",
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            Some(name_with_suffix(&name, partial && is_composite)),
+                        )
+                    }
+                }
+                Type::List(ty) => {
+                    let item_ty = ty.item();
+                    let is_composite = item_ty.is_composite();
+                    if matches!((ty.min_items, ty.max_items), (None, None))
+                        && ty.title().starts_with("list_")
+                    {
+                        // no alias -- inline
+                        // let map = map.clone();
+                        let container_name = if ty.unique_items {
+                            "std::collections::HashSet"
+                        } else {
+                            "Vec"
+                        };
+                        RustType::container(
+                            container_name,
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            None,
+                        )
+                    } else {
+                        let container_name = if ty.unique_items {
+                            "std::collections::HashSet"
+                        } else {
+                            "Vec"
+                        };
+                        RustType::container(
+                            container_name,
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            Some(name_with_suffix(&name, partial && is_composite)),
+                        )
+                    }
+                }
+
+                Type::Object(ty) => {
+                    let props = ty
+                        .properties()
+                        .iter()
+                        .map(|(prop_name, prop)| {
+                            let name = normalize_struct_prop_name(prop_name);
+                            let rename = if prop_name.as_ref() != name.as_str() {
+                                Some(prop_name.to_string())
+                            } else {
+                                None
+                            };
+                            let (optional, boxed) = match &prop.ty {
+                                Type::Optional(_) => (true, false),
+                                _ => (false, ty.is_descendant_of(&prop.ty)),
+                            };
+                            StructProp {
+                                name,
+                                rename,
+                                ty: prop.ty.key(),
+                                optional,
+                                boxed,
+                            }
+                        })
+                        .collect();
+                    RustType::Struct {
+                        name: normalize_type_title(&ty.name()),
+                        derive: Derive {
+                            debug: true,
+                            serde: true,
+                        },
+                        properties: props,
+                        partial,
+                    }
+                }
+
+                Type::Union(ty) => {
+                    let variants = ty
+                        .variants()
+                        .iter()
+                        .map(|variant| (variant.name().to_pascal_case(), variant.key()))
+                        .collect();
+                    RustType::Enum {
+                        name: normalize_type_title(&ty.name()),
+                        derive: Derive {
+                            debug: true,
+                            serde: true,
+                        },
+                        variants,
+                        partial,
+                    }
+                }
+
+                Type::Function(_) => unreachable!("unexpected function type"),
+            }
+        } else {
+            RustType::builtin(
+                match ty {
+                    Type::Boolean(_) => "bool",
+                    Type::Integer(_) => "i64",
+                    Type::Float(_) => "f64",
+                    Type::String(_) => "String",
+                    Type::File(_) => "super::FileId",
+                    _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
+                },
+                None,
+            )
+        }
+    }
 }
 
 fn name_with_suffix(name: &str, partial: bool) -> String {
@@ -252,168 +395,34 @@ fn name_with_suffix(name: &str, partial: bool) -> String {
     }
 }
 
-fn get_typespec(ty: &Type, partial: bool) -> RustType {
-    if type_body_required(ty) {
-        let name = normalize_type_title(&ty.name());
-        match ty {
-            Type::Boolean(_) => RustType::builtin("bool", Some(name)),
-            Type::Integer(_) => RustType::builtin("i64", Some(name)),
-            Type::Float(_) => RustType::builtin("f64", Some(name)),
-            Type::String(ty) => {
-                if let (Some(format), true) = (ty.format_only(), ty.title().starts_with("string_"))
-                {
-                    let name = Some(normalize_type_title(&format!(
-                        "string_{format}_{}",
-                        ty.idx()
-                    )));
-                    RustType::builtin("String", name)
-                } else {
-                    RustType::builtin("String", Some(name))
-                }
-            }
-            Type::File(_) => RustType::builtin("super::FileId", Some(name)),
-            Type::Optional(ty) => {
-                let item_ty = ty.item();
-                let is_composite = item_ty.is_composite();
-                if ty.default_value.is_none() && ty.title().starts_with("optional_") {
-                    // no alias -- inline
-                    RustType::container(
-                        "Option",
-                        item_ty.key(),
-                        is_composite, // TODO is_cyclic
-                        None,
-                    )
-                } else {
-                    RustType::container(
-                        "Option",
-                        item_ty.key(),
-                        is_composite, // TODO is_cyclic
-                        Some(name_with_suffix(&name, partial && is_composite)),
-                    )
-                }
-            }
-            Type::List(ty) => {
-                let item_ty = ty.item();
-                let is_composite = item_ty.is_composite();
-                if matches!((ty.min_items, ty.max_items), (None, None))
-                    && ty.title().starts_with("list_")
-                {
-                    // no alias -- inline
-                    // let map = map.clone();
-                    let container_name = if ty.unique_items {
-                        "std::collections::HashSet"
-                    } else {
-                        "Vec"
-                    };
-                    RustType::container(
-                        container_name,
-                        item_ty.key(),
-                        is_composite, // TODO is_cyclic
-                        None,
-                    )
-                } else {
-                    let container_name = if ty.unique_items {
-                        "std::collections::HashSet"
-                    } else {
-                        "Vec"
-                    };
-                    RustType::container(
-                        container_name,
-                        item_ty.key(),
-                        is_composite, // TODO is_cyclic
-                        Some(name_with_suffix(&name, partial && is_composite)),
-                    )
-                }
-            }
-
-            Type::Object(ty) => {
-                let props = ty
-                    .properties()
-                    .iter()
-                    .map(|(prop_name, prop)| {
-                        let name = normalize_struct_prop_name(prop_name);
-                        let rename = if prop_name.as_ref() != name.as_str() {
-                            Some(prop_name.to_string())
-                        } else {
-                            None
-                        };
-                        let (optional, boxed) = match &prop.ty {
-                            Type::Optional(_) => (true, false),
-                            _ => (false, ty.is_descendant_of(&prop.ty)),
-                        };
-                        StructProp {
-                            name,
-                            rename,
-                            ty: prop.ty.key(),
-                            optional,
-                            boxed,
-                        }
-                    })
-                    .collect();
-                RustType::Struct {
-                    name: normalize_type_title(&ty.name()),
-                    derive: Derive {
-                        debug: true,
-                        serde: true,
-                    },
-                    properties: props,
-                    partial,
-                }
-            }
-
-            Type::Union(ty) => {
-                let variants = ty
-                    .variants()
-                    .iter()
-                    .map(|variant| (variant.name().to_pascal_case(), variant.key()))
-                    .collect();
-                RustType::Enum {
-                    name: normalize_type_title(&ty.name()),
-                    derive: Derive {
-                        debug: true,
-                        serde: true,
-                    },
-                    variants,
-                    partial,
-                }
-            }
-
-            Type::Function(_) => unreachable!("unexpected function type"),
-        }
-    } else {
-        RustType::builtin(
-            match ty {
-                Type::Boolean(_) => "bool",
-                Type::Integer(_) => "i64",
-                Type::Float(_) => "f64",
-                Type::String(_) => "String",
-                Type::File(_) => "super::FileId",
-                _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
-            },
-            None,
-        )
-    }
-}
-
 type Extras = Derive;
 
 pub type RustTypeManifestPage = ManifestPage<RustType, Extras>;
 
 pub struct RustTypesSubmanifest {
-    pub default: RustTypeManifestPage,
-    pub partial: Option<RustTypeManifestPage>,
+    pub inputs: RustTypeManifestPage,
+    pub outputs: Option<RustTypeManifestPage>,
+    pub partial_outputs: Option<RustTypeManifestPage>,
+}
+
+#[derive(Default, Clone)]
+pub enum OutputTypes {
+    #[default]
+    Partial,
+    NonPartial,
+    Both,
 }
 
 #[derive(Default)]
 pub struct RustTypesConfig {
-    partial_output_types: bool,
+    output_types: OutputTypes,
     derive_serde: bool,
     derive_debug: bool,
 }
 
 impl RustTypesConfig {
-    pub fn partial_output_types(mut self, value: bool) -> Self {
-        self.partial_output_types = value;
+    pub fn output_types(mut self, value: OutputTypes) -> Self {
+        self.output_types = value;
         self
     }
 
@@ -432,53 +441,74 @@ impl RustTypesConfig {
             serde: self.derive_serde,
             debug: self.derive_debug,
         };
-        RustTypesSubmanifest::new(tg, self.partial_output_types, gen_config)
+        RustTypesSubmanifest::new(tg, &self.output_types, gen_config)
     }
 }
 
 impl RustTypesSubmanifest {
-    fn new(tg: &Typegraph, partial_output_types: bool, gen_config: Extras) -> Self {
-        let default = Self::default_page(tg, gen_config.clone());
-        default.cache_references();
-        if partial_output_types {
-            eprintln!("Partial types enabled");
-            let partial = Self::partial_page(tg, &default, gen_config.clone());
-            partial.cache_references();
-            Self {
-                default,
-                partial: Some(partial),
-            }
+    fn new(tg: &Typegraph, output_types: &OutputTypes, gen_config: Extras) -> Self {
+        let inputs = Self::get_inputs(tg, gen_config.clone());
+        inputs.cache_references();
+
+        let outputs = if matches!(output_types, OutputTypes::NonPartial | OutputTypes::Both) {
+            let outputs = Self::get_outputs(tg, &inputs, gen_config.clone());
+            outputs.cache_references();
+            Some(outputs)
         } else {
-            Self {
-                default,
-                partial: None,
-            }
+            None
+        };
+
+        let partial_outputs = if matches!(output_types, OutputTypes::Partial | OutputTypes::Both) {
+            let partial_outputs =
+                Self::get_partial_outputs(tg, &inputs, outputs.as_ref(), gen_config.clone());
+            partial_outputs.cache_references();
+            Some(partial_outputs)
+        } else {
+            None
+        };
+
+        Self {
+            inputs,
+            outputs,
+            partial_outputs,
         }
     }
 
-    fn default_page(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
+    fn get_inputs(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
         let mut map = IndexMap::new();
 
         for (key, ty) in tg.input_types.iter() {
-            let typespec = get_typespec(ty, false);
-            map.insert(*key, typespec);
+            map.insert(*key, RustType::new(ty, false));
         }
 
+        ManifestPage::with_extras(map, gen_config)
+    }
+
+    fn get_outputs(
+        tg: &Typegraph,
+        inputs: &RustTypeManifestPage,
+        gen_config: Extras,
+    ) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
+
         for (key, ty) in tg.output_types.iter() {
-            let typespec = get_typespec(ty, false);
-            if let Entry::Vacant(entry) = map.entry(*key) {
-                entry.insert(typespec);
+            if let Some(inp_ref) = inputs.get_ref(&ty.key()) {
+                let alias = Alias::Plain {
+                    name: inp_ref.clone(),
+                };
+                map.insert(*key, RustType::Alias { alias, name: None });
+            } else {
+                map.insert(*key, RustType::new(ty, false));
             }
         }
 
-        let res: RustTypeManifestPage = ManifestPage::with_extras(map, gen_config);
-
-        res
+        ManifestPage::with_extras(map, gen_config)
     }
 
-    fn partial_page(
+    fn get_partial_outputs(
         tg: &Typegraph,
-        default_page: &RustTypeManifestPage,
+        inputs: &RustTypeManifestPage,
+        outputs: Option<&RustTypeManifestPage>,
         gen_config: Extras,
     ) -> RustTypeManifestPage {
         let mut map = IndexMap::new();
@@ -487,27 +517,42 @@ impl RustTypesSubmanifest {
             let partial = ty.is_composite();
             if !partial {
                 // alias to input type if exists
-                let inp_ref = default_page.get_ref(&ty.key()).unwrap();
-                let alias = Alias::Plain {
-                    name: inp_ref.clone(),
-                };
-                let typespec = RustType::Alias { alias, name: None };
-                map.insert(*key, typespec);
+                if let Some(inp_ref) = inputs.get_ref(&ty.key()) {
+                    let alias = Alias::Plain {
+                        name: inp_ref.clone(),
+                    };
+                    map.insert(*key, RustType::Alias { alias, name: None });
+                    continue;
+                }
+
+                // alias to output type if exists
+                if let Some(out_ref) = outputs.and_then(|page| page.get_ref(&ty.key())) {
+                    let alias = Alias::Plain {
+                        name: out_ref.clone(),
+                    };
+                    map.insert(*key, RustType::Alias { alias, name: None });
+                    continue;
+                }
+
+                map.insert(*key, RustType::new(ty, false));
             } else {
-                let typespec = get_typespec(ty, partial);
-                map.insert(*key, typespec);
+                map.insert(*key, RustType::new(ty, true));
             }
         }
 
-        let res = ManifestPage::with_extras(map, gen_config);
-        res.cache_references();
-
-        res
+        ManifestPage::with_extras(map, gen_config)
     }
 
     pub fn render_all(&self, out: &mut impl Write) -> std::fmt::Result {
-        self.default.render_all(out)?;
-        self.partial
+        writeln!(out, "// input types")?;
+        self.inputs.render_all(out)?;
+        writeln!(out, "// partial output types")?;
+        self.partial_outputs
+            .as_ref()
+            .map(|page| page.render_all(out))
+            .transpose()?;
+        writeln!(out, "// output types")?;
+        self.outputs
             .as_ref()
             .map(|page| page.render_all(out))
             .transpose()?;
@@ -684,6 +729,7 @@ pub struct MyObj {
     pub optional: MyStrMaybe,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum MyEither {
     MyStr(MyStr),
@@ -697,6 +743,7 @@ pub enum MyEither {
     MyObj(MyObj),
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum MyUnion {
     MyStr(MyStr),
@@ -913,6 +960,7 @@ pub struct ObjB {
     pub union_c: Box<CUnion>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum CUnion {
     ObjA(ObjA),
@@ -966,6 +1014,7 @@ pub struct ObjB {
     pub either_c: Box<CEither>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum CEither {
     ObjA(ObjA),
@@ -982,11 +1031,14 @@ pub enum CEither {
             // });
 
             let tg = create_typegraph(name.into(), nodes)?;
-            let mut manifest = RustTypesConfig::default().build_manifest(&tg);
-            let first = *manifest.outputs.map.first().unwrap().0;
-            manifest.outputs.map.shift_remove(&first);
+            let mut manifest = RustTypesConfig::default()
+                .output_types(OutputTypes::NonPartial)
+                .build_manifest(&tg);
+            let mut outputs = std::mem::take(&mut manifest.outputs).unwrap();
+            let first = *outputs.map.first().unwrap().0;
+            outputs.map.shift_remove(&first);
 
-            let real_out = manifest.outputs.render_all_buffered()?;
+            let real_out = outputs.render_all_buffered()?;
 
             // pretty_assertions::assert_eq!(
             //     &gen_name[..],
