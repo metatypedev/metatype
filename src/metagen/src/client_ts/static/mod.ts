@@ -23,15 +23,7 @@ function _selectionToNodeSet(
     const nodeInstances = nodeSelection instanceof Alias
       ? nodeSelection.aliases()
       : { [nodeName]: nodeSelection };
-    const nodeInstances = nodeSelection instanceof Alias
-      ? nodeSelection.aliases()
-      : { [nodeName]: nodeSelection };
 
-    for (
-      const [instanceName, instanceSelection] of Object.entries(
-        nodeInstances,
-      )
-    ) {
     for (
       const [instanceName, instanceSelection] of Object.entries(
         nodeInstances,
@@ -495,16 +487,6 @@ function convertQueryNodeGql(
     } else {
       out = `${out} { ${
         Object.entries(subNodes)
-          .map(([variantTy, subNodes]) => {
-            let gqlTy = typeToGqlTypeMap[variantTy];
-            if (!gqlTy) {
-              throw new Error(
-                `unreachable: no graphql type found for variant ${variantTy}`,
-              );
-            }
-            gqlTy = gqlTy.replace(/[!]+$/, "");
-      out = `${out} { ${
-        Object.entries(subNodes)
           .map(([variantTy, variantSubNodes]) => {
             let gqlTy = typeToGqlTypeMap[variantTy];
             if (!gqlTy) {
@@ -513,21 +495,15 @@ function convertQueryNodeGql(
               );
             }
             gqlTy = gqlTy.replace(/[!]+$/, "");
-
-            return `... on ${gqlTy} {${
-              subNodes
-                .map((node) =>
-                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
-                )
-                .join(" ")
-            }}`;
-          })
-          .join(" ")
-      } }`;
             return `... on ${gqlTy} {${
               variantSubNodes
                 .map((node) =>
-                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                  convertQueryNodeGql(
+                    typeToGqlTypeMap,
+                    node,
+                    variables,
+                    files,
+                  )
                 )
                 .join(" ")
             }}`;

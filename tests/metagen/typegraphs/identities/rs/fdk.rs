@@ -10,7 +10,6 @@ pub mod wit {
         pub_export_macro: true,
         
 
-
         inline: "package metatype:wit-wire;
 
 interface typegate-wire {
@@ -92,12 +91,6 @@ impl Default for MatBuilder {
     }
 }
 
-impl Default for MatBuilder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl MatBuilder {
     pub fn new() -> Self {
         Self {
@@ -146,11 +139,6 @@ impl Router {
             host: transports::hostcall(&qg),
             qg,
         };
-        let qg = query_graph();
-        let cx = Ctx {
-            host: transports::hostcall(&qg),
-            qg,
-        };
         (handler.handler_fn)(&req.in_json, cx)
     }
 }
@@ -161,11 +149,6 @@ thread_local! {
     pub static MAT_STATE: RefCell<Router> = panic!("MAT_STATE has not been initialized");
 }
 
-
-pub struct Ctx {
-    pub qg: QueryGraph,
-    pub host: metagen_client::hostcall::HostcallTransport,
-}
 
 pub struct Ctx {
     pub qg: QueryGraph,
@@ -284,7 +267,6 @@ pub struct QueryGraph {
 //
 use types::*;
 #[allow(unused)]
-#[allow(unused)]
 pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesArgs {
@@ -329,6 +311,7 @@ pub mod types {
         pub union: CompositesUnionUnion,
         pub list: CompositesListPrimitivesStrStringList,
     }
+    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
@@ -413,6 +396,92 @@ pub mod types {
         pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
     pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PrimitivesPartial {
+        pub str: Option<PrimitivesStrString>,
+        #[serde(rename = "enum")]
+        pub r#enum: Option<PrimitivesEnumStringEnum>,
+        pub uuid: Option<PrimitivesUuidStringUuid>,
+        pub email: Option<PrimitivesEmailStringEmail>,
+        pub ean: Option<PrimitivesEanStringEan>,
+        pub json: Option<PrimitivesJsonStringJson>,
+        pub uri: Option<PrimitivesUriStringUri>,
+        pub date: Option<PrimitivesDateStringDate>,
+        pub datetime: Option<PrimitivesDatetimeStringDatetime>,
+        pub int: Option<PrimitivesIntInteger>,
+        pub float: Option<PrimitivesFloatFloat>,
+        pub boolean: Option<PrimitivesBooleanBoolean>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch2Partial {
+        pub branch2: Option<PrimitivesStrString>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesEitherEitherPartial {
+        Primitives(PrimitivesPartial),
+        Branch2(Branch2Partial),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct CompositesPartial {
+        pub opt: CompositesOptPrimitivesStrStringOptional,
+        pub either: Option<CompositesEitherEitherPartial>,
+        pub union: Option<CompositesUnionUnion>,
+        pub list: Option<CompositesListPrimitivesStrStringList>,
+    }
+    pub type Cycles1To2Cycles2OptionalPartial = Option<Box<Cycles2Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles3Partial {
+        Branch33A(Branch33APartial),
+        Branch33B(Branch33BPartial),
+    }
+    pub type Cycles1List3Cycles3ListPartial = Vec<Box<Cycles3Partial>>;
+    pub type Cycles1List3Cycles1List3Cycles3ListOptionalPartial = Option<Box<Cycles1List3Cycles3ListPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Partial {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptionalPartial,
+    }
+    pub type Branch33ATo1Cycles1OptionalPartial = Option<Box<Cycles1Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33APartial {
+        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
+        pub to1: Branch33ATo1Cycles1OptionalPartial,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33BPartial {
+        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles2Partial {
+        Cycles3(Cycles3Partial),
+        Cycles1(Cycles1Partial),
+    }
+    pub type SimpleCycles1To2SimpleCycles2OptionalPartial = Option<Box<SimpleCycles2Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1Partial {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: SimpleCycles1To2SimpleCycles2OptionalPartial,
+    }
+    pub type SimpleCycles3To1SimpleCycles1OptionalPartial = Option<Box<SimpleCycles1Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles3Partial {
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1OptionalPartial,
+    }
+    pub type SimpleCycles2To3SimpleCycles3OptionalPartial = Option<Box<SimpleCycles3Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles2Partial {
+        pub phantom2: CompositesOptPrimitivesStrStringOptional,
+        pub to3: SimpleCycles2To3SimpleCycles3OptionalPartial,
+    }
 }
 
 #[allow(non_snake_case)]
@@ -426,6 +495,39 @@ mod node_metas {
             input_files: None,
         }
     }    
+    pub fn RsProxyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn Primitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("str".into(), scalar as NodeMetaFn),
+                    ("enum".into(), scalar as NodeMetaFn),
+                    ("uuid".into(), scalar as NodeMetaFn),
+                    ("email".into(), scalar as NodeMetaFn),
+                    ("ean".into(), scalar as NodeMetaFn),
+                    ("json".into(), scalar as NodeMetaFn),
+                    ("uri".into(), scalar as NodeMetaFn),
+                    ("date".into(), scalar as NodeMetaFn),
+                    ("datetime".into(), scalar as NodeMetaFn),
+                    ("int".into(), scalar as NodeMetaFn),
+                    ("float".into(), scalar as NodeMetaFn),
+                    ("boolean".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
     pub fn RsSimpleCycles() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
@@ -601,30 +703,17 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn Primitives() -> NodeMeta {
+    pub fn RsPrimitives() -> NodeMeta {
         NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
+            arg_types: Some(
                 [
-                    ("str".into(), scalar as NodeMetaFn),
-                    ("enum".into(), scalar as NodeMetaFn),
-                    ("uuid".into(), scalar as NodeMetaFn),
-                    ("email".into(), scalar as NodeMetaFn),
-                    ("ean".into(), scalar as NodeMetaFn),
-                    ("json".into(), scalar as NodeMetaFn),
-                    ("uri".into(), scalar as NodeMetaFn),
-                    ("date".into(), scalar as NodeMetaFn),
-                    ("datetime".into(), scalar as NodeMetaFn),
-                    ("int".into(), scalar as NodeMetaFn),
-                    ("float".into(), scalar as NodeMetaFn),
-                    ("boolean".into(), scalar as NodeMetaFn),
+                    ("data".into(), "primitives".into()),
                 ].into()
             ),
-            input_files: None,
+            ..Primitives()
         }
     }
-    pub fn RsPrimitives() -> NodeMeta {
+    pub fn TsProxyPrimitives() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
@@ -665,6 +754,16 @@ mod node_metas {
         }
     }
     pub fn TsPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn PyProxyPrimitives() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
@@ -820,7 +919,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn py_primitives(
         &self,
             args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "py_primitives".into(),
@@ -832,7 +931,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn py_composites(
         &self,
             args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "py_composites".into(),
@@ -844,7 +943,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn py_cycles(
         &self,
             args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "py_cycles".into(),
@@ -856,7 +955,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn py_simple_cycles(
         &self,
             args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "py_simple_cycles".into(),
@@ -865,10 +964,22 @@ pub fn query_graph() -> QueryGraph {
             _marker: PhantomData,
         }
     }
+    pub fn py_proxy_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
+    {
+        UnselectedNode {
+            root_name: "py_proxy_primitives".into(),
+            root_meta: node_metas::PyProxyPrimitives,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
     pub fn ts_primitives(
         &self,
             args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "ts_primitives".into(),
@@ -880,7 +991,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn ts_composites(
         &self,
             args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "ts_composites".into(),
@@ -892,7 +1003,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn ts_cycles(
         &self,
             args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "ts_cycles".into(),
@@ -904,7 +1015,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn ts_simple_cycles(
         &self,
             args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "ts_simple_cycles".into(),
@@ -913,10 +1024,22 @@ pub fn query_graph() -> QueryGraph {
             _marker: PhantomData,
         }
     }
+    pub fn ts_proxy_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
+    {
+        UnselectedNode {
+            root_name: "ts_proxy_primitives".into(),
+            root_meta: node_metas::TsProxyPrimitives,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
     pub fn rs_primitives(
         &self,
             args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, Primitives>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "rs_primitives".into(),
@@ -928,7 +1051,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn rs_composites(
         &self,
             args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, Composites>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "rs_composites".into(),
@@ -940,7 +1063,7 @@ pub fn query_graph() -> QueryGraph {
     pub fn rs_cycles(
         &self,
             args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "rs_cycles".into(),
@@ -952,11 +1075,23 @@ pub fn query_graph() -> QueryGraph {
     pub fn rs_simple_cycles(
         &self,
             args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "rs_simple_cycles".into(),
             root_meta: node_metas::RsSimpleCycles,
+            args: args.into().into(),
+            _marker: PhantomData,
+        }
+    }
+    pub fn rs_proxy_primitives(
+        &self,
+            args: impl Into<NodeArgs<PrimitivesArgs>>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
+    {
+        UnselectedNode {
+            root_name: "rs_proxy_primitives".into(),
+            root_meta: node_metas::RsProxyPrimitives,
             args: args.into().into(),
             _marker: PhantomData,
         }

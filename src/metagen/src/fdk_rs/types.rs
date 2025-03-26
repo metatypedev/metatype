@@ -6,6 +6,7 @@ use super::{indent_lines_into, utils::*};
 use crate::interlude::*;
 use crate::shared::types::type_body_required;
 use heck::ToPascalCase as _;
+use indexmap::map::Entry;
 use std::fmt::Write;
 
 #[derive(Debug)]
@@ -399,8 +400,8 @@ type Extras = Derive;
 pub type RustTypeManifestPage = ManifestPage<RustType, Extras>;
 
 pub struct RustTypesSubmanifest {
-    pub inputs: RustTypeManifestPage,
-    pub outputs: RustTypeManifestPage,
+    pub default: RustTypeManifestPage,
+    pub partial: Option<RustTypeManifestPage>,
 }
 
 #[derive(Default)]
@@ -437,13 +438,25 @@ impl RustTypesConfig {
 
 impl RustTypesSubmanifest {
     fn new(tg: &Typegraph, partial_output_types: bool, gen_config: Extras) -> Self {
-        let inputs = Self::input_page(tg, gen_config.clone());
-        let outputs = Self::output_page(tg, partial_output_types, &inputs, gen_config);
-        outputs.cache_references();
-        Self { inputs, outputs }
+        let default = Self::default_page(tg, gen_config.clone());
+        default.cache_references();
+        if partial_output_types {
+            eprintln!("Partial types enabled");
+            let partial = Self::partial_page(tg, &default, gen_config.clone());
+            partial.cache_references();
+            Self {
+                default,
+                partial: Some(partial),
+            }
+        } else {
+            Self {
+                default,
+                partial: None,
+            }
+        }
     }
 
-    fn input_page(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
+    fn default_page(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
         let mut map = IndexMap::new();
 
         for (key, ty) in tg.input_types.iter() {
@@ -451,35 +464,39 @@ impl RustTypesSubmanifest {
             map.insert(*key, typespec);
         }
 
+        for (key, ty) in tg.output_types.iter() {
+            let typespec = get_typespec(ty, false);
+            if let Entry::Vacant(entry) = map.entry(*key) {
+                entry.insert(typespec);
+            }
+        }
+
         let res: RustTypeManifestPage = ManifestPage::with_extras(map, gen_config);
-        res.cache_references();
 
         res
     }
 
-    fn output_page(
+    fn partial_page(
         tg: &Typegraph,
-        partial: bool,
-        input_page: &RustTypeManifestPage,
+        default_page: &RustTypeManifestPage,
         gen_config: Extras,
     ) -> RustTypeManifestPage {
         let mut map = IndexMap::new();
 
         for (key, ty) in tg.output_types.iter() {
-            let partial = partial && ty.is_composite();
+            let partial = ty.is_composite();
             if !partial {
                 // alias to input type if exists
-                if let Some(inp_ref) = input_page.get_ref(&ty.key()) {
-                    let alias = Alias::Plain {
-                        name: inp_ref.clone(),
-                    };
-                    let typespec = RustType::Alias { alias, name: None };
-                    map.insert(*key, typespec);
-                    continue;
-                }
+                let inp_ref = default_page.get_ref(&ty.key()).unwrap();
+                let alias = Alias::Plain {
+                    name: inp_ref.clone(),
+                };
+                let typespec = RustType::Alias { alias, name: None };
+                map.insert(*key, typespec);
+            } else {
+                let typespec = get_typespec(ty, partial);
+                map.insert(*key, typespec);
             }
-            let typespec = get_typespec(ty, partial);
-            map.insert(*key, typespec);
         }
 
         let res = ManifestPage::with_extras(map, gen_config);
@@ -489,8 +506,12 @@ impl RustTypesSubmanifest {
     }
 
     pub fn render_all(&self, out: &mut impl Write) -> std::fmt::Result {
-        self.inputs.render_all(out)?;
-        self.outputs.render_all(out)
+        self.default.render_all(out)?;
+        self.partial
+            .as_ref()
+            .map(|page| page.render_all(out))
+            .transpose()?;
+        Ok(())
     }
 
     pub fn render_full(&self, out: &mut impl Write) -> std::fmt::Result {

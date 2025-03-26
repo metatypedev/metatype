@@ -44,8 +44,6 @@ pub struct FdkRustGenConfig {
     pub skip_lib_rs: Option<bool>,
     #[garde(skip)]
     pub exclude_client: Option<bool>,
-    #[garde(skip)]
-    pub exclude_client: Option<bool>,
 }
 
 impl FdkRustGenConfig {
@@ -160,10 +158,6 @@ impl crate::Plugin for Generator {
                         Some(&crate_name),
                         !self.config.exclude_client.unwrap_or_default(),
                     ),
-                    contents: gen_cargo_toml(
-                        Some(&crate_name),
-                        !self.config.exclude_client.unwrap_or_default(),
-                    ),
                     overwrite: false,
                 },
             );
@@ -181,9 +175,10 @@ impl crate::Plugin for Generator {
     }
 }
 
+#[derive(Debug)]
 struct Maps {
-    input: IndexMap<TypeKey, String>,
-    output: IndexMap<TypeKey, String>,
+    default: IndexMap<TypeKey, String>,
+    partial: IndexMap<TypeKey, String>,
 }
 
 impl FdkRustTemplate {
@@ -211,17 +206,22 @@ impl FdkRustTemplate {
             manifest.render_full(&mut mod_rs.buf)?;
 
             Maps {
-                input: manifest.inputs.get_cached_refs(),
-                output: manifest.outputs.get_cached_refs(),
+                default: manifest.default.get_cached_refs(),
+                partial: manifest
+                    .partial
+                    .as_ref()
+                    .map(|p| p.get_cached_refs())
+                    .unwrap_or_default(),
             }
         } else {
-            let manifest = RsClientManifest::new(tg.clone(), false)?;
+            let manifest = RsClientManifest::new(tg.clone(), true)?;
             manifest.render_client(&mut mod_rs.buf, &GenClientRsOpts { hostcall: true })?;
             Maps {
-                input: manifest.maps.input_types,
-                output: manifest.maps.output_types,
+                default: manifest.maps.types,
+                partial: manifest.maps.partial_types,
             }
         };
+        eprintln!("maps: {maps:#?}");
 
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
         writeln!(&mut mod_rs.buf, "    use super::*;")?;
@@ -265,11 +265,6 @@ impl FdkRustTemplate {
         dest: &mut GenDestBuf,
         config: &FdkRustGenConfig,
     ) -> anyhow::Result<()> {
-    pub fn gen_static(
-        &self,
-        dest: &mut GenDestBuf,
-        config: &FdkRustGenConfig,
-    ) -> anyhow::Result<()> {
         let mod_rs = self.mod_rs.clone().into_owned();
         let mod_rs = mod_rs.replace("__METATYPE_VERSION__", std::env!("CARGO_PKG_VERSION"));
 
@@ -288,19 +283,7 @@ impl FdkRustTemplate {
 
         processed_write(
             dest,
-
-        let flags = [(
-            "HOSTCALL".to_string(),
-            !config.exclude_client.unwrap_or_default(),
-        )]
-        .into_iter()
-        .collect();
-
-        processed_write(
-            dest,
             &mod_rs[mod_rs.find(gen_start).unwrap() + gen_start.len()
-                ..mod_rs.find(wit_start).unwrap()],
-            &flags,
                 ..mod_rs.find(wit_start).unwrap()],
             &flags,
         )?;
@@ -349,30 +332,7 @@ fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
             "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
             version = env!("CARGO_PKG_VERSION")
         )
-fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
-    let crate_name = crate_name.unwrap_or("fdk_rs");
-
-    let dependency = if hostcall {
-        #[cfg(debug_assertions)]
-        {
-            use normpath::PathExt;
-            let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../metagen-client-rs")
-                .normalize()
-                .unwrap();
-            format!(
-                r#"metagen-client = {{ path = "{client_path}", default-features = false }}"#,
-                client_path = client_path.as_path().to_str().unwrap()
-            )
-        }
-
-        #[cfg(not(debug_assertions))]
-        format!(
-            "metagen-client = {{ git = \"https://github.com/metatypedev/metatype.git\", tag = \"{version}\", default-features = false }}",
-            version = env!("CARGO_PKG_VERSION")
-        )
     } else {
-        "".to_string()
         "".to_string()
     };
 
@@ -394,9 +354,6 @@ path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
 [profile.release]
 strip = "symbols"
-opt-level = "z"
-"#
-    )
 opt-level = "z"
 "#
     )
@@ -446,7 +403,6 @@ fn e2e() -> anyhow::Result<()> {
                         skip_lib_rs: Some(true),
                         stubbed_runtimes: Some(vec!["wasm_wire".into()]),
                         crate_name: None,
-                        exclude_client: None,
                         exclude_client: None,
                         base: config::FdkGeneratorConfigBase {
                             typegraph_name: Some(tg_name.into()),

@@ -8,6 +8,8 @@ use super::shared::types::type_body_required;
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
 use crate::interlude::*;
 
+pub type TsTypesPage = ManifestPage<TsType>;
+
 #[derive(Debug)]
 pub enum Alias {
     BuiltIn(&'static str),
@@ -43,6 +45,72 @@ impl TsType {
             name,
         }
     }
+
+    fn build_string(ty: &Arc<StringType>, name: String) -> TsType {
+        if let Some(variants) = &ty.enumeration {
+            TsType::LiteralEnum {
+                name,
+                variants: variants.clone(),
+            }
+        } else if let Some(format) = ty.format_only() {
+            let ty_name = normalize_type_title(&format!("string_{format}_{}", ty.idx()));
+            TsType::builtin("string", Some(ty_name))
+        } else {
+            TsType::builtin("string", Some(name))
+        }
+    }
+
+    fn build_optional(ty: &Arc<OptionalType>, name: String) -> TsType {
+        let item_ty = ty.item();
+        let explicit_alias = ty.default_value.is_some() || !ty.title().starts_with("optional_");
+        TsType::Alias {
+            alias: Alias::Optional(item_ty.key()),
+            name: explicit_alias.then_some(name),
+        }
+    }
+
+    fn build_list(ty: &Arc<ListType>, name: String) -> TsType {
+        let explicit_alias = !matches!((ty.max_items, ty.min_items), (None, None))
+            || !ty.title().starts_with("list_");
+        let name = explicit_alias.then_some(name);
+
+        TsType::Alias {
+            alias: Alias::Container {
+                name: "Array",
+                item: ty.item().key(),
+            },
+            name,
+        }
+    }
+
+    fn build_object(ty: &Arc<ObjectType>, name: String) -> TsType {
+        let props = ty
+            .properties()
+            .iter()
+            .map(|(name, prop)| {
+                let ty = prop.ty.key();
+                let optional = matches!(prop.ty, Type::Optional(_));
+                ObjectProp {
+                    name: normalize_struct_prop_name(&name[..]),
+                    ty,
+                    optional,
+                }
+            })
+            .collect::<Vec<_>>();
+        TsType::Object {
+            name,
+            properties: props,
+        }
+    }
+
+    fn build_union(ty: &Arc<UnionType>, name: String) -> TsType {
+        let variants = ty
+            .variants()
+            .iter()
+            .map(|variant| variant.key())
+            .collect::<Vec<_>>();
+        TsType::Enum { name, variants }
+    }
 }
 
 #[derive(Debug)]
@@ -55,7 +123,7 @@ pub struct ObjectProp {
 impl ManifestEntry for TsType {
     type Extras = ();
 
-    fn render(&self, out: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
+    fn render(&self, out: &mut impl Write, page: &TsTypesPage) -> std::fmt::Result {
         match self {
             TsType::Alias { name, alias } => {
                 if let Some(name) = name {
@@ -113,7 +181,7 @@ impl ManifestEntry for TsType {
         Ok(())
     }
 
-    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
+    fn get_reference_expr(&self, page: &TsTypesPage) -> Option<String> {
         match self {
             TsType::Alias { name, alias } => {
                 if let Some(name) = name {
@@ -142,127 +210,55 @@ impl ManifestEntry for TsType {
     }
 }
 
-fn get_typespec(ty: &Type) -> TsType {
-    if type_body_required(ty) {
-        let name = normalize_type_title(&ty.name());
-        match ty {
-            Type::Boolean(_) => TsType::builtin("boolean", Some(name)),
-            Type::Integer(_) => TsType::builtin("number", Some(name)),
-            Type::Float(_) => TsType::builtin("number", Some(name)),
-            Type::String(ty) => {
-                if let Some(variants) = &ty.enumeration {
-                    TsType::LiteralEnum {
-                        name,
-                        variants: variants.clone(),
-                    }
-                } else if let Some(format) = ty.format_only() {
-                    let ty_name = normalize_type_title(&format!("string_{format}_{}", ty.idx()));
-                    TsType::builtin("string", Some(ty_name))
-                } else {
-                    TsType::builtin("string", Some(name))
-                }
-            }
-            Type::File(_) => TsType::builtin("File", Some(name)),
-            Type::Optional(ty) => {
-                let item_ty = ty.item();
-                if ty.default_value.is_none() && ty.title().starts_with("optional_") {
-                    TsType::Alias {
-                        alias: Alias::Optional(item_ty.key()),
-                        name: None,
-                    }
-                } else {
-                    TsType::Alias {
-                        alias: Alias::Optional(item_ty.key()),
-                        name: Some(name),
-                    }
-                }
-            }
-            Type::List(ty) => {
-                let item_ty = ty.item();
-                if matches!((ty.max_items, ty.min_items), (None, None))
-                    && ty.title().starts_with("list_")
-                {
-                    TsType::Alias {
-                        alias: Alias::Container {
-                            name: "Array",
-                            item: item_ty.key(),
-                        },
-                        name: None,
-                    }
-                } else {
-                    TsType::Alias {
-                        alias: Alias::Container {
-                            name: "Array",
-                            item: item_ty.key(),
-                        },
-                        name: Some(name),
-                    }
-                }
-            }
-
-            Type::Object(ty) => {
-                let props = ty
-                    .properties()
-                    .iter()
-                    .map(|(name, prop)| {
-                        let ty = prop.ty.key();
-                        let optional = matches!(prop.ty, Type::Optional(_));
-                        ObjectProp {
-                            name: normalize_struct_prop_name(&name[..]),
-                            ty,
-                            optional,
-                        }
-                    })
-                    .collect::<Vec<_>>();
-                TsType::Object {
-                    name,
-                    properties: props,
-                }
-            }
-
-            Type::Union(ty) => {
-                let variants = ty
-                    .variants()
-                    .iter()
-                    .map(|variant| variant.key())
-                    .collect::<Vec<_>>();
-                TsType::Enum { name, variants }
-            }
-
-            Type::Function(_) => unreachable!("unexpected function type"),
-        }
-    } else {
-        TsType::builtin(
+impl From<&Type> for TsType {
+    fn from(ty: &Type) -> Self {
+        if type_body_required(ty) {
+            let name = normalize_type_title(&ty.name());
             match ty {
-                Type::Boolean(_) => "boolean",
-                Type::Integer(_) | Type::Float(_) => "number",
-                Type::String(_) => "string",
-                Type::File(_) => "File",
-                _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
-            },
-            None,
-        )
+                Type::Boolean(_) => TsType::builtin("boolean", Some(name)),
+                Type::Integer(_) => TsType::builtin("number", Some(name)),
+                Type::Float(_) => TsType::builtin("number", Some(name)),
+                Type::String(ty) => Self::build_string(ty, name),
+                Type::File(_) => TsType::builtin("File", Some(name)),
+                Type::Optional(ty) => Self::build_optional(ty, name),
+                Type::List(ty) => Self::build_list(ty, name),
+                Type::Object(ty) => Self::build_object(ty, name),
+                Type::Union(ty) => Self::build_union(ty, name),
+
+                Type::Function(_) => unreachable!("unexpected function type"),
+            }
+        } else {
+            TsType::builtin(
+                match ty {
+                    Type::Boolean(_) => "boolean",
+                    Type::Integer(_) | Type::Float(_) => "number",
+                    Type::String(_) => "string",
+                    Type::File(_) => "File",
+                    _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
+                },
+                None,
+            )
+        }
     }
 }
 
-pub fn manifest_page(tg: &Typegraph) -> Result<ManifestPage<TsType>> {
-    let mut map = IndexMap::new();
+impl TsTypesPage {
+    pub fn new(tg: &Typegraph) -> Self {
+        let mut map = IndexMap::new();
 
-    for (key, ty) in tg.input_types.iter() {
-        if let Type::Object(ty) = ty {
-            if ty.properties().is_empty() {
-                continue;
+        for (key, ty) in tg.input_types.iter() {
+            if let Type::Object(ty) = ty {
+                if ty.properties().is_empty() {
+                    continue;
+                }
             }
+            map.insert(*key, ty.into());
         }
-        let typespec = get_typespec(ty);
-        map.insert(*key, typespec);
-    }
 
-    for (key, ty) in tg.output_types.iter() {
-        let typespec = get_typespec(ty);
-        map.insert(*key, typespec);
-    }
+        for (key, ty) in tg.output_types.iter() {
+            map.insert(*key, ty.into());
+        }
 
-    let res: ManifestPage<TsType> = map.into();
-    Ok(res)
+        map.into()
+    }
 }

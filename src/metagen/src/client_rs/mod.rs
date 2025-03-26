@@ -46,8 +46,8 @@ impl ClienRsGenConfig {
 }
 
 pub(super) struct Maps {
-    pub(super) input_types: IndexMap<TypeKey, String>,
-    pub(super) output_types: IndexMap<TypeKey, String>,
+    pub(super) types: IndexMap<TypeKey, String>,
+    pub(super) partial_types: IndexMap<TypeKey, String>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
@@ -67,14 +67,18 @@ impl RsClientManifest {
             .derive_serde(true)
             .derive_debug(true)
             .build_manifest(&tg);
-        let input_types_memo = types.inputs.get_cached_refs();
-        let output_types_memo = types.outputs.get_cached_refs();
+        let types_memo = types.default.get_cached_refs();
+        let partial_types_memo = types
+            .partial
+            .as_ref()
+            .map(|p| p.get_cached_refs())
+            .unwrap_or_default();
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build();
         node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg, input_types_memo.clone());
+        let selections = selections::manifest_page(&tg, types_memo.clone());
         selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 
@@ -84,8 +88,8 @@ impl RsClientManifest {
             node_metas,
             selections,
             maps: Maps {
-                input_types: input_types_memo,
-                output_types: output_types_memo,
+                types: types_memo,
+                partial_types: partial_types_memo,
                 node_metas: node_metas_memo,
                 selections: selections_memo,
             },
@@ -258,11 +262,11 @@ pub fn query_graph() -> QueryGraph {{
 
             let node_name = path.join("_");
             let method_name = node_name.to_snek_case();
-            let out_ty_name = self.maps.output_types.get(&ty.output().key()).unwrap();
+            let out_ty_name = self.maps.partial_types.get(&ty.output().key()).unwrap();
 
             let arg_ty = ty
                 .non_empty_input()
-                .map(|ty| self.maps.input_types.get(&ty.key()).unwrap());
+                .map(|ty| self.maps.types.get(&ty.key()).unwrap());
 
             let select_ty = self.maps.selections.get(&ty.output().key());
 
@@ -360,11 +364,6 @@ fn render_static(dest: &mut impl Write, hostcall: bool) -> anyhow::Result<()> {
         client_rs,
         &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
     )?;
-    crate::utils::processed_write(
-        dest,
-        client_rs,
-        &[("HOSTCALL".to_string(), hostcall)].into_iter().collect(),
-    )?;
     Ok(())
 }
 
@@ -403,7 +402,6 @@ pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {
     let is_test = std::env::var("METAGEN_CLIENT_RS_TEST").ok().as_deref() == Some("1");
 
     #[cfg(debug_assertions)]
-    let dependency = {
     let dependency = {
         use normpath::PathExt;
         let client_path = Path::new(env!("CARGO_MANIFEST_DIR"))

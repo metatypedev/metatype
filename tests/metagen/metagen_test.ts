@@ -572,9 +572,6 @@ Meta.test({
   );
 
   for (const prefix of ["rs", "ts", "py"]) {
-    // if (prefix !== "py") {
-    //   continue;
-    // }
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
         if (skip) {

@@ -498,11 +498,15 @@ function convertQueryNodeGql(
               );
             }
             gqlTy = gqlTy.replace(/[!]+$/, "");
-
             return `... on ${gqlTy} {${
               variantSubNodes
                 .map((node) =>
-                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                  convertQueryNodeGql(
+                    typeToGqlTypeMap,
+                    node,
+                    variables,
+                    files,
+                  )
                 )
                 .join(" ")
             }}`;
@@ -1068,9 +1072,6 @@ export type RootCompositeArgsFnInput = {
 export type RootIdentityFnInput = {
   input: number;
 };
-export type RootGetUserFnInput = Record<string, never>;
-export type UserEmailStringEmail = string;
-export type UserPostsPostList = Array<Post>;
 export type User = {
   id: StringUuid4;
   email: StringEmail5;

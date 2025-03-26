@@ -7,11 +7,14 @@ pub mod utils;
 use core::fmt::Write;
 use std::borrow::Cow;
 
+use client_ts::GenClientTsOpts;
+use client_ts::TsClientManifest;
 use typegraph::TypeNodeExt as _;
-use types::manifest_page;
+use types::TsTypesPage;
 
 use crate::interlude::*;
 use crate::shared::*;
+use crate::utils::processed_write;
 use crate::*;
 
 use crate::utils::GenDestBuf;
@@ -89,10 +92,15 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        let dest: &mut GenDestBuf = &mut fdk_ts;
-        let tg = tg.clone();
-        let manif = manifest_page(&tg)?;
-        manif.render_all(dest)?;
+
+        if config.exclude_client.unwrap_or_default() {
+            let manif = TsTypesPage::new(&tg);
+            manif.render_all(&mut fdk_ts)?;
+        } else {
+            let manif = TsClientManifest::new(tg.clone())?;
+            manif.render_client(&mut fdk_ts, &GenClientTsOpts { hostcall: true })?;
+        }
+
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
@@ -115,9 +123,13 @@ impl FdkTypescriptTemplate {
         Ok(fdk_ts.buf)
     }
 
-    pub fn gen_static(&self, dest: &mut GenDestBuf) -> core::fmt::Result {
+    pub fn gen_static(&self, dest: &mut GenDestBuf) -> anyhow::Result<()> {
         let fdk_ts = self.fdk_ts.as_ref();
-        writeln!(dest, "{}", fdk_ts)?;
+        processed_write(
+            dest,
+            fdk_ts,
+            &[("HOSTCALL".to_string(), true)].into_iter().collect(),
+        )?;
         Ok(())
     }
 }
