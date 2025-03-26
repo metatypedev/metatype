@@ -129,7 +129,7 @@ export async function handleGraphQL(
       return jsonError({ status: 502, message: err.message, headers });
     } else if (err instanceof BadContext) {
       logger.error(`context err: ${err.message}`);
-      return jsonError(
+      return jsonError({
         status: Object.keys(context).length === 0 ? 401 : 403,
         message: err.message,
         headers,
