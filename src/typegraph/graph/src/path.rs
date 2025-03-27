@@ -202,7 +202,9 @@ impl PartialEq for ValueTypePath {
         let left = self.owner.upgrade().expect("no strong pointer for type");
         let right = other.owner.upgrade().expect("no strong pointer for type");
 
-        left.base.type_idx == right.base.type_idx && self.path == other.path
+        self.branch == other.branch
+            && left.base.type_idx == right.base.type_idx
+            && self.path == other.path
     }
 }
 

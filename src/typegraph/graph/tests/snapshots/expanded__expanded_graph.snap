@@ -1,0 +1,7 @@
+---
+source: src/typegraph/graph/tests/expanded.rs
+expression: "tg.namespace_objects.iter().map(|(ns, obj)|\n            { (ns.join(\"/\"), obj.name()) }).collect::<BTreeMap<_, _>>()"
+---
+{
+    "": "example-metagen",
+}

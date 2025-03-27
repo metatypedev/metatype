@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use super::dedup::DuplicationKey;
 use super::{RelativePath, TypeKey};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum ValueTypeKind {
     Input,
     Output,
@@ -232,12 +232,12 @@ impl ConversionMap {
                 let item = value_type.get_mut(variant).ok_or_else(|| {
                     eyre!("value type not found: local index out of bound: {:?}", key)
                 })?;
-                let added = item.relative_paths.insert(
-                    rpath
-                        .clone()
-                        .try_into()
-                        .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?,
-                );
+                let vtype_path = rpath
+                    .clone()
+                    .try_into()
+                    .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?;
+                let added = item.relative_paths.insert(vtype_path);
+
                 if !added {
                     return Ok(false);
                 }

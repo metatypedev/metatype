@@ -1,18 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{path::Path, process::Command, sync::Arc};
+use std::{collections::BTreeMap, path::Path, process::Command, sync::Arc};
 
 use typegraph::{TypeNode as _, TypeNodeExt as _};
 
 #[test]
 fn test_expanded_graph() -> color_eyre::Result<()> {
     let project_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-    eprintln!("project_dir={:?}", project_dir);
     let path = project_dir
         .join("../../../tests/metagen/typegraphs/metagen.ts")
         .canonicalize()?;
-    eprintln!("path={:?}", path);
     let output = Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -1 -f"
@@ -21,42 +19,37 @@ fn test_expanded_graph() -> color_eyre::Result<()> {
         )
         .arg(path)
         .output()?;
-    eprintln!("status={}", output.status);
-    if !output.status.success() {
-        eprintln!("stderr={}", String::from_utf8_lossy(&output.stderr));
-        color_eyre::eyre::bail!("error running meta-cli");
-    }
+    assert!(output.status.success());
+
     let schema = String::from_utf8(output.stdout)?;
     let schema: tg_schema::Typegraph = serde_json::from_str(&schema)?;
     let schema: Arc<_> = schema.into();
 
     let tg = typegraph::Typegraph::try_from(schema.clone())?;
 
-    println!("namespaces");
-    for (ns, obj) in tg.namespace_objects.iter() {
-        println!("    /{}: {}", ns.join("/"), obj.name());
-    }
+    insta::assert_debug_snapshot!(tg
+        .namespace_objects
+        .iter()
+        .map(|(ns, obj)| { (ns.join("/"), obj.name()) })
+        .collect::<BTreeMap<_, _>>());
 
-    println!("functions");
-    for (idx, func) in tg.functions.iter() {
-        println!("    {:2}: {}", idx, func.name());
-    }
+    insta::assert_debug_snapshot!(tg
+        .functions
+        .iter()
+        .map(|(idx, func)| { (idx, func.name()) })
+        .collect::<BTreeMap<_, _>>());
 
-    println!("input_types");
-    for (key, ty) in tg.input_types.iter() {
-        println!("    {:?}({}): {}", key, ty.tag(), ty.name());
-    }
+    insta::assert_debug_snapshot!(tg
+        .input_types
+        .iter()
+        .map(|(idx, ty)| { (idx, (ty.tag(), ty.name())) })
+        .collect::<BTreeMap<_, _>>());
 
-    println!("output_types");
-    for (key, ty) in tg.output_types.iter() {
-        println!(
-            "    {:?}({}): {} parent_idx={}",
-            key,
-            ty.tag(),
-            ty.name(),
-            ty.parent().unwrap().idx()
-        );
-    }
+    insta::assert_debug_snapshot!(tg
+        .output_types
+        .iter()
+        .map(|(idx, ty)| { (idx, (ty.tag(), ty.name())) })
+        .collect::<BTreeMap<_, _>>());
 
     Ok(())
 }

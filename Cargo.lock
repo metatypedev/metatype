@@ -13074,6 +13074,7 @@ dependencies = [
  "color-eyre",
  "enum_dispatch",
  "indexmap 2.6.0",
+ "insta",
  "paste",
  "serde",
  "serde_json",

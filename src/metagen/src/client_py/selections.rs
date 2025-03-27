@@ -206,6 +206,9 @@ impl PySelectionsPage {
             }
         }
 
-        ManifestPage::with_extras(map, Extras { input_types })
+        let res = ManifestPage::with_extras(map, Extras { input_types });
+        res.cache_references();
+
+        res
     }
 }
