@@ -1,9 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-Lice
-
 use crate::naming::NamingEngine;
 use crate::policies::{convert_policy, convert_policy_spec, Policy, PolicySpec};
 use crate::runtimes::{convert_materializer, Materializer};

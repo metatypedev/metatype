@@ -52,9 +52,6 @@ impl MetasPageBuilder {
                     continue;
                 }
                 map.insert(ty.key(), self.build_meta(ty.clone()));
-                // for child_ty in ty.children() {
-                //     self.stack.borrow_mut().push(child_ty);
-                // }
             } else {
                 break;
             }

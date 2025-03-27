@@ -667,7 +667,8 @@ class GraphQLTransportBase(ABC):
     def handle_response(self, res: GraphQLResponse):
         if res.status != 200:
             raise Exception(f"graphql request failed with status {res.status}", res)
-        if res.headers.get("content-type") != "application/json":
+        content_type = res.headers.get("content-type")
+        if content_type is None or not content_type.startswith("application/json"):
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
         if parsed.get("errors"):

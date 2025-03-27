@@ -87,13 +87,11 @@ impl TypeConversionResult for UnionTypeConversionResult {
 
     fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
         let mut variants = Vec::with_capacity(self.variants.len());
-        // let mut results = Vec::with_capacity(self.variants.len());
         let weak = self.ty.clone().wrap().downgrade();
         for (i, &idx) in self.variants.iter().enumerate() {
             let rpath = self.rpath.push(PathSegment::UnionVariant(i as u32))?;
             let mut res = conv.convert_type(weak.clone(), idx, rpath)?;
             variants.push(res.get_type());
-            // results.push(res);
             res.finalize(conv)?
         }
 
@@ -103,10 +101,6 @@ impl TypeConversionResult for UnionTypeConversionResult {
                 self.ty.key()
             )
         })?;
-
-        // for mut res in results {
-        //     res.finalize(conv)?;
-        // }
 
         Ok(())
     }

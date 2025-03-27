@@ -290,30 +290,20 @@ impl RustType {
                         && ty.title().starts_with("list_")
                     {
                         // no alias -- inline
-                        // let map = map.clone();
                         let container_name = if ty.unique_items {
                             "std::collections::HashSet"
                         } else {
                             "Vec"
                         };
-                        RustType::container(
-                            container_name,
-                            item_ty.key(),
-                            is_composite, // TODO is_cyclic
-                            None,
-                        )
+                        RustType::container(container_name, item_ty.key(), false, None)
                     } else {
                         let container_name = if ty.unique_items {
                             "std::collections::HashSet"
                         } else {
                             "Vec"
                         };
-                        RustType::container(
-                            container_name,
-                            item_ty.key(),
-                            is_composite, // TODO is_cyclic
-                            Some(name_with_suffix(&name, partial && is_composite)),
-                        )
+                        let name = name_with_suffix(&name, partial && is_composite);
+                        RustType::container(container_name, item_ty.key(), false, Some(name))
                     }
                 }
 

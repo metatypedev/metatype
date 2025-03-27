@@ -41,7 +41,9 @@ trait OptionalIndex<I> {
 impl OptionalIndex<u32> for &[Policy] {
     type Item = Policy;
     fn opt_get(&self, index: Option<u32>) -> Option<Policy> {
-        index.map(|i| &self[i as usize]).cloned()
+        index
+            .map(|i| self.get(i as usize).expect("policy index out of bounds"))
+            .cloned()
     }
 }
 
