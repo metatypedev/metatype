@@ -63,7 +63,6 @@ impl Generator {
     pub fn new(config: FdkPythonGenConfig) -> Result<Self, garde::Report> {
         use garde::Validate;
         config.validate()?;
-        config.validate()?;
         Ok(Self { config })
     }
 }
