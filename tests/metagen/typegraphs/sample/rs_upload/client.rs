@@ -37,25 +37,6 @@ pub struct QueryGraph {
 //
 // --- --- Typegraph types --- --- //
 //
-use types::*;
-#[allow(unused)]
-pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootUploadFnInput {
-        pub file: FileBf9b7,
-        pub path: RootUploadFnInputPathString25e51Optional,
-    }
-    pub type FileBf9b7 = super::FileId;
-    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootUploadManyFnInput {
-        pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
-        pub files: RootUploadManyFnInputFilesFileBf9b7List,
-    }
-    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
-    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
-    pub type RootUploadFnOutput = bool;
-}
 
 #[allow(non_snake_case)]
 mod node_metas {
@@ -108,6 +89,28 @@ mod node_metas {
             ..scalar()
         }
     }
+}
+use types::*;
+#[allow(unused)]
+pub mod types {
+    // input types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootUploadFnInput {
+        pub file: FileBf9b7,
+        pub path: RootUploadFnInputPathString25e51Optional,
+    }
+    pub type FileBf9b7 = super::FileId;
+    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootUploadManyFnInput {
+        pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
+        pub files: RootUploadManyFnInputFilesFileBf9b7List,
+    }
+    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
+    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
+    // partial output types
+    pub type RootUploadFnOutput = bool;
+    // output types
 }
 
 pub fn query_graph() -> QueryGraph {

@@ -38,89 +38,6 @@ pub struct QueryGraph {
 //
 // --- --- Typegraph types --- --- //
 //
-use types::*;
-#[allow(unused)]
-pub mod types {
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootGetUserFnInput {
-    }
-    pub type UserIdStringUuid = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Post {
-        pub id: UserIdStringUuid,
-        pub slug: String,
-        pub title: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootCompositeArgsFnInput {
-        pub id: String,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInput {
-        pub input: i64,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct UserPartial {
-        pub id: Option<UserIdStringUuid>,
-        pub email: Option<UserEmailStringEmail>,
-        pub posts: Option<UserPostsPostListPartial>,
-    }
-    pub type UserEmailStringEmail = String;
-    pub type UserPostsPostListPartial = Vec<Box<PostPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct PostPartial {
-        pub id: Option<UserIdStringUuid>,
-        pub slug: Option<String>,
-        pub title: Option<String>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootScalarUnionFnOutput {
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootCompositeUnionFnOutputPartial {
-        Post(PostPartial),
-        User(UserPartial),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum RootMixedUnionFnOutputPartial {
-        Post(PostPartial),
-        User(UserPartial),
-        StringE1a43(String),
-        Integer64be4(i64),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputPartial {
-        pub scalar: Option<i64>,
-        pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
-        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
-        pub value: Option<i64>,
-        pub nested: Option<RootNestedCompositeFnOutputCompositeStructNestedStructPartial>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
-        pub inner: Option<i64>,
-    }
-    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial = Vec<Box<RootNestedCompositeFnOutputListStructPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootNestedCompositeFnOutputListStructPartial {
-        pub value: Option<i64>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct RootIdentityFnInputPartial {
-        pub input: Option<i64>,
-    }
-}
 
 #[allow(non_snake_case)]
 mod node_metas {
@@ -349,6 +266,92 @@ mod node_metas {
     }
 
 }
+use types::*;
+#[allow(unused)]
+pub mod types {
+    // input types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootGetUserFnInput {
+    }
+    pub type UserIdStringUuid = String;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Post {
+        pub id: UserIdStringUuid,
+        pub slug: String,
+        pub title: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootCompositeArgsFnInput {
+        pub id: String,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInput {
+        pub input: i64,
+    }
+    // partial output types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct UserPartial {
+        pub id: Option<UserIdStringUuid>,
+        pub email: Option<UserEmailStringEmail>,
+        pub posts: Option<UserPostsPostListPartial>,
+    }
+    pub type UserEmailStringEmail = String;
+    pub type UserPostsPostListPartial = Vec<PostPartial>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PostPartial {
+        pub id: Option<UserIdStringUuid>,
+        pub slug: Option<String>,
+        pub title: Option<String>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum RootScalarUnionFnOutput {
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum RootCompositeUnionFnOutputPartial {
+        Post(PostPartial),
+        User(UserPartial),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum RootMixedUnionFnOutputPartial {
+        Post(PostPartial),
+        User(UserPartial),
+        StringE1a43(String),
+        Integer64be4(i64),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputPartial {
+        pub scalar: Option<i64>,
+        pub composite: Option<RootNestedCompositeFnOutputCompositeStructPartial>,
+        pub list: Option<RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructPartial {
+        pub value: Option<i64>,
+        pub nested: Option<RootNestedCompositeFnOutputCompositeStructNestedStructPartial>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputCompositeStructNestedStructPartial {
+        pub inner: Option<i64>,
+    }
+    pub type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructListPartial = Vec<RootNestedCompositeFnOutputListStructPartial>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootNestedCompositeFnOutputListStructPartial {
+        pub value: Option<i64>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct RootIdentityFnInputPartial {
+        pub input: Option<i64>,
+    }
+    // output types
+}
 #[derive(Default, Debug)]
 pub struct UserSelections<ATy = NoAlias> {
     pub id: ScalarSelect<ATy>,
@@ -461,7 +464,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn scalar_args(
         &self,
-            args: impl Into<NodeArgs<Post>>
+        args: impl Into<NodeArgs<Post>>
     ) -> MutationNode<String>
     {
         let nodes = selection_to_node_set(
@@ -493,7 +496,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn composite_args(
         &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
     ) -> UnselectedNode<PostSelections, PostSelections<HasAlias>, MutationMarker, PostPartial>
     {
         UnselectedNode {
@@ -505,7 +508,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn scalar_union(
         &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
     ) -> QueryNode<RootScalarUnionFnOutput>
     {
         let nodes = selection_to_node_set(
@@ -526,7 +529,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn composite_union(
         &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
     ) -> UnselectedNode<RootCompositeUnionFnOutputSelections, RootCompositeUnionFnOutputSelections<HasAlias>, QueryMarker, RootCompositeUnionFnOutputPartial>
     {
         UnselectedNode {
@@ -538,7 +541,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn mixed_union(
         &self,
-            args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
+        args: impl Into<NodeArgs<RootCompositeArgsFnInput>>
     ) -> UnselectedNode<RootMixedUnionFnOutputSelections, RootMixedUnionFnOutputSelections<HasAlias>, QueryMarker, RootMixedUnionFnOutputPartial>
     {
         UnselectedNode {
@@ -561,7 +564,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn identity(
         &self,
-            args: impl Into<NodeArgs<RootIdentityFnInput>>
+        args: impl Into<NodeArgs<RootIdentityFnInput>>
     ) -> UnselectedNode<RootIdentityFnInputSelections, RootIdentityFnInputSelections<HasAlias>, QueryMarker, RootIdentityFnInputPartial>
     {
         UnselectedNode {
@@ -573,7 +576,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn identity_update(
         &self,
-            args: impl Into<NodeArgs<RootIdentityFnInput>>
+        args: impl Into<NodeArgs<RootIdentityFnInput>>
     ) -> UnselectedNode<RootIdentityFnInputSelections, RootIdentityFnInputSelections<HasAlias>, MutationMarker, RootIdentityFnInputPartial>
     {
         UnselectedNode {
@@ -584,3 +587,4 @@ pub fn query_graph() -> QueryGraph {
         }
     }
 }
+

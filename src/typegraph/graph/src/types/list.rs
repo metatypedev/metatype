@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType, Wrap as _};
-use crate::{conv::interlude::*, interlude::*, Arc, Once};
+use crate::{
+    conv::{dedup::DuplicationKeyGenerator, interlude::*},
+    interlude::*,
+    Arc, Once,
+};
 
 #[derive(Debug)]
 pub struct ListType {
@@ -41,16 +45,13 @@ impl TypeNode for Arc<ListType> {
     }
 }
 
-pub(crate) fn convert_list(
-    parent: WeakType,
-    key: TypeKey,
-    rpath: RelativePath,
-    base: &tg_schema::TypeNodeBase,
+pub(crate) fn convert_list<G: DuplicationKeyGenerator>(
+    base: TypeBase,
     data: &tg_schema::ListTypeData,
-    schema: &tg_schema::Typegraph,
-) -> Box<dyn TypeConversionResult> {
+    rpath: RelativePath,
+) -> Box<dyn TypeConversionResult<G>> {
     let ty = ListType {
-        base: Conversion::base(key, parent, rpath.clone(), base, schema),
+        base,
         item: Default::default(),
         min_items: data.min_items,
         max_items: data.max_items,
@@ -71,12 +72,12 @@ pub struct ListTypeConversionResult {
     rpath: RelativePath,
 }
 
-impl TypeConversionResult for ListTypeConversionResult {
+impl<G: DuplicationKeyGenerator> TypeConversionResult<G> for ListTypeConversionResult {
     fn get_type(&self) -> Type {
         self.ty.clone().wrap()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
+    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()> {
         let mut item = conv.convert_type(
             self.ty.clone().wrap().downgrade(),
             self.item_idx,

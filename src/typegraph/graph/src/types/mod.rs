@@ -3,7 +3,9 @@
 
 use crate::{
     conv::key::TypeKey,
+    injection::InjectionNode,
     interlude::*,
+    path::RelativePath,
     visitor::{Infallible, PathExt as _, VisitNext},
 };
 use enum_dispatch::enum_dispatch;
@@ -28,7 +30,6 @@ pub use list::*;
 pub use object::*;
 pub use optional::*;
 pub use string::*;
-use tg_schema::InjectionNode;
 pub use union::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -73,12 +74,29 @@ impl std::hash::Hash for Edge {
 #[derive(Debug)]
 pub struct TypeBase {
     pub parent: WeakType,
-    pub type_idx: u32,
     pub key: TypeKey,
     pub title: String,
     pub name: Once<Arc<str>>,
     pub description: Option<String>,
-    pub injection: Option<InjectionNode>,
+    pub injection: Option<Arc<InjectionNode>>,
+}
+
+impl TypeBase {
+    pub fn new(
+        schema: &tg_schema::TypeNodeBase,
+        parent: WeakType,
+        key: TypeKey,
+        rpath: &RelativePath,
+    ) -> Self {
+        Self {
+            parent,
+            key,
+            title: schema.title.clone(),
+            name: Default::default(),
+            description: schema.description.clone(),
+            injection: rpath.get_injection(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -115,7 +133,7 @@ pub trait TypeNodeExt: TypeNode {
     fn parent(&self) -> Option<Type>;
     fn title(&self) -> &str;
     fn key(&self) -> TypeKey;
-    fn injection(&self) -> Option<&InjectionNode>;
+    fn injection(&self) -> Option<Arc<InjectionNode>>;
     fn is_descendant_of(&self, other: &Type) -> bool;
 }
 
@@ -124,7 +142,7 @@ where
     N: TypeNode,
 {
     fn idx(&self) -> u32 {
-        self.base().type_idx
+        self.base().key.0
     }
 
     fn name(&self) -> Arc<str> {
@@ -147,8 +165,8 @@ where
         self.base().key
     }
 
-    fn injection(&self) -> Option<&InjectionNode> {
-        self.base().injection.as_ref()
+    fn injection(&self) -> Option<Arc<InjectionNode>> {
+        self.base().injection.clone()
     }
 
     fn is_descendant_of(&self, other: &Type) -> bool {

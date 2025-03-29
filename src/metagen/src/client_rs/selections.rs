@@ -211,7 +211,7 @@ pub fn manifest_page(
                     let selection = selection_for_field(variant);
                     variants.push(UnionProp {
                         name: struct_prop_name,
-                        variant_ty: variant.name().to_string(), // FIXME normalized??
+                        variant_ty: variant.name().to_string(),
                         select_ty: selection,
                     });
                 }

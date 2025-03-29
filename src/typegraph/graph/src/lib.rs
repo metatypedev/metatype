@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod conv;
+pub mod injection;
 pub mod naming;
 mod path;
 mod policies;
@@ -26,7 +27,13 @@ pub mod prelude {
     pub use crate::Typegraph;
 }
 
-use conv::{key::TypeKey, ValueType};
+use conv::{
+    dedup::{
+        DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DuplicationKeyGenerator,
+    },
+    key::TypeKey,
+    ValueType,
+};
 use indexmap::IndexMap;
 use interlude::*;
 use naming::DefaultNamingEngine;
@@ -36,16 +43,16 @@ use tg_schema::runtimes::TGRuntime;
 pub use types::*;
 
 #[derive(Debug)]
-pub enum MapItem {
+pub enum MapItem<K: DupKey> {
     Namespace(Arc<ObjectType>, Vec<Arc<str>>),
     Function(Arc<FunctionType>),
-    Value(ValueType),
+    Value(ValueType<K>),
 }
 
-impl TryFrom<conv::MapItem> for MapItem {
+impl<K: DupKey> TryFrom<conv::MapItem<K>> for MapItem<K> {
     type Error = color_eyre::Report;
 
-    fn try_from(value: conv::MapItem) -> Result<Self> {
+    fn try_from(value: conv::MapItem<K>) -> Result<Self> {
         Ok(match value {
             conv::MapItem::Unset => bail!("type was not converted"),
             conv::MapItem::Namespace(object, path) => MapItem::Namespace(object, path),
@@ -56,7 +63,7 @@ impl TryFrom<conv::MapItem> for MapItem {
 }
 
 #[derive(Debug)]
-pub struct Typegraph {
+pub struct Typegraph<K: DupKey = DefaultDuplicationKey> {
     pub schema: Arc<tg_schema::Typegraph>,
     pub root: Arc<ObjectType>,
     pub input_types: IndexMap<TypeKey, Type>,
@@ -64,12 +71,12 @@ pub struct Typegraph {
     pub functions: IndexMap<u32, Arc<FunctionType>>,
     pub namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
     pub named: HashMap<Arc<str>, Type>,
-    pub conversion_map: Vec<MapItem>,
+    pub conversion_map: Vec<MapItem<K>>,
     pub runtimes: Vec<Arc<TGRuntime>>,
     pub materializers: Vec<Materializer>,
 }
 
-impl Typegraph {
+impl<K: DupKey> Typegraph<K> {
     pub fn find_type(&self, key: TypeKey) -> Option<Type> {
         let TypeKey(idx, variant) = key;
         match self.conversion_map.get(idx as usize)? {
@@ -80,14 +87,24 @@ impl Typegraph {
     }
 }
 
-impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
-    type Error = color_eyre::Report;
-    fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
-        conv::Conversion::convert(schema, DefaultNamingEngine::default())
+impl<K: DupKey> Typegraph<K> {
+    fn new<G>(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Result<Self>
+    where
+        G: DuplicationKeyGenerator<Key = K>,
+    {
+        conv::Conversion::convert(schema, dup_key_gen, DefaultNamingEngine::default())
     }
 }
 
-impl Typegraph {
+impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
+    type Error = color_eyre::Report;
+
+    fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
+        Self::new(schema, DefaultDuplicationKeyGenerator)
+    }
+}
+
+impl<K: DupKey> Typegraph<K> {
     pub fn root_functions(&self) -> RootFnsIter {
         RootFnsIter {
             stack: vec![StackItem {

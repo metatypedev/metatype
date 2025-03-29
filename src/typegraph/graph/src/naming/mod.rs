@@ -3,6 +3,7 @@
 
 use std::collections::HashMap;
 
+use crate::conv::dedup::DupKey;
 use crate::conv::ValueType;
 use crate::interlude::*;
 use crate::{Arc, FunctionType, ObjectType, Type, TypeNode as _};
@@ -27,7 +28,7 @@ impl NameRegistry {
 }
 
 pub trait NamingEngine {
-    fn name_value_types(&mut self, types: &ValueType) -> Result<()>;
+    fn name_value_types<K: DupKey>(&mut self, types: &ValueType<K>) -> Result<()>;
     fn name_function(&mut self, function: &Arc<FunctionType>) -> Result<()>;
     fn name_ns_object(&mut self, ns_object: &Arc<ObjectType>) -> Result<()>;
     fn registry(&mut self) -> &mut NameRegistry;
@@ -44,7 +45,7 @@ mod default {
     }
 
     impl NamingEngine for DefaultNamingEngine {
-        fn name_value_types(&mut self, value_type: &ValueType) -> Result<()> {
+        fn name_value_types<K: DupKey>(&mut self, value_type: &ValueType<K>) -> Result<()> {
             if value_type.is_empty() {
                 unreachable!("no registered type");
             }

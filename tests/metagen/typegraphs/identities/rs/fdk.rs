@@ -265,227 +265,6 @@ pub struct QueryGraph {
 //
 // --- --- Typegraph types --- --- //
 //
-use types::*;
-#[allow(unused)]
-pub mod types {
-    // input types
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct PrimitivesArgs {
-        pub data: Primitives,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Primitives {
-        pub str: PrimitivesStrString,
-        #[serde(rename = "enum")]
-        pub r#enum: PrimitivesEnumStringEnum,
-        pub uuid: PrimitivesUuidStringUuid,
-        pub email: PrimitivesEmailStringEmail,
-        pub ean: PrimitivesEanStringEan,
-        pub json: PrimitivesJsonStringJson,
-        pub uri: PrimitivesUriStringUri,
-        pub date: PrimitivesDateStringDate,
-        pub datetime: PrimitivesDatetimeStringDatetime,
-        pub int: PrimitivesIntInteger,
-        pub float: PrimitivesFloatFloat,
-        pub boolean: PrimitivesBooleanBoolean,
-    }
-    pub type PrimitivesStrString = String;
-    pub type PrimitivesEnumStringEnum = String;
-    pub type PrimitivesUuidStringUuid = String;
-    pub type PrimitivesEmailStringEmail = String;
-    pub type PrimitivesEanStringEan = String;
-    pub type PrimitivesJsonStringJson = String;
-    pub type PrimitivesUriStringUri = String;
-    pub type PrimitivesDateStringDate = String;
-    pub type PrimitivesDatetimeStringDatetime = String;
-    pub type PrimitivesIntInteger = i64;
-    pub type PrimitivesFloatFloat = f64;
-    pub type PrimitivesBooleanBoolean = bool;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct CompositesArgs {
-        pub data: Composites,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Composites {
-        pub opt: CompositesOptPrimitivesStrStringOptional,
-        pub either: CompositesEitherEither,
-        pub union: CompositesUnionUnion,
-        pub list: CompositesListPrimitivesStrStringList,
-    }
-    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum CompositesEitherEither {
-        Primitives(Primitives),
-        Branch2(Branch2),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch2 {
-        pub branch2: PrimitivesStrString,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum CompositesUnionUnion {
-        Branch4(Branch4),
-        PrimitivesIntInteger(PrimitivesIntInteger),
-        PrimitivesStrString(PrimitivesStrString),
-        Branch4again(Branch4again),
-    }
-    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
-    pub type CompositesUnionUnionT0StringEnum = String;
-    pub type Branch4again = String;
-    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1Args {
-        pub data: Cycles1,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1 {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Cycles1To2Cycles2Optional,
-        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
-    }
-    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum Cycles2 {
-        Cycles3(Cycles3),
-        Cycles1(Cycles1),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum Cycles3 {
-        Branch33A(Branch33A),
-        Branch33B(Branch33B),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33A {
-        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
-        pub to1: Branch33ATo1Cycles1Optional,
-    }
-    pub type Branch33ATo1Cycles1Optional = Option<Box<Cycles1>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33B {
-        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Cycles1To2Cycles2Optional,
-    }
-    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Box<Cycles1List3Cycles3List>>;
-    pub type Cycles1List3Cycles3List = Vec<Box<Cycles3>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles1Args {
-        pub data: SimpleCycles1,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles1 {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: SimpleCycles1To2SimpleCycles2Optional,
-    }
-    pub type SimpleCycles1To2SimpleCycles2Optional = Option<Box<SimpleCycles2>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles2 {
-        pub phantom2: CompositesOptPrimitivesStrStringOptional,
-        pub to3: SimpleCycles2To3SimpleCycles3Optional,
-    }
-    pub type SimpleCycles2To3SimpleCycles3Optional = Option<Box<SimpleCycles3>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles3 {
-        pub phantom3: CompositesOptPrimitivesStrStringOptional,
-        pub to1: SimpleCycles3To1SimpleCycles1Optional,
-    }
-    pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
-    // partial output types
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct PrimitivesPartial {
-        pub str: Option<PrimitivesStrString>,
-        #[serde(rename = "enum")]
-        pub r#enum: Option<PrimitivesEnumStringEnum>,
-        pub uuid: Option<PrimitivesUuidStringUuid>,
-        pub email: Option<PrimitivesEmailStringEmail>,
-        pub ean: Option<PrimitivesEanStringEan>,
-        pub json: Option<PrimitivesJsonStringJson>,
-        pub uri: Option<PrimitivesUriStringUri>,
-        pub date: Option<PrimitivesDateStringDate>,
-        pub datetime: Option<PrimitivesDatetimeStringDatetime>,
-        pub int: Option<PrimitivesIntInteger>,
-        pub float: Option<PrimitivesFloatFloat>,
-        pub boolean: Option<PrimitivesBooleanBoolean>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch2Partial {
-        pub branch2: Option<PrimitivesStrString>,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum CompositesEitherEitherPartial {
-        Primitives(PrimitivesPartial),
-        Branch2(Branch2Partial),
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct CompositesPartial {
-        pub opt: CompositesOptPrimitivesStrStringOptional,
-        pub either: Option<CompositesEitherEitherPartial>,
-        pub union: Option<CompositesUnionUnion>,
-        pub list: Option<CompositesListPrimitivesStrStringList>,
-    }
-    pub type Cycles1To2Cycles2OptionalPartial = Option<Box<Cycles2Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum Cycles3Partial {
-        Branch33A(Branch33APartial),
-        Branch33B(Branch33BPartial),
-    }
-    pub type Cycles1List3Cycles3ListPartial = Vec<Box<Cycles3Partial>>;
-    pub type Cycles1List3Cycles1List3Cycles3ListOptionalPartial = Option<Box<Cycles1List3Cycles3ListPartial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1Partial {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Cycles1To2Cycles2OptionalPartial,
-        pub list3: Cycles1List3Cycles1List3Cycles3ListOptionalPartial,
-    }
-    pub type Branch33ATo1Cycles1OptionalPartial = Option<Box<Cycles1Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33APartial {
-        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
-        pub to1: Branch33ATo1Cycles1OptionalPartial,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33BPartial {
-        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Cycles1To2Cycles2OptionalPartial,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum Cycles2Partial {
-        Cycles3(Cycles3Partial),
-        Cycles1(Cycles1Partial),
-    }
-    pub type SimpleCycles1To2SimpleCycles2OptionalPartial = Option<Box<SimpleCycles2Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles1Partial {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: SimpleCycles1To2SimpleCycles2OptionalPartial,
-    }
-    pub type SimpleCycles3To1SimpleCycles1OptionalPartial = Option<Box<SimpleCycles1Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles3Partial {
-        pub phantom3: CompositesOptPrimitivesStrStringOptional,
-        pub to1: SimpleCycles3To1SimpleCycles1OptionalPartial,
-    }
-    pub type SimpleCycles2To3SimpleCycles3OptionalPartial = Option<Box<SimpleCycles3Partial>>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles2Partial {
-        pub phantom2: CompositesOptPrimitivesStrStringOptional,
-        pub to3: SimpleCycles2To3SimpleCycles3OptionalPartial,
-    }
-    // output types
-}
 
 #[allow(non_snake_case)]
 mod node_metas {
@@ -818,6 +597,227 @@ mod node_metas {
     }
 
 }
+use types::*;
+#[allow(unused)]
+pub mod types {
+    // input types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PrimitivesArgs {
+        pub data: Primitives,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Primitives {
+        pub str: PrimitivesStrString,
+        #[serde(rename = "enum")]
+        pub r#enum: PrimitivesEnumStringEnum,
+        pub uuid: PrimitivesUuidStringUuid,
+        pub email: PrimitivesEmailStringEmail,
+        pub ean: PrimitivesEanStringEan,
+        pub json: PrimitivesJsonStringJson,
+        pub uri: PrimitivesUriStringUri,
+        pub date: PrimitivesDateStringDate,
+        pub datetime: PrimitivesDatetimeStringDatetime,
+        pub int: PrimitivesIntInteger,
+        pub float: PrimitivesFloatFloat,
+        pub boolean: PrimitivesBooleanBoolean,
+    }
+    pub type PrimitivesStrString = String;
+    pub type PrimitivesEnumStringEnum = String;
+    pub type PrimitivesUuidStringUuid = String;
+    pub type PrimitivesEmailStringEmail = String;
+    pub type PrimitivesEanStringEan = String;
+    pub type PrimitivesJsonStringJson = String;
+    pub type PrimitivesUriStringUri = String;
+    pub type PrimitivesDateStringDate = String;
+    pub type PrimitivesDatetimeStringDatetime = String;
+    pub type PrimitivesIntInteger = i64;
+    pub type PrimitivesFloatFloat = f64;
+    pub type PrimitivesBooleanBoolean = bool;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct CompositesArgs {
+        pub data: Composites,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Composites {
+        pub opt: CompositesOptPrimitivesStrStringOptional,
+        pub either: CompositesEitherEither,
+        pub union: CompositesUnionUnion,
+        pub list: CompositesListPrimitivesStrStringList,
+    }
+    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesEitherEither {
+        Primitives(Primitives),
+        Branch2(Branch2),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch2 {
+        pub branch2: PrimitivesStrString,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesUnionUnion {
+        Branch4(Branch4),
+        PrimitivesIntInteger(PrimitivesIntInteger),
+        PrimitivesStrString(PrimitivesStrString),
+        Branch4again(Branch4again),
+    }
+    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
+    pub type CompositesUnionUnionT0StringEnum = String;
+    pub type Branch4again = String;
+    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Args {
+        pub data: Cycles1,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1 {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2Optional,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
+    }
+    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles2 {
+        Cycles3(Cycles3),
+        Cycles1(Cycles1),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles3 {
+        Branch33A(Branch33A),
+        Branch33B(Branch33B),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33A {
+        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
+        pub to1: Branch33ATo1Cycles1Optional,
+    }
+    pub type Branch33ATo1Cycles1Optional = Option<Box<Cycles1>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33B {
+        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2Optional,
+    }
+    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Box<Cycles1List3Cycles3List>>;
+    pub type Cycles1List3Cycles3List = Vec<Cycles3>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1Args {
+        pub data: SimpleCycles1,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1 {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: SimpleCycles1To2SimpleCycles2Optional,
+    }
+    pub type SimpleCycles1To2SimpleCycles2Optional = Option<Box<SimpleCycles2>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles2 {
+        pub phantom2: CompositesOptPrimitivesStrStringOptional,
+        pub to3: SimpleCycles2To3SimpleCycles3Optional,
+    }
+    pub type SimpleCycles2To3SimpleCycles3Optional = Option<Box<SimpleCycles3>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles3 {
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1Optional,
+    }
+    pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
+    // partial output types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PrimitivesPartial {
+        pub str: Option<PrimitivesStrString>,
+        #[serde(rename = "enum")]
+        pub r#enum: Option<PrimitivesEnumStringEnum>,
+        pub uuid: Option<PrimitivesUuidStringUuid>,
+        pub email: Option<PrimitivesEmailStringEmail>,
+        pub ean: Option<PrimitivesEanStringEan>,
+        pub json: Option<PrimitivesJsonStringJson>,
+        pub uri: Option<PrimitivesUriStringUri>,
+        pub date: Option<PrimitivesDateStringDate>,
+        pub datetime: Option<PrimitivesDatetimeStringDatetime>,
+        pub int: Option<PrimitivesIntInteger>,
+        pub float: Option<PrimitivesFloatFloat>,
+        pub boolean: Option<PrimitivesBooleanBoolean>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch2Partial {
+        pub branch2: Option<PrimitivesStrString>,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesEitherEitherPartial {
+        Primitives(PrimitivesPartial),
+        Branch2(Branch2Partial),
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct CompositesPartial {
+        pub opt: CompositesOptPrimitivesStrStringOptional,
+        pub either: Option<CompositesEitherEitherPartial>,
+        pub union: Option<CompositesUnionUnion>,
+        pub list: Option<CompositesListPrimitivesStrStringList>,
+    }
+    pub type Cycles1To2Cycles2OptionalPartial = Option<Box<Cycles2Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles3Partial {
+        Branch33A(Branch33APartial),
+        Branch33B(Branch33BPartial),
+    }
+    pub type Cycles1List3Cycles3ListPartial = Vec<Cycles3Partial>;
+    pub type Cycles1List3Cycles1List3Cycles3ListOptionalPartial = Option<Box<Cycles1List3Cycles3ListPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Partial {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptionalPartial,
+    }
+    pub type Branch33ATo1Cycles1OptionalPartial = Option<Box<Cycles1Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33APartial {
+        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
+        pub to1: Branch33ATo1Cycles1OptionalPartial,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33BPartial {
+        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles2Partial {
+        Cycles3(Cycles3Partial),
+        Cycles1(Cycles1Partial),
+    }
+    pub type SimpleCycles1To2SimpleCycles2OptionalPartial = Option<Box<SimpleCycles2Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1Partial {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: SimpleCycles1To2SimpleCycles2OptionalPartial,
+    }
+    pub type SimpleCycles3To1SimpleCycles1OptionalPartial = Option<Box<SimpleCycles1Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles3Partial {
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1OptionalPartial,
+    }
+    pub type SimpleCycles2To3SimpleCycles3OptionalPartial = Option<Box<SimpleCycles3Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles2Partial {
+        pub phantom2: CompositesOptPrimitivesStrStringOptional,
+        pub to3: SimpleCycles2To3SimpleCycles3OptionalPartial,
+    }
+    // output types
+}
 #[derive(Default, Debug)]
 pub struct PrimitivesSelections<ATy = NoAlias> {
     pub str: ScalarSelect<ATy>,
@@ -921,7 +921,7 @@ pub fn query_graph() -> QueryGraph {
 
     pub fn py_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
@@ -933,7 +933,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn py_composites(
         &self,
-            args: impl Into<NodeArgs<CompositesArgs>>
+        args: impl Into<NodeArgs<CompositesArgs>>
     ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
@@ -945,7 +945,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn py_cycles(
         &self,
-            args: impl Into<NodeArgs<Cycles1Args>>
+        args: impl Into<NodeArgs<Cycles1Args>>
     ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
@@ -957,7 +957,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn py_simple_cycles(
         &self,
-            args: impl Into<NodeArgs<SimpleCycles1Args>>
+        args: impl Into<NodeArgs<SimpleCycles1Args>>
     ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
@@ -969,7 +969,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn py_proxy_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
@@ -981,7 +981,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn ts_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
@@ -993,7 +993,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn ts_composites(
         &self,
-            args: impl Into<NodeArgs<CompositesArgs>>
+        args: impl Into<NodeArgs<CompositesArgs>>
     ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
@@ -1005,7 +1005,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn ts_cycles(
         &self,
-            args: impl Into<NodeArgs<Cycles1Args>>
+        args: impl Into<NodeArgs<Cycles1Args>>
     ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
@@ -1017,7 +1017,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn ts_simple_cycles(
         &self,
-            args: impl Into<NodeArgs<SimpleCycles1Args>>
+        args: impl Into<NodeArgs<SimpleCycles1Args>>
     ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
@@ -1029,7 +1029,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn ts_proxy_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
@@ -1041,7 +1041,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn rs_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
@@ -1053,7 +1053,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn rs_composites(
         &self,
-            args: impl Into<NodeArgs<CompositesArgs>>
+        args: impl Into<NodeArgs<CompositesArgs>>
     ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
@@ -1065,7 +1065,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn rs_cycles(
         &self,
-            args: impl Into<NodeArgs<Cycles1Args>>
+        args: impl Into<NodeArgs<Cycles1Args>>
     ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
@@ -1077,7 +1077,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn rs_simple_cycles(
         &self,
-            args: impl Into<NodeArgs<SimpleCycles1Args>>
+        args: impl Into<NodeArgs<SimpleCycles1Args>>
     ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
@@ -1089,7 +1089,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn rs_proxy_primitives(
         &self,
-            args: impl Into<NodeArgs<PrimitivesArgs>>
+        args: impl Into<NodeArgs<PrimitivesArgs>>
     ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {

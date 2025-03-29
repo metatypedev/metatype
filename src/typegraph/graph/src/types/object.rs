@@ -1,19 +1,19 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use indexmap::IndexMap;
-use tg_schema::InjectionNode;
-
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
+use crate::conv::dedup::DuplicationKeyGenerator;
 use crate::conv::interlude::*;
+use crate::injection::InjectionNode;
 use crate::policies::PolicySpec;
 use crate::{interlude::*, TypeNodeExt as _};
+use indexmap::IndexMap;
 
 #[derive(Debug)]
 pub struct ObjectProperty {
     pub ty: Type,
     pub policies: Vec<PolicySpec>,
-    pub injection: Option<InjectionNode>,
+    pub injection: Option<Arc<InjectionNode>>,
     pub outjection: Option<()>,
     pub required: bool,
     pub as_id: bool,
@@ -66,16 +66,13 @@ impl TypeNode for Arc<ObjectType> {
     }
 }
 
-pub(crate) fn convert_object(
-    parent: WeakType,
-    key: TypeKey,
-    rpath: RelativePath,
-    base: &tg_schema::TypeNodeBase,
+pub(crate) fn convert_object<G: DuplicationKeyGenerator>(
+    base: crate::TypeBase,
     data: &tg_schema::ObjectTypeData,
-    schema: &tg_schema::Typegraph,
-) -> Box<dyn TypeConversionResult> {
+    rpath: RelativePath,
+) -> Box<dyn TypeConversionResult<G>> {
     let ty = ObjectType {
-        base: Conversion::base(key, parent, rpath.clone(), base, schema),
+        base,
         properties: Default::default(),
     }
     .into();
@@ -99,12 +96,12 @@ pub struct ObjectTypeConversionResult {
     policies: IndexMap<String, Vec<tg_schema::PolicyIndices>>,
 }
 
-impl TypeConversionResult for ObjectTypeConversionResult {
+impl<G: DuplicationKeyGenerator> TypeConversionResult<G> for ObjectTypeConversionResult {
     fn get_type(&self) -> Type {
         self.ty.clone().wrap()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
+    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()> {
         let mut properties = IndexMap::with_capacity(self.properties.len());
 
         let weak = self.ty.clone().wrap().downgrade();
@@ -122,7 +119,7 @@ impl TypeConversionResult for ObjectTypeConversionResult {
             let required = self.required.iter().any(|r| r == name.as_ref());
             let as_id = self.id.iter().any(|r| r == name.as_ref());
 
-            let injection = injections.as_ref().and_then(|inj| match inj {
+            let injection = injections.as_ref().and_then(|inj| match inj.as_ref() {
                 InjectionNode::Parent { children } => children.get(name.as_ref()).cloned(),
                 _ => None,
             });

@@ -229,10 +229,10 @@ impl RsClientManifest {
     ) -> anyhow::Result<()> {
         render_static(dest, opts.hostcall)?;
 
-        self.types.render_full(dest)?;
-
         let methods = self.node_metas.render_all_buffered()?;
         with_metas_namespace(dest, methods)?;
+
+        self.types.render_full(dest)?;
 
         self.selections.render_all(dest)?;
 
@@ -311,7 +311,7 @@ pub fn query_graph() -> QueryGraph {{
             let args_row = match &arg_ty {
                 Some(arg_ty) => format!(
                     "
-            args: impl Into<NodeArgs<{arg_ty}>>"
+        args: impl Into<NodeArgs<{arg_ty}>>"
                 ),
                 None => "".into(),
             };

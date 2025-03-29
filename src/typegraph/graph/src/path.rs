@@ -1,12 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conv::dedup::DuplicationKey;
-use crate::conv::key::TypeKeyEx;
+use crate::injection::InjectionNode;
 use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
 use crate::{Edge, TypeNode as _, TypeNodeExt as _};
 use std::hash::{Hash, Hasher};
-use tg_schema::InjectionNode;
 
 pub type Path = Vec<PathSegment>;
 
@@ -144,34 +142,27 @@ impl PathSegment {
         }
     }
 
-    pub fn apply_on_schema_node_ex(
-        &self,
-        nodes: &[tg_schema::TypeNode],
-        xkey: TypeKeyEx,
-    ) -> Result<TypeKeyEx> {
-        let idx = self.apply_on_schema_node(nodes, xkey.0)?;
-        let injection = xkey
-            .1
-            .injection
-            .and_then(|inj| self.apply_on_injection(inj));
+    // pub fn apply_on_schema_node_ex<K: DupKey>(
+    //     &self,
+    //     nodes: &[tg_schema::TypeNode],
+    //     xkey: TypeKeyEx<K>,
+    // ) -> Result<TypeKeyEx<K>> {
+    //     let idx = self.apply_on_schema_node(nodes, xkey.0)?;
+    //     let injection = xkey
+    //         .1
+    //         .injection
+    //         .and_then(|inj| self.apply_on_injection(&inj));
+    //
+    //     Ok(TypeKeyEx(idx, DuplicationKey { injection }))
+    // }
 
-        Ok(TypeKeyEx(idx, DuplicationKey { injection }))
-    }
-
-    pub fn apply_on_injection(&self, mut node: InjectionNode) -> Option<InjectionNode> {
+    pub fn apply_on_injection(&self, node: &Arc<InjectionNode>) -> Option<Arc<InjectionNode>> {
         match self {
-            PathSegment::ObjectProp(key) => match &mut node {
-                InjectionNode::Parent { children } => children.get_mut(key.as_ref()).map(|node| {
-                    std::mem::replace(
-                        node,
-                        InjectionNode::Parent {
-                            children: Default::default(),
-                        },
-                    )
-                }),
+            PathSegment::ObjectProp(key) => match node.as_ref() {
+                InjectionNode::Parent { children } => children.get(key.as_ref()).cloned(),
                 _ => unreachable!("expected parent node"),
             },
-            _ => Some(node),
+            _ => Some(node.clone()),
         }
     }
 }
@@ -202,9 +193,7 @@ impl PartialEq for ValueTypePath {
         let left = self.owner.upgrade().expect("no strong pointer for type");
         let right = other.owner.upgrade().expect("no strong pointer for type");
 
-        self.branch == other.branch
-            && left.base.type_idx == right.base.type_idx
-            && self.path == other.path
+        self.branch == other.branch && left.base.key == right.base.key && self.path == other.path
     }
 }
 
@@ -216,8 +205,9 @@ impl Hash for ValueTypePath {
             .upgrade()
             .expect("no strong pointer for type")
             .base
-            .type_idx
+            .key
             .hash(state);
+        self.branch.hash(state);
         self.path.hash(state);
     }
 }
@@ -300,88 +290,18 @@ impl RelativePath {
         matches!(self, Self::NsObject(_))
     }
 
-    pub fn contains(&self, nodes: &[tg_schema::TypeNode], xkey: &TypeKeyEx) -> bool {
-        use RelativePath as RP;
-
-        match self {
-            RP::Function(_) => false,
-            RP::NsObject(_) => false,
-            RP::Input(p) => {
-                let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let input_type = match &nodes[owner.base.type_idx as usize] {
-                    tg_schema::TypeNode::Function { data, .. } => data.input,
-                    _ => unreachable!("expected a function node"),
-                };
-                let injection = owner.injection().cloned();
-                let mut cursor = TypeKeyEx(input_type, DuplicationKey { injection });
-                for seg in &p.path {
-                    match seg.apply_on_schema_node_ex(nodes, cursor) {
-                        Ok(next) => {
-                            if &next == xkey {
-                                return true;
-                            }
-                            cursor = next;
-                        }
-                        Err(_) => return false,
-                    }
-                }
-
-                false
-            }
-
-            RP::Output(p) => {
-                let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let out_ty = match &nodes[owner.base.type_idx as usize] {
-                    tg_schema::TypeNode::Function { data, .. } => data.output,
-                    _ => unreachable!("expected a function node"),
-                };
-
-                let mut cursor = TypeKeyEx(out_ty, DuplicationKey { injection: None });
-                for seg in &p.path {
-                    match seg.apply_on_schema_node_ex(nodes, cursor) {
-                        Ok(next) => {
-                            if &next == xkey {
-                                return true;
-                            }
-                            cursor = next;
-                        }
-                        Err(_) => return false,
-                    }
-                }
-
-                false
-            }
-        }
-    }
-
-    pub fn get_injection(&self, schema: &tg_schema::Typegraph) -> Option<InjectionNode> {
+    pub fn get_injection(&self) -> Option<Arc<InjectionNode>> {
         match self {
             Self::Function(_) | Self::NsObject(_) | Self::Output(_) => None,
             Self::Input(p) => {
+                // TODO (perf): get from parent
                 let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let owner_node = schema.types.get(owner.base.type_idx as usize).unwrap();
-                let data = match owner_node {
-                    tg_schema::TypeNode::Function { data, .. } => {
-                        data
-                        //
-                    }
-                    _ => unreachable!("expected a function node; got {:?}", owner_node.type_name()),
-                };
-                let mut injection = InjectionNode::Parent {
-                    children: data.injections.clone(),
-                };
+                let mut injection = Arc::new(InjectionNode::Parent {
+                    children: owner.injections.clone(),
+                });
 
                 for seg in &p.path {
-                    if let Some(inj) = seg.apply_on_injection(std::mem::replace(
-                        &mut injection,
-                        InjectionNode::Parent {
-                            children: Default::default(),
-                        },
-                    )) {
-                        injection = inj;
-                    } else {
-                        return None;
-                    }
+                    injection = seg.apply_on_injection(&injection)?;
                 }
                 Some(injection)
             }

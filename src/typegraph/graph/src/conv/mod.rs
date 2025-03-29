@@ -7,10 +7,10 @@ use crate::runtimes::{convert_materializer, Materializer};
 use crate::types::{BooleanType, TypeNodeExt, WeakType};
 use crate::{
     convert_function, convert_list, convert_object, convert_optional, convert_union, interlude::*,
-    TypeNode as _,
+    TypeBase, TypeNode as _,
 };
 use crate::{FunctionType, IntegerType, ObjectType, Type};
-use dedup::{Deduplication, DuplicationKey};
+use dedup::{Deduplication, DuplicationKeyGenerator};
 use indexmap::IndexMap;
 pub use map::{ConversionMap, MapItem, MapValueItem, ValueType};
 use tg_schema::runtimes::TGRuntime;
@@ -27,9 +27,12 @@ pub mod interlude {
 use interlude::*;
 
 /// Conversion state; used when converting a `tg_schema::Typegraph` into a `crate::Typegraph`
-pub struct Conversion {
+pub struct Conversion<G>
+where
+    G: DuplicationKeyGenerator,
+{
     schema: Arc<tg_schema::Typegraph>,
-    conversion_map: ConversionMap,
+    conversion_map: ConversionMap<G>,
     input_types: IndexMap<TypeKey, Type>,
     output_types: IndexMap<TypeKey, Type>,
     functions: IndexMap<u32, Arc<FunctionType>>,
@@ -37,33 +40,74 @@ pub struct Conversion {
     runtimes: Vec<Arc<TGRuntime>>,
     materializers: Vec<Materializer>,
     policies: Vec<Policy>,
+    dup_key_gen: G,
 }
 
-pub trait TypeConversionResult {
+pub trait TypeConversionResult<G: DuplicationKeyGenerator> {
     fn get_type(&self) -> Type;
-    fn finalize(&mut self, conv: &mut Conversion) -> Result<()>; // convert children
+    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()>
+    where
+        G: DuplicationKeyGenerator; // convert children
 }
 
 // Type conversion that does not need propagation; cached or no children
 struct FinalizedTypeConversion(Type);
 
-fn finalized_type(ty: Type) -> Box<dyn TypeConversionResult> {
+fn finalized_type<DKG: DuplicationKeyGenerator>(ty: Type) -> Box<dyn TypeConversionResult<DKG>> {
     Box::new(FinalizedTypeConversion(ty))
 }
 
-impl TypeConversionResult for FinalizedTypeConversion {
+impl<DKG: DuplicationKeyGenerator> TypeConversionResult<DKG> for FinalizedTypeConversion {
     fn get_type(&self) -> Type {
         self.0.clone()
     }
 
-    fn finalize(&mut self, _conv: &mut Conversion) -> Result<()> {
+    fn finalize(&mut self, _conv: &mut Conversion<DKG>) -> Result<()>
+    where
+        DKG: DuplicationKeyGenerator,
+    {
         // nothing to do
         Ok(())
     }
 }
 
-impl Conversion {
-    fn new(schema: Arc<tg_schema::Typegraph>) -> Conversion {
+// pub struct TypeConvParams {
+//     pub parent: WeakType,
+//     pub idx: u32,
+//     pub rpath: RelativePath,
+// }
+//
+// impl TypeConvParams {
+//     pub fn func(parent: WeakType, idx: u32) -> Self {
+//         Self {
+//             parent,
+//             idx,
+//             rpath: RelativePath::Function(idx),
+//         }
+//     }
+//
+//     pub fn func_input(parent: Arc<FunctionType>, idx: u32) -> Self {
+//         Self {
+//             parent: parent.clone().wrap().downgrade(),
+//             idx,
+//             rpath: RelativePath::input(Arc::downgrade(&parent), vec![]),
+//         }
+//     }
+//
+//     pub fn func_output(parent: Arc<FunctionType>, idx: u32) -> Self {
+//         Self {
+//             parent: parent.clone().wrap().downgrade(),
+//             idx,
+//             rpath: RelativePath::output(Arc::downgrade(&parent), vec![]),
+//         }
+//     }
+// }
+
+impl<G> Conversion<G>
+where
+    G: DuplicationKeyGenerator,
+{
+    fn new(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Self {
         let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();
         let materializers: Vec<_> = schema
             .materializers
@@ -79,7 +123,7 @@ impl Conversion {
 
         Conversion {
             schema: schema.clone(),
-            conversion_map: ConversionMap::new(&schema),
+            conversion_map: ConversionMap::new(&schema, &dup_key_gen),
             input_types: Default::default(),
             output_types: Default::default(),
             functions: Default::default(),
@@ -87,17 +131,19 @@ impl Conversion {
             materializers,
             runtimes,
             policies,
+            dup_key_gen,
         }
     }
 
     pub fn convert<NE>(
         schema: Arc<tg_schema::Typegraph>,
+        dup_key_gen: G,
         naming_engine: NE,
-    ) -> Result<crate::Typegraph>
+    ) -> Result<crate::Typegraph<G::Key>>
     where
         NE: NamingEngine,
     {
-        let mut conv = Conversion::new(schema.clone());
+        let mut conv = Conversion::new(schema.clone(), dup_key_gen);
         let mut res = conv.convert_type(
             WeakType::Object(Default::default()),
             0,
@@ -164,7 +210,9 @@ impl Conversion {
 
             let added = self.conversion_map.append(ty.key(), rpath.clone())?;
             if added {
-                let cyclic = rpath.pop().contains(&self.schema.types, &From::from(&ty));
+                let cyclic = self
+                    .dup_key_gen
+                    .find_type_in_rpath(&ty, &rpath.pop(), &self.schema);
                 if !cyclic {
                     for edge in ty.edges() {
                         let child_ty = edge.to;
@@ -196,14 +244,13 @@ impl Conversion {
         Ok(())
     }
 
-    fn register_type_2<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
+    fn register_type<C: FnOnce() -> Box<dyn TypeConversionResult<G>>>(
         &mut self,
         rpath: RelativePath,
-        key: TypeKey,
         convert: C,
         duplicate: bool,
-    ) -> Result<Box<dyn TypeConversionResult>> {
-        let conv_res = convert(key);
+    ) -> Result<Box<dyn TypeConversionResult<G>>> {
+        let conv_res = convert();
         let typ = conv_res.get_type();
 
         self.register_converted_type(rpath.clone(), typ.clone(), duplicate)?;
@@ -211,53 +258,61 @@ impl Conversion {
         Ok(conv_res)
     }
 
-    fn register_type<C: FnOnce(TypeKey) -> Box<dyn TypeConversionResult>>(
+    fn register_finalized_type(
         &mut self,
         rpath: RelativePath,
-        key: TypeKey,
-        convert: C,
-    ) -> Result<Box<dyn TypeConversionResult>> {
-        self.register_type_2(rpath, key, convert, false)
+        ty: Type,
+    ) -> Result<Box<dyn TypeConversionResult<G>>> {
+        self.register_converted_type(rpath, ty.clone(), false)?;
+        Ok(finalized_type(ty))
     }
 
     pub fn convert_type(
         &mut self,
         parent: WeakType,
-        type_idx: u32,
+        idx: u32,
         rpath: RelativePath,
-    ) -> Result<Box<dyn TypeConversionResult>> {
+    ) -> Result<Box<dyn TypeConversionResult<G>>> {
         let schema = self.schema.clone();
-        let type_node = &schema.types[type_idx as usize];
+        let type_node = &schema.types[idx as usize];
         use tg_schema::TypeNode as N;
 
-        let dkey = if !schema.is_function(type_idx) && schema.is_composite(type_idx) {
-            DuplicationKey::from_rpath(&schema, &rpath)
-        } else {
-            // currently, we only generate a single type from each scalar type node
-            Default::default()
-        };
-        let key = match self.conversion_map.deduplicate(type_idx, &dkey)? {
-            Deduplication::Reuse(ty) => {
-                return self.register_type_2(rpath.clone(), ty.key(), |_| finalized_type(ty), true);
+        let dkey = self.dup_key_gen.gen_from_rpath(&rpath);
+
+        // let dkey = if !schema.is_function(ty.idx) && schema.is_composite(ty.idx) {
+        //     DuplicationKey::from_rpath(&rpath)
+        // } else {
+        //     // currently, we only generate a single type from each scalar type node
+        //     Default::default()
+        // };
+        let key = match self.conversion_map.deduplicate(idx, &dkey)? {
+            Deduplication::Reuse(typ) => {
+                // TODO rename to: register_duplicate
+                return self.register_type(rpath.clone(), || finalized_type(typ), true);
             }
             Deduplication::Register(tkey) => tkey,
         };
 
-        let schema = self.schema.clone();
+        let gen_base = {
+            let rpath = rpath.clone();
+            move |base: &tg_schema::TypeNodeBase| TypeBase::new(base, parent, key, &rpath)
+        };
 
         match type_node {
-            N::Boolean { base } => self.register_type(rpath.clone(), key, |key| {
-                finalized_type(Type::Boolean(
+            N::Boolean { base } => self.register_finalized_type(
+                rpath,
+                Type::Boolean(
                     BooleanType {
-                        base: Self::base(key, parent, rpath, base, &schema),
+                        base: gen_base(base),
                     }
                     .into(),
-                ))
-            }),
-            N::Integer { base, data } => self.register_type(rpath.clone(), key, |key| {
-                finalized_type(Type::Integer(
+                ),
+            ),
+            N::Integer { base, data } => self.register_finalized_type(
+                rpath,
+                Type::Integer(
                     IntegerType {
-                        base: Self::base(key, parent, rpath, base, &schema),
+                        base: gen_base(base),
                         minimum: data.minimum,
                         maximum: data.maximum,
                         exclusive_minimum: data.exclusive_minimum,
@@ -265,12 +320,13 @@ impl Conversion {
                         multiple_of: data.multiple_of,
                     }
                     .into(),
-                ))
-            }),
-            N::Float { base, data } => self.register_type(rpath.clone(), key, |key| {
-                finalized_type(Type::Float(
+                ),
+            ),
+            N::Float { base, data } => self.register_finalized_type(
+                rpath,
+                Type::Float(
                     crate::FloatType {
-                        base: Self::base(key, parent, rpath, base, &schema),
+                        base: gen_base(base),
                         minimum: data.minimum,
                         maximum: data.maximum,
                         exclusive_minimum: data.exclusive_minimum,
@@ -278,12 +334,13 @@ impl Conversion {
                         multiple_of: data.multiple_of,
                     }
                     .into(),
-                ))
-            }),
-            N::String { base, data } => self.register_type(rpath.clone(), key, |key| {
-                finalized_type(Type::String(
+                ),
+            ),
+            N::String { base, data } => self.register_finalized_type(
+                rpath,
+                Type::String(
                     crate::StringType {
-                        base: Self::base(key, parent, rpath, base, &schema),
+                        base: gen_base(base),
                         pattern: data.pattern.clone(),
                         format: data.format.clone(),
                         min_length: data.min_length,
@@ -291,75 +348,54 @@ impl Conversion {
                         enumeration: base.enumeration.clone(),
                     }
                     .into(),
-                ))
-            }),
-            N::File { base, data } => self.register_type(rpath.clone(), key, |key| {
-                finalized_type(Type::File(
+                ),
+            ),
+            N::File { base, data } => self.register_finalized_type(
+                rpath,
+                Type::File(
                     crate::FileType {
-                        base: Self::base(key, parent, rpath, base, &schema),
+                        base: gen_base(base),
                         min_size: data.min_size,
                         max_size: data.max_size,
                         mime_types: data.mime_types.clone(),
                     }
                     .into(),
-                ))
-            }),
-            N::Optional { base, data } => self.register_type(rpath.clone(), key, move |key| {
-                convert_optional(parent, key, rpath, base, data, &schema)
-            }),
-            N::List { base, data } => self.register_type(rpath.clone(), key, |key| {
-                convert_list(parent, key, rpath.clone(), base, data, &schema)
-            }),
-            N::Object { base, data } => self.register_type(rpath.clone(), key, |key| {
-                convert_object(parent, key, rpath.clone(), base, data, &schema)
-            }),
-            N::Either { base, data } => self.register_type(rpath.clone(), key, |key| {
-                convert_union(
-                    parent,
-                    key,
-                    rpath.clone(),
-                    base,
-                    &data.one_of,
-                    &schema,
-                    true,
-                )
-            }),
-            N::Union { base, data } => self.register_type(rpath.clone(), key, |key| {
-                convert_union(
-                    parent,
-                    key,
-                    rpath.clone(),
-                    base,
-                    &data.any_of,
-                    &schema,
-                    false,
-                )
-            }),
+                ),
+            ),
+            N::Optional { base, data } => self.register_type(
+                rpath.clone(),
+                move || convert_optional(gen_base(base), data, &rpath),
+                false,
+            ),
+            N::List { base, data } => self.register_type(
+                rpath.clone(),
+                || convert_list(gen_base(base), data, rpath.clone()),
+                false,
+            ),
+            N::Object { base, data } => self.register_type(
+                rpath.clone(),
+                || convert_object(gen_base(base), data, rpath.clone()),
+                false,
+            ),
+            N::Either { base, data } => self.register_type(
+                rpath.clone(),
+                || convert_union(gen_base(base), &data.one_of, rpath.clone(), true),
+                false,
+            ),
+            N::Union { base, data } => self.register_type(
+                rpath.clone(),
+                || convert_union(gen_base(base), &data.any_of, rpath.clone(), false),
+                false,
+            ),
             N::Function { base, data } => {
                 let mat = self.materializers[data.materializer as usize].clone();
-                self.register_type(RelativePath::Function(type_idx), key, |key| {
-                    convert_function(parent, key, base, data, mat, &schema)
-                })
+                self.register_type(
+                    RelativePath::Function(idx),
+                    || convert_function(gen_base(base), data, mat),
+                    false,
+                )
             }
             N::Any { .. } => unreachable!(), // FIXME is this still used?
-        }
-    }
-
-    pub fn base(
-        key: TypeKey,
-        parent: WeakType,
-        rpath: RelativePath,
-        base: &tg_schema::TypeNodeBase,
-        schema: &tg_schema::Typegraph,
-    ) -> crate::TypeBase {
-        crate::TypeBase {
-            key,
-            parent,
-            type_idx: key.0,
-            title: base.title.clone(),
-            name: Default::default(),
-            description: base.description.clone(),
-            injection: rpath.get_injection(schema),
         }
     }
 

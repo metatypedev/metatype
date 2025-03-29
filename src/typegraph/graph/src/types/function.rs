@@ -1,8 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::BTreeMap;
+
 use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType, Wrap as _};
+use crate::conv::dedup::DuplicationKeyGenerator;
 use crate::conv::interlude::*;
+use crate::injection::InjectionNode;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{
     runtimes::{Materializer, MaterializerNode, Runtime},
@@ -16,6 +20,8 @@ pub struct FunctionType {
     pub(crate) input: Once<Arc<ObjectType>>,
     pub(crate) output: Once<Type>,
     pub parameter_transform: Option<FunctionParameterTransform>,
+    // TODO BTreeMap<Arc<str>, Arc<InjectionNode>>
+    pub injections: BTreeMap<String, Arc<InjectionNode>>,
     pub runtime_config: serde_json::Value, // TODO should not this be removed?
     pub materializer: Materializer,
     pub rate_weight: Option<u32>,
@@ -80,16 +86,28 @@ impl TypeNode for Arc<FunctionType> {
     }
 }
 
-pub(crate) fn convert_function(
-    parent: WeakType,
-    key: TypeKey,
-    base: &tg_schema::TypeNodeBase,
+pub(crate) fn convert_function<G: DuplicationKeyGenerator>(
+    base: TypeBase,
     data: &tg_schema::FunctionTypeData,
     materializer: Arc<MaterializerNode>,
-    schema: &tg_schema::Typegraph,
-) -> Box<dyn TypeConversionResult> {
+) -> Box<dyn TypeConversionResult<G>> {
+    let injections = data
+        .injections
+        .iter()
+        .filter_map(|(k, v)| {
+            InjectionNode::from_schema(
+                v,
+                materializer
+                    .effect
+                    .effect
+                    .unwrap_or(tg_schema::EffectType::Read),
+            )
+            .map(|inj| (k.clone(), inj))
+        })
+        .collect();
+
     let ty = FunctionType {
-        base: Conversion::base(key, parent, RelativePath::Function(key.0), base, schema),
+        base,
         input: Default::default(),
         output: Default::default(),
         parameter_transform: data.parameter_transform.clone(),
@@ -97,6 +115,7 @@ pub(crate) fn convert_function(
         materializer,
         rate_weight: data.rate_weight,
         rate_calls: data.rate_calls,
+        injections,
     }
     .into();
 
@@ -113,24 +132,18 @@ struct FunctionTypeConversionResult {
     output_idx: u32,
 }
 
-impl TypeConversionResult for FunctionTypeConversionResult {
+impl<G: DuplicationKeyGenerator> TypeConversionResult<G> for FunctionTypeConversionResult {
     fn get_type(&self) -> Type {
         self.ty.clone().wrap()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
+    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()> {
         let weak = self.ty.clone().wrap().downgrade();
-        let owner_fn = weak.as_func().ok_or_else(|| {
-            eyre!(
-                "strong pointer removed for function type; key={:?}",
-                self.ty.key()
-            )
-        })?;
 
         let mut input_res = conv.convert_type(
             weak.clone(),
             self.input_idx,
-            RelativePath::input(owner_fn.clone(), vec![]),
+            RelativePath::input(Arc::downgrade(&self.ty), vec![]),
         )?;
         match &input_res.get_type() {
             Type::Object(input) => {
@@ -146,9 +159,9 @@ impl TypeConversionResult for FunctionTypeConversionResult {
         input_res.finalize(conv)?;
 
         let mut output_res = conv.convert_type(
-            weak.clone(),
+            weak,
             self.output_idx,
-            RelativePath::output(owner_fn.clone(), vec![]),
+            RelativePath::output(Arc::downgrade(&self.ty), vec![]),
         )?;
         self.ty.output.set(output_res.get_type()).map_err(|_| {
             eyre!(

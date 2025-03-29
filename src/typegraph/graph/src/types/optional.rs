@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
+use crate::conv::dedup::DuplicationKeyGenerator;
 use crate::{conv::interlude::*, Arc, Once};
 use crate::{interlude::*, TypeNodeExt as _};
 
@@ -42,16 +43,13 @@ impl TypeNode for Arc<OptionalType> {
     }
 }
 
-pub(crate) fn convert_optional(
-    parent: WeakType,
-    key: TypeKey,
-    rpath: RelativePath,
-    base: &tg_schema::TypeNodeBase,
+pub(crate) fn convert_optional<G: DuplicationKeyGenerator>(
+    base: TypeBase,
     data: &tg_schema::OptionalTypeData,
-    schema: &tg_schema::Typegraph,
-) -> Box<dyn TypeConversionResult> {
+    rpath: &RelativePath,
+) -> Box<dyn TypeConversionResult<G>> {
     let ty = OptionalType {
-        base: Conversion::base(key, parent, rpath.clone(), base, schema),
+        base,
         item: Default::default(),
         default_value: data.default_value.clone(),
     }
@@ -60,7 +58,7 @@ pub(crate) fn convert_optional(
     Box::new(OptionalTypeConversionResult {
         ty,
         item_idx: data.item,
-        rpath,
+        rpath: rpath.clone(),
     })
 }
 
@@ -70,12 +68,12 @@ pub struct OptionalTypeConversionResult {
     rpath: RelativePath,
 }
 
-impl TypeConversionResult for OptionalTypeConversionResult {
+impl<G: DuplicationKeyGenerator> TypeConversionResult<G> for OptionalTypeConversionResult {
     fn get_type(&self) -> Type {
         self.ty.clone().wrap()
     }
 
-    fn finalize(&mut self, conv: &mut Conversion) -> Result<()> {
+    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()> {
         let mut item = conv.convert_type(
             self.ty.clone().wrap().downgrade(),
             self.item_idx,
