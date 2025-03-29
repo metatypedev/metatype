@@ -56,6 +56,44 @@ impl<K: DupKey> ValueType<K> {
     pub fn is_empty(&self) -> bool {
         self.default.is_none() && self.variants.is_empty()
     }
+
+    fn extend(
+        &mut self,
+        node: Type,
+        rpath: RelativePath,
+        dup_key_gen: &impl DuplicationKeyGenerator<Key = K>,
+    ) -> Result<()> {
+        let rpath: ValueTypePath = rpath
+            .try_into()
+            .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?;
+        let dkey = dup_key_gen.gen_from_type(&node);
+        let key = node.key();
+        if key.1 == 0 {
+            debug_assert!(dkey.is_default());
+            if self.default.is_some() {
+                bail!("duplicate default value type: {:?}", key);
+            }
+            self.default = Some(MapValueItem {
+                ty: node.clone(),
+                relative_paths: std::iter::once(rpath).collect(),
+            });
+        } else {
+            debug_assert!(!dkey.is_default());
+            let index = key.1 - 1;
+            if index != self.variants.len() as u32 {
+                bail!("unexpected ordinal number for type registration: {:?}", key);
+            }
+            self.variants.insert(
+                dkey,
+                MapValueItem {
+                    ty: node.clone(),
+                    relative_paths: std::iter::once(rpath).collect(),
+                },
+            );
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug)]
@@ -72,6 +110,61 @@ impl<K: DupKey> MapItem<K> {
             Self::Value(v) => Some(v),
             _ => None,
         }
+    }
+
+    fn new(
+        ty: &Type,
+        rpath: RelativePath,
+        dup_key_gen: &impl DuplicationKeyGenerator<Key = K>,
+    ) -> Result<Self> {
+        Ok(match &rpath {
+            RelativePath::Function(_) => MapItem::Function(ty.assert_func()?.clone()),
+            RelativePath::NsObject(path) => {
+                MapItem::Namespace(ty.assert_object()?.clone(), path.clone())
+            }
+            RelativePath::Input(_) => {
+                let dkey = dup_key_gen.gen_from_type(ty);
+                if dkey.is_default() || !ty.is_composite() {
+                    MapItem::Value(ValueType {
+                        default: Some(MapValueItem {
+                            ty: ty.clone(),
+                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
+                                |e| eyre!("relative path is not a value type: {:?}", e),
+                            )?)
+                            .collect(),
+                        }),
+                        variants: Default::default(),
+                    })
+                } else {
+                    let variant =
+                        MapValueItem {
+                            ty: ty.clone(),
+                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
+                                |e| eyre!("relative path is not a value type: {:?}", e),
+                            )?)
+                            .collect(),
+                        };
+                    let variants = std::iter::once((dkey, variant)).collect();
+                    MapItem::Value(ValueType {
+                        default: None,
+                        variants,
+                    })
+                }
+            }
+            RelativePath::Output(_) => MapItem::Value(ValueType {
+                default: Some(MapValueItem {
+                    ty: ty.clone(),
+                    relative_paths: std::iter::once(
+                        rpath
+                            .clone()
+                            .try_into()
+                            .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?,
+                    )
+                    .collect(),
+                }),
+                variants: Default::default(),
+            }),
+        })
     }
 }
 
@@ -127,52 +220,7 @@ impl<G: DuplicationKeyGenerator> ConversionMap<G> {
         let key = node.key();
         let item = std::mem::replace(&mut self.direct[key.0 as usize], MapItem::Unset);
         let item = match item {
-            MapItem::Unset => match &rpath {
-                RelativePath::Function(_) => MapItem::Function(node.assert_func()?.clone()),
-                RelativePath::NsObject(path) => {
-                    MapItem::Namespace(node.assert_object()?.clone(), path.clone())
-                }
-                RelativePath::Input(_) => {
-                    let dkey = self.dup_key_gen.gen_from_type(&node);
-                    if dkey.is_default() || !node.is_composite() {
-                        MapItem::Value(ValueType {
-                            default: Some(MapValueItem {
-                                ty: node.clone(),
-                                relative_paths: std::iter::once(rpath.clone().try_into().map_err(
-                                    |e| eyre!("relative path is not a value type: {:?}", e),
-                                )?)
-                                .collect(),
-                            }),
-                            variants: Default::default(),
-                        })
-                    } else {
-                        let variant = MapValueItem {
-                            ty: node.clone(),
-                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
-                                |e| eyre!("relative path is not a value type: {:?}", e),
-                            )?)
-                            .collect(),
-                        };
-                        let variants = std::iter::once((dkey, variant)).collect();
-                        MapItem::Value(ValueType {
-                            default: None,
-                            variants,
-                        })
-                    }
-                }
-                RelativePath::Output(_) => {
-                    MapItem::Value(ValueType {
-                        default: Some(MapValueItem {
-                            ty: node.clone(),
-                            relative_paths: std::iter::once(rpath.clone().try_into().map_err(
-                                |e| eyre!("relative path is not a value type: {:?}", e),
-                            )?)
-                            .collect(),
-                        }),
-                        variants: Default::default(),
-                    })
-                }
-            },
+            MapItem::Unset => MapItem::new(&node, rpath.clone(), &self.dup_key_gen)?,
             MapItem::Namespace(_, _) => {
                 bail!("unexpected duplicate namespace type: {:?}", key)
             }
@@ -180,34 +228,7 @@ impl<G: DuplicationKeyGenerator> ConversionMap<G> {
                 bail!("unexpected duplicate function type: {:?}", key)
             }
             MapItem::Value(mut value_type) => {
-                let rpath: ValueTypePath = rpath
-                    .clone()
-                    .try_into()
-                    .map_err(|e| eyre!("relative path is not a value type: {:?}", e))?;
-                let dkey = self.dup_key_gen.gen_from_type(&node);
-                if key.1 == 0 {
-                    debug_assert!(dkey.is_default());
-                    if value_type.default.is_some() {
-                        bail!("duplicate default value type: {:?}", key);
-                    }
-                    value_type.default = Some(MapValueItem {
-                        ty: node.clone(),
-                        relative_paths: std::iter::once(rpath).collect(),
-                    });
-                } else {
-                    debug_assert!(!dkey.is_default());
-                    let index = key.1 - 1;
-                    if index != value_type.variants.len() as u32 {
-                        bail!("unexpected ordinal number for type registration: {:?}", key);
-                    }
-                    value_type.variants.insert(
-                        dkey,
-                        MapValueItem {
-                            ty: node.clone(),
-                            relative_paths: std::iter::once(rpath).collect(),
-                        },
-                    );
-                }
+                value_type.extend(node, rpath.clone(), &self.dup_key_gen)?;
                 MapItem::Value(value_type)
             }
         };

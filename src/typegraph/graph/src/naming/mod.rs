@@ -47,6 +47,7 @@ mod default {
     impl NamingEngine for DefaultNamingEngine {
         fn name_value_types<K: DupKey>(&mut self, value_type: &ValueType<K>) -> Result<()> {
             if value_type.is_empty() {
+                // the type has not been converted
                 unreachable!("no registered type");
             }
             if let Some(item) = value_type.default.as_ref() {
