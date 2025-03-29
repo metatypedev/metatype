@@ -311,6 +311,7 @@ impl RustType {
                     let props = ty
                         .properties()
                         .iter()
+                        .filter(|(_, prop)| !prop.is_injected())
                         .map(|(prop_name, prop)| {
                             let name = normalize_struct_prop_name(prop_name);
                             let rename = if prop_name.as_ref() != name.as_str() {

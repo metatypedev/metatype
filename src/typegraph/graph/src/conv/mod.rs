@@ -71,38 +71,6 @@ impl<DKG: DuplicationKeyGenerator> TypeConversionResult<DKG> for FinalizedTypeCo
     }
 }
 
-// pub struct TypeConvParams {
-//     pub parent: WeakType,
-//     pub idx: u32,
-//     pub rpath: RelativePath,
-// }
-//
-// impl TypeConvParams {
-//     pub fn func(parent: WeakType, idx: u32) -> Self {
-//         Self {
-//             parent,
-//             idx,
-//             rpath: RelativePath::Function(idx),
-//         }
-//     }
-//
-//     pub fn func_input(parent: Arc<FunctionType>, idx: u32) -> Self {
-//         Self {
-//             parent: parent.clone().wrap().downgrade(),
-//             idx,
-//             rpath: RelativePath::input(Arc::downgrade(&parent), vec![]),
-//         }
-//     }
-//
-//     pub fn func_output(parent: Arc<FunctionType>, idx: u32) -> Self {
-//         Self {
-//             parent: parent.clone().wrap().downgrade(),
-//             idx,
-//             rpath: RelativePath::output(Arc::downgrade(&parent), vec![]),
-//         }
-//     }
-// }
-
 impl<G> Conversion<G>
 where
     G: DuplicationKeyGenerator,

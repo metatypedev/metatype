@@ -281,21 +281,26 @@ impl From<&Type> for PyType {
             }
             Type::File(_) => PyType::Alias(AliasTarget::BuiltIn("bytes").into()),
             Type::Object(ty) => {
-                let props = ty.properties().iter().map(|(name, prop)| {
-                    let (optional, quoted) = match prop.ty {
-                        Type::Optional(_) => (true, true),
-                        _ => (false, ty.is_descendant_of(&prop.ty)),
-                    };
-                    ObjectProperty {
-                        name: normalize_struct_prop_name(&name[..]),
-                        ty: prop.ty.key(),
-                        optional,
-                        quoted,
-                    }
-                });
+                let props = ty
+                    .properties()
+                    .iter()
+                    .filter(|(_, prop)| !prop.is_injected())
+                    .map(|(name, prop)| {
+                        let (optional, quoted) = match prop.ty {
+                            Type::Optional(_) => (true, true),
+                            _ => (false, ty.is_descendant_of(&prop.ty)),
+                        };
+                        ObjectProperty {
+                            name: normalize_struct_prop_name(&name[..]),
+                            ty: prop.ty.key(),
+                            optional,
+                            quoted,
+                        }
+                    })
+                    .collect();
                 PyType::Object(Object {
                     name: normalize_type_title(&ty.name()),
-                    props: props.collect(),
+                    props,
                 })
             }
             Type::Union(ty) => {

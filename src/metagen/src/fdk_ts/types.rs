@@ -87,6 +87,7 @@ impl TsType {
         let props = ty
             .properties()
             .iter()
+            .filter(|(_, prop)| !prop.is_injected())
             .map(|(name, prop)| {
                 let ty = prop.ty.key();
                 let optional = matches!(prop.ty, Type::Optional(_));
