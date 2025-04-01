@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use indexmap::IndexMap;
+use std::collections::BTreeMap;
+
 use serde_json::Value;
 
 use super::types::{EnsureSubtypeOf as _, ErrorCollector, ExtendedTypeNode};
@@ -176,7 +177,7 @@ impl Validator {
         &mut self,
         type_node: &TypeNode,
         variants: &[TypeId],
-        children: &IndexMap<String, InjectionNode>,
+        children: &BTreeMap<String, InjectionNode>,
         path: &mut Vec<String>,
         cx: &InjectionValidationContext<'_>,
         union_kind: UnionKind,

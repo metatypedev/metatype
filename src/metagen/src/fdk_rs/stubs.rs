@@ -1,31 +1,30 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use typegraph::FunctionType;
+use typegraph::TypeNodeExt as _;
+
 use super::utils::normalize_type_title;
 use crate::interlude::*;
-use crate::shared::*;
 use crate::utils::*;
 use std::fmt::Write;
 
 pub struct GenStubOptions {}
 
 pub fn gen_stub(
-    fun: &StubbedFunction,
+    fun: &Arc<FunctionType>,
     mod_stub_traits: &mut GenDestBuf,
-    type_names: &BTreeMap<u32, Rc<str>>,
+    maps: &super::Maps,
     _opts: &GenStubOptions,
 ) -> anyhow::Result<String> {
-    let TypeNode::Function { base, data } = &fun.node else {
-        unreachable!()
-    };
-    let inp_ty = type_names
-        .get(&data.input)
-        .context("input type for function not found")?;
-    let out_ty = type_names
-        .get(&data.output)
-        .context("output type for function not found")?;
-    let trait_name: String = normalize_type_title(&base.title);
-    let title = &base.title;
+    let inp_ty = maps
+        .inputs
+        .get(&fun.input().key())
+        .map(|s| s.as_str())
+        .unwrap_or("()");
+    let out_ty = maps.outputs.get(&fun.output().key()).unwrap();
+    let title = &fun.name();
+    let trait_name: String = normalize_type_title(title);
     // FIXME: use hash or other stable id
     let id = title;
     writeln!(
@@ -80,80 +79,105 @@ pub fn gen_op_to_mat_map(
 
 #[cfg(test)]
 mod test {
+    use tests::default_type_node_base;
+
     use super::*;
-    use crate::{fdk_rs::*, tests::default_type_node_base};
-    use tg_schema::*;
+    use crate::fdk_rs::*;
 
     #[test]
     fn stub_test() -> anyhow::Result<()> {
         let tg_name = "my_tg".to_string();
-        let tg = Arc::new(Typegraph {
-            path: None,
-            policies: vec![],
-            deps: vec![],
-            meta: TypeMeta {
-                ..Default::default()
-            },
-            runtimes: vec![tg_schema::runtimes::TGRuntime::Unknown(
-                tg_schema::runtimes::UnknownRuntime {
+        let tg = {
+            use tg_schema::*;
+
+            Arc::new(Typegraph {
+                path: None,
+                policies: vec![],
+                deps: vec![],
+                meta: TypeMeta {
+                    ..Default::default()
+                },
+                runtimes: vec![runtimes::TGRuntime::Unknown(runtimes::UnknownRuntime {
                     name: "wasm".into(),
                     data: Default::default(),
-                },
-            )],
-            materializers: vec![Materializer {
-                name: "function".into(),
-                runtime: 0,
-                data: serde_json::from_value(serde_json::json!({ "op_name": "my_op" })).unwrap(),
-                effect: Effect {
-                    effect: None,
-                    idempotent: false,
-                },
-            }],
-            types: vec![
-                TypeNode::Object {
-                    data: ObjectTypeData {
-                        properties: Default::default(),
-                        policies: Default::default(),
-                        id: vec![],
-                        required: vec![],
-                        additional_props: false,
+                })],
+                materializers: vec![Materializer {
+                    name: "function".into(),
+                    runtime: 0,
+                    data: serde_json::from_value(serde_json::json!({ "op_name": "my_op" }))
+                        .unwrap(),
+                    effect: tg_schema::Effect {
+                        effect: None,
+                        idempotent: false,
                     },
-                    base: TypeNodeBase {
-                        ..default_type_node_base()
+                }],
+                types: vec![
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: {
+                                let mut props = IndexMap::new();
+                                props.insert("first".to_string(), 3_u32);
+                                props
+                            },
+                            policies: Default::default(),
+                            id: vec![],
+                            required: vec![],
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "stub_test".into(),
+                            ..default_type_node_base()
+                        },
                     },
-                },
-                TypeNode::Integer {
-                    data: IntegerTypeData {
-                        maximum: None,
-                        multiple_of: None,
-                        exclusive_minimum: None,
-                        exclusive_maximum: None,
-                        minimum: None,
+                    TypeNode::Object {
+                        data: ObjectTypeData {
+                            properties: Default::default(),
+                            policies: Default::default(),
+                            id: vec![],
+                            required: vec![],
+                            additional_props: false,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_inp".into(),
+                            ..default_type_node_base()
+                        },
                     },
-                    base: TypeNodeBase {
-                        title: "my_int".into(),
-                        ..default_type_node_base()
+                    TypeNode::Integer {
+                        data: IntegerTypeData {
+                            maximum: None,
+                            multiple_of: None,
+                            exclusive_minimum: None,
+                            exclusive_maximum: None,
+                            minimum: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_int".into(),
+                            ..default_type_node_base()
+                        },
                     },
-                },
-                TypeNode::Function {
-                    data: FunctionTypeData {
-                        input: 1,
-                        output: 1,
-                        injections: Default::default(),
-                        outjections: Default::default(),
-                        runtime_config: Default::default(),
-                        rate_calls: false,
-                        rate_weight: None,
-                        materializer: 0,
-                        parameter_transform: None,
+                    TypeNode::Function {
+                        data: FunctionTypeData {
+                            input: 1,
+                            output: 2,
+                            injections: Default::default(),
+                            outjections: Default::default(),
+                            runtime_config: Default::default(),
+                            rate_calls: false,
+                            rate_weight: None,
+                            materializer: 0,
+                            parameter_transform: None,
+                        },
+                        base: TypeNodeBase {
+                            title: "my_func".into(),
+                            ..default_type_node_base()
+                        },
                     },
-                    base: TypeNodeBase {
-                        title: "my_func".into(),
-                        ..default_type_node_base()
-                    },
-                },
-            ],
-        });
+                ],
+            })
+        };
+
+        let tg: Arc<Typegraph> = Arc::new(tg.try_into()?);
+
         let generator = Generator::new(FdkRustGenConfig {
             base: crate::config::FdkGeneratorConfigBase {
                 path: "/".into(),
@@ -196,7 +220,14 @@ mod test {
         pretty_assertions::assert_eq!(
             r#"// gen-static-end
 use types::*;
+#[allow(unused)]
 pub mod types {
+    // input types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct MyInp {
+    }
+    // partial output types
+    // output types
     pub type MyInt = i64;
 }
 pub mod stubs {
@@ -219,7 +250,7 @@ pub mod stubs {
             }
         }
 
-        fn handle(&self, input: MyInt, cx: Ctx) -> anyhow::Result<MyInt>;
+        fn handle(&self, input: MyInp, cx: Ctx) -> anyhow::Result<MyInt>;
     }
     pub fn op_to_trait_name(op_name: &str) -> &'static str {
         match op_name {

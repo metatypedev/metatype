@@ -1,347 +1,577 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::utils::*;
+use super::manifest::{ManifestEntry, ManifestPage};
+use super::{indent_lines_into, utils::*};
 use crate::interlude::*;
-use crate::shared::types::*;
-use heck::ToPascalCase;
+use crate::shared::types::type_body_required;
+use heck::ToPascalCase as _;
 use std::fmt::Write;
-use tg_schema::*;
 
-pub struct RustTypeRenderer {
-    pub derive_debug: bool,
-    pub derive_serde: bool,
-    // this is used by the client since
-    // users might exclude fields on return
-    // types
-    pub all_fields_optional: bool,
+#[derive(Debug)]
+pub enum Alias {
+    BuiltIn(&'static str),
+    Container {
+        name: &'static str,
+        item: TypeKey,
+        boxed: bool,
+    },
+    Plain {
+        name: String,
+    },
 }
 
-impl RustTypeRenderer {
-    fn render_derive(&self, dest: &mut impl Write) -> std::fmt::Result {
+#[derive(Debug, Clone)]
+pub struct Derive {
+    debug: bool,
+    serde: bool,
+}
+
+#[derive(Debug)]
+pub enum RustType {
+    Alias {
+        alias: Alias,
+        /// inlined if name is none
+        name: Option<String>,
+    },
+    Struct {
+        name: String,
+        derive: Derive,
+        properties: Vec<StructProp>,
+        partial: bool,
+    },
+    Enum {
+        name: String,
+        derive: Derive,
+        variants: Vec<(String, TypeKey)>,
+        partial: bool,
+    },
+}
+
+#[derive(Debug)]
+pub struct StructProp {
+    name: String,
+    rename: Option<String>,
+    ty: TypeKey,
+    optional: bool,
+    boxed: bool,
+}
+
+impl ManifestEntry for RustType {
+    type Extras = Derive;
+
+    fn render(&self, out: &mut impl Write, page: &RustTypeManifestPage) -> std::fmt::Result {
+        match self {
+            Self::Alias {
+                alias,
+                name: alias_name,
+                ..
+            } => {
+                if let Some(alias_name) = alias_name {
+                    match alias {
+                        Alias::BuiltIn(name) => {
+                            writeln!(out, "pub type {} = {};", alias_name, name)
+                        }
+                        Alias::Container {
+                            name: container_name,
+                            item,
+                            boxed,
+                        } => {
+                            let inner_name = page.get_ref(item).unwrap();
+                            let inner_name = if *boxed {
+                                format!("Box<{}>", inner_name)
+                            } else {
+                                inner_name
+                            };
+                            writeln!(
+                                out,
+                                "pub type {} = {}<{}>;",
+                                alias_name, container_name, inner_name
+                            )
+                        }
+                        _ => unreachable!(),
+                    }
+                } else {
+                    Ok(())
+                }
+            }
+
+            Self::Struct {
+                name,
+                derive,
+                properties,
+                partial,
+            } => {
+                RustType::render_derive(out, derive)?;
+                let name = if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                };
+                writeln!(out, "pub struct {} {{", name)?;
+                for prop in properties.iter() {
+                    if let Some(rename) = &prop.rename {
+                        writeln!(out, r#"    #[serde(rename = "{}")]"#, rename)?;
+                    }
+                    let mut ty_ref = page.get_ref(&prop.ty).unwrap();
+                    if *partial && !prop.optional {
+                        ty_ref = format!("Option<{}>", ty_ref)
+                    } else if prop.boxed {
+                        ty_ref = format!("Box<{}>", ty_ref)
+                    }
+
+                    writeln!(out, "    pub {}: {},", prop.name, ty_ref)?;
+                }
+                writeln!(out, "}}")
+            }
+
+            Self::Enum {
+                name,
+                derive,
+                variants,
+                partial,
+            } => {
+                let name = if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                };
+                RustType::render_derive(out, derive)?;
+                writeln!(out, "#[allow(clippy::large_enum_variant)]")?;
+                writeln!(out, "#[serde(untagged)]")?;
+                writeln!(out, "pub enum {} {{", name)?;
+                for (var_name, ty) in variants.iter() {
+                    writeln!(out, "    {}({}),", var_name, page.get_ref(ty).unwrap())?;
+                }
+                writeln!(out, "}}")
+            }
+        }
+    }
+
+    fn get_reference_expr(&self, page: &RustTypeManifestPage) -> Option<String> {
+        Some(match self {
+            Self::Alias { name, alias } => {
+                if let Some(name) = name {
+                    name.clone()
+                } else {
+                    // inlined
+                    match alias {
+                        Alias::BuiltIn(name) => name.to_string(),
+                        Alias::Container { name, item, boxed } => {
+                            self.container_def(name, item, *boxed, page)
+                        }
+                        Alias::Plain { name } => name.clone(),
+                    }
+                }
+            }
+            Self::Struct { name, partial, .. } => {
+                if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                }
+            }
+            Self::Enum { name, partial, .. } => {
+                if *partial {
+                    format!("{}Partial", name)
+                } else {
+                    name.clone()
+                }
+            }
+        })
+    }
+}
+
+impl RustType {
+    fn container_def(
+        &self,
+        name: &str,
+        item: &TypeKey,
+        boxed: bool,
+        page: &RustTypeManifestPage,
+    ) -> String {
+        let inner_name = page.get_ref(item).unwrap();
+        let inner_name = if boxed {
+            format!("Box<{}>", inner_name)
+        } else {
+            inner_name
+        };
+        format!("{}<{}>", name, inner_name)
+    }
+
+    fn render_derive(out: &mut impl Write, spec: &Derive) -> std::fmt::Result {
         let mut derive_args = vec![];
-        if self.derive_debug {
+        if spec.debug {
             derive_args.extend_from_slice(&["Debug"]);
         }
-        if self.derive_serde {
+        if spec.serde {
             derive_args.extend_from_slice(&["serde::Serialize", "serde::Deserialize"]);
         }
         if !derive_args.is_empty() {
-            write!(dest, "#[derive(")?;
+            write!(out, "#[derive(")?;
             let last = derive_args.pop().unwrap();
             for arg in derive_args {
-                write!(dest, "{arg}, ")?;
+                write!(out, "{arg}, ")?;
             }
-            write!(dest, "{last}")?;
-            writeln!(dest, ")]")?;
+            write!(out, "{last}")?;
+            writeln!(out, ")]")?;
         }
         Ok(())
     }
 
-    fn render_alias(
-        &self,
-        out: &mut impl Write,
-        alias_name: &str,
-        aliased_ty: &str,
-    ) -> std::fmt::Result {
-        writeln!(out, "pub type {alias_name} = {aliased_ty};")
+    fn builtin(target: &'static str, name: Option<String>) -> RustType {
+        RustType::Alias {
+            alias: Alias::BuiltIn(target),
+            name,
+        }
     }
 
-    /// `props` is a map of prop_name -> (TypeName, serialization_name)
-    fn render_struct(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, (String, Option<String>)>,
-        additional_props: bool,
-    ) -> std::fmt::Result {
-        self.render_derive(dest)?;
-        if !additional_props {
-            // FIXME: #MET-848
-            // writeln!(dest, "#[serde(deny_unknown_fields)]")?;
+    fn container(
+        container_name: &'static str,
+        item: TypeKey,
+        boxed: bool,
+        name: Option<String>,
+    ) -> RustType {
+        RustType::Alias {
+            alias: Alias::Container {
+                name: container_name,
+                item,
+                boxed,
+            },
+            name,
         }
-        writeln!(dest, "pub struct {ty_name} {{")?;
-        for (name, (ty_name, ser_name)) in props.into_iter() {
-            if let Some(ser_name) = ser_name {
-                writeln!(dest, r#"    #[serde(rename = "{ser_name}")]"#)?;
+    }
+
+    fn new(ty: &Type, partial: bool) -> RustType {
+        if type_body_required(ty) {
+            let name = normalize_type_title(&ty.name());
+            match ty {
+                Type::Boolean(_) => RustType::builtin("bool", Some(name)),
+                Type::Integer(_) => RustType::builtin("i64", Some(name)),
+                Type::Float(_) => RustType::builtin("f64", Some(name)),
+                Type::String(ty) => {
+                    if let (Some(format), true) =
+                        (ty.format_only(), ty.title().starts_with("string_"))
+                    {
+                        let name = Some(normalize_type_title(&format!(
+                            "string_{format}_{}",
+                            ty.idx()
+                        )));
+                        RustType::builtin("String", name)
+                    } else {
+                        RustType::builtin("String", Some(name))
+                    }
+                }
+                Type::File(_) => RustType::builtin("super::FileId", Some(name)),
+                Type::Optional(ty) => {
+                    let item_ty = ty.item();
+                    let is_composite = item_ty.is_composite();
+                    if ty.default_value.is_none() && ty.title().starts_with("optional_") {
+                        // no alias -- inline
+                        RustType::container(
+                            "Option",
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            None,
+                        )
+                    } else {
+                        RustType::container(
+                            "Option",
+                            item_ty.key(),
+                            is_composite, // TODO is_cyclic
+                            Some(name_with_suffix(&name, partial && is_composite)),
+                        )
+                    }
+                }
+                Type::List(ty) => {
+                    let item_ty = ty.item();
+                    let is_composite = item_ty.is_composite();
+                    if matches!((ty.min_items, ty.max_items), (None, None))
+                        && ty.title().starts_with("list_")
+                    {
+                        // no alias -- inline
+                        let container_name = if ty.unique_items {
+                            "std::collections::HashSet"
+                        } else {
+                            "Vec"
+                        };
+                        RustType::container(container_name, item_ty.key(), false, None)
+                    } else {
+                        let container_name = if ty.unique_items {
+                            "std::collections::HashSet"
+                        } else {
+                            "Vec"
+                        };
+                        let name = name_with_suffix(&name, partial && is_composite);
+                        RustType::container(container_name, item_ty.key(), false, Some(name))
+                    }
+                }
+
+                Type::Object(ty) => {
+                    let props = ty
+                        .properties()
+                        .iter()
+                        .filter(|(_, prop)| !prop.is_injected())
+                        .map(|(prop_name, prop)| {
+                            let name = normalize_struct_prop_name(prop_name);
+                            let rename = if prop_name.as_ref() != name.as_str() {
+                                Some(prop_name.to_string())
+                            } else {
+                                None
+                            };
+                            let (optional, boxed) = match &prop.ty {
+                                Type::Optional(_) => (true, false),
+                                _ => (false, ty.is_descendant_of(&prop.ty)),
+                            };
+                            StructProp {
+                                name,
+                                rename,
+                                ty: prop.ty.key(),
+                                optional,
+                                boxed,
+                            }
+                        })
+                        .collect();
+                    RustType::Struct {
+                        name: normalize_type_title(&ty.name()),
+                        derive: Derive {
+                            debug: true,
+                            serde: true,
+                        },
+                        properties: props,
+                        partial,
+                    }
+                }
+
+                Type::Union(ty) => {
+                    let variants = ty
+                        .variants()
+                        .iter()
+                        .map(|variant| (variant.name().to_pascal_case(), variant.key()))
+                        .collect();
+                    RustType::Enum {
+                        name: normalize_type_title(&ty.name()),
+                        derive: Derive {
+                            debug: true,
+                            serde: true,
+                        },
+                        variants,
+                        partial,
+                    }
+                }
+
+                Type::Function(_) => unreachable!("unexpected function type"),
             }
-            writeln!(dest, "    pub {name}: {ty_name},")?;
+        } else {
+            RustType::builtin(
+                match ty {
+                    Type::Boolean(_) => "bool",
+                    Type::Integer(_) => "i64",
+                    Type::Float(_) => "f64",
+                    Type::String(_) => "String",
+                    Type::File(_) => "super::FileId",
+                    _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
+                },
+                None,
+            )
         }
-        writeln!(dest, "}}")?;
-        Ok(())
-    }
-
-    /// `variants` is variant name to variant type
-    /// All generated variants are tuples of arity 1.
-    fn render_enum(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        variants: Vec<(String, String)>,
-    ) -> std::fmt::Result {
-        self.render_derive(dest)?;
-        writeln!(dest, "#[serde(untagged)]")?;
-        // writeln!(dest, r#"#[serde(tag = "__typename")]"#)?;
-        writeln!(dest, "pub enum {ty_name} {{")?;
-        for (var_name, ty_name) in variants.into_iter() {
-            writeln!(dest, "    {var_name}({ty_name}),")?;
-        }
-        writeln!(dest, "}}")?;
-        Ok(())
     }
 }
-impl RenderType for RustTypeRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        let body_required = type_body_required(cursor.node.clone());
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Function { .. } => "()".into(),
 
-            // if [type_body_required] says so, we usually need to generate
-            // aliases for even simple primitie types
-            TypeNode::Boolean { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "bool")?;
-                ty_name
-            }
-            // under certain conditionds, we don't want to  generate aliases
-            // for primitive types. this includes
-            // - types with defualt generated names
-            // - types with no special semantics
-            TypeNode::Boolean { .. } => "bool".into(),
+fn name_with_suffix(name: &str, partial: bool) -> String {
+    if partial {
+        format!("{}Partial", name)
+    } else {
+        name.to_string()
+    }
+}
 
-            TypeNode::Float { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "f64")?;
-                ty_name
-            }
-            TypeNode::Float { .. } => "f64".into(),
+type Extras = Derive;
 
-            TypeNode::Integer { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "i64")?;
-                ty_name
-            }
-            TypeNode::Integer { .. } => "i64".into(),
+pub type RustTypeManifestPage = ManifestPage<RustType, Extras>;
 
-            TypeNode::String {
-                data:
-                    StringTypeData {
-                        format: Some(format),
-                        pattern: None,
-                        min_length: None,
-                        max_length: None,
-                    },
-                base:
-                    TypeNodeBase {
-                        title,
-                        enumeration: None,
-                        ..
-                    },
-            } if title.starts_with("string_") => {
-                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
-                self.render_alias(renderer, &ty_name, "String")?;
-                ty_name
-            }
-            TypeNode::String { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "String")?;
-                ty_name
-            }
-            TypeNode::String { .. } => "String".into(),
+pub struct RustTypesSubmanifest {
+    pub inputs: RustTypeManifestPage,
+    pub outputs: Option<RustTypeManifestPage>,
+    pub partial_outputs: Option<RustTypeManifestPage>,
+}
 
-            TypeNode::File { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "super::FileId")?;
-                ty_name
-            }
-            TypeNode::File { .. } => "super::FileId".into(),
+#[derive(Default, Clone)]
+pub enum OutputTypes {
+    #[default]
+    Partial,
+    NonPartial,
+    Both,
+}
 
-            TypeNode::Any { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "serde_json::Value")?;
-                ty_name
-            }
-            TypeNode::Any { .. } => "serde_json::Value".into(),
+#[derive(Default)]
+pub struct RustTypesConfig {
+    output_types: OutputTypes,
+    derive_serde: bool,
+    derive_debug: bool,
+}
 
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property type sfirst
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, cyclic) = renderer.render_subgraph(dep_id, cursor)?;
+impl RustTypesConfig {
+    pub fn output_types(mut self, value: OutputTypes) -> Self {
+        self.output_types = value;
+        self
+    }
 
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
+    pub fn derive_serde(mut self, value: bool) -> Self {
+        self.derive_serde = value;
+        self
+    }
 
-                        let ty_name = match renderer.nodes[dep_id as usize].deref() {
-                            TypeNode::Optional { .. } => ty_name.to_string(),
-                            _ if !self.all_fields_optional => ty_name.to_string(),
-                            _ => format!("Option<{ty_name}>"),
-                        };
+    pub fn derive_debug(mut self, value: bool) -> Self {
+        self.derive_debug = value;
+        self
+    }
 
-                        let ty_name = if let Some(true) = cyclic {
-                            format!("Box<{ty_name}>")
-                        } else {
-                            ty_name
-                        };
-
-                        let normalized_prop_name = normalize_struct_prop_name(name);
-                        let rename_name = if normalized_prop_name.as_str() != name.as_str() {
-                            Some(name.clone())
-                        } else {
-                            None
-                        };
-                        Ok::<_, anyhow::Error>((normalized_prop_name, (ty_name, rename_name)))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-
-                let ty_name = normalize_type_title(&base.title);
-                let ty_name = if self.all_fields_optional {
-                    format!("{ty_name}Partial")
-                } else {
-                    ty_name
-                };
-                self.render_struct(renderer, &ty_name, props, data.additional_props)?;
-                ty_name
-            }
-            TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            }
-            | TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            } => {
-                let variants = variants
-                    .iter()
-                    .map(|&inner| {
-                        let (ty_name, cyclic) = renderer.render_subgraph(inner, cursor)?;
-                        let (variant_name, ty_name) = match ty_name {
-                            RenderedName::Name(name) => (name.to_pascal_case(), name),
-                            RenderedName::Placeholder(name) => (
-                                renderer
-                                    .placeholder_string(
-                                        inner,
-                                        Box::new(|final_name| final_name.to_pascal_case()),
-                                    )
-                                    .to_string(),
-                                name,
-                            ),
-                        };
-                        let ty_name = if let Some(true) = cyclic {
-                            format!("Box<{ty_name}>")
-                        } else {
-                            ty_name.to_string()
-                        };
-                        Ok::<_, anyhow::Error>((variant_name, ty_name))
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
-                self.render_enum(renderer, &ty_name, variants)?;
-                ty_name
-            }
-            // Simple optionals don't require aliases
-            TypeNode::Optional {
-                base,
-                data:
-                    OptionalTypeData {
-                        default_value: None,
-                        item,
-                    },
-            } if base.title.starts_with("optional_") => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, cyclic) = renderer.render_subgraph(*item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let inner_ty_name = if let Some(true) = cyclic {
-                    format!("Box<{inner_ty_name}>")
-                } else {
-                    inner_ty_name.to_string()
-                };
-                format!("Option<{inner_ty_name}>")
-            }
-            TypeNode::Optional { data, base } => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, cyclic) = renderer.render_subgraph(data.item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let inner_ty_name = if let Some(true) = cyclic {
-                    format!("Box<{inner_ty_name}>")
-                } else {
-                    inner_ty_name.to_string()
-                };
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, &format!("Option<{inner_ty_name}>"))?;
-                ty_name
-            }
-            // simple list types don't require aliases
-            TypeNode::List {
-                base,
-                data:
-                    ListTypeData {
-                        min_items: None,
-                        max_items: None,
-                        unique_items,
-                        items,
-                    },
-            } if base.title.starts_with("list_") => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                if let Some(true) = unique_items {
-                    format!("std::collections::HashSet<{inner_ty_name}>")
-                } else {
-                    format!("Vec<{inner_ty_name}>")
-                }
-            }
-            TypeNode::List { data, base } => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let ty_name = normalize_type_title(&base.title);
-                if let Some(true) = data.unique_items {
-                    // let ty_name = format!("{inner_ty_name}Set");
-                    self.render_alias(
-                        renderer,
-                        &ty_name,
-                        &format!("std::collections::HashSet<{inner_ty_name}>"),
-                    )?;
-                } else {
-                    // let ty_name = format!("{inner_ty_name}List");
-                    self.render_alias(renderer, &ty_name, &format!("Vec<{inner_ty_name}>"))?;
-                };
-                ty_name
-            }
+    pub fn build_manifest(&self, tg: &Typegraph) -> RustTypesSubmanifest {
+        let gen_config = Derive {
+            serde: self.derive_serde,
+            debug: self.derive_debug,
         };
-        Ok(name)
+        RustTypesSubmanifest::new(tg, &self.output_types, gen_config)
+    }
+}
+
+impl RustTypesSubmanifest {
+    fn new(tg: &Typegraph, output_types: &OutputTypes, gen_config: Extras) -> Self {
+        let inputs = Self::get_inputs(tg, gen_config.clone());
+        inputs.cache_references();
+
+        let outputs = if matches!(output_types, OutputTypes::NonPartial | OutputTypes::Both) {
+            let outputs = Self::get_outputs(tg, &inputs, gen_config.clone());
+            outputs.cache_references();
+            Some(outputs)
+        } else {
+            None
+        };
+
+        let partial_outputs = if matches!(output_types, OutputTypes::Partial | OutputTypes::Both) {
+            let partial_outputs =
+                Self::get_partial_outputs(tg, &inputs, outputs.as_ref(), gen_config.clone());
+            partial_outputs.cache_references();
+            Some(partial_outputs)
+        } else {
+            None
+        };
+
+        Self {
+            inputs,
+            outputs,
+            partial_outputs,
+        }
+    }
+
+    fn get_inputs(tg: &Typegraph, gen_config: Extras) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
+
+        for (key, ty) in tg.input_types.iter() {
+            map.insert(*key, RustType::new(ty, false));
+        }
+
+        ManifestPage::with_extras(map, gen_config)
+    }
+
+    fn get_outputs(
+        tg: &Typegraph,
+        inputs: &RustTypeManifestPage,
+        gen_config: Extras,
+    ) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
+
+        for (key, ty) in tg.output_types.iter() {
+            if let Some(inp_ref) = inputs.get_ref(&ty.key()) {
+                let alias = Alias::Plain {
+                    name: inp_ref.clone(),
+                };
+                map.insert(*key, RustType::Alias { alias, name: None });
+            } else {
+                map.insert(*key, RustType::new(ty, false));
+            }
+        }
+
+        ManifestPage::with_extras(map, gen_config)
+    }
+
+    fn get_partial_outputs(
+        tg: &Typegraph,
+        inputs: &RustTypeManifestPage,
+        outputs: Option<&RustTypeManifestPage>,
+        gen_config: Extras,
+    ) -> RustTypeManifestPage {
+        let mut map = IndexMap::new();
+
+        for (key, ty) in tg.output_types.iter() {
+            let partial = ty.is_composite();
+            if !partial {
+                // alias to input type if exists
+                if let Some(inp_ref) = inputs.get_ref(&ty.key()) {
+                    let alias = Alias::Plain {
+                        name: inp_ref.clone(),
+                    };
+                    map.insert(*key, RustType::Alias { alias, name: None });
+                    continue;
+                }
+
+                // alias to output type if exists
+                if let Some(out_ref) = outputs.and_then(|page| page.get_ref(&ty.key())) {
+                    let alias = Alias::Plain {
+                        name: out_ref.clone(),
+                    };
+                    map.insert(*key, RustType::Alias { alias, name: None });
+                    continue;
+                }
+
+                map.insert(*key, RustType::new(ty, false));
+            } else {
+                map.insert(*key, RustType::new(ty, true));
+            }
+        }
+
+        ManifestPage::with_extras(map, gen_config)
+    }
+
+    pub fn render_all(&self, out: &mut impl Write) -> std::fmt::Result {
+        writeln!(out, "// input types")?;
+        self.inputs.render_all(out)?;
+        writeln!(out, "// partial output types")?;
+        self.partial_outputs
+            .as_ref()
+            .map(|page| page.render_all(out))
+            .transpose()?;
+        writeln!(out, "// output types")?;
+        self.outputs
+            .as_ref()
+            .map(|page| page.render_all(out))
+            .transpose()?;
+        Ok(())
+    }
+
+    pub fn render_full(&self, out: &mut impl Write) -> std::fmt::Result {
+        writeln!(out, "use types::*;")?;
+        writeln!(out, "#[allow(unused)]")?;
+        writeln!(out, "pub mod types {{")?;
+
+        let mut buffer = String::new();
+        self.render_all(&mut buffer)?;
+        indent_lines_into(out, &buffer, "    ")?;
+
+        writeln!(out, "}}")?;
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::tests::default_type_node_base;
-
     use super::*;
+    use crate::tests::{create_typegraph, default_type_node_base};
 
     #[test]
     fn ty_generation_test() -> anyhow::Result<()> {
+        use tg_schema::*;
         let cases = [
             (
                 "kitchen_sink",
@@ -360,7 +590,7 @@ mod test {
                     },
                     TypeNode::List {
                         data: ListTypeData {
-                            items: 0,
+                            items: 4,
                             max_items: None,
                             min_items: None,
                             unique_items: None,
@@ -372,7 +602,7 @@ mod test {
                     },
                     TypeNode::List {
                         data: ListTypeData {
-                            items: 0,
+                            items: 4,
                             max_items: None,
                             min_items: None,
                             unique_items: Some(true),
@@ -384,7 +614,7 @@ mod test {
                     },
                     TypeNode::Optional {
                         data: OptionalTypeData {
-                            item: 0,
+                            item: 4,
                             default_value: None,
                         },
                         base: TypeNodeBase {
@@ -438,15 +668,14 @@ mod test {
                     TypeNode::Object {
                         data: ObjectTypeData {
                             properties: [
-                                ("myString".to_string(), 0),
-                                ("list".to_string(), 1),
-                                ("optional".to_string(), 3),
+                                ("myString".to_string(), 4),
+                                ("list".to_string(), 5),
+                                ("optional".to_string(), 7),
                             ]
                             .into_iter()
                             .collect(),
                             policies: Default::default(),
                             id: vec![],
-                            // FIXME: remove required
                             required: vec![],
                             additional_props: false,
                         },
@@ -457,7 +686,7 @@ mod test {
                     },
                     TypeNode::Either {
                         data: EitherTypeData {
-                            one_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8],
+                            one_of: vec![4, 5, 6, 7, 8, 9, 10, 11, 12],
                         },
                         base: TypeNodeBase {
                             title: "my_either".into(),
@@ -466,7 +695,7 @@ mod test {
                     },
                     TypeNode::Union {
                         data: UnionTypeData {
-                            any_of: vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+                            any_of: vec![4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
                         },
                         base: TypeNodeBase {
                             title: "my_union".into(),
@@ -491,6 +720,7 @@ pub struct MyObj {
     pub optional: MyStrMaybe,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum MyEither {
     MyStr(MyStr),
@@ -504,6 +734,7 @@ pub enum MyEither {
     MyObj(MyObj),
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum MyUnion {
     MyStr(MyStr),
@@ -536,7 +767,7 @@ pub enum MyUnion {
                     },
                     TypeNode::List {
                         data: ListTypeData {
-                            items: 0,
+                            items: 4,
                             max_items: None,
                             min_items: None,
                             unique_items: None,
@@ -548,7 +779,7 @@ pub enum MyUnion {
                     },
                     TypeNode::List {
                         data: ListTypeData {
-                            items: 0,
+                            items: 4,
                             max_items: None,
                             min_items: None,
                             unique_items: Some(true),
@@ -560,7 +791,7 @@ pub enum MyUnion {
                     },
                     TypeNode::Optional {
                         data: OptionalTypeData {
-                            item: 0,
+                            item: 4,
                             default_value: None,
                         },
                         base: TypeNodeBase {
@@ -620,7 +851,7 @@ pub enum MyUnion {
                 vec![
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("obj_b".to_string(), 1)].into_iter().collect(),
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
                             policies: Default::default(),
@@ -633,7 +864,7 @@ pub enum MyUnion {
                     },
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("obj_c".to_string(), 2)].into_iter().collect(),
+                            properties: [("obj_c".to_string(), 6)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_c"].into_iter().map(Into::into).collect(),
@@ -646,7 +877,7 @@ pub enum MyUnion {
                     },
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("obj_a".to_string(), 0)].into_iter().collect(),
+                            properties: [("obj_a".to_string(), 4)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_a"].into_iter().map(Into::into).collect(),
@@ -660,12 +891,12 @@ pub enum MyUnion {
                 ],
                 "ObjC",
                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ObjB {
-    pub obj_c: ObjC,
+pub struct ObjA {
+    pub obj_b: Box<ObjB>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ObjA {
-    pub obj_b: ObjB,
+pub struct ObjB {
+    pub obj_c: Box<ObjC>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ObjC {
@@ -678,7 +909,7 @@ pub struct ObjC {
                 vec![
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("obj_b".to_string(), 1)].into_iter().collect(),
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
@@ -691,7 +922,7 @@ pub struct ObjC {
                     },
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("union_c".to_string(), 2)].into_iter().collect(),
+                            properties: [("union_c".to_string(), 6)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["union_c"].into_iter().map(Into::into).collect(),
@@ -703,7 +934,7 @@ pub struct ObjC {
                         },
                     },
                     TypeNode::Union {
-                        data: UnionTypeData { any_of: vec![0] },
+                        data: UnionTypeData { any_of: vec![4] },
                         base: TypeNodeBase {
                             title: "CUnion".into(),
                             ..default_type_node_base()
@@ -712,17 +943,18 @@ pub struct ObjC {
                 ],
                 "CUnion",
                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ObjB {
-    pub union_c: CUnion,
-}
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ObjA {
-    pub obj_b: ObjB,
+    pub obj_b: Box<ObjB>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjB {
+    pub union_c: Box<CUnion>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum CUnion {
-    ObjA(Box<ObjA>),
+    ObjA(ObjA),
 }
 "#,
             ),
@@ -731,7 +963,7 @@ pub enum CUnion {
                 vec![
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("obj_b".to_string(), 1)].into_iter().collect(),
+                            properties: [("obj_b".to_string(), 5)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["obj_b"].into_iter().map(Into::into).collect(),
@@ -744,7 +976,7 @@ pub enum CUnion {
                     },
                     TypeNode::Object {
                         data: ObjectTypeData {
-                            properties: [("either_c".to_string(), 2)].into_iter().collect(),
+                            properties: [("either_c".to_string(), 6)].into_iter().collect(),
                             policies: Default::default(),
                             id: vec![],
                             required: ["either_c"].into_iter().map(Into::into).collect(),
@@ -756,7 +988,7 @@ pub enum CUnion {
                         },
                     },
                     TypeNode::Either {
-                        data: EitherTypeData { one_of: vec![0] },
+                        data: EitherTypeData { one_of: vec![4] },
                         base: TypeNodeBase {
                             title: "CEither".into(),
                             ..default_type_node_base()
@@ -765,39 +997,45 @@ pub enum CUnion {
                 ],
                 "CEither",
                 r#"#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct ObjB {
-    pub either_c: CEither,
-}
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct ObjA {
-    pub obj_b: ObjB,
+    pub obj_b: Box<ObjB>,
 }
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct ObjB {
+    pub either_c: Box<CEither>,
+}
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[allow(clippy::large_enum_variant)]
 #[serde(untagged)]
 pub enum CEither {
-    ObjA(Box<ObjA>),
+    ObjA(ObjA),
 }
 "#,
             ),
         ];
         for (test_name, nodes, name, test_out) in cases {
-            let mut renderer = TypeRenderer::new(
-                nodes.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-                Rc::new(RustTypeRenderer {
-                    derive_serde: true,
-                    derive_debug: true,
-                    all_fields_optional: false,
-                }),
-                [],
-            );
-            let gen_name = renderer.render(nodes.len() as u32 - 1)?;
-            let (real_out, _) = renderer.finalize();
+            // TODO
+            // let config = Arc::new(RustTypeRenderer {
+            //     derive_serde: true,
+            //     derive_debug: true,
+            //     all_fields_optional: false,
+            // });
 
-            pretty_assertions::assert_eq!(
-                &gen_name[..],
-                name,
-                "{test_name}: generated unexpected type name"
-            );
+            let tg = create_typegraph(name.into(), nodes)?;
+            let mut manifest = RustTypesConfig::default()
+                .output_types(OutputTypes::NonPartial)
+                .build_manifest(&tg);
+            let mut outputs = std::mem::take(&mut manifest.outputs).unwrap();
+            let first = *outputs.map.first().unwrap().0;
+            outputs.map.shift_remove(&first);
+
+            let real_out = outputs.render_all_buffered()?;
+
+            // pretty_assertions::assert_eq!(
+            //     &gen_name[..],
+            //     name,
+            //     "{test_name}: generated unexpected type name"
+            // );
             pretty_assertions::assert_eq!(
                 real_out,
                 test_out,

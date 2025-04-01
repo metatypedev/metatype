@@ -3,13 +3,11 @@
 
 #[allow(unused)]
 mod interlude {
-    pub use tg_schema::TypeNode;
-    pub use tg_schema::Typegraph;
+    pub use typegraph::prelude::*;
 
     pub use std::collections::{BTreeMap, BTreeSet};
     pub use std::ops::Deref;
     pub use std::path::{Path, PathBuf};
-    pub use std::rc::Rc;
     pub use std::sync::Arc;
 
     pub use color_eyre::eyre::{
@@ -192,7 +190,7 @@ impl GeneratorRunner {
                     "client_py".to_string(),
                     GeneratorRunner {
                         op: |workspace_path: &Path, val| {
-                            let config = client_py::ClienPyGenConfig::from_json(val, workspace_path)?;
+                            let config = client_py::ClientPyGenConfig::from_json(val, workspace_path)?;
                             let generator = client_py::Generator::new(config)?;
                             Ok(Box::new(generator))
                         },

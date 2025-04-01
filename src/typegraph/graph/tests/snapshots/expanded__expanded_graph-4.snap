@@ -1,0 +1,26 @@
+---
+source: src/typegraph/graph/tests/expanded.rs
+expression: "tg.output_types.iter().map(|(idx, ty)|\n            { (idx, (ty.tag(), ty.name())) }).collect::<BTreeMap<_, _>>()"
+---
+{
+    Ty_3/0: (
+        "string",
+        "string_3fb09",
+    ),
+    Ty_4/0: (
+        "list",
+        "root_one_fn_output",
+    ),
+    Ty_5/0: (
+        "object",
+        "Student",
+    ),
+    Ty_6/0: (
+        "integer",
+        "Student_id_integer",
+    ),
+    Ty_7/0: (
+        "optional",
+        "Student_peers_placeholder_optional",
+    ),
+}

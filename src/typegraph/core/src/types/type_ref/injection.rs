@@ -5,15 +5,16 @@ use super::{RefAttr, TypeRef};
 use crate::sdk::utils::ReduceEntry;
 use crate::types::Type;
 use crate::{errors::Result, sdk::core::Error};
-use indexmap::{map::Entry, IndexMap};
 use serde::{Deserialize, Serialize};
+use std::collections::btree_map::Entry;
+use std::collections::BTreeMap;
 use std::hash::{Hash, Hasher};
 use tg_schema::{Injection, InjectionNode};
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
-pub struct InjectionTree(pub IndexMap<String, InjectionNode>);
+pub struct InjectionTree(pub BTreeMap<String, InjectionNode>);
 
-type InjectionTreeMap = IndexMap<String, InjectionNode>;
+type InjectionTreeMap = BTreeMap<String, InjectionNode>;
 
 pub trait WithInjection {
     fn with_injection(self, injection: Injection) -> Result<TypeRef>;
@@ -61,7 +62,7 @@ impl InjectionTree {
     }
 
     fn add_reduce_entry_at(
-        parent: &mut IndexMap<String, InjectionNode>,
+        parent: &mut BTreeMap<String, InjectionNode>,
         path: &[String],
         injection: Injection,
     ) -> Result<()> {
@@ -82,7 +83,7 @@ impl InjectionTree {
             2.. => {
                 let key = path[0].clone();
                 let node = parent.entry(key).or_insert(InjectionNode::Parent {
-                    children: IndexMap::new(),
+                    children: BTreeMap::new(),
                 });
                 match node {
                     InjectionNode::Leaf { .. } => {

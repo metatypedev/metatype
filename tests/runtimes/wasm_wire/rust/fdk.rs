@@ -116,7 +116,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.1-rc.0";
+        static MT_VERSION: &str = "0.5.1-rc.1";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -235,6 +235,11 @@ macro_rules! init_mat {
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
 pub mod transports {
     use super::*;
 
@@ -272,36 +277,20 @@ mod node_metas {
             input_files: None,
         }
     }    
-    pub fn Add() -> NodeMeta {
+    pub fn HundredRandom() -> NodeMeta {
         NodeMeta {
-            arg_types: Some(
-                [
-                    ("a".into(), "AddArgsAFloat".into()),
-                    ("b".into(), "AddArgsAFloat".into()),
-                ].into()
-            ),
-            ..scalar()
+            ..Entity()
         }
     }
-    pub fn Range() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("a".into(), "RangeArgsAAddOutputOptional".into()),
-                    ("b".into(), "AddOutput".into()),
-                ].into()
-            ),
-            ..scalar()
-        }
-    }
-    pub fn ProfileCategoryStruct() -> NodeMeta {
+    pub fn Entity() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
             sub_nodes: Some(
                 [
-                    ("tag".into(), scalar as NodeMetaFn),
-                    ("value".into(), scalar as NodeMetaFn),
+                    ("name".into(), scalar as NodeMetaFn),
+                    ("age".into(), scalar as NodeMetaFn),
+                    ("profile".into(), Profile as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -322,21 +311,20 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn Entity() -> NodeMeta {
+    pub fn ProfileCategoryStruct() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
             sub_nodes: Some(
                 [
-                    ("name".into(), scalar as NodeMetaFn),
-                    ("age".into(), scalar as NodeMetaFn),
-                    ("profile".into(), Profile as NodeMetaFn),
+                    ("tag".into(), scalar as NodeMetaFn),
+                    ("value".into(), scalar as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
         }
     }
-    pub fn RecordCreation() -> NodeMeta {
+    pub fn RootRandomFn() -> NodeMeta {
         NodeMeta {
             ..Entity()
         }
@@ -345,22 +333,39 @@ mod node_metas {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("name".into(), "EntityNameString".into()),
-                    ("age".into(), "RangeArgsAAddOutputOptional".into()),
-                    ("profile".into(), "Profile".into()),
+                    ("age".into(), "range_args_a_add_output_optional".into()),
+                    ("name".into(), "entity_name_string".into()),
+                    ("profile".into(), "profile".into()),
                 ].into()
             ),
             ..Entity()
         }
     }
-    pub fn RootRandomFn() -> NodeMeta {
+    pub fn RecordCreation() -> NodeMeta {
         NodeMeta {
             ..Entity()
         }
     }
-    pub fn HundredRandom() -> NodeMeta {
+    pub fn Range() -> NodeMeta {
         NodeMeta {
-            ..Entity()
+            arg_types: Some(
+                [
+                    ("a".into(), "range_args_a_add_output_optional".into()),
+                    ("b".into(), "add_output".into()),
+                ].into()
+            ),
+            ..scalar()
+        }
+    }
+    pub fn Add() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("a".into(), "add_args_a_float".into()),
+                    ("b".into(), "add_args_a_float".into()),
+                ].into()
+            ),
+            ..scalar()
         }
     }
 
@@ -368,20 +373,20 @@ mod node_metas {
 use types::*;
 #[allow(unused)]
 pub mod types {
-    pub type AddArgsAFloat = f64;
+    // input types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct AddArgs {
         pub a: AddArgsAFloat,
         pub b: AddArgsAFloat,
     }
-    pub type AddOutput = i64;
-    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
+    pub type AddArgsAFloat = f64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RangeArgs {
         pub a: RangeArgsAAddOutputOptional,
         pub b: AddOutput,
     }
-    pub type RangeOutput = Vec<AddOutput>;
+    pub type RangeArgsAAddOutputOptional = Option<AddOutput>;
+    pub type AddOutput = i64;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
@@ -397,6 +402,7 @@ pub mod types {
         pub value: ProfileCategoryStructValueEntityNameStringOptional,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum ProfileMetadatasEither {
         EntityNameString(EntityNameString),
@@ -417,15 +423,13 @@ pub mod types {
         pub age: RangeArgsAAddOutputOptional,
         pub profile: Profile,
     }
-    pub type RecordCreationOutput = Vec<Entity>;
-}
-#[allow(unused)]
-pub mod return_types {
-    use super::types::*;
+    // partial output types
+    pub type RecordCreationOutputPartial = Vec<EntityPartial>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct ProfileCategoryStructPartial {
-        pub tag: Option<ProfileCategoryStructTagStringEnum>,
-        pub value: ProfileCategoryStructValueEntityNameStringOptional,
+    pub struct EntityPartial {
+        pub name: Option<EntityNameString>,
+        pub age: RangeArgsAAddOutputOptional,
+        pub profile: Option<ProfilePartial>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct ProfilePartial {
@@ -435,24 +439,21 @@ pub mod return_types {
         pub metadatas: Option<ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct EntityPartial {
-        pub name: Option<EntityNameString>,
-        pub age: RangeArgsAAddOutputOptional,
-        pub profile: Option<ProfilePartial>,
+    pub struct ProfileCategoryStructPartial {
+        pub tag: Option<ProfileCategoryStructTagStringEnum>,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
     }
-    pub type RecordCreationOutput = Vec<EntityPartial>;
+    // output types
+    pub type RangeOutput = Vec<AddOutput>;
+    pub type RecordCreationOutput = Vec<Entity>;
 }
 #[derive(Default, Debug)]
-pub struct ProfileCategoryStructSelections<ATy = NoAlias> {
-    pub tag: ScalarSelect<ATy>,
-    pub value: ScalarSelect<ATy>,
+pub struct EntitySelections<ATy = NoAlias> {
+    pub name: ScalarSelect<ATy>,
+    pub age: ScalarSelect<ATy>,
+    pub profile: CompositeSelect<ProfileSelections<ATy>, ATy>,
 }
-impl_selection_traits!(ProfileCategoryStructSelections, tag, value);
-#[derive(Default, Debug)]
-pub struct ProfileMetadatasEitherSelections<ATy = NoAlias> {
-    pub phantom: std::marker::PhantomData<ATy>,
-}
-impl_union_selection_traits!(ProfileMetadatasEitherSelections);
+impl_selection_traits!(EntitySelections, name, age, profile);
 #[derive(Default, Debug)]
 pub struct ProfileSelections<ATy = NoAlias> {
     pub level: ScalarSelect<ATy>,
@@ -462,30 +463,28 @@ pub struct ProfileSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(ProfileSelections, level, attributes, category, metadatas);
 #[derive(Default, Debug)]
-pub struct EntitySelections<ATy = NoAlias> {
-    pub name: ScalarSelect<ATy>,
-    pub age: ScalarSelect<ATy>,
-    pub profile: CompositeSelect<ProfileSelections<ATy>, ATy>,
+pub struct ProfileCategoryStructSelections<ATy = NoAlias> {
+    pub tag: ScalarSelect<ATy>,
+    pub value: ScalarSelect<ATy>,
 }
-impl_selection_traits!(EntitySelections, name, age, profile);
+impl_selection_traits!(ProfileCategoryStructSelections, tag, value);
 
 pub fn query_graph() -> QueryGraph {
     QueryGraph {
         ty_to_gql_ty_map: std::sync::Arc::new([
-        
-            ("AddArgsAFloat".into(), "Float!".into()),
-            ("AddOutput".into(), "Int!".into()),
-            ("RangeArgsAAddOutputOptional".into(), "Int".into()),
-            ("EntityNameString".into(), "String!".into()),
-            ("Profile".into(), "profile!".into()),
+            ("add_args_a_float".into(), "Float!".into()),
+            ("range_args_a_add_output_optional".into(), "Int".into()),
+            ("add_output".into(), "Int!".into()),
+            ("entity_name_string".into(), "String!".into()),
+            ("profile".into(), "profile!".into()),
         ].into()),
     }
 }
-impl QueryGraph {
+    impl QueryGraph{
 
     pub fn add(
         &self,
-        args: impl Into<NodeArgs<AddArgs>>
+            args: impl Into<NodeArgs<AddArgs>>
     ) -> QueryNode<AddOutput>
     {
         let nodes = selection_to_node_set(
@@ -506,7 +505,7 @@ impl QueryGraph {
     }
     pub fn range(
         &self,
-        args: impl Into<NodeArgs<RangeArgs>>
+            args: impl Into<NodeArgs<RangeArgs>>
     ) -> QueryNode<RangeOutput>
     {
         let nodes = selection_to_node_set(
@@ -527,19 +526,28 @@ impl QueryGraph {
     }
     pub fn record(
         &self,
-    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::RecordCreationOutput>
+    ) -> QueryNode<RecordCreationOutputPartial>
     {
-        UnselectedNode {
-            root_name: "record".into(),
-            root_meta: node_metas::RecordCreation,
-            args: NodeArgsErased::None,
-            _marker: PhantomData,
-        }
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "record".into(),
+                    SelectionErased::Scalar,
+                )]
+                .into(),
+            ),
+            &[
+                ("record".into(), node_metas::RecordCreation as NodeMetaFn),
+            ].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
     pub fn identity(
         &self,
-        args: impl Into<NodeArgs<Entity>>
-    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::EntityPartial>
+            args: impl Into<NodeArgs<Entity>>
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, EntityPartial>
     {
         UnselectedNode {
             root_name: "identity".into(),
@@ -550,7 +558,7 @@ impl QueryGraph {
     }
     pub fn random(
         &self,
-    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::EntityPartial>
+    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, EntityPartial>
     {
         UnselectedNode {
             root_name: "random".into(),
@@ -561,14 +569,23 @@ impl QueryGraph {
     }
     pub fn hundred(
         &self,
-    ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, return_types::RecordCreationOutput>
+    ) -> QueryNode<RecordCreationOutputPartial>
     {
-        UnselectedNode {
-            root_name: "hundred".into(),
-            root_meta: node_metas::HundredRandom,
-            args: NodeArgsErased::None,
-            _marker: PhantomData,
-        }
+        let nodes = selection_to_node_set(
+            SelectionErasedMap(
+                [(
+                    "hundred".into(),
+                    SelectionErased::Scalar,
+                )]
+                .into(),
+            ),
+            &[
+                ("hundred".into(), node_metas::HundredRandom as NodeMetaFn),
+            ].into(),
+            "$q".into(),
+        )
+        .unwrap();
+        QueryNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
 }
 pub mod stubs {

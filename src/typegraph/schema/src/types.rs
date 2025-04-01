@@ -17,12 +17,12 @@ pub type TypeId = u32;
 
 type JsonValue = serde_json::Value;
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct SingleValue {
     pub value: JsonValue,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
 #[serde(untagged)]
 pub enum InjectionData {
     SingleValue(SingleValue),
@@ -48,7 +48,7 @@ impl InjectionData {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
 #[serde(tag = "source", content = "data", rename_all = "lowercase")]
 pub enum Injection {
     Static(InjectionData),
@@ -176,15 +176,24 @@ pub struct ListTypeData<Id = TypeId> {
     pub unique_items: Option<bool>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash)]
 #[serde(untagged)]
 pub enum InjectionNode {
     Parent {
-        children: IndexMap<String, InjectionNode>,
+        children: BTreeMap<String, InjectionNode>,
     },
     Leaf {
         injection: Injection,
     },
+}
+
+impl InjectionNode {
+    pub fn is_empty(&self) -> bool {
+        match self {
+            InjectionNode::Parent { children } => children.values().all(InjectionNode::is_empty),
+            InjectionNode::Leaf { .. } => false,
+        }
+    }
 }
 
 impl InjectionNode {
@@ -212,12 +221,12 @@ pub struct FunctionTypeData<Id = TypeId> {
     #[serde(rename = "parameterTransform")]
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub output: Id,
-    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(default)]
-    pub injections: IndexMap<String, InjectionNode>,
-    #[serde(skip_serializing_if = "IndexMap::is_empty")]
+    pub injections: BTreeMap<String, InjectionNode>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(default)]
-    pub outjections: IndexMap<String, InjectionNode>,
+    pub outjections: BTreeMap<String, InjectionNode>,
     #[serde(rename = "runtimeConfig")]
     pub runtime_config: serde_json::Value,
     pub materializer: u32,
@@ -380,5 +389,18 @@ impl TypeNode {
             self,
             Boolean { .. } | Float { .. } | Integer { .. } | String { .. }
         )
+    }
+
+    pub fn children(&self) -> Result<Vec<TypeId>> {
+        use TypeNode::*;
+        match self {
+            Optional { data, .. } => Ok(vec![data.item]),
+            Object { data, .. } => Ok(data.properties.values().cloned().collect()),
+            List { data, .. } => Ok(vec![data.items]),
+            Function { data, .. } => Ok(vec![data.input, data.output]),
+            Union { data, .. } => Ok(data.any_of.clone()),
+            Either { data, .. } => Ok(data.one_of.clone()),
+            _ => Ok(vec![]),
+        }
     }
 }

@@ -277,6 +277,16 @@ mod node_metas {
             input_files: None,
         }
     }    
+    pub fn RsProxyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
     pub fn Primitives() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -300,150 +310,24 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn PyPrimitives() -> NodeMeta {
+    pub fn RsSimpleCycles() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("data".into(), "Primitives".into()),
+                    ("data".into(), "simple_cycles_1".into()),
                 ].into()
             ),
-            ..Primitives()
+            ..SimpleCycles1()
         }
     }
-    pub fn Branch2() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("branch2".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn CompositesEitherEither() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("primitives".into(), Primitives as NodeMetaFn),
-                    ("branch2".into(), Branch2 as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn Composites() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("opt".into(), scalar as NodeMetaFn),
-                    ("either".into(), CompositesEitherEither as NodeMetaFn),
-                    ("union".into(), scalar as NodeMetaFn),
-                    ("list".into(), scalar as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn PyComposites() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Composites".into()),
-                ].into()
-            ),
-            ..Composites()
-        }
-    }
-    pub fn Branch33A() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("phantom3a".into(), scalar as NodeMetaFn),
-                    ("to1".into(), Cycles1 as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn Branch33B() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("phantom3b".into(), scalar as NodeMetaFn),
-                    ("to2".into(), Cycles2 as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn Cycles3() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("branch33A".into(), Branch33A as NodeMetaFn),
-                    ("branch33B".into(), Branch33B as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn Cycles2() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            sub_nodes: None,
-            variants: Some(
-                [
-                    ("cycles3".into(), Cycles3 as NodeMetaFn),
-                    ("cycles1".into(), Cycles1 as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn Cycles1() -> NodeMeta {
+    pub fn SimpleCycles1() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
             sub_nodes: Some(
                 [
                     ("phantom1".into(), scalar as NodeMetaFn),
-                    ("to2".into(), Cycles2 as NodeMetaFn),
-                    ("list3".into(), Cycles3 as NodeMetaFn),
-                ].into()
-            ),
-            input_files: None,
-        }
-    }
-    pub fn PyCycles() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Cycles1".into()),
-                ].into()
-            ),
-            ..Cycles1()
-        }
-    }
-    pub fn SimpleCycles3() -> NodeMeta {
-        NodeMeta {
-            arg_types: None,
-            variants: None,
-            sub_nodes: Some(
-                [
-                    ("phantom3".into(), scalar as NodeMetaFn),
-                    ("to1".into(), SimpleCycles1 as NodeMetaFn),
+                    ("to2".into(), SimpleCycles2 as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
@@ -462,134 +346,250 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn SimpleCycles1() -> NodeMeta {
+    pub fn SimpleCycles3() -> NodeMeta {
         NodeMeta {
             arg_types: None,
             variants: None,
             sub_nodes: Some(
                 [
-                    ("phantom1".into(), scalar as NodeMetaFn),
-                    ("to2".into(), SimpleCycles2 as NodeMetaFn),
+                    ("phantom3".into(), scalar as NodeMetaFn),
+                    ("to1".into(), SimpleCycles1 as NodeMetaFn),
                 ].into()
             ),
             input_files: None,
-        }
-    }
-    pub fn PySimpleCycles() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "SimpleCycles1".into()),
-                ].into()
-            ),
-            ..SimpleCycles1()
-        }
-    }
-    pub fn PyProxyPrimitives() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Primitives".into()),
-                ].into()
-            ),
-            ..Primitives()
-        }
-    }
-    pub fn TsPrimitives() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Primitives".into()),
-                ].into()
-            ),
-            ..Primitives()
-        }
-    }
-    pub fn TsComposites() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Composites".into()),
-                ].into()
-            ),
-            ..Composites()
-        }
-    }
-    pub fn TsCycles() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Cycles1".into()),
-                ].into()
-            ),
-            ..Cycles1()
-        }
-    }
-    pub fn TsSimpleCycles() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "SimpleCycles1".into()),
-                ].into()
-            ),
-            ..SimpleCycles1()
-        }
-    }
-    pub fn TsProxyPrimitives() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Primitives".into()),
-                ].into()
-            ),
-            ..Primitives()
-        }
-    }
-    pub fn RsPrimitives() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Primitives".into()),
-                ].into()
-            ),
-            ..Primitives()
-        }
-    }
-    pub fn RsComposites() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("data".into(), "Composites".into()),
-                ].into()
-            ),
-            ..Composites()
         }
     }
     pub fn RsCycles() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("data".into(), "Cycles1".into()),
+                    ("data".into(), "cycles1".into()),
                 ].into()
             ),
             ..Cycles1()
         }
     }
-    pub fn RsSimpleCycles() -> NodeMeta {
+    pub fn Cycles1() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom1".into(), scalar as NodeMetaFn),
+                    ("to2".into(), Cycles2 as NodeMetaFn),
+                    ("list3".into(), Cycles3 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Cycles3() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("branch33A".into(), Branch33A as NodeMetaFn),
+                    ("branch33B".into(), Branch33B as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch33B() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom3b".into(), scalar as NodeMetaFn),
+                    ("to2".into(), Cycles2 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Cycles2() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("cycles3".into(), Cycles3 as NodeMetaFn),
+                    ("cycles1".into(), Cycles1 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch33A() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("phantom3a".into(), scalar as NodeMetaFn),
+                    ("to1".into(), Cycles1 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RsComposites() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("data".into(), "SimpleCycles1".into()),
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn Composites() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("opt".into(), scalar as NodeMetaFn),
+                    ("either".into(), CompositesEitherEither as NodeMetaFn),
+                    ("union".into(), scalar as NodeMetaFn),
+                    ("list".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn CompositesEitherEither() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            sub_nodes: None,
+            variants: Some(
+                [
+                    ("primitives".into(), Primitives as NodeMetaFn),
+                    ("branch2".into(), Branch2 as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn Branch2() -> NodeMeta {
+        NodeMeta {
+            arg_types: None,
+            variants: None,
+            sub_nodes: Some(
+                [
+                    ("branch2".into(), scalar as NodeMetaFn),
+                ].into()
+            ),
+            input_files: None,
+        }
+    }
+    pub fn RsPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn TsProxyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn TsSimpleCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "simple_cycles_1".into()),
                 ].into()
             ),
             ..SimpleCycles1()
         }
     }
-    pub fn RsProxyPrimitives() -> NodeMeta {
+    pub fn TsCycles() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
-                    ("data".into(), "Primitives".into()),
+                    ("data".into(), "cycles1".into()),
+                ].into()
+            ),
+            ..Cycles1()
+        }
+    }
+    pub fn TsComposites() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn TsPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn PyProxyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
+                ].into()
+            ),
+            ..Primitives()
+        }
+    }
+    pub fn PySimpleCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "simple_cycles_1".into()),
+                ].into()
+            ),
+            ..SimpleCycles1()
+        }
+    }
+    pub fn PyCycles() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "cycles1".into()),
+                ].into()
+            ),
+            ..Cycles1()
+        }
+    }
+    pub fn PyComposites() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "composites".into()),
+                ].into()
+            ),
+            ..Composites()
+        }
+    }
+    pub fn PyPrimitives() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("data".into(), "primitives".into()),
                 ].into()
             ),
             ..Primitives()
@@ -600,18 +600,11 @@ mod node_metas {
 use types::*;
 #[allow(unused)]
 pub mod types {
-    pub type PrimitivesStrString = String;
-    pub type PrimitivesEnumStringEnum = String;
-    pub type PrimitivesUuidStringUuid = String;
-    pub type PrimitivesEmailStringEmail = String;
-    pub type PrimitivesEanStringEan = String;
-    pub type PrimitivesJsonStringJson = String;
-    pub type PrimitivesUriStringUri = String;
-    pub type PrimitivesDateStringDate = String;
-    pub type PrimitivesDatetimeStringDatetime = String;
-    pub type PrimitivesIntInteger = i64;
-    pub type PrimitivesFloatFloat = f64;
-    pub type PrimitivesBooleanBoolean = bool;
+    // input types
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct PrimitivesArgs {
+        pub data: Primitives,
+    }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Primitives {
         pub str: PrimitivesStrString,
@@ -628,33 +621,22 @@ pub mod types {
         pub float: PrimitivesFloatFloat,
         pub boolean: PrimitivesBooleanBoolean,
     }
+    pub type PrimitivesStrString = String;
+    pub type PrimitivesEnumStringEnum = String;
+    pub type PrimitivesUuidStringUuid = String;
+    pub type PrimitivesEmailStringEmail = String;
+    pub type PrimitivesEanStringEan = String;
+    pub type PrimitivesJsonStringJson = String;
+    pub type PrimitivesUriStringUri = String;
+    pub type PrimitivesDateStringDate = String;
+    pub type PrimitivesDatetimeStringDatetime = String;
+    pub type PrimitivesIntInteger = i64;
+    pub type PrimitivesFloatFloat = f64;
+    pub type PrimitivesBooleanBoolean = bool;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct PrimitivesArgs {
-        pub data: Primitives,
+    pub struct CompositesArgs {
+        pub data: Composites,
     }
-    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch2 {
-        pub branch2: PrimitivesStrString,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum CompositesEitherEither {
-        Primitives(Primitives),
-        Branch2(Branch2),
-    }
-    pub type CompositesUnionUnionT0StringEnum = String;
-    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
-    pub type Branch4again = String;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum CompositesUnionUnion {
-        Branch4(Branch4),
-        PrimitivesIntInteger(PrimitivesIntInteger),
-        PrimitivesStrString(PrimitivesStrString),
-        Branch4again(Branch4again),
-    }
-    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Composites {
         pub opt: CompositesOptPrimitivesStrStringOptional,
@@ -662,72 +644,92 @@ pub mod types {
         pub union: CompositesUnionUnion,
         pub list: CompositesListPrimitivesStrStringList,
     }
+    pub type CompositesOptPrimitivesStrStringOptional = Option<PrimitivesStrString>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct CompositesArgs {
-        pub data: Composites,
-    }
-    pub type Branch33ATo1Cycles1Optional = Option<Cycles1>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33A {
-        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
-        pub to1: Branch33ATo1Cycles1Optional,
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesEitherEither {
+        Primitives(Primitives),
+        Branch2(Branch2),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Branch33B {
-        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+    pub struct Branch2 {
+        pub branch2: PrimitivesStrString,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum CompositesUnionUnion {
+        Branch4(Branch4),
+        PrimitivesIntInteger(PrimitivesIntInteger),
+        PrimitivesStrString(PrimitivesStrString),
+        Branch4again(Branch4again),
+    }
+    pub type Branch4 = Vec<CompositesUnionUnionT0StringEnum>;
+    pub type CompositesUnionUnionT0StringEnum = String;
+    pub type Branch4again = String;
+    pub type CompositesListPrimitivesStrStringList = Vec<PrimitivesStrString>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Args {
+        pub data: Cycles1,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1 {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
         pub to2: Cycles1To2Cycles2Optional,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
+    }
+    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles2 {
+        Cycles3(Cycles3),
+        Cycles1(Cycles1),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
     pub enum Cycles3 {
         Branch33A(Branch33A),
         Branch33B(Branch33B),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Cycles2 {
-        Cycles3(Cycles3),
-        Cycles1(Cycles1),
+    pub struct Branch33A {
+        pub phantom3a: CompositesOptPrimitivesStrStringOptional,
+        pub to1: Branch33ATo1Cycles1Optional,
     }
-    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
+    pub type Branch33ATo1Cycles1Optional = Option<Box<Cycles1>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Branch33B {
+        pub phantom3b: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2Optional,
+    }
+    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Box<Cycles1List3Cycles3List>>;
     pub type Cycles1List3Cycles3List = Vec<Cycles3>;
-    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Cycles1List3Cycles3List>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1 {
+    pub struct SimpleCycles1Args {
+        pub data: SimpleCycles1,
+    }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles1 {
         pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Box<Cycles1To2Cycles2Optional>,
-        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
+        pub to2: SimpleCycles1To2SimpleCycles2Optional,
     }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1Args {
-        pub data: Cycles1,
-    }
-    pub type SimpleCycles3To1SimpleCycles1Optional = Option<SimpleCycles1>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles3 {
-        pub phantom3: CompositesOptPrimitivesStrStringOptional,
-        pub to1: SimpleCycles3To1SimpleCycles1Optional,
-    }
-    pub type SimpleCycles2To3SimpleCycles3Optional = Option<SimpleCycles3>;
+    pub type SimpleCycles1To2SimpleCycles2Optional = Option<Box<SimpleCycles2>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles2 {
         pub phantom2: CompositesOptPrimitivesStrStringOptional,
         pub to3: SimpleCycles2To3SimpleCycles3Optional,
     }
-    pub type SimpleCycles1To2SimpleCycles2Optional = Option<SimpleCycles2>;
+    pub type SimpleCycles2To3SimpleCycles3Optional = Option<Box<SimpleCycles3>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles1 {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Box<SimpleCycles1To2SimpleCycles2Optional>,
+    pub struct SimpleCycles3 {
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1Optional,
     }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles1Args {
-        pub data: SimpleCycles1,
-    }
-}
-#[allow(unused)]
-pub mod return_types {
-    use super::types::*;
+    pub type SimpleCycles3To1SimpleCycles1Optional = Option<Box<SimpleCycles1>>;
+    // partial output types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct PrimitivesPartial {
         pub str: Option<PrimitivesStrString>,
@@ -749,68 +751,72 @@ pub mod return_types {
         pub branch2: Option<PrimitivesStrString>,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
-    pub enum CompositesEitherEither {
-        PrimitivesPartial(PrimitivesPartial),
-        Branch2Partial(Branch2Partial),
+    pub enum CompositesEitherEitherPartial {
+        Primitives(PrimitivesPartial),
+        Branch2(Branch2Partial),
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct CompositesPartial {
         pub opt: CompositesOptPrimitivesStrStringOptional,
-        pub either: Option<CompositesEitherEither>,
+        pub either: Option<CompositesEitherEitherPartial>,
         pub union: Option<CompositesUnionUnion>,
         pub list: Option<CompositesListPrimitivesStrStringList>,
     }
-    pub type Branch33ATo1Cycles1Optional = Option<Cycles1Partial>;
+    pub type Cycles1To2Cycles2OptionalPartial = Option<Box<Cycles2Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum Cycles3Partial {
+        Branch33A(Branch33APartial),
+        Branch33B(Branch33BPartial),
+    }
+    pub type Cycles1List3Cycles3ListPartial = Vec<Cycles3Partial>;
+    pub type Cycles1List3Cycles1List3Cycles3ListOptionalPartial = Option<Box<Cycles1List3Cycles3ListPartial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Cycles1Partial {
+        pub phantom1: CompositesOptPrimitivesStrStringOptional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
+        pub list3: Cycles1List3Cycles1List3Cycles3ListOptionalPartial,
+    }
+    pub type Branch33ATo1Cycles1OptionalPartial = Option<Box<Cycles1Partial>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Branch33APartial {
         pub phantom3a: CompositesOptPrimitivesStrStringOptional,
-        pub to1: Branch33ATo1Cycles1Optional,
+        pub to1: Branch33ATo1Cycles1OptionalPartial,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Branch33BPartial {
         pub phantom3b: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Cycles1To2Cycles2Optional,
+        pub to2: Cycles1To2Cycles2OptionalPartial,
     }
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
     #[serde(untagged)]
-    pub enum Cycles3 {
-        Branch33APartial(Branch33APartial),
-        Branch33BPartial(Branch33BPartial),
+    pub enum Cycles2Partial {
+        Cycles3(Cycles3Partial),
+        Cycles1(Cycles1Partial),
     }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[serde(untagged)]
-    pub enum Cycles2 {
-        Cycles3(Cycles3),
-        Cycles1Partial(Cycles1Partial),
-    }
-    pub type Cycles1To2Cycles2Optional = Option<Box<Cycles2>>;
-    pub type Cycles1List3Cycles3List = Vec<Cycles3>;
-    pub type Cycles1List3Cycles1List3Cycles3ListOptional = Option<Cycles1List3Cycles3List>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Cycles1Partial {
-        pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Box<Cycles1To2Cycles2Optional>,
-        pub list3: Cycles1List3Cycles1List3Cycles3ListOptional,
-    }
-    pub type SimpleCycles3To1SimpleCycles1Optional = Option<SimpleCycles1Partial>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles3Partial {
-        pub phantom3: CompositesOptPrimitivesStrStringOptional,
-        pub to1: SimpleCycles3To1SimpleCycles1Optional,
-    }
-    pub type SimpleCycles2To3SimpleCycles3Optional = Option<SimpleCycles3Partial>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct SimpleCycles2Partial {
-        pub phantom2: CompositesOptPrimitivesStrStringOptional,
-        pub to3: SimpleCycles2To3SimpleCycles3Optional,
-    }
-    pub type SimpleCycles1To2SimpleCycles2Optional = Option<SimpleCycles2Partial>;
+    pub type SimpleCycles1To2SimpleCycles2OptionalPartial = Option<Box<SimpleCycles2Partial>>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct SimpleCycles1Partial {
         pub phantom1: CompositesOptPrimitivesStrStringOptional,
-        pub to2: Box<SimpleCycles1To2SimpleCycles2Optional>,
+        pub to2: SimpleCycles1To2SimpleCycles2OptionalPartial,
     }
+    pub type SimpleCycles3To1SimpleCycles1OptionalPartial = Option<Box<SimpleCycles1Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles3Partial {
+        pub phantom3: CompositesOptPrimitivesStrStringOptional,
+        pub to1: SimpleCycles3To1SimpleCycles1OptionalPartial,
+    }
+    pub type SimpleCycles2To3SimpleCycles3OptionalPartial = Option<Box<SimpleCycles3Partial>>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct SimpleCycles2Partial {
+        pub phantom2: CompositesOptPrimitivesStrStringOptional,
+        pub to3: SimpleCycles2To3SimpleCycles3OptionalPartial,
+    }
+    // output types
 }
 #[derive(Default, Debug)]
 pub struct PrimitivesSelections<ATy = NoAlias> {
@@ -840,11 +846,6 @@ pub struct CompositesEitherEitherSelections<ATy = NoAlias> {
 }
 impl_union_selection_traits!(CompositesEitherEitherSelections, ("primitives", primitives), ("branch2", branch2));
 #[derive(Default, Debug)]
-pub struct CompositesUnionUnionSelections<ATy = NoAlias> {
-    pub phantom: std::marker::PhantomData<ATy>,
-}
-impl_union_selection_traits!(CompositesUnionUnionSelections);
-#[derive(Default, Debug)]
 pub struct CompositesSelections<ATy = NoAlias> {
     pub opt: ScalarSelect<ATy>,
     pub either: CompositeSelect<CompositesEitherEitherSelections<ATy>, ATy>,
@@ -852,6 +853,19 @@ pub struct CompositesSelections<ATy = NoAlias> {
     pub list: ScalarSelect<ATy>,
 }
 impl_selection_traits!(CompositesSelections, opt, either, union, list);
+#[derive(Default, Debug)]
+pub struct Cycles3Selections<ATy = NoAlias> {
+    pub branch33_a: CompositeSelect<Branch33ASelections<ATy>, NoAlias>,
+    pub branch33_b: CompositeSelect<Branch33BSelections<ATy>, NoAlias>,
+}
+impl_union_selection_traits!(Cycles3Selections, ("branch33A", branch33_a), ("branch33B", branch33_b));
+#[derive(Default, Debug)]
+pub struct Cycles1Selections<ATy = NoAlias> {
+    pub phantom1: ScalarSelect<ATy>,
+    pub to2: CompositeSelect<Cycles2Selections<ATy>, ATy>,
+    pub list3: CompositeSelect<Cycles3Selections<ATy>, ATy>,
+}
+impl_selection_traits!(Cycles1Selections, phantom1, to2, list3);
 #[derive(Default, Debug)]
 pub struct Branch33ASelections<ATy = NoAlias> {
     pub phantom3a: ScalarSelect<ATy>,
@@ -865,24 +879,17 @@ pub struct Branch33BSelections<ATy = NoAlias> {
 }
 impl_selection_traits!(Branch33BSelections, phantom3b, to2);
 #[derive(Default, Debug)]
-pub struct Cycles3Selections<ATy = NoAlias> {
-    pub branch33_a: CompositeSelect<Branch33ASelections<ATy>, NoAlias>,
-    pub branch33_b: CompositeSelect<Branch33BSelections<ATy>, NoAlias>,
-}
-impl_union_selection_traits!(Cycles3Selections, ("branch33A", branch33_a), ("branch33B", branch33_b));
-#[derive(Default, Debug)]
 pub struct Cycles2Selections<ATy = NoAlias> {
     pub cycles3: CompositeSelect<Cycles3Selections<ATy>, NoAlias>,
     pub cycles1: CompositeSelect<Cycles1Selections<ATy>, NoAlias>,
 }
 impl_union_selection_traits!(Cycles2Selections, ("cycles3", cycles3), ("cycles1", cycles1));
 #[derive(Default, Debug)]
-pub struct Cycles1Selections<ATy = NoAlias> {
+pub struct SimpleCycles1Selections<ATy = NoAlias> {
     pub phantom1: ScalarSelect<ATy>,
-    pub to2: CompositeSelect<Cycles2Selections<ATy>, ATy>,
-    pub list3: CompositeSelect<Cycles3Selections<ATy>, ATy>,
+    pub to2: CompositeSelect<SimpleCycles2Selections<ATy>, ATy>,
 }
-impl_selection_traits!(Cycles1Selections, phantom1, to2, list3);
+impl_selection_traits!(SimpleCycles1Selections, phantom1, to2);
 #[derive(Default, Debug)]
 pub struct SimpleCycles3Selections<ATy = NoAlias> {
     pub phantom3: ScalarSelect<ATy>,
@@ -895,36 +902,27 @@ pub struct SimpleCycles2Selections<ATy = NoAlias> {
     pub to3: CompositeSelect<SimpleCycles3Selections<ATy>, ATy>,
 }
 impl_selection_traits!(SimpleCycles2Selections, phantom2, to3);
-#[derive(Default, Debug)]
-pub struct SimpleCycles1Selections<ATy = NoAlias> {
-    pub phantom1: ScalarSelect<ATy>,
-    pub to2: CompositeSelect<SimpleCycles2Selections<ATy>, ATy>,
-}
-impl_selection_traits!(SimpleCycles1Selections, phantom1, to2);
 
 pub fn query_graph() -> QueryGraph {
     QueryGraph {
         ty_to_gql_ty_map: std::sync::Arc::new([
-        
-            ("Primitives".into(), "primitives!".into()),
-            ("Composites".into(), "composites!".into()),
-            ("Cycles1".into(), "cycles1!".into()),
-            ("SimpleCycles1".into(), "simple_cycles_1!".into()),
             ("primitives".into(), "primitives!".into()),
+            ("composites".into(), "composites!".into()),
+            ("cycles1".into(), "cycles1!".into()),
+            ("simple_cycles_1".into(), "simple_cycles_1!".into()),
             ("branch2".into(), "branch2!".into()),
             ("branch33A".into(), "branch33A!".into()),
             ("branch33B".into(), "branch33B!".into()),
             ("cycles3".into(), "cycles3!".into()),
-            ("cycles1".into(), "cycles1!".into()),
         ].into()),
     }
 }
-impl QueryGraph {
+    impl QueryGraph{
 
     pub fn py_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "py_primitives".into(),
@@ -936,7 +934,7 @@ impl QueryGraph {
     pub fn py_composites(
         &self,
         args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, return_types::CompositesPartial>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "py_composites".into(),
@@ -948,7 +946,7 @@ impl QueryGraph {
     pub fn py_cycles(
         &self,
         args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, return_types::Cycles1Partial>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "py_cycles".into(),
@@ -960,7 +958,7 @@ impl QueryGraph {
     pub fn py_simple_cycles(
         &self,
         args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, return_types::SimpleCycles1Partial>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "py_simple_cycles".into(),
@@ -972,7 +970,7 @@ impl QueryGraph {
     pub fn py_proxy_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "py_proxy_primitives".into(),
@@ -984,7 +982,7 @@ impl QueryGraph {
     pub fn ts_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "ts_primitives".into(),
@@ -996,7 +994,7 @@ impl QueryGraph {
     pub fn ts_composites(
         &self,
         args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, return_types::CompositesPartial>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "ts_composites".into(),
@@ -1008,7 +1006,7 @@ impl QueryGraph {
     pub fn ts_cycles(
         &self,
         args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, return_types::Cycles1Partial>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "ts_cycles".into(),
@@ -1020,7 +1018,7 @@ impl QueryGraph {
     pub fn ts_simple_cycles(
         &self,
         args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, return_types::SimpleCycles1Partial>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "ts_simple_cycles".into(),
@@ -1032,7 +1030,7 @@ impl QueryGraph {
     pub fn ts_proxy_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "ts_proxy_primitives".into(),
@@ -1044,7 +1042,7 @@ impl QueryGraph {
     pub fn rs_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "rs_primitives".into(),
@@ -1056,7 +1054,7 @@ impl QueryGraph {
     pub fn rs_composites(
         &self,
         args: impl Into<NodeArgs<CompositesArgs>>
-    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, return_types::CompositesPartial>
+    ) -> UnselectedNode<CompositesSelections, CompositesSelections<HasAlias>, QueryMarker, CompositesPartial>
     {
         UnselectedNode {
             root_name: "rs_composites".into(),
@@ -1068,7 +1066,7 @@ impl QueryGraph {
     pub fn rs_cycles(
         &self,
         args: impl Into<NodeArgs<Cycles1Args>>
-    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, return_types::Cycles1Partial>
+    ) -> UnselectedNode<Cycles1Selections, Cycles1Selections<HasAlias>, QueryMarker, Cycles1Partial>
     {
         UnselectedNode {
             root_name: "rs_cycles".into(),
@@ -1080,7 +1078,7 @@ impl QueryGraph {
     pub fn rs_simple_cycles(
         &self,
         args: impl Into<NodeArgs<SimpleCycles1Args>>
-    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, return_types::SimpleCycles1Partial>
+    ) -> UnselectedNode<SimpleCycles1Selections, SimpleCycles1Selections<HasAlias>, QueryMarker, SimpleCycles1Partial>
     {
         UnselectedNode {
             root_name: "rs_simple_cycles".into(),
@@ -1092,7 +1090,7 @@ impl QueryGraph {
     pub fn rs_proxy_primitives(
         &self,
         args: impl Into<NodeArgs<PrimitivesArgs>>
-    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, return_types::PrimitivesPartial>
+    ) -> UnselectedNode<PrimitivesSelections, PrimitivesSelections<HasAlias>, QueryMarker, PrimitivesPartial>
     {
         UnselectedNode {
             root_name: "rs_proxy_primitives".into(),

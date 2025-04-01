@@ -12,7 +12,7 @@ use super::{Action, ConfigArgs};
 enum Template {
     Rust,
     Python,
-    Typescript,
+    // Typescript,
 }
 
 #[derive(Parser, Debug)]
@@ -40,7 +40,7 @@ impl Action for CreateFdkTemplate {
         let template = match self.template {
             Template::Rust => metagen::FDK_RS_DEFAULT_TEMPLATE,
             Template::Python => metagen::FDK_PY_DEFAULT_TEMPLATE,
-            Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
+            // Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
         };
 
         for (file_name, content) in template.iter() {

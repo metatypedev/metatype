@@ -15,8 +15,7 @@ use crate::types::{
     AsTypeDefEx as _, ExtendedTypeDef, FindAttribute as _, Func, InjectionTree, RefAttr, Struct,
     TypeDef, TypeDefData, TypeId,
 };
-use indexmap::IndexMap;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::hash::Hash as _;
 use std::rc::Rc;
 use tg_schema::{parameter_transform::FunctionParameterTransform, FunctionTypeData, TypeNode};
@@ -134,7 +133,7 @@ fn collect_injections(
     if !visited.insert(input_type.id) {
         return Ok(Default::default());
     }
-    let mut res = IndexMap::new();
+    let mut res = BTreeMap::new();
 
     for (name, prop_id) in input_type.data.props.iter() {
         let xdef = TypeId(*prop_id).as_xdef()?;

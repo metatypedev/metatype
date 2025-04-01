@@ -45,7 +45,7 @@ pub struct GenDestFs {
 /// * `Ok(())` if processing was successful
 /// * `Err` if there are unmatched or unclosed directives
 pub fn processed_write(
-    dest: &mut GenDestBuf,
+    dest: &mut impl Write,
     input: &str,
     flags: &BTreeMap<String, bool>,
 ) -> eyre::Result<()> {
@@ -155,4 +155,26 @@ pub fn collect_at_first_instance(input: &str, pattern: &regex::Regex) -> String 
     output_lines.extend(post_non_matches);
 
     output_lines.join("\n")
+}
+
+#[allow(dead_code)]
+pub fn indent_lines(s: &str, indent: &str) -> Result<String, core::fmt::Error> {
+    let mut result = String::new();
+    indent_lines_into(&mut result, s, indent)?;
+    Ok(result)
+}
+
+pub fn indent_lines_into(
+    out: &mut impl Write,
+    source: &str,
+    indent: &str,
+) -> Result<(), core::fmt::Error> {
+    for line in source.lines() {
+        if !line.is_empty() {
+            writeln!(out, "{}{}", indent, line)?;
+        } else {
+            writeln!(out)?;
+        }
+    }
+    Ok(())
 }

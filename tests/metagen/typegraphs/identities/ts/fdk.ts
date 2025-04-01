@@ -32,7 +32,6 @@ export type Handler<In, Out> = (
   ctx: Ctx,
   tg: Deployment,
 ) => Out | Promise<Out>;
-
 function _selectionToNodeSet(
   selection: Selection,
   metas: [string, () => NodeMeta][],
@@ -530,11 +529,15 @@ function convertQueryNodeGql(
               );
             }
             gqlTy = gqlTy.replace(/[!]+$/, "");
-
             return `... on ${gqlTy} {${
               variantSubNodes
                 .map((node) =>
-                  convertQueryNodeGql(typeToGqlTypeMap, node, variables, files)
+                  convertQueryNodeGql(
+                    typeToGqlTypeMap,
+                    node,
+                    variables,
+                    files,
+                  )
                 )
                 .join(" ")
             }}`;
@@ -979,6 +982,14 @@ const nodeMetas = {
     return {};
   },
   
+  RsProxyPrimitives(): NodeMeta {
+    return {
+      ...nodeMetas.Primitives(),
+      argumentTypes: {
+        data: "primitives",
+      },
+    };
+  },
   Primitives(): NodeMeta {
     return {
       subNodes: [
@@ -997,27 +1008,93 @@ const nodeMetas = {
       ],
     };
   },
-  PyPrimitives(): NodeMeta {
+  RsSimpleCycles(): NodeMeta {
     return {
-      ...nodeMetas.Primitives(),
+      ...nodeMetas.SimpleCycles1(),
       argumentTypes: {
-        data: "Primitives",
+        data: "simple_cycles_1",
       },
     };
   },
-  Branch2(): NodeMeta {
+  SimpleCycles1(): NodeMeta {
     return {
       subNodes: [
-        ["branch2", nodeMetas.scalar],
+        ["phantom1", nodeMetas.scalar],
+        ["to2", nodeMetas.SimpleCycles2],
       ],
     };
   },
-  CompositesEitherEither(): NodeMeta {
+  SimpleCycles2(): NodeMeta {
+    return {
+      subNodes: [
+        ["phantom2", nodeMetas.scalar],
+        ["to3", nodeMetas.SimpleCycles3],
+      ],
+    };
+  },
+  SimpleCycles3(): NodeMeta {
+    return {
+      subNodes: [
+        ["phantom3", nodeMetas.scalar],
+        ["to1", nodeMetas.SimpleCycles1],
+      ],
+    };
+  },
+  RsCycles(): NodeMeta {
+    return {
+      ...nodeMetas.Cycles1(),
+      argumentTypes: {
+        data: "cycles1",
+      },
+    };
+  },
+  Cycles1(): NodeMeta {
+    return {
+      subNodes: [
+        ["phantom1", nodeMetas.scalar],
+        ["to2", nodeMetas.Cycles2],
+        ["list3", nodeMetas.Cycles3],
+      ],
+    };
+  },
+  Cycles3(): NodeMeta {
     return {
       variants: [
-        ["primitives", nodeMetas.Primitives],
-        ["branch2", nodeMetas.Branch2],
+        ["branch33A", nodeMetas.Branch33A],
+        ["branch33B", nodeMetas.Branch33B],
       ],
+    };
+  },
+  Branch33B(): NodeMeta {
+    return {
+      subNodes: [
+        ["phantom3b", nodeMetas.scalar],
+        ["to2", nodeMetas.Cycles2],
+      ],
+    };
+  },
+  Cycles2(): NodeMeta {
+    return {
+      variants: [
+        ["cycles3", nodeMetas.Cycles3],
+        ["cycles1", nodeMetas.Cycles1],
+      ],
+    };
+  },
+  Branch33A(): NodeMeta {
+    return {
+      subNodes: [
+        ["phantom3a", nodeMetas.scalar],
+        ["to1", nodeMetas.Cycles1],
+      ],
+    };
+  },
+  RsComposites(): NodeMeta {
+    return {
+      ...nodeMetas.Composites(),
+      argumentTypes: {
+        data: "composites",
+      },
     };
   },
   Composites(): NodeMeta {
@@ -1030,132 +1107,26 @@ const nodeMetas = {
       ],
     };
   },
-  PyComposites(): NodeMeta {
-    return {
-      ...nodeMetas.Composites(),
-      argumentTypes: {
-        data: "Composites",
-      },
-    };
-  },
-  Branch33A(): NodeMeta {
-    return {
-      subNodes: [
-        ["phantom3a", nodeMetas.scalar],
-        ["to1", nodeMetas.Cycles1],
-      ],
-    };
-  },
-  Branch33B(): NodeMeta {
-    return {
-      subNodes: [
-        ["phantom3b", nodeMetas.scalar],
-        ["to2", nodeMetas.Cycles2],
-      ],
-    };
-  },
-  Cycles3(): NodeMeta {
+  CompositesEitherEither(): NodeMeta {
     return {
       variants: [
-        ["branch33A", nodeMetas.Branch33A],
-        ["branch33B", nodeMetas.Branch33B],
+        ["primitives", nodeMetas.Primitives],
+        ["branch2", nodeMetas.Branch2],
       ],
     };
   },
-  Cycles2(): NodeMeta {
-    return {
-      variants: [
-        ["cycles3", nodeMetas.Cycles3],
-        ["cycles1", nodeMetas.Cycles1],
-      ],
-    };
-  },
-  Cycles1(): NodeMeta {
+  Branch2(): NodeMeta {
     return {
       subNodes: [
-        ["phantom1", nodeMetas.scalar],
-        ["to2", nodeMetas.Cycles2],
-        ["list3", nodeMetas.Cycles3],
+        ["branch2", nodeMetas.scalar],
       ],
     };
   },
-  PyCycles(): NodeMeta {
-    return {
-      ...nodeMetas.Cycles1(),
-      argumentTypes: {
-        data: "Cycles1",
-      },
-    };
-  },
-  SimpleCycles3(): NodeMeta {
-    return {
-      subNodes: [
-        ["phantom3", nodeMetas.scalar],
-        ["to1", nodeMetas.SimpleCycles1],
-      ],
-    };
-  },
-  SimpleCycles2(): NodeMeta {
-    return {
-      subNodes: [
-        ["phantom2", nodeMetas.scalar],
-        ["to3", nodeMetas.SimpleCycles3],
-      ],
-    };
-  },
-  SimpleCycles1(): NodeMeta {
-    return {
-      subNodes: [
-        ["phantom1", nodeMetas.scalar],
-        ["to2", nodeMetas.SimpleCycles2],
-      ],
-    };
-  },
-  PySimpleCycles(): NodeMeta {
-    return {
-      ...nodeMetas.SimpleCycles1(),
-      argumentTypes: {
-        data: "SimpleCycles1",
-      },
-    };
-  },
-  PyProxyPrimitives(): NodeMeta {
+  RsPrimitives(): NodeMeta {
     return {
       ...nodeMetas.Primitives(),
       argumentTypes: {
-        data: "Primitives",
-      },
-    };
-  },
-  TsPrimitives(): NodeMeta {
-    return {
-      ...nodeMetas.Primitives(),
-      argumentTypes: {
-        data: "Primitives",
-      },
-    };
-  },
-  TsComposites(): NodeMeta {
-    return {
-      ...nodeMetas.Composites(),
-      argumentTypes: {
-        data: "Composites",
-      },
-    };
-  },
-  TsCycles(): NodeMeta {
-    return {
-      ...nodeMetas.Cycles1(),
-      argumentTypes: {
-        data: "Cycles1",
-      },
-    };
-  },
-  TsSimpleCycles(): NodeMeta {
-    return {
-      ...nodeMetas.SimpleCycles1(),
-      argumentTypes: {
-        data: "SimpleCycles1",
+        data: "primitives",
       },
     };
   },
@@ -1163,152 +1134,189 @@ const nodeMetas = {
     return {
       ...nodeMetas.Primitives(),
       argumentTypes: {
-        data: "Primitives",
+        data: "primitives",
       },
     };
   },
-  RsPrimitives(): NodeMeta {
-    return {
-      ...nodeMetas.Primitives(),
-      argumentTypes: {
-        data: "Primitives",
-      },
-    };
-  },
-  RsComposites(): NodeMeta {
-    return {
-      ...nodeMetas.Composites(),
-      argumentTypes: {
-        data: "Composites",
-      },
-    };
-  },
-  RsCycles(): NodeMeta {
-    return {
-      ...nodeMetas.Cycles1(),
-      argumentTypes: {
-        data: "Cycles1",
-      },
-    };
-  },
-  RsSimpleCycles(): NodeMeta {
+  TsSimpleCycles(): NodeMeta {
     return {
       ...nodeMetas.SimpleCycles1(),
       argumentTypes: {
-        data: "SimpleCycles1",
+        data: "simple_cycles_1",
       },
     };
   },
-  RsProxyPrimitives(): NodeMeta {
+  TsCycles(): NodeMeta {
+    return {
+      ...nodeMetas.Cycles1(),
+      argumentTypes: {
+        data: "cycles1",
+      },
+    };
+  },
+  TsComposites(): NodeMeta {
+    return {
+      ...nodeMetas.Composites(),
+      argumentTypes: {
+        data: "composites",
+      },
+    };
+  },
+  TsPrimitives(): NodeMeta {
     return {
       ...nodeMetas.Primitives(),
       argumentTypes: {
-        data: "Primitives",
+        data: "primitives",
       },
     };
   },
-};
-export type PrimitivesStrString = string;
-export type PrimitivesEnumStringEnum = "wan" | "tew" | "tree";
-export type PrimitivesUuidStringUuid = string;
-export type PrimitivesEmailStringEmail = string;
-export type PrimitivesEanStringEan = string;
-export type PrimitivesJsonStringJson = string;
-export type PrimitivesUriStringUri = string;
-export type PrimitivesDateStringDate = string;
-export type PrimitivesDatetimeStringDatetime = string;
-export type PrimitivesIntInteger = number;
-export type PrimitivesFloatFloat = number;
-export type PrimitivesBooleanBoolean = boolean;
-export type Primitives = {
-  str: PrimitivesStrString;
-  "enum": PrimitivesEnumStringEnum;
-  uuid: PrimitivesUuidStringUuid;
-  email: PrimitivesEmailStringEmail;
-  ean: PrimitivesEanStringEan;
-  json: PrimitivesJsonStringJson;
-  uri: PrimitivesUriStringUri;
-  date: PrimitivesDateStringDate;
-  datetime: PrimitivesDatetimeStringDatetime;
-  int: PrimitivesIntInteger;
-  float: PrimitivesFloatFloat;
-  "boolean": PrimitivesBooleanBoolean;
+  PyProxyPrimitives(): NodeMeta {
+    return {
+      ...nodeMetas.Primitives(),
+      argumentTypes: {
+        data: "primitives",
+      },
+    };
+  },
+  PySimpleCycles(): NodeMeta {
+    return {
+      ...nodeMetas.SimpleCycles1(),
+      argumentTypes: {
+        data: "simple_cycles_1",
+      },
+    };
+  },
+  PyCycles(): NodeMeta {
+    return {
+      ...nodeMetas.Cycles1(),
+      argumentTypes: {
+        data: "cycles1",
+      },
+    };
+  },
+  PyComposites(): NodeMeta {
+    return {
+      ...nodeMetas.Composites(),
+      argumentTypes: {
+        data: "composites",
+      },
+    };
+  },
+  PyPrimitives(): NodeMeta {
+    return {
+      ...nodeMetas.Primitives(),
+      argumentTypes: {
+        data: "primitives",
+      },
+    };
+  },
 };
 export type PrimitivesArgs = {
   data: Primitives;
 };
-export type CompositesOptPrimitivesStrStringOptional = PrimitivesStrString | null | undefined;
-export type Branch2 = {
-  branch2: PrimitivesStrString;
+export type Primitives = {
+  str: PrimitivesStrString;
+  "enum": PrimitivesEnumStringEnum;
+  uuid: StringUuid6;
+  email: StringEmail7;
+  ean: StringEan8;
+  json: StringJson9;
+  uri: StringUri10;
+  date: StringDate11;
+  datetime: StringDateTime12;
+  int: PrimitivesIntInteger;
+  float: PrimitivesFloatFloat;
+  "boolean": PrimitivesBooleanBoolean;
 };
-export type CompositesEitherEither =
-  | (Primitives)
-  | (Branch2);
-export type CompositesUnionUnionT0StringEnum = "grey" | "beige";
-export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
-export type Branch4again = string;
-export type CompositesUnionUnion =
-  | (Branch4)
-  | (PrimitivesIntInteger)
-  | (PrimitivesStrString)
-  | (Branch4again);
-export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
+export type PrimitivesStrString = string;
+export type PrimitivesEnumStringEnum =
+
+  | "wan"
+  | "tew"
+  | "tree";
+export type StringUuid6 = string;
+export type StringEmail7 = string;
+export type StringEan8 = string;
+export type StringJson9 = string;
+export type StringUri10 = string;
+export type StringDate11 = string;
+export type StringDateTime12 = string;
+export type PrimitivesIntInteger = number;
+export type PrimitivesFloatFloat = number;
+export type PrimitivesBooleanBoolean = boolean;
+export type CompositesArgs = {
+  data: Composites;
+};
 export type Composites = {
   opt?: CompositesOptPrimitivesStrStringOptional;
   either: CompositesEitherEither;
   union: CompositesUnionUnion;
   list: CompositesListPrimitivesStrStringList;
 };
-export type CompositesArgs = {
-  data: Composites;
+export type CompositesOptPrimitivesStrStringOptional = (PrimitivesStrString) | null | undefined;
+export type CompositesEitherEither =
+  | (Primitives)
+  | (Branch2);
+export type Branch2 = {
+  branch2: PrimitivesStrString;
 };
-export type Branch33ATo1Cycles1Optional = Cycles1 | null | undefined;
-export type Branch33A = {
-  phantom3a?: CompositesOptPrimitivesStrStringOptional;
-  to1?: Branch33ATo1Cycles1Optional;
+export type CompositesUnionUnion =
+  | (Branch4)
+  | (PrimitivesIntInteger)
+  | (PrimitivesStrString)
+  | (StringEmail25);
+export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
+export type CompositesUnionUnionT0StringEnum =
+
+  | "grey"
+  | "beige";
+export type StringEmail25 = string;
+export type CompositesListPrimitivesStrStringList = Array<PrimitivesStrString>;
+export type Cycles1Args = {
+  data: Cycles1;
 };
-export type Branch33B = {
-  phantom3b?: CompositesOptPrimitivesStrStringOptional;
-  to2?: Cycles1To2Cycles2Optional;
-};
-export type Cycles3 =
-  | (Branch33A)
-  | (Branch33B);
-export type Cycles2 =
-  | (Cycles3)
-  | (Cycles1);
-export type Cycles1To2Cycles2Optional = Cycles2 | null | undefined;
-export type Cycles1List3Cycles3List = Array<Cycles3>;
-export type Cycles1List3Cycles1List3Cycles3ListOptional = Cycles1List3Cycles3List | null | undefined;
 export type Cycles1 = {
   phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
   list3?: Cycles1List3Cycles1List3Cycles3ListOptional;
 };
-export type Cycles1Args = {
-  data: Cycles1;
+export type Cycles1To2Cycles2Optional = (Cycles2) | null | undefined;
+export type Cycles2 =
+  | (Cycles3)
+  | (Cycles1);
+export type Cycles3 =
+  | (Branch33A)
+  | (Branch33B);
+export type Branch33A = {
+  phantom3a?: CompositesOptPrimitivesStrStringOptional;
+  to1?: Branch33ATo1Cycles1Optional;
 };
-export type SimpleCycles3To1SimpleCycles1Optional = SimpleCycles1 | null | undefined;
-export type SimpleCycles3 = {
-  phantom3?: CompositesOptPrimitivesStrStringOptional;
-  to1?: SimpleCycles3To1SimpleCycles1Optional;
+export type Branch33ATo1Cycles1Optional = (Cycles1) | null | undefined;
+export type Branch33B = {
+  phantom3b?: CompositesOptPrimitivesStrStringOptional;
+  to2?: Cycles1To2Cycles2Optional;
 };
-export type SimpleCycles2To3SimpleCycles3Optional = SimpleCycles3 | null | undefined;
-export type SimpleCycles2 = {
-  phantom2?: CompositesOptPrimitivesStrStringOptional;
-  to3?: SimpleCycles2To3SimpleCycles3Optional;
+export type Cycles1List3Cycles1List3Cycles3ListOptional = (Cycles1List3Cycles3List) | null | undefined;
+export type Cycles1List3Cycles3List = Array<Cycles3>;
+export type SimpleCycles1Args = {
+  data: SimpleCycles1;
 };
-export type SimpleCycles1To2SimpleCycles2Optional = SimpleCycles2 | null | undefined;
 export type SimpleCycles1 = {
   phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: SimpleCycles1To2SimpleCycles2Optional;
 };
-export type SimpleCycles1Args = {
-  data: SimpleCycles1;
+export type SimpleCycles1To2SimpleCycles2Optional = (SimpleCycles2) | null | undefined;
+export type SimpleCycles2 = {
+  phantom2?: CompositesOptPrimitivesStrStringOptional;
+  to3?: SimpleCycles2To3SimpleCycles3Optional;
 };
-
+export type SimpleCycles2To3SimpleCycles3Optional = (SimpleCycles3) | null | undefined;
+export type SimpleCycles3 = {
+  phantom3?: CompositesOptPrimitivesStrStringOptional;
+  to1?: SimpleCycles3To1SimpleCycles1Optional;
+};
+export type SimpleCycles3To1SimpleCycles1Optional = (SimpleCycles1) | null | undefined;
 export type PrimitivesSelections = {
-  _?: SelectionFlags;
   str?: ScalarSelectNoArgs;
   "enum"?: ScalarSelectNoArgs;
   uuid?: ScalarSelectNoArgs;
@@ -1323,82 +1331,66 @@ export type PrimitivesSelections = {
   "boolean"?: ScalarSelectNoArgs;
 };
 export type Branch2Selections = {
-  _?: SelectionFlags;
   branch2?: ScalarSelectNoArgs;
 };
 export type CompositesEitherEitherSelections = {
-  _?: SelectionFlags;
   "primitives"?: CompositeSelectNoArgs<PrimitivesSelections>;
   "branch2"?: CompositeSelectNoArgs<Branch2Selections>;
 };
-export type CompositesUnionUnionSelections = {
-  _?: SelectionFlags;
-};
 export type CompositesSelections = {
-  _?: SelectionFlags;
   opt?: ScalarSelectNoArgs;
   either?: CompositeSelectNoArgs<CompositesEitherEitherSelections>;
   union?: ScalarSelectNoArgs;
   list?: ScalarSelectNoArgs;
 };
-export type Branch33ASelections = {
-  _?: SelectionFlags;
-  phantom3a?: ScalarSelectNoArgs;
-  to1?: CompositeSelectNoArgs<Cycles1Selections>;
-};
-export type Branch33BSelections = {
-  _?: SelectionFlags;
-  phantom3b?: ScalarSelectNoArgs;
-  to2?: CompositeSelectNoArgs<Cycles2Selections>;
-};
 export type Cycles3Selections = {
-  _?: SelectionFlags;
   "branch33A"?: CompositeSelectNoArgs<Branch33ASelections>;
   "branch33B"?: CompositeSelectNoArgs<Branch33BSelections>;
 };
-export type Cycles2Selections = {
-  _?: SelectionFlags;
-  "cycles3"?: CompositeSelectNoArgs<Cycles3Selections>;
-  "cycles1"?: CompositeSelectNoArgs<Cycles1Selections>;
-};
 export type Cycles1Selections = {
-  _?: SelectionFlags;
   phantom1?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<Cycles2Selections>;
   list3?: CompositeSelectNoArgs<Cycles3Selections>;
 };
+export type Branch33ASelections = {
+  phantom3a?: ScalarSelectNoArgs;
+  to1?: CompositeSelectNoArgs<Cycles1Selections>;
+};
+export type Branch33BSelections = {
+  phantom3b?: ScalarSelectNoArgs;
+  to2?: CompositeSelectNoArgs<Cycles2Selections>;
+};
+export type Cycles2Selections = {
+  "cycles3"?: CompositeSelectNoArgs<Cycles3Selections>;
+  "cycles1"?: CompositeSelectNoArgs<Cycles1Selections>;
+};
+export type SimpleCycles1Selections = {
+  phantom1?: ScalarSelectNoArgs;
+  to2?: CompositeSelectNoArgs<SimpleCycles2Selections>;
+};
 export type SimpleCycles3Selections = {
-  _?: SelectionFlags;
   phantom3?: ScalarSelectNoArgs;
   to1?: CompositeSelectNoArgs<SimpleCycles1Selections>;
 };
 export type SimpleCycles2Selections = {
-  _?: SelectionFlags;
   phantom2?: ScalarSelectNoArgs;
   to3?: CompositeSelectNoArgs<SimpleCycles3Selections>;
-};
-export type SimpleCycles1Selections = {
-  _?: SelectionFlags;
-  phantom1?: ScalarSelectNoArgs;
-  to2?: CompositeSelectNoArgs<SimpleCycles2Selections>;
 };
 
 export class QueryGraph extends _QueryGraphBase {
   constructor() {
     super({
-      "Primitives": "primitives!",
-      "Composites": "composites!",
-      "Cycles1": "cycles1!",
-      "SimpleCycles1": "simple_cycles_1!",
       "primitives": "primitives!",
+      "composites": "composites!",
+      "cycles1": "cycles1!",
+      "simple_cycles_1": "simple_cycles_1!",
       "branch2": "branch2!",
       "branch33A": "branch33A!",
       "branch33B": "branch33B!",
       "cycles3": "cycles3!",
-      "cycles1": "cycles1!",
     });
   }
-    
+            
   pyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "py_primitives": [args, select] },

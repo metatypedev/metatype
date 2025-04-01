@@ -49,35 +49,17 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn RootUploadFn() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("file".into(), "FileBf9b7".into()),
-                    (
-                        "path".into(),
-                        "RootUploadFnInputPathString25e51Optional".into(),
-                    ),
-                ]
-                .into(),
-            ),
-            input_files: Some(PathToInputFiles(&[TypePath(&[
-                TypePathSegment::ObjectProp("file"),
-            ])])),
-            ..scalar()
-        }
-    }
     pub fn RootUploadManyFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
                     (
-                        "prefix".into(),
-                        "RootUploadManyFnInputPrefixString25e51Optional".into(),
+                        "files".into(),
+                        "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
                     ),
                     (
-                        "files".into(),
-                        "RootUploadManyFnInputFilesFileBf9b7List".into(),
+                        "prefix".into(),
+                        "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
                     ),
                 ]
                 .into(),
@@ -89,47 +71,64 @@ mod node_metas {
             ..scalar()
         }
     }
+    pub fn RootUploadFn() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("file".into(), "file_bf9b7".into()),
+                    (
+                        "path".into(),
+                        "root_upload_fn_input_path_string_25e51_optional".into(),
+                    ),
+                ]
+                .into(),
+            ),
+            input_files: Some(PathToInputFiles(&[TypePath(&[
+                TypePathSegment::ObjectProp("file"),
+            ])])),
+            ..scalar()
+        }
+    }
 }
 use types::*;
 #[allow(unused)]
 pub mod types {
-    pub type FileBf9b7 = super::FileId;
-    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
+    // input types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadFnInput {
         pub file: FileBf9b7,
         pub path: RootUploadFnInputPathString25e51Optional,
     }
-    pub type RootUploadFnOutput = bool;
-    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
-    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
+    pub type FileBf9b7 = super::FileId;
+    pub type RootUploadFnInputPathString25e51Optional = Option<String>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootUploadManyFnInput {
         pub prefix: RootUploadManyFnInputPrefixString25e51Optional,
         pub files: RootUploadManyFnInputFilesFileBf9b7List,
     }
-}
-#[allow(unused)]
-pub mod return_types {
-    use super::types::*;
+    pub type RootUploadManyFnInputPrefixString25e51Optional = Option<String>;
+    pub type RootUploadManyFnInputFilesFileBf9b7List = Vec<FileBf9b7>;
+    // partial output types
+    pub type RootUploadFnOutput = bool;
+    // output types
 }
 
 pub fn query_graph() -> QueryGraph {
     QueryGraph {
         ty_to_gql_ty_map: std::sync::Arc::new(
             [
-                ("FileBf9b7".into(), "file_bf9b7!".into()),
+                ("file_bf9b7".into(), "file_bf9b7!".into()),
                 (
-                    "RootUploadFnInputPathString25e51Optional".into(),
+                    "root_upload_fn_input_path_string_25e51_optional".into(),
                     "String".into(),
                 ),
                 (
-                    "RootUploadManyFnInputPrefixString25e51Optional".into(),
+                    "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
                     "String".into(),
                 ),
                 (
-                    "RootUploadManyFnInputFilesFileBf9b7List".into(),
-                    "[file_bf9b7]!".into(),
+                    "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
+                    "[file_bf9b7!]!".into(),
                 ),
             ]
             .into(),
