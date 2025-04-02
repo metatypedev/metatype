@@ -130,9 +130,12 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
             ));
             let inner_name = visit_type(cx, acc, data.item)?;
             acc.path.pop();
-            // gen_name(cx, acc, id, "optional")
-            gen_name(cx, acc, id, &format!("{inner_name}_optional"))
-            // format!("{inner_name}_optional").into()
+
+            if cx.user_named.contains(&data.item) {
+                gen_name(cx, acc, id, &format!("{inner_name}_optional"))
+            } else {
+                format!("{inner_name}_optional").into()
+            }
         }
         TypeNode::List { data, .. } => {
             acc.path.push((
@@ -144,14 +147,12 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
             ));
             let inner_name = visit_type(cx, acc, data.items)?;
             acc.path.pop();
-            // gen_name(cx, acc, id, "list")
-            /* if cx.user_named.contains(&data.items) {
-                gen_name(cx, acc, id, &format!("{_inner_name}_list"))
+
+            if cx.user_named.contains(&data.items) {
+                gen_name(cx, acc, id, &format!("{inner_name}_list"))
             } else {
-                format!("{_inner_name}_list").into()
-            } */
-            // format!("{inner_name}_list").into()
-            gen_name(cx, acc, id, &format!("{inner_name}_list"))
+                format!("{inner_name}_list").into()
+            }
         }
         TypeNode::Object { data, .. } => {
             let name = gen_name(cx, acc, id, "struct");

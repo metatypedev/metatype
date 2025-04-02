@@ -51,4 +51,18 @@ await typegraph("materializer-dedup", (g: any) => {
     f1: f.withPolicy(Policy.public()),
     f2: f.withPolicy(Policy.internal()),
   });
+
+  g.expose(
+    {
+      f3: deno.func(t.struct({}), t.list(t.struct({ key: t.string() })), {
+        code: () => [{ key: "value" }],
+      }),
+    },
+    {
+      f4: deno.func(t.struct({}), t.optional(t.struct({ key: t.string() })), {
+        code: () => ({ key: "value" }),
+      }),
+    },
+    Policy.public(),
+  );
 });
