@@ -21,6 +21,6 @@ expression: "tg.output_types.iter().map(|(idx, ty)|\n            { (idx, (ty.tag
     ),
     Ty_7/0: (
         "optional",
-        "Student_peers_placeholder_optional",
+        "placeholder_optional",
     ),
 }
