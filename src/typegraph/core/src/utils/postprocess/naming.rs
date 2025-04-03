@@ -130,9 +130,8 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
             ));
             let inner_name = visit_type(cx, acc, data.item)?;
             acc.path.pop();
-            // gen_name(cx, acc, id, "optional")
+
             gen_name(cx, acc, id, &format!("{inner_name}_optional"))
-            // format!("{inner_name}_optional").into()
         }
         TypeNode::List { data, .. } => {
             acc.path.push((
@@ -144,13 +143,7 @@ fn visit_type(cx: &VisitContext, acc: &mut VisitCollector, id: u32) -> anyhow::R
             ));
             let inner_name = visit_type(cx, acc, data.items)?;
             acc.path.pop();
-            // gen_name(cx, acc, id, "list")
-            /* if cx.user_named.contains(&data.items) {
-                gen_name(cx, acc, id, &format!("{_inner_name}_list"))
-            } else {
-                format!("{_inner_name}_list").into()
-            } */
-            // format!("{inner_name}_list").into()
+
             gen_name(cx, acc, id, &format!("{inner_name}_list"))
         }
         TypeNode::Object { data, .. } => {
@@ -344,15 +337,31 @@ fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str)
 
         let title;
         let mut last = acc.path.len();
+        let mut wrapped = false;
         loop {
             last -= 1;
             let (last_segment, last_name) = &acc.path[last];
             title = match &last_segment.edge {
                 // we don't include optional and list nodes in
                 // generated names (useless but also, they might be placeholders)
-                Edge::OptionalItem | Edge::ArrayItem => continue,
-                Edge::FunctionInput => format!("{}_input", last_name),
-                Edge::FunctionOutput => format!("{}_output", last_name),
+                Edge::OptionalItem | Edge::ArrayItem => {
+                    wrapped = true;
+                    continue;
+                }
+                Edge::FunctionInput => {
+                    format!(
+                        "{}_input{}",
+                        last_name,
+                        wrapped.then_some(format!("_{ty_name}")).unwrap_or_default()
+                    )
+                }
+                Edge::FunctionOutput => {
+                    format!(
+                        "{}_output{}",
+                        last_name,
+                        wrapped.then_some(format!("_{ty_name}")).unwrap_or_default()
+                    )
+                }
                 Edge::ObjectProp(key) => {
                     join_if_ok!(format!("{last_name}_{key}"), ty_name)
                 }
