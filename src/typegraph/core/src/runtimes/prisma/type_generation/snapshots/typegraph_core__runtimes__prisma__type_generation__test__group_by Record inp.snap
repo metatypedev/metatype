@@ -2,204 +2,252 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct 'Record_group_by_query_input' #152
-├─ [by]: list 'Record_group_by' #109
-│  └─ item: string #107 enum{ '"id"', '"name"', '"age"', '"created_at"' }
-├─ [cursor]: optional #105
-│  └─ item: union 'Record_cursor' #104
-│     ├─ variant_0: struct #99
+root: struct 'Record_group_by_query_input' #192
+├─ [by]: list 'Record_group_by' #149
+│  └─ item: string #147 enum{ '"id"', '"name"', '"age"', '"created_at"' }
+├─ [cursor]: optional #145
+│  └─ item: union 'Record_cursor' #144
+│     ├─ variant_0: struct #139
 │     │  └─ [id]: string #4
-│     ├─ variant_1: struct #100
+│     ├─ variant_1: struct #140
 │     │  └─ [name]: string #5
-│     ├─ variant_2: struct #101
+│     ├─ variant_2: struct #141
 │     │  └─ [age]: integer #6
-│     └─ variant_3: struct #102
+│     └─ variant_3: struct #142
 │        └─ [created_at]: string #1
-├─ [having]: optional #150
-│  └─ item: union 'Record_having' #149
-│     ├─ variant_0: struct 'Record_where_with_aggregates' #141
-│     │  ├─ [age]: optional #138
-│     │  │  └─ item: optional '_prisma_integer_filter_with_aggregates_ex' #137
-│     │  │     └─ item: union #135
-│     │  │        ├─ variant_0: union '_prisma_integer_filter_with_aggregates' #133
-│     │  │        │  ├─ variant_0: &_prisma_integer_filter #36
-│     │  │        │  ├─ variant_1: struct #127
-│     │  │        │  │  └─ [_count]: &_prisma_integer_filter #36
-│     │  │        │  ├─ variant_2: struct #128
-│     │  │        │  │  └─ [_sum]: &_prisma_integer_filter #36
-│     │  │        │  ├─ variant_3: struct #129
-│     │  │        │  │  └─ [_avg]: either '_prisma_float_filter' #126
-│     │  │        │  │     ├─ variant_0: float #117
-│     │  │        │  │     ├─ variant_1: struct #120
-│     │  │        │  │     │  └─ [equals]: float #117
-│     │  │        │  │     ├─ variant_2: struct #121
-│     │  │        │  │     │  └─ [not]: float #117
-│     │  │        │  │     ├─ variant_3: struct #122
-│     │  │        │  │     │  ├─ [gt]: optional #118
-│     │  │        │  │     │  │  └─ item: float #117
-│     │  │        │  │     │  ├─ [gte]: optional #118
-│     │  │        │  │     │  │  └─ item: float #117
-│     │  │        │  │     │  ├─ [lt]: optional #118
-│     │  │        │  │     │  │  └─ item: float #117
-│     │  │        │  │     │  └─ [lte]: optional #118
-│     │  │        │  │     │     └─ item: float #117
-│     │  │        │  │     ├─ variant_4: struct #123
-│     │  │        │  │     │  └─ [in]: list #119
-│     │  │        │  │     │     └─ item: float #117
-│     │  │        │  │     └─ variant_5: struct #124
-│     │  │        │  │        └─ [notIn]: list #119
-│     │  │        │  │           └─ item: float #117
-│     │  │        │  ├─ variant_4: struct #130
-│     │  │        │  │  └─ [_min]: &_prisma_integer_filter #36
-│     │  │        │  └─ variant_5: struct #131
-│     │  │        │     └─ [_max]: &_prisma_integer_filter #36
-│     │  │        └─ variant_1: struct #134
-│     │  │           └─ [not]: union '_prisma_integer_filter_with_aggregates' #133
-│     │  │              ├─ variant_0: &_prisma_integer_filter #36
-│     │  │              ├─ variant_1: struct #127
-│     │  │              │  └─ [_count]: &_prisma_integer_filter #36
-│     │  │              ├─ variant_2: struct #128
-│     │  │              │  └─ [_sum]: &_prisma_integer_filter #36
-│     │  │              ├─ variant_3: struct #129
-│     │  │              │  └─ [_avg]: either '_prisma_float_filter' #126
-│     │  │              │     ├─ variant_0: float #117
-│     │  │              │     ├─ variant_1: struct #120
-│     │  │              │     │  └─ [equals]: float #117
-│     │  │              │     ├─ variant_2: struct #121
-│     │  │              │     │  └─ [not]: float #117
-│     │  │              │     ├─ variant_3: struct #122
-│     │  │              │     │  ├─ [gt]: optional #118
-│     │  │              │     │  │  └─ item: float #117
-│     │  │              │     │  ├─ [gte]: optional #118
-│     │  │              │     │  │  └─ item: float #117
-│     │  │              │     │  ├─ [lt]: optional #118
-│     │  │              │     │  │  └─ item: float #117
-│     │  │              │     │  └─ [lte]: optional #118
-│     │  │              │     │     └─ item: float #117
-│     │  │              │     ├─ variant_4: struct #123
-│     │  │              │     │  └─ [in]: list #119
-│     │  │              │     │     └─ item: float #117
-│     │  │              │     └─ variant_5: struct #124
-│     │  │              │        └─ [notIn]: list #119
-│     │  │              │           └─ item: float #117
-│     │  │              ├─ variant_4: struct #130
-│     │  │              │  └─ [_min]: &_prisma_integer_filter #36
-│     │  │              └─ variant_5: struct #131
-│     │  │                 └─ [_max]: &_prisma_integer_filter #36
-│     │  ├─ [created_at]: optional #139
-│     │  │  └─ item: &_prisma_string_filter_ex #13
-│     │  ├─ [id]: optional #112
-│     │  │  └─ item: &_prisma_string_filter_ex #13
-│     │  └─ [name]: optional #113
-│     │     └─ item: &_prisma_string_filter_ex #13
-│     ├─ variant_1: struct #144
-│     │  └─ [AND]: list #143
-│     │     └─ item: &Record_having #142
-│     ├─ variant_2: struct #146
-│     │  └─ [OR]: list #145
-│     │     └─ item: &Record_having #142
-│     └─ variant_3: struct #147
-│        └─ [NOT]: &Record_having #142
-├─ [orderBy]: optional #89
-│  └─ item: list 'Record_order_by_with_aggregates' #88
-│     └─ item: struct #86
-│        ├─ [_avg]: optional #83
-│        │  └─ item: struct #82
-│        │     └─ [age]: &_prisma_sort_nullable #75
-│        ├─ [_count]: optional #81
-│        │  └─ item: struct #80
-│        │     ├─ [age]: optional '_prisma_sort_nullable' #79
-│        │     │  └─ item: union #77
-│        │     │     ├─ variant_0: struct #76
-│        │     │     │  ├─ [nulls]: &_prisma_nulls_order #68 enum{ '"first"', '"last"' }
-│        │     │     │  └─ [sort]: &_prisma_sort_order #65 enum{ '"asc"', '"desc"' }
-│        │     │     └─ variant_1: &_prisma_sort_order #65 enum{ '"asc"', '"desc"' }
-│        │     ├─ [created_at]: &_prisma_sort #64
-│        │     ├─ [id]: optional '_prisma_sort' #74
-│        │     │  └─ item: union #72
-│        │     │     ├─ variant_0: struct #71
-│        │     │     │  └─ [sort]: string '_prisma_sort_order' #67 enum{ '"asc"', '"desc"' }
-│        │     │     └─ variant_1: string '_prisma_sort_order' #67 enum{ '"asc"', '"desc"' }
-│        │     └─ [name]: &_prisma_sort #64
-│        ├─ [_max]: optional #83
-│        │  └─ item: struct #82
-│        │     └─ [age]: &_prisma_sort_nullable #75
-│        ├─ [_min]: optional #83
-│        │  └─ item: struct #82
-│        │     └─ [age]: &_prisma_sort_nullable #75
-│        ├─ [_sum]: optional #83
-│        │  └─ item: struct #82
-│        │     └─ [age]: &_prisma_sort_nullable #75
-│        ├─ [age]: &_prisma_sort_nullable #75
-│        ├─ [created_at]: &_prisma_sort #64
-│        ├─ [id]: &_prisma_sort #64
-│        └─ [name]: &_prisma_sort #64
-├─ [skip]: optional #97
-│  └─ item: integer '_skip' #96
-├─ [take]: optional #93
-│  └─ item: integer '_take' #92
-└─ [where]: optional #61
-   └─ item: struct 'Record_query_where_input' #60
-      ├─ [AND]: optional #57
-      │  └─ item: list #56
-      │     └─ item: &Record_query_where_input #55
-      ├─ [NOT]: optional #58
-      │  └─ item: &Record_query_where_input #55
-      ├─ [OR]: optional #57
-      │  └─ item: list #56
-      │     └─ item: &Record_query_where_input #55
-      ├─ [age]: optional #51
-      │  └─ item: optional '_prisma_integer_filter_ex' #50
-      │     └─ item: union #48
-      │        ├─ variant_0: either '_prisma_integer_filter' #46
-      │        │  ├─ variant_0: integer #37
-      │        │  ├─ variant_1: struct #40
-      │        │  │  └─ [equals]: integer #37
-      │        │  ├─ variant_2: struct #41
-      │        │  │  └─ [not]: integer #37
-      │        │  ├─ variant_3: struct #42
-      │        │  │  ├─ [gt]: optional #38
-      │        │  │  │  └─ item: integer #37
-      │        │  │  ├─ [gte]: optional #38
-      │        │  │  │  └─ item: integer #37
-      │        │  │  ├─ [lt]: optional #38
-      │        │  │  │  └─ item: integer #37
-      │        │  │  └─ [lte]: optional #38
-      │        │  │     └─ item: integer #37
-      │        │  ├─ variant_4: struct #43
-      │        │  │  └─ [in]: list #39
-      │        │  │     └─ item: integer #37
-      │        │  └─ variant_5: struct #44
-      │        │     └─ [notIn]: list #39
-      │        │        └─ item: integer #37
-      │        └─ variant_1: struct #47
-      │           └─ [not]: either '_prisma_integer_filter' #46
-      │              ├─ variant_0: integer #37
-      │              ├─ variant_1: struct #40
-      │              │  └─ [equals]: integer #37
-      │              ├─ variant_2: struct #41
-      │              │  └─ [not]: integer #37
-      │              ├─ variant_3: struct #42
-      │              │  ├─ [gt]: optional #38
-      │              │  │  └─ item: integer #37
-      │              │  ├─ [gte]: optional #38
-      │              │  │  └─ item: integer #37
-      │              │  ├─ [lt]: optional #38
-      │              │  │  └─ item: integer #37
-      │              │  └─ [lte]: optional #38
-      │              │     └─ item: integer #37
-      │              ├─ variant_4: struct #43
-      │              │  └─ [in]: list #39
-      │              │     └─ item: integer #37
-      │              └─ variant_5: struct #44
-      │                 └─ [notIn]: list #39
-      │                    └─ item: integer #37
-      ├─ [created_at]: optional #52
-      │  └─ item: &_prisma_string_filter_ex #13
+├─ [having]: optional #190
+│  └─ item: union 'Record_having' #189
+│     ├─ variant_0: struct 'Record_where_with_aggregates' #181
+│     │  ├─ [age]: optional #178
+│     │  │  └─ item: optional '_prisma_integer_filter_with_aggregates_ex' #177
+│     │  │     └─ item: union #175
+│     │  │        ├─ variant_0: union '_prisma_integer_filter_with_aggregates' #173
+│     │  │        │  ├─ variant_0: &_prisma_integer_filter #56
+│     │  │        │  ├─ variant_1: struct #167
+│     │  │        │  │  └─ [_count]: &_prisma_integer_filter #56
+│     │  │        │  ├─ variant_2: struct #168
+│     │  │        │  │  └─ [_sum]: &_prisma_integer_filter #56
+│     │  │        │  ├─ variant_3: struct #169
+│     │  │        │  │  └─ [_avg]: either '_prisma_float_filter' #166
+│     │  │        │  │     ├─ variant_0: float #157
+│     │  │        │  │     ├─ variant_1: struct #160
+│     │  │        │  │     │  └─ [equals]: float #157
+│     │  │        │  │     ├─ variant_2: struct #161
+│     │  │        │  │     │  └─ [not]: float #157
+│     │  │        │  │     ├─ variant_3: struct #162
+│     │  │        │  │     │  ├─ [gt]: optional #158
+│     │  │        │  │     │  │  └─ item: float #157
+│     │  │        │  │     │  ├─ [gte]: optional #158
+│     │  │        │  │     │  │  └─ item: float #157
+│     │  │        │  │     │  ├─ [lt]: optional #158
+│     │  │        │  │     │  │  └─ item: float #157
+│     │  │        │  │     │  └─ [lte]: optional #158
+│     │  │        │  │     │     └─ item: float #157
+│     │  │        │  │     ├─ variant_4: struct #163
+│     │  │        │  │     │  └─ [in]: list #159
+│     │  │        │  │     │     └─ item: float #157
+│     │  │        │  │     └─ variant_5: struct #164
+│     │  │        │  │        └─ [notIn]: list #159
+│     │  │        │  │           └─ item: float #157
+│     │  │        │  ├─ variant_4: struct #170
+│     │  │        │  │  └─ [_min]: &_prisma_integer_filter #56
+│     │  │        │  └─ variant_5: struct #171
+│     │  │        │     └─ [_max]: &_prisma_integer_filter #56
+│     │  │        └─ variant_1: struct #174
+│     │  │           └─ [not]: union '_prisma_integer_filter_with_aggregates' #173
+│     │  │              ├─ variant_0: &_prisma_integer_filter #56
+│     │  │              ├─ variant_1: struct #167
+│     │  │              │  └─ [_count]: &_prisma_integer_filter #56
+│     │  │              ├─ variant_2: struct #168
+│     │  │              │  └─ [_sum]: &_prisma_integer_filter #56
+│     │  │              ├─ variant_3: struct #169
+│     │  │              │  └─ [_avg]: either '_prisma_float_filter' #166
+│     │  │              │     ├─ variant_0: float #157
+│     │  │              │     ├─ variant_1: struct #160
+│     │  │              │     │  └─ [equals]: float #157
+│     │  │              │     ├─ variant_2: struct #161
+│     │  │              │     │  └─ [not]: float #157
+│     │  │              │     ├─ variant_3: struct #162
+│     │  │              │     │  ├─ [gt]: optional #158
+│     │  │              │     │  │  └─ item: float #157
+│     │  │              │     │  ├─ [gte]: optional #158
+│     │  │              │     │  │  └─ item: float #157
+│     │  │              │     │  ├─ [lt]: optional #158
+│     │  │              │     │  │  └─ item: float #157
+│     │  │              │     │  └─ [lte]: optional #158
+│     │  │              │     │     └─ item: float #157
+│     │  │              │     ├─ variant_4: struct #163
+│     │  │              │     │  └─ [in]: list #159
+│     │  │              │     │     └─ item: float #157
+│     │  │              │     └─ variant_5: struct #164
+│     │  │              │        └─ [notIn]: list #159
+│     │  │              │           └─ item: float #157
+│     │  │              ├─ variant_4: struct #170
+│     │  │              │  └─ [_min]: &_prisma_integer_filter #56
+│     │  │              └─ variant_5: struct #171
+│     │  │                 └─ [_max]: &_prisma_integer_filter #56
+│     │  ├─ [created_at]: optional #179
+│     │  │  └─ item: &_prisma_date-time_filter_ex #72
+│     │  ├─ [id]: optional #152
+│     │  │  └─ item: &_prisma_uuid_filter_ex #13
+│     │  └─ [name]: optional #153
+│     │     └─ item: &_prisma_string_filter_ex #34
+│     ├─ variant_1: struct #184
+│     │  └─ [AND]: list #183
+│     │     └─ item: &Record_having #182
+│     ├─ variant_2: struct #186
+│     │  └─ [OR]: list #185
+│     │     └─ item: &Record_having #182
+│     └─ variant_3: struct #187
+│        └─ [NOT]: &Record_having #182
+├─ [orderBy]: optional #129
+│  └─ item: list 'Record_order_by_with_aggregates' #128
+│     └─ item: struct #126
+│        ├─ [_avg]: optional #123
+│        │  └─ item: struct #122
+│        │     └─ [age]: &_prisma_sort_nullable #115
+│        ├─ [_count]: optional #121
+│        │  └─ item: struct #120
+│        │     ├─ [age]: optional '_prisma_sort_nullable' #119
+│        │     │  └─ item: union #117
+│        │     │     ├─ variant_0: struct #116
+│        │     │     │  ├─ [nulls]: &_prisma_nulls_order #108 enum{ '"first"', '"last"' }
+│        │     │     │  └─ [sort]: &_prisma_sort_order #105 enum{ '"asc"', '"desc"' }
+│        │     │     └─ variant_1: &_prisma_sort_order #105 enum{ '"asc"', '"desc"' }
+│        │     ├─ [created_at]: &_prisma_sort #104
+│        │     ├─ [id]: optional '_prisma_sort' #114
+│        │     │  └─ item: union #112
+│        │     │     ├─ variant_0: struct #111
+│        │     │     │  └─ [sort]: string '_prisma_sort_order' #107 enum{ '"asc"', '"desc"' }
+│        │     │     └─ variant_1: string '_prisma_sort_order' #107 enum{ '"asc"', '"desc"' }
+│        │     └─ [name]: &_prisma_sort #104
+│        ├─ [_max]: optional #123
+│        │  └─ item: struct #122
+│        │     └─ [age]: &_prisma_sort_nullable #115
+│        ├─ [_min]: optional #123
+│        │  └─ item: struct #122
+│        │     └─ [age]: &_prisma_sort_nullable #115
+│        ├─ [_sum]: optional #123
+│        │  └─ item: struct #122
+│        │     └─ [age]: &_prisma_sort_nullable #115
+│        ├─ [age]: &_prisma_sort_nullable #115
+│        ├─ [created_at]: &_prisma_sort #104
+│        ├─ [id]: &_prisma_sort #104
+│        └─ [name]: &_prisma_sort #104
+├─ [skip]: optional #137
+│  └─ item: integer '_skip' #136
+├─ [take]: optional #133
+│  └─ item: integer '_take' #132
+└─ [where]: optional #101
+   └─ item: struct 'Record_query_where_input' #100
+      ├─ [AND]: optional #97
+      │  └─ item: list #96
+      │     └─ item: &Record_query_where_input #95
+      ├─ [NOT]: optional #98
+      │  └─ item: &Record_query_where_input #95
+      ├─ [OR]: optional #97
+      │  └─ item: list #96
+      │     └─ item: &Record_query_where_input #95
+      ├─ [age]: optional #71
+      │  └─ item: optional '_prisma_integer_filter_ex' #70
+      │     └─ item: union #68
+      │        ├─ variant_0: either '_prisma_integer_filter' #66
+      │        │  ├─ variant_0: integer #57
+      │        │  ├─ variant_1: struct #60
+      │        │  │  └─ [equals]: integer #57
+      │        │  ├─ variant_2: struct #61
+      │        │  │  └─ [not]: integer #57
+      │        │  ├─ variant_3: struct #62
+      │        │  │  ├─ [gt]: optional #58
+      │        │  │  │  └─ item: integer #57
+      │        │  │  ├─ [gte]: optional #58
+      │        │  │  │  └─ item: integer #57
+      │        │  │  ├─ [lt]: optional #58
+      │        │  │  │  └─ item: integer #57
+      │        │  │  └─ [lte]: optional #58
+      │        │  │     └─ item: integer #57
+      │        │  ├─ variant_4: struct #63
+      │        │  │  └─ [in]: list #59
+      │        │  │     └─ item: integer #57
+      │        │  └─ variant_5: struct #64
+      │        │     └─ [notIn]: list #59
+      │        │        └─ item: integer #57
+      │        └─ variant_1: struct #67
+      │           └─ [not]: either '_prisma_integer_filter' #66
+      │              ├─ variant_0: integer #57
+      │              ├─ variant_1: struct #60
+      │              │  └─ [equals]: integer #57
+      │              ├─ variant_2: struct #61
+      │              │  └─ [not]: integer #57
+      │              ├─ variant_3: struct #62
+      │              │  ├─ [gt]: optional #58
+      │              │  │  └─ item: integer #57
+      │              │  ├─ [gte]: optional #58
+      │              │  │  └─ item: integer #57
+      │              │  ├─ [lt]: optional #58
+      │              │  │  └─ item: integer #57
+      │              │  └─ [lte]: optional #58
+      │              │     └─ item: integer #57
+      │              ├─ variant_4: struct #63
+      │              │  └─ [in]: list #59
+      │              │     └─ item: integer #57
+      │              └─ variant_5: struct #64
+      │                 └─ [notIn]: list #59
+      │                    └─ item: integer #57
+      ├─ [created_at]: optional #92
+      │  └─ item: optional '_prisma_date-time_filter_ex' #91
+      │     └─ item: union #89
+      │        ├─ variant_0: union '_prisma_date-time_filter' #87
+      │        │  ├─ variant_0: string #74
+      │        │  ├─ variant_1: struct #77
+      │        │  │  └─ [equals]: string #74
+      │        │  ├─ variant_2: struct #78
+      │        │  │  └─ [not]: string #74
+      │        │  ├─ variant_3: struct #79
+      │        │  │  └─ [in]: list #76
+      │        │  │     └─ item: string #74
+      │        │  ├─ variant_4: struct #80
+      │        │  │  └─ [notIn]: list #76
+      │        │  │     └─ item: string #74
+      │        │  ├─ variant_5: struct #83
+      │        │  │  ├─ [contains]: string #74
+      │        │  │  └─ [mode]: optional #82
+      │        │  │     └─ item: string #81 enum{ '"insensitive"' }
+      │        │  ├─ variant_6: struct #84
+      │        │  │  └─ [search]: string #74
+      │        │  └─ variant_7: struct #85
+      │        │     ├─ [endsWith]: optional #75
+      │        │     │  └─ item: string #74
+      │        │     └─ [startsWith]: optional #75
+      │        │        └─ item: string #74
+      │        └─ variant_1: struct #88
+      │           └─ [not]: union '_prisma_date-time_filter' #87
+      │              ├─ variant_0: string #74
+      │              ├─ variant_1: struct #77
+      │              │  └─ [equals]: string #74
+      │              ├─ variant_2: struct #78
+      │              │  └─ [not]: string #74
+      │              ├─ variant_3: struct #79
+      │              │  └─ [in]: list #76
+      │              │     └─ item: string #74
+      │              ├─ variant_4: struct #80
+      │              │  └─ [notIn]: list #76
+      │              │     └─ item: string #74
+      │              ├─ variant_5: struct #83
+      │              │  ├─ [contains]: string #74
+      │              │  └─ [mode]: optional #82
+      │              │     └─ item: string #81 enum{ '"insensitive"' }
+      │              ├─ variant_6: struct #84
+      │              │  └─ [search]: string #74
+      │              └─ variant_7: struct #85
+      │                 ├─ [endsWith]: optional #75
+      │                 │  └─ item: string #74
+      │                 └─ [startsWith]: optional #75
+      │                    └─ item: string #74
       ├─ [id]: optional #33
-      │  └─ item: optional '_prisma_string_filter_ex' #32
+      │  └─ item: optional '_prisma_uuid_filter_ex' #32
       │     └─ item: union #30
-      │        ├─ variant_0: union '_prisma_string_filter' #28
+      │        ├─ variant_0: union '_prisma_uuid_filter' #28
       │        │  ├─ variant_0: string #15
       │        │  ├─ variant_1: struct #18
       │        │  │  └─ [equals]: string #15
@@ -223,7 +271,7 @@ root: struct 'Record_group_by_query_input' #152
       │        │     └─ [startsWith]: optional #16
       │        │        └─ item: string #15
       │        └─ variant_1: struct #29
-      │           └─ [not]: union '_prisma_string_filter' #28
+      │           └─ [not]: union '_prisma_uuid_filter' #28
       │              ├─ variant_0: string #15
       │              ├─ variant_1: struct #18
       │              │  └─ [equals]: string #15
@@ -246,5 +294,53 @@ root: struct 'Record_group_by_query_input' #152
       │                 │  └─ item: string #15
       │                 └─ [startsWith]: optional #16
       │                    └─ item: string #15
-      └─ [name]: optional #34
-         └─ item: &_prisma_string_filter_ex #13
+      └─ [name]: optional #54
+         └─ item: optional '_prisma_string_filter_ex' #53
+            └─ item: union #51
+               ├─ variant_0: union '_prisma_string_filter' #49
+               │  ├─ variant_0: string #36
+               │  ├─ variant_1: struct #39
+               │  │  └─ [equals]: string #36
+               │  ├─ variant_2: struct #40
+               │  │  └─ [not]: string #36
+               │  ├─ variant_3: struct #41
+               │  │  └─ [in]: list #38
+               │  │     └─ item: string #36
+               │  ├─ variant_4: struct #42
+               │  │  └─ [notIn]: list #38
+               │  │     └─ item: string #36
+               │  ├─ variant_5: struct #45
+               │  │  ├─ [contains]: string #36
+               │  │  └─ [mode]: optional #44
+               │  │     └─ item: string #43 enum{ '"insensitive"' }
+               │  ├─ variant_6: struct #46
+               │  │  └─ [search]: string #36
+               │  └─ variant_7: struct #47
+               │     ├─ [endsWith]: optional #37
+               │     │  └─ item: string #36
+               │     └─ [startsWith]: optional #37
+               │        └─ item: string #36
+               └─ variant_1: struct #50
+                  └─ [not]: union '_prisma_string_filter' #49
+                     ├─ variant_0: string #36
+                     ├─ variant_1: struct #39
+                     │  └─ [equals]: string #36
+                     ├─ variant_2: struct #40
+                     │  └─ [not]: string #36
+                     ├─ variant_3: struct #41
+                     │  └─ [in]: list #38
+                     │     └─ item: string #36
+                     ├─ variant_4: struct #42
+                     │  └─ [notIn]: list #38
+                     │     └─ item: string #36
+                     ├─ variant_5: struct #45
+                     │  ├─ [contains]: string #36
+                     │  └─ [mode]: optional #44
+                     │     └─ item: string #43 enum{ '"insensitive"' }
+                     ├─ variant_6: struct #46
+                     │  └─ [search]: string #36
+                     └─ variant_7: struct #47
+                        ├─ [endsWith]: optional #37
+                        │  └─ item: string #36
+                        └─ [startsWith]: optional #37
+                           └─ item: string #36
