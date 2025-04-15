@@ -36,6 +36,8 @@ if (platform === "darwin" || platform === "linux") {
   const flags = fcntl([process.stdin.fd, F_GETFL, 0]);
   const result = fcntl([process.stdin.fd, F_SETFL, flags & ~O_NONBLOCK]);
 
+  ffi.close("libc");
+
   if (result !== 0) {
     throw new Error("Failed to disable non-blocking fd flag");
   }
