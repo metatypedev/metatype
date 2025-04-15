@@ -5,6 +5,7 @@
       "jsr:@david/dax@0.41.0": "jsr:@david/dax@0.41.0",
       "jsr:@david/which@^0.4.1": "jsr:@david/which@0.4.1",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.4",
+      "jsr:@std/assert": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0.10": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.10",
@@ -50,6 +51,7 @@
       "npm:@sinonjs/fake-timers@13.0.5": "npm:@sinonjs/fake-timers@13.0.5",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
+      "npm:ffi-rs": "npm:ffi-rs@1.2.10",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:marked": "npm:marked@15.0.6",
@@ -277,6 +279,50 @@
         "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
         "dependencies": {}
       },
+      "@yuuang/ffi-rs-android-arm64@1.2.10": {
+        "integrity": "sha512-jkYl/qJnhlY3sjhkDnerLfCqVpqrmKUruOy2WbYS9Lu8sRIDBEmuWx5JYSMtB7o9dLE4JY+8YhSPulhBTYbANw==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-darwin-arm64@1.2.10": {
+        "integrity": "sha512-iezEXSSLtQvcV8r9rgmCPjfzff5PUvIxKGlgtdj7Ue+FAcM89pzW0VLA0SriamGrWVG+P1DnR0796m7/76Njww==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-darwin-x64@1.2.10": {
+        "integrity": "sha512-Hvqm7kFXBPDqEK88Jsp8UXKDQpXeQqNSdkX3YepIooZ/d/bqmV8NjpdNRG0YW8ATpi8Dl1DbFdmO5tLgQcnUXg==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-linux-arm-gnueabihf@1.2.10": {
+        "integrity": "sha512-rh8QyQZv/7M13BXIrQeZ1IS32U5R7XUM6fuNalVZhNKw86AsioNWS54S6lwRH+2qtIfMNslw1/KtlchbeOBJSw==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-linux-arm64-gnu@1.2.10": {
+        "integrity": "sha512-0KNATJlYyCcdklOLsii/bq0JtMBGCdbDt9fAXmQ0GzZkuJB9eB0QhdwuVSwOvjoY6do1hIqv8r7GdoIBp3ajkg==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-linux-arm64-musl@1.2.10": {
+        "integrity": "sha512-g8vMwGStVNN6/gtMtxw8DeZWhxK5Z0MuQqIRRFF/FVQFTLhrHRmxJ1NfXlRWgHJzECaWlTNwrnFPB7j48O8FcQ==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-linux-x64-gnu@1.2.10": {
+        "integrity": "sha512-wNGpsVhphbQCZJo/4Bkgjq0qyMv55rTXy+117hC2GTGpYDmhcV2tVfEugfDiQr64QUkF4I7NRSU40xtuYZ6ORg==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-linux-x64-musl@1.2.10": {
+        "integrity": "sha512-kpFQS/us9QWstdyrKKdmFfRe95iYBdT0/0ct+Rqj3sWZgKhy45kheZbfOGVGKC6IKd0ZtSmCeLf4vvFXBX8nmw==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-win32-arm64-msvc@1.2.10": {
+        "integrity": "sha512-8wPV1fNTmX0Ct95NSd7PJyqhd+b1zthwIGIZITTSK6wEQufCwm3UduhcrlZr9FamnBnskwL19nWpM4foQFcPQw==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-win32-ia32-msvc@1.2.10": {
+        "integrity": "sha512-3G2vYAEPpyEErkpr9PGuULfm5sbtvsn3RFt+5nh/RB+kTG/HP8mai+gNHQIE6I//udZE8w6RhYXuZMB2Ri2+zw==",
+        "dependencies": {}
+      },
+      "@yuuang/ffi-rs-win32-x64-msvc@1.2.10": {
+        "integrity": "sha512-hAv+RHe1WMB5gk4QDRC8/T9Tw9YiE6DqNNnw+Snl2xbDJ2xyr8B7cHit0OgRX11G9f6l8cjOtzSz+qGncFF5tA==",
+        "dependencies": {}
+      },
       "agent-base@6.0.2": {
         "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
         "dependencies": {
@@ -308,6 +354,22 @@
       "escape-latex@1.2.0": {
         "integrity": "sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==",
         "dependencies": {}
+      },
+      "ffi-rs@1.2.10": {
+        "integrity": "sha512-veJXMuLkQRdoFi/WULIyBUi2pOg4HMJvSbnVwDBKlRZJZ63BArDKm+k4NzXTjL68T2V+Aj3Fu9g4Iefph14c5g==",
+        "dependencies": {
+          "@yuuang/ffi-rs-android-arm64": "@yuuang/ffi-rs-android-arm64@1.2.10",
+          "@yuuang/ffi-rs-darwin-arm64": "@yuuang/ffi-rs-darwin-arm64@1.2.10",
+          "@yuuang/ffi-rs-darwin-x64": "@yuuang/ffi-rs-darwin-x64@1.2.10",
+          "@yuuang/ffi-rs-linux-arm-gnueabihf": "@yuuang/ffi-rs-linux-arm-gnueabihf@1.2.10",
+          "@yuuang/ffi-rs-linux-arm64-gnu": "@yuuang/ffi-rs-linux-arm64-gnu@1.2.10",
+          "@yuuang/ffi-rs-linux-arm64-musl": "@yuuang/ffi-rs-linux-arm64-musl@1.2.10",
+          "@yuuang/ffi-rs-linux-x64-gnu": "@yuuang/ffi-rs-linux-x64-gnu@1.2.10",
+          "@yuuang/ffi-rs-linux-x64-musl": "@yuuang/ffi-rs-linux-x64-musl@1.2.10",
+          "@yuuang/ffi-rs-win32-arm64-msvc": "@yuuang/ffi-rs-win32-arm64-msvc@1.2.10",
+          "@yuuang/ffi-rs-win32-ia32-msvc": "@yuuang/ffi-rs-win32-ia32-msvc@1.2.10",
+          "@yuuang/ffi-rs-win32-x64-msvc": "@yuuang/ffi-rs-win32-x64-msvc@1.2.10"
+        }
       },
       "fraction.js@4.3.4": {
         "integrity": "sha512-pwiTgt0Q7t+GHZA4yaLjObx4vXmmdcS0iSJ19o8d/goUGgItX9UZWKWNnLHehxviD8wU2IWRsnR8cD5+yOJP2Q==",
