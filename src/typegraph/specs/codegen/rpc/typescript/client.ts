@@ -22,13 +22,13 @@ if (platform === "darwin" || platform === "linux") {
 
   ffi.open({
     library: "libc",
-    path: platform === "darwin" ? "usr/lib/libSystem.B.dylib" : "libc.so.6",
+    path: platform === "darwin" ? "/usr/lib/libSystem.B.dylib" : "libc.so.6",
   });
 
   const { fcntl } = ffi.define({
     fcntl: {
       library: "libc",
-      retType: ffi.DataType.U8,
+      retType: ffi.DataType.I32,
       paramsType: [ffi.DataType.I32, ffi.DataType.I32, ffi.DataType.I32],
     },
   });
