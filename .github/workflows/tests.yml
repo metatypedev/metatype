@@ -27,7 +27,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GHJK_VERSION: "v0.2.1"
+  GHJK_VERSION: "v0.2.2"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir

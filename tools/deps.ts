@@ -4,18 +4,21 @@
 // FIXME: we can't use the import map in ghjk so we must
 // rely on a deps.ts
 
-export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
-export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/mod.ts";
-export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/ports/mod.ts";
+export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/mod.ts";
+export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/mod.ts";
+export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/ports/mod.ts";
 export {
   std_url,
   zod,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/deps/common.ts";
+} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/deps/common.ts";
 export {
   copyLock,
   sedLock,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/std.ts";
-export { downloadFile,objectHash } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.1/utils/mod.ts";
+} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/std.ts";
+export {
+  downloadFile,
+  objectHash,
+} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/utils/mod.ts";
 // export * from "../../ghjk/mod.ts";
 // export * as ports from "../../ghjk/ports/mod.ts";
 // export * as utils from "../../ghjk/utils/mod.ts";
@@ -62,7 +65,6 @@ import bytes from "https://deno.land/x/convert_bytes@v2.1.1/mod.ts";
 export { bytes };
 export * as ctrlc from "https://deno.land/x/ctrlc@0.2.1/mod.ts";
 
-
 export type OrRetOf<T> = T extends () => infer Inner ? Inner : T;
 // FIXME: move with `$.switchMap` once ghjk 0.3 lands
 /**
@@ -85,13 +87,11 @@ export function switchMap<
   All extends {
     [Key in K]?: All[K];
   },
-> // D = undefined,
-(
+>( // D = undefined,
   val: K,
   branches: All,
   // def?: (val: K) => D,
-): K extends keyof All ? OrRetOf<All[K]>
-  : OrRetOf<All[keyof All]> | undefined {
+): K extends keyof All ? OrRetOf<All[K]> : OrRetOf<All[keyof All]> | undefined {
   const branch = branches[val];
   return typeof branch == "function" ? branch() : branch;
 }
