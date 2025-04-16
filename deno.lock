@@ -51,7 +51,7 @@
       "npm:@sinonjs/fake-timers@13.0.5": "npm:@sinonjs/fake-timers@13.0.5",
       "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:chance@1.1.11": "npm:chance@1.1.11",
-      "npm:ffi-rs": "npm:ffi-rs@1.2.10",
+      "npm:ffi-rs@1.2.10": "npm:ffi-rs@1.2.10",
       "npm:graphql@16.8.1": "npm:graphql@16.8.1",
       "npm:lodash@4.17.21": "npm:lodash@4.17.21",
       "npm:marked": "npm:marked@15.0.6",

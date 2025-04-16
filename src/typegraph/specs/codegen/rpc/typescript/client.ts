@@ -14,7 +14,7 @@ const decoder = new TextDecoder();
 const { platform } = process;
 
 if (platform === "darwin" || platform === "linux") {
-  const ffi = await import("npm:ffi-rs");
+  const ffi = await import("npm:ffi-rs@1.2.10");
 
   const F_GETFL = 3;
   const F_SETFL = 4;
