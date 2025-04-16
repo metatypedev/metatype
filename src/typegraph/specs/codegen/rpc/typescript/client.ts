@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import fs from "node:fs";
+import process from "node:process";
 import { Buffer } from "node:buffer";
 
 const BUFFER_SIZE = 1024;
@@ -10,6 +11,37 @@ const state = { id: 0 };
 const isDeno = !Deno.version.v8.includes("node");
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+const { platform } = process;
+
+if (platform === "darwin" || platform === "linux") {
+  const ffi = await import("npm:ffi-rs@1.2.10");
+
+  const F_GETFL = 3;
+  const F_SETFL = 4;
+  const O_NONBLOCK = platform === "darwin" ? 0x0004 : 0x800;
+
+  ffi.open({
+    library: "libc",
+    path: platform === "darwin" ? "/usr/lib/libSystem.B.dylib" : "libc.so.6",
+  });
+
+  const { fcntl } = ffi.define({
+    fcntl: {
+      library: "libc",
+      retType: ffi.DataType.I32,
+      paramsType: [ffi.DataType.I32, ffi.DataType.I32, ffi.DataType.I32],
+    },
+  });
+
+  const flags = fcntl([process.stdin.fd, F_GETFL, 0]);
+  const result = fcntl([process.stdin.fd, F_SETFL, flags & ~O_NONBLOCK]);
+
+  ffi.close("libc");
+
+  if (result !== 0) {
+    throw new Error("Failed to disable non-blocking fd flag");
+  }
+}
 
 type RpcResponse<R, E = null> = {
   jsonrpc: "2.0";
@@ -59,13 +91,10 @@ function readResponse() {
       content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
     } while (content[content.length - 1] != 0x0a);
   } else {
-    const fd = fs.openSync("/dev/stdin", "r");
     do {
-      bytesRead = fs.readSync(fd, buffer) ?? 0;
+      bytesRead = fs.readSync(process.stdin.fd, buffer) ?? 0;
       content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
     } while (content[content.length - 1] != 0x0a);
-
-    fs.closeSync(fd);
   }
 
   return decoder.decode(content);
