@@ -3,6 +3,6 @@
 
 pub mod aws;
 pub mod core;
-pub mod runtimes;
 pub mod utils;
+pub mod runtimes;
 pub use self::core::Error;

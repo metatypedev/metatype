@@ -1,0 +1,9 @@
+{
+  "imports": {
+    "@ghjk/ts/": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/src/ghjk_ts/",
+    "@ghjk/ts": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/src/ghjk_ts/mod.ts",
+    "@ghjk/ports_wip": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/ports/mod.ts",
+    "@ghjk/ports_wip/": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/ports/"
+  },
+  "lock": "./deno.lock"
+}

@@ -23,6 +23,7 @@ pub mod transports {
     ) -> metagen_client::graphql::GraphQlTransportReqwestSync {
         metagen_client::graphql::GraphQlTransportReqwestSync::new(addr, qg.ty_to_gql_ty_map.clone())
     }
+
 }
 
 //
@@ -48,26 +49,16 @@ mod node_metas {
             variants: None,
             input_files: None,
         }
-    }
+    }    
     pub fn RootUploadManyFn() -> NodeMeta {
         NodeMeta {
             arg_types: Some(
                 [
-                    (
-                        "files".into(),
-                        "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
-                    ),
-                    (
-                        "prefix".into(),
-                        "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
-                    ),
-                ]
-                .into(),
+                    ("files".into(), "root_uploadMany_fn_input_files_file_bf9b7_list".into()),
+                    ("prefix".into(), "root_uploadMany_fn_input_prefix_string_25e51_optional".into()),
+                ].into()
             ),
-            input_files: Some(PathToInputFiles(&[TypePath(&[
-                TypePathSegment::ObjectProp("files"),
-                TypePathSegment::ArrayItem,
-            ])])),
+            input_files: Some(PathToInputFiles(&[TypePath(&[TypePathSegment::ObjectProp("files"), TypePathSegment::ArrayItem])])),
             ..scalar()
         }
     }
@@ -76,19 +67,14 @@ mod node_metas {
             arg_types: Some(
                 [
                     ("file".into(), "file_bf9b7".into()),
-                    (
-                        "path".into(),
-                        "root_upload_fn_input_path_string_25e51_optional".into(),
-                    ),
-                ]
-                .into(),
+                    ("path".into(), "root_upload_fn_input_path_string_25e51_optional".into()),
+                ].into()
             ),
-            input_files: Some(PathToInputFiles(&[TypePath(&[
-                TypePathSegment::ObjectProp("file"),
-            ])])),
+            input_files: Some(PathToInputFiles(&[TypePath(&[TypePathSegment::ObjectProp("file")])])),
             ..scalar()
         }
     }
+
 }
 use types::*;
 #[allow(unused)]
@@ -115,31 +101,21 @@ pub mod types {
 
 pub fn query_graph() -> QueryGraph {
     QueryGraph {
-        ty_to_gql_ty_map: std::sync::Arc::new(
-            [
-                ("file_bf9b7".into(), "file_bf9b7!".into()),
-                (
-                    "root_upload_fn_input_path_string_25e51_optional".into(),
-                    "String".into(),
-                ),
-                (
-                    "root_uploadMany_fn_input_prefix_string_25e51_optional".into(),
-                    "String".into(),
-                ),
-                (
-                    "root_uploadMany_fn_input_files_file_bf9b7_list".into(),
-                    "[file_bf9b7!]!".into(),
-                ),
-            ]
-            .into(),
-        ),
+        ty_to_gql_ty_map: std::sync::Arc::new([
+            ("file_bf9b7".into(), "file_bf9b7!".into()),
+            ("root_upload_fn_input_path_string_25e51_optional".into(), "String".into()),
+            ("root_uploadMany_fn_input_prefix_string_25e51_optional".into(), "String".into()),
+            ("root_uploadMany_fn_input_files_file_bf9b7_list".into(), "[file_bf9b7!]!".into()),
+        ].into()),
     }
 }
-impl QueryGraph {
+    impl QueryGraph{
+
     pub fn upload(
         &self,
-        args: impl Into<NodeArgs<RootUploadFnInput>>,
-    ) -> MutationNode<RootUploadFnOutput> {
+        args: impl Into<NodeArgs<RootUploadFnInput>>
+    ) -> MutationNode<RootUploadFnOutput>
+    {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -148,7 +124,9 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[("upload".into(), node_metas::RootUploadFn as NodeMetaFn)].into(),
+            &[
+                ("upload".into(), node_metas::RootUploadFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
@@ -156,8 +134,9 @@ impl QueryGraph {
     }
     pub fn upload_many(
         &self,
-        args: impl Into<NodeArgs<RootUploadManyFnInput>>,
-    ) -> MutationNode<RootUploadFnOutput> {
+        args: impl Into<NodeArgs<RootUploadManyFnInput>>
+    ) -> MutationNode<RootUploadFnOutput>
+    {
         let nodes = selection_to_node_set(
             SelectionErasedMap(
                 [(
@@ -166,14 +145,13 @@ impl QueryGraph {
                 )]
                 .into(),
             ),
-            &[(
-                "uploadMany".into(),
-                node_metas::RootUploadManyFn as NodeMetaFn,
-            )]
-            .into(),
+            &[
+                ("uploadMany".into(), node_metas::RootUploadManyFn as NodeMetaFn),
+            ].into(),
             "$q".into(),
         )
         .unwrap();
         MutationNode(nodes.into_iter().next().unwrap(), PhantomData)
     }
 }
+

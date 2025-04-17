@@ -14,7 +14,6 @@ import urllib.request as request
 import uuid
 from abc import ABC, abstractmethod
 
-
 class Ctx:
     def __init__(
         self,
@@ -28,6 +27,9 @@ class Ctx:
 
     def gql(self, query: str, variables: typing.Mapping):
         return self.__binding(query, dict(variables))
+
+
+
 
 
 def selection_to_nodes(
@@ -679,7 +681,8 @@ class GraphQLTransportBase(ABC):
     def handle_response(self, res: GraphQLResponse):
         if res.status != 200:
             raise Exception(f"graphql request failed with status {res.status}", res)
-        if res.headers.get("content-type") != "application/json":
+        content_type = res.headers.get("content-type")
+        if content_type is None or not content_type.startswith("application/json"):
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
         if parsed.get("errors"):
@@ -843,6 +846,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
+
 HostcallBinding = typing.Callable[
     [str, typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]
 ]
@@ -934,6 +938,8 @@ class HostcallTransport(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
+
+
 class PreparedRequest(typing.Generic[Out, PreparedOut]):
     def __init__(
         self,
@@ -1007,6 +1013,7 @@ class Transports:
             addr, opts or GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
         )
 
+
     @staticmethod
     def hostcall(
         qg: QueryGraphBase,
@@ -1017,25 +1024,25 @@ class Transports:
         )
 
 
+
 #
 # --- --- Typegraph types --- --- #
 #
-
 
 class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-
+    
     @staticmethod
-    def RootSumFn():
+    def RootRemoteSumPyFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
@@ -1046,71 +1053,58 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
     @staticmethod
-    def RootRemoteSumPyFn():
+    def RootSumFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
-
-RootSumFnInput = typing.TypedDict(
-    "RootSumFnInput",
-    {
-        "first": float,
-        "second": float,
-    },
-    total=False,
-)
+RootSumFnInput = typing.TypedDict("RootSumFnInput", {
+    "first": "float",
+    "second": "float",
+}, total=False)
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__(
-            {
-                "FloatD0c49": "Float!",
-            }
-        )
-
-    def sum(
-        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
-    ) -> QueryNode[float]:
-        node = selection_to_nodes({"sum": args}, {"sum": NodeDescs.RootSumFn}, "$q")[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
-
-    def remote_sum_deno(
-        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
-    ) -> QueryNode[float]:
+        super().__init__({
+            "float_d0c49": "Float!",
+        })
+    
+    def sum(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
         node = selection_to_nodes(
-            {"remoteSumDeno": args},
-            {"remoteSumDeno": NodeDescs.RootRemoteSumDenoFn},
-            "$q",
+            {"sum": args}, 
+            {"sum": NodeDescs.RootSumFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def remote_sum_py(
-        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
-    ) -> QueryNode[float]:
+    def remote_sum_deno(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
         node = selection_to_nodes(
-            {"remoteSumPy": args}, {"remoteSumPy": NodeDescs.RootRemoteSumPyFn}, "$q"
+            {"remoteSumDeno": args}, 
+            {"remoteSumDeno": NodeDescs.RootRemoteSumDenoFn}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+
+    def remote_sum_py(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
+        node = selection_to_nodes(
+            {"remoteSumPy": args}, 
+            {"remoteSumPy": NodeDescs.RootRemoteSumPyFn}, 
+            "$q"
+        )[0]
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
 
 def handler_remote_sum(user_fn: typing.Callable[[RootSumFnInput, Ctx], float]):
@@ -1121,3 +1115,5 @@ def handler_remote_sum(user_fn: typing.Callable[[RootSumFnInput, Ctx], float]):
         return user_fn(raw_inp, cx)
 
     return wrapper
+
+                    

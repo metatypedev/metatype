@@ -14,7 +14,6 @@ import urllib.request as request
 import uuid
 from abc import ABC, abstractmethod
 
-
 class Ctx:
     def __init__(
         self,
@@ -28,6 +27,9 @@ class Ctx:
 
     def gql(self, query: str, variables: typing.Mapping):
         return self.__binding(query, dict(variables))
+
+
+
 
 
 def selection_to_nodes(
@@ -844,6 +846,7 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
+
 HostcallBinding = typing.Callable[
     [str, typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]
 ]
@@ -935,6 +938,8 @@ class HostcallTransport(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
+
+
 class PreparedRequest(typing.Generic[Out, PreparedOut]):
     def __init__(
         self,
@@ -1008,6 +1013,7 @@ class Transports:
             addr, opts or GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
         )
 
+
     @staticmethod
     def hostcall(
         qg: QueryGraphBase,
@@ -1018,16 +1024,16 @@ class Transports:
         )
 
 
+
 #
 # --- --- Typegraph types --- --- #
 #
-
 
 class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-
+    
     @staticmethod
     def RsProxyPrimitives():
         return_node = NodeDescs.Primitives()
@@ -1313,33 +1319,24 @@ class NodeDescs:
             },
         )
 
+PrimitivesArgs = typing.TypedDict("PrimitivesArgs", {
+    "data": "Primitives",
+}, total=False)
 
-PrimitivesArgs = typing.TypedDict(
-    "PrimitivesArgs",
-    {
-        "data": "Primitives",
-    },
-    total=False,
-)
-
-Primitives = typing.TypedDict(
-    "Primitives",
-    {
-        "str": "PrimitivesStrString",
-        "r#enum": "PrimitivesEnumStringEnum",
-        "uuid": "PrimitivesUuidStringUuid",
-        "email": "PrimitivesEmailStringEmail",
-        "ean": "PrimitivesEanStringEan",
-        "json": "PrimitivesJsonStringJson",
-        "uri": "PrimitivesUriStringUri",
-        "date": "PrimitivesDateStringDate",
-        "datetime": "PrimitivesDatetimeStringDatetime",
-        "int": "PrimitivesIntInteger",
-        "float": "PrimitivesFloatFloat",
-        "boolean": "PrimitivesBooleanBoolean",
-    },
-    total=False,
-)
+Primitives = typing.TypedDict("Primitives", {
+    "str": "PrimitivesStrString",
+    "r#enum": "PrimitivesEnumStringEnum",
+    "uuid": "PrimitivesUuidStringUuid",
+    "email": "PrimitivesEmailStringEmail",
+    "ean": "PrimitivesEanStringEan",
+    "json": "PrimitivesJsonStringJson",
+    "uri": "PrimitivesUriStringUri",
+    "date": "PrimitivesDateStringDate",
+    "datetime": "PrimitivesDatetimeStringDatetime",
+    "int": "PrimitivesIntInteger",
+    "float": "PrimitivesFloatFloat",
+    "boolean": "PrimitivesBooleanBoolean",
+}, total=False)
 
 PrimitivesStrString = str
 
@@ -1369,24 +1366,16 @@ PrimitivesFloatFloat = float
 
 PrimitivesBooleanBoolean = bool
 
-CompositesArgs = typing.TypedDict(
-    "CompositesArgs",
-    {
-        "data": "Composites",
-    },
-    total=False,
-)
+CompositesArgs = typing.TypedDict("CompositesArgs", {
+    "data": "Composites",
+}, total=False)
 
-Composites = typing.TypedDict(
-    "Composites",
-    {
-        "opt": "CompositesOptPrimitivesStrStringOptional",
-        "either": "CompositesEitherEither",
-        "union": "CompositesUnionUnion",
-        "list": "CompositesListPrimitivesStrStringList",
-    },
-    total=False,
-)
+Composites = typing.TypedDict("Composites", {
+    "opt": "CompositesOptPrimitivesStrStringOptional",
+    "either": "CompositesEitherEither",
+    "union": "CompositesUnionUnion",
+    "list": "CompositesListPrimitivesStrStringList",
+}, total=False)
 
 CompositesOptPrimitivesStrStringOptional = typing.Optional["PrimitivesStrString"]
 
@@ -1395,13 +1384,9 @@ CompositesEitherEither = typing.Union[
     "Branch2",
 ]
 
-Branch2 = typing.TypedDict(
-    "Branch2",
-    {
-        "branch2": PrimitivesStrString,
-    },
-    total=False,
-)
+Branch2 = typing.TypedDict("Branch2", {
+    "branch2": PrimitivesStrString,
+}, total=False)
 
 CompositesUnionUnion = typing.Union[
     "Branch4",
@@ -1421,23 +1406,15 @@ Branch4again = str
 
 CompositesListPrimitivesStrStringList = typing.List["PrimitivesStrString"]
 
-Cycles1Args = typing.TypedDict(
-    "Cycles1Args",
-    {
-        "data": "Cycles1",
-    },
-    total=False,
-)
+Cycles1Args = typing.TypedDict("Cycles1Args", {
+    "data": "Cycles1",
+}, total=False)
 
-Cycles1 = typing.TypedDict(
-    "Cycles1",
-    {
-        "phantom1": "CompositesOptPrimitivesStrStringOptional",
-        "to2": "Cycles1To2Cycles2Optional",
-        "list3": "Cycles1List3Cycles1List3Cycles3ListOptional",
-    },
-    total=False,
-)
+Cycles1 = typing.TypedDict("Cycles1", {
+    "phantom1": "CompositesOptPrimitivesStrStringOptional",
+    "to2": "Cycles1To2Cycles2Optional",
+    "list3": "Cycles1List3Cycles1List3Cycles3ListOptional",
+}, total=False)
 
 Cycles1To2Cycles2Optional = typing.Optional["Cycles2"]
 
@@ -1451,422 +1428,264 @@ Cycles3 = typing.Union[
     "Branch33B",
 ]
 
-Branch33A = typing.TypedDict(
-    "Branch33A",
-    {
-        "phantom3a": "CompositesOptPrimitivesStrStringOptional",
-        "to1": "Branch33ATo1Cycles1Optional",
-    },
-    total=False,
-)
+Branch33A = typing.TypedDict("Branch33A", {
+    "phantom3a": "CompositesOptPrimitivesStrStringOptional",
+    "to1": "Branch33ATo1Cycles1Optional",
+}, total=False)
 
 Branch33ATo1Cycles1Optional = typing.Optional["Cycles1"]
 
-Branch33B = typing.TypedDict(
-    "Branch33B",
-    {
-        "phantom3b": "CompositesOptPrimitivesStrStringOptional",
-        "to2": "Cycles1To2Cycles2Optional",
-    },
-    total=False,
-)
+Branch33B = typing.TypedDict("Branch33B", {
+    "phantom3b": "CompositesOptPrimitivesStrStringOptional",
+    "to2": "Cycles1To2Cycles2Optional",
+}, total=False)
 
 Cycles1List3Cycles1List3Cycles3ListOptional = typing.Optional["Cycles1List3Cycles3List"]
 
 Cycles1List3Cycles3List = typing.List["Cycles3"]
 
-SimpleCycles1Args = typing.TypedDict(
-    "SimpleCycles1Args",
-    {
-        "data": "SimpleCycles1",
-    },
-    total=False,
-)
+SimpleCycles1Args = typing.TypedDict("SimpleCycles1Args", {
+    "data": "SimpleCycles1",
+}, total=False)
 
-SimpleCycles1 = typing.TypedDict(
-    "SimpleCycles1",
-    {
-        "phantom1": "CompositesOptPrimitivesStrStringOptional",
-        "to2": "SimpleCycles1To2SimpleCycles2Optional",
-    },
-    total=False,
-)
+SimpleCycles1 = typing.TypedDict("SimpleCycles1", {
+    "phantom1": "CompositesOptPrimitivesStrStringOptional",
+    "to2": "SimpleCycles1To2SimpleCycles2Optional",
+}, total=False)
 
 SimpleCycles1To2SimpleCycles2Optional = typing.Optional["SimpleCycles2"]
 
-SimpleCycles2 = typing.TypedDict(
-    "SimpleCycles2",
-    {
-        "phantom2": "CompositesOptPrimitivesStrStringOptional",
-        "to3": "SimpleCycles2To3SimpleCycles3Optional",
-    },
-    total=False,
-)
+SimpleCycles2 = typing.TypedDict("SimpleCycles2", {
+    "phantom2": "CompositesOptPrimitivesStrStringOptional",
+    "to3": "SimpleCycles2To3SimpleCycles3Optional",
+}, total=False)
 
 SimpleCycles2To3SimpleCycles3Optional = typing.Optional["SimpleCycles3"]
 
-SimpleCycles3 = typing.TypedDict(
-    "SimpleCycles3",
-    {
-        "phantom3": "CompositesOptPrimitivesStrStringOptional",
-        "to1": "SimpleCycles3To1SimpleCycles1Optional",
-    },
-    total=False,
-)
+SimpleCycles3 = typing.TypedDict("SimpleCycles3", {
+    "phantom3": "CompositesOptPrimitivesStrStringOptional",
+    "to1": "SimpleCycles3To1SimpleCycles1Optional",
+}, total=False)
 
 SimpleCycles3To1SimpleCycles1Optional = typing.Optional["SimpleCycles1"]
 
-PrimitivesSelections = typing.TypedDict(
-    "PrimitivesSelections",
-    {
-        "_": SelectionFlags,
-        "str": ScalarSelectNoArgs,
-        "enum": ScalarSelectNoArgs,
-        "uuid": ScalarSelectNoArgs,
-        "email": ScalarSelectNoArgs,
-        "ean": ScalarSelectNoArgs,
-        "json": ScalarSelectNoArgs,
-        "uri": ScalarSelectNoArgs,
-        "date": ScalarSelectNoArgs,
-        "datetime": ScalarSelectNoArgs,
-        "int": ScalarSelectNoArgs,
-        "float": ScalarSelectNoArgs,
-        "boolean": ScalarSelectNoArgs,
-    },
-    total=False,
-)
+PrimitivesSelections = typing.TypedDict("PrimitivesSelections", {
+    "_": SelectionFlags,
+    "str": ScalarSelectNoArgs,
+    "enum": ScalarSelectNoArgs,
+    "uuid": ScalarSelectNoArgs,
+    "email": ScalarSelectNoArgs,
+    "ean": ScalarSelectNoArgs,
+    "json": ScalarSelectNoArgs,
+    "uri": ScalarSelectNoArgs,
+    "date": ScalarSelectNoArgs,
+    "datetime": ScalarSelectNoArgs,
+    "int": ScalarSelectNoArgs,
+    "float": ScalarSelectNoArgs,
+    "boolean": ScalarSelectNoArgs,
+}, total=False)
 
-Branch2Selections = typing.TypedDict(
-    "Branch2Selections",
-    {
-        "_": SelectionFlags,
-        "branch2": ScalarSelectNoArgs,
-    },
-    total=False,
-)
+Branch2Selections = typing.TypedDict("Branch2Selections", {
+    "_": SelectionFlags,
+    "branch2": ScalarSelectNoArgs,
+}, total=False)
 
-CompositesEitherEitherSelections = typing.TypedDict(
-    "CompositesEitherEitherSelections",
-    {
-        "_": SelectionFlags,
-        "primitives": CompositeSelectNoArgs["PrimitivesSelections"],
-        "branch2": CompositeSelectNoArgs["Branch2Selections"],
-    },
-    total=False,
-)
+CompositesEitherEitherSelections = typing.TypedDict("CompositesEitherEitherSelections", {
+    "_": SelectionFlags,
+    "primitives": CompositeSelectNoArgs["PrimitivesSelections"],
+    "branch2": CompositeSelectNoArgs["Branch2Selections"],
+}, total=False)
 
-CompositesSelections = typing.TypedDict(
-    "CompositesSelections",
-    {
-        "_": SelectionFlags,
-        "opt": ScalarSelectNoArgs,
-        "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
-        "union": ScalarSelectNoArgs,
-        "list": ScalarSelectNoArgs,
-    },
-    total=False,
-)
+CompositesSelections = typing.TypedDict("CompositesSelections", {
+    "_": SelectionFlags,
+    "opt": ScalarSelectNoArgs,
+    "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
+    "union": ScalarSelectNoArgs,
+    "list": ScalarSelectNoArgs,
+}, total=False)
 
-Cycles3Selections = typing.TypedDict(
-    "Cycles3Selections",
-    {
-        "_": SelectionFlags,
-        "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
-        "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
-    },
-    total=False,
-)
+Cycles3Selections = typing.TypedDict("Cycles3Selections", {
+    "_": SelectionFlags,
+    "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
+    "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
+}, total=False)
 
-Cycles1Selections = typing.TypedDict(
-    "Cycles1Selections",
-    {
-        "_": SelectionFlags,
-        "phantom1": ScalarSelectNoArgs,
-        "to2": CompositeSelectNoArgs["Cycles2Selections"],
-        "list3": CompositeSelectNoArgs["Cycles3Selections"],
-    },
-    total=False,
-)
+Cycles1Selections = typing.TypedDict("Cycles1Selections", {
+    "_": SelectionFlags,
+    "phantom1": ScalarSelectNoArgs,
+    "to2": CompositeSelectNoArgs["Cycles2Selections"],
+    "list3": CompositeSelectNoArgs["Cycles3Selections"],
+}, total=False)
 
-Branch33ASelections = typing.TypedDict(
-    "Branch33ASelections",
-    {
-        "_": SelectionFlags,
-        "phantom3a": ScalarSelectNoArgs,
-        "to1": CompositeSelectNoArgs["Cycles1Selections"],
-    },
-    total=False,
-)
+Branch33ASelections = typing.TypedDict("Branch33ASelections", {
+    "_": SelectionFlags,
+    "phantom3a": ScalarSelectNoArgs,
+    "to1": CompositeSelectNoArgs["Cycles1Selections"],
+}, total=False)
 
-Branch33BSelections = typing.TypedDict(
-    "Branch33BSelections",
-    {
-        "_": SelectionFlags,
-        "phantom3b": ScalarSelectNoArgs,
-        "to2": CompositeSelectNoArgs["Cycles2Selections"],
-    },
-    total=False,
-)
+Branch33BSelections = typing.TypedDict("Branch33BSelections", {
+    "_": SelectionFlags,
+    "phantom3b": ScalarSelectNoArgs,
+    "to2": CompositeSelectNoArgs["Cycles2Selections"],
+}, total=False)
 
-Cycles2Selections = typing.TypedDict(
-    "Cycles2Selections",
-    {
-        "_": SelectionFlags,
-        "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
-        "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
-    },
-    total=False,
-)
+Cycles2Selections = typing.TypedDict("Cycles2Selections", {
+    "_": SelectionFlags,
+    "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
+    "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
+}, total=False)
 
-SimpleCycles1Selections = typing.TypedDict(
-    "SimpleCycles1Selections",
-    {
-        "_": SelectionFlags,
-        "phantom1": ScalarSelectNoArgs,
-        "to2": CompositeSelectNoArgs["SimpleCycles2Selections"],
-    },
-    total=False,
-)
+SimpleCycles1Selections = typing.TypedDict("SimpleCycles1Selections", {
+    "_": SelectionFlags,
+    "phantom1": ScalarSelectNoArgs,
+    "to2": CompositeSelectNoArgs["SimpleCycles2Selections"],
+}, total=False)
 
-SimpleCycles3Selections = typing.TypedDict(
-    "SimpleCycles3Selections",
-    {
-        "_": SelectionFlags,
-        "phantom3": ScalarSelectNoArgs,
-        "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
-    },
-    total=False,
-)
+SimpleCycles3Selections = typing.TypedDict("SimpleCycles3Selections", {
+    "_": SelectionFlags,
+    "phantom3": ScalarSelectNoArgs,
+    "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
+}, total=False)
 
-SimpleCycles2Selections = typing.TypedDict(
-    "SimpleCycles2Selections",
-    {
-        "_": SelectionFlags,
-        "phantom2": ScalarSelectNoArgs,
-        "to3": CompositeSelectNoArgs["SimpleCycles3Selections"],
-    },
-    total=False,
-)
+SimpleCycles2Selections = typing.TypedDict("SimpleCycles2Selections", {
+    "_": SelectionFlags,
+    "phantom2": ScalarSelectNoArgs,
+    "to3": CompositeSelectNoArgs["SimpleCycles3Selections"],
+}, total=False)
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__(
-            {
-                "primitives": "primitives!",
-                "composites": "composites!",
-                "cycles1": "cycles1!",
-                "simple_cycles_1": "simple_cycles_1!",
-                "branch2": "branch2!",
-                "branch33A": "branch33A!",
-                "branch33B": "branch33B!",
-                "cycles3": "cycles3!",
-            }
-        )
-
-    def py_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+        super().__init__({
+            "primitives": "primitives!",
+            "composites": "composites!",
+            "cycles1": "cycles1!",
+            "simple_cycles_1": "simple_cycles_1!",
+            "branch2": "branch2!",
+            "branch33A": "branch33A!",
+            "branch33B": "branch33B!",
+            "cycles3": "cycles3!",
+        })
+    
+    def py_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"py_primitives": (args, select)},
-            {"py_primitives": NodeDescs.PyPrimitives},
-            "$q",
+            {"py_primitives": (args, select)}, 
+            {"py_primitives": NodeDescs.PyPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def py_composites(
-        self,
-        args: typing.Union[CompositesArgs, PlaceholderArgs],
-        select: CompositesSelections,
-    ) -> QueryNode[Composites]:
+    def py_composites(self, args: typing.Union[CompositesArgs, PlaceholderArgs], select: CompositesSelections) -> QueryNode[Composites]:
         node = selection_to_nodes(
-            {"py_composites": (args, select)},
-            {"py_composites": NodeDescs.PyComposites},
-            "$q",
+            {"py_composites": (args, select)}, 
+            {"py_composites": NodeDescs.PyComposites}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def py_cycles(
-        self,
-        args: typing.Union[Cycles1Args, PlaceholderArgs],
-        select: Cycles1Selections,
-    ) -> QueryNode[Cycles1]:
+    def py_cycles(self, args: typing.Union[Cycles1Args, PlaceholderArgs], select: Cycles1Selections) -> QueryNode[Cycles1]:
         node = selection_to_nodes(
-            {"py_cycles": (args, select)}, {"py_cycles": NodeDescs.PyCycles}, "$q"
+            {"py_cycles": (args, select)}, 
+            {"py_cycles": NodeDescs.PyCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def py_simple_cycles(
-        self,
-        args: typing.Union[SimpleCycles1Args, PlaceholderArgs],
-        select: SimpleCycles1Selections,
-    ) -> QueryNode[SimpleCycles1]:
+    def py_simple_cycles(self, args: typing.Union[SimpleCycles1Args, PlaceholderArgs], select: SimpleCycles1Selections) -> QueryNode[SimpleCycles1]:
         node = selection_to_nodes(
-            {"py_simple_cycles": (args, select)},
-            {"py_simple_cycles": NodeDescs.PySimpleCycles},
-            "$q",
+            {"py_simple_cycles": (args, select)}, 
+            {"py_simple_cycles": NodeDescs.PySimpleCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def py_proxy_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+    def py_proxy_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"py_proxy_primitives": (args, select)},
-            {"py_proxy_primitives": NodeDescs.PyProxyPrimitives},
-            "$q",
+            {"py_proxy_primitives": (args, select)}, 
+            {"py_proxy_primitives": NodeDescs.PyProxyPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def ts_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+    def ts_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"ts_primitives": (args, select)},
-            {"ts_primitives": NodeDescs.TsPrimitives},
-            "$q",
+            {"ts_primitives": (args, select)}, 
+            {"ts_primitives": NodeDescs.TsPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def ts_composites(
-        self,
-        args: typing.Union[CompositesArgs, PlaceholderArgs],
-        select: CompositesSelections,
-    ) -> QueryNode[Composites]:
+    def ts_composites(self, args: typing.Union[CompositesArgs, PlaceholderArgs], select: CompositesSelections) -> QueryNode[Composites]:
         node = selection_to_nodes(
-            {"ts_composites": (args, select)},
-            {"ts_composites": NodeDescs.TsComposites},
-            "$q",
+            {"ts_composites": (args, select)}, 
+            {"ts_composites": NodeDescs.TsComposites}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def ts_cycles(
-        self,
-        args: typing.Union[Cycles1Args, PlaceholderArgs],
-        select: Cycles1Selections,
-    ) -> QueryNode[Cycles1]:
+    def ts_cycles(self, args: typing.Union[Cycles1Args, PlaceholderArgs], select: Cycles1Selections) -> QueryNode[Cycles1]:
         node = selection_to_nodes(
-            {"ts_cycles": (args, select)}, {"ts_cycles": NodeDescs.TsCycles}, "$q"
+            {"ts_cycles": (args, select)}, 
+            {"ts_cycles": NodeDescs.TsCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def ts_simple_cycles(
-        self,
-        args: typing.Union[SimpleCycles1Args, PlaceholderArgs],
-        select: SimpleCycles1Selections,
-    ) -> QueryNode[SimpleCycles1]:
+    def ts_simple_cycles(self, args: typing.Union[SimpleCycles1Args, PlaceholderArgs], select: SimpleCycles1Selections) -> QueryNode[SimpleCycles1]:
         node = selection_to_nodes(
-            {"ts_simple_cycles": (args, select)},
-            {"ts_simple_cycles": NodeDescs.TsSimpleCycles},
-            "$q",
+            {"ts_simple_cycles": (args, select)}, 
+            {"ts_simple_cycles": NodeDescs.TsSimpleCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def ts_proxy_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+    def ts_proxy_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"ts_proxy_primitives": (args, select)},
-            {"ts_proxy_primitives": NodeDescs.TsProxyPrimitives},
-            "$q",
+            {"ts_proxy_primitives": (args, select)}, 
+            {"ts_proxy_primitives": NodeDescs.TsProxyPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def rs_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+    def rs_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"rs_primitives": (args, select)},
-            {"rs_primitives": NodeDescs.RsPrimitives},
-            "$q",
+            {"rs_primitives": (args, select)}, 
+            {"rs_primitives": NodeDescs.RsPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def rs_composites(
-        self,
-        args: typing.Union[CompositesArgs, PlaceholderArgs],
-        select: CompositesSelections,
-    ) -> QueryNode[Composites]:
+    def rs_composites(self, args: typing.Union[CompositesArgs, PlaceholderArgs], select: CompositesSelections) -> QueryNode[Composites]:
         node = selection_to_nodes(
-            {"rs_composites": (args, select)},
-            {"rs_composites": NodeDescs.RsComposites},
-            "$q",
+            {"rs_composites": (args, select)}, 
+            {"rs_composites": NodeDescs.RsComposites}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def rs_cycles(
-        self,
-        args: typing.Union[Cycles1Args, PlaceholderArgs],
-        select: Cycles1Selections,
-    ) -> QueryNode[Cycles1]:
+    def rs_cycles(self, args: typing.Union[Cycles1Args, PlaceholderArgs], select: Cycles1Selections) -> QueryNode[Cycles1]:
         node = selection_to_nodes(
-            {"rs_cycles": (args, select)}, {"rs_cycles": NodeDescs.RsCycles}, "$q"
+            {"rs_cycles": (args, select)}, 
+            {"rs_cycles": NodeDescs.RsCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def rs_simple_cycles(
-        self,
-        args: typing.Union[SimpleCycles1Args, PlaceholderArgs],
-        select: SimpleCycles1Selections,
-    ) -> QueryNode[SimpleCycles1]:
+    def rs_simple_cycles(self, args: typing.Union[SimpleCycles1Args, PlaceholderArgs], select: SimpleCycles1Selections) -> QueryNode[SimpleCycles1]:
         node = selection_to_nodes(
-            {"rs_simple_cycles": (args, select)},
-            {"rs_simple_cycles": NodeDescs.RsSimpleCycles},
-            "$q",
+            {"rs_simple_cycles": (args, select)}, 
+            {"rs_simple_cycles": NodeDescs.RsSimpleCycles}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
-    def rs_proxy_primitives(
-        self,
-        args: typing.Union[PrimitivesArgs, PlaceholderArgs],
-        select: PrimitivesSelections,
-    ) -> QueryNode[Primitives]:
+    def rs_proxy_primitives(self, args: typing.Union[PrimitivesArgs, PlaceholderArgs], select: PrimitivesSelections) -> QueryNode[Primitives]:
         node = selection_to_nodes(
-            {"rs_proxy_primitives": (args, select)},
-            {"rs_proxy_primitives": NodeDescs.RsProxyPrimitives},
-            "$q",
+            {"rs_proxy_primitives": (args, select)}, 
+            {"rs_proxy_primitives": NodeDescs.RsProxyPrimitives}, 
+            "$q"
         )[0]
-        return QueryNode(
-            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
-        )
+        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
 
 
 def handler_primitives(user_fn: typing.Callable[[PrimitivesArgs, Ctx], Primitives]):
@@ -1878,6 +1697,7 @@ def handler_primitives(user_fn: typing.Callable[[PrimitivesArgs, Ctx], Primitive
 
     return wrapper
 
+                    
 
 def handler_composites(user_fn: typing.Callable[[CompositesArgs, Ctx], Composites]):
     def wrapper(raw_inp, gql_fn):
@@ -1888,6 +1708,7 @@ def handler_composites(user_fn: typing.Callable[[CompositesArgs, Ctx], Composite
 
     return wrapper
 
+                    
 
 def handler_cycles(user_fn: typing.Callable[[Cycles1Args, Ctx], Cycles1]):
     def wrapper(raw_inp, gql_fn):
@@ -1898,10 +1719,9 @@ def handler_cycles(user_fn: typing.Callable[[Cycles1Args, Ctx], Cycles1]):
 
     return wrapper
 
+                    
 
-def handler_simple_cycles(
-    user_fn: typing.Callable[[SimpleCycles1Args, Ctx], SimpleCycles1],
-):
+def handler_simple_cycles(user_fn: typing.Callable[[SimpleCycles1Args, Ctx], SimpleCycles1]):
     def wrapper(raw_inp, gql_fn):
         qg = QueryGraph()
         host = Transports.hostcall(qg, gql_fn)
@@ -1910,10 +1730,9 @@ def handler_simple_cycles(
 
     return wrapper
 
+                    
 
-def handler_proxy_primitives(
-    user_fn: typing.Callable[[PrimitivesArgs, Ctx], Primitives],
-):
+def handler_proxy_primitives(user_fn: typing.Callable[[PrimitivesArgs, Ctx], Primitives]):
     def wrapper(raw_inp, gql_fn):
         qg = QueryGraph()
         host = Transports.hostcall(qg, gql_fn)
@@ -1921,3 +1740,5 @@ def handler_proxy_primitives(
         return user_fn(raw_inp, cx)
 
     return wrapper
+
+                    

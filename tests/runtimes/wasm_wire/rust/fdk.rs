@@ -116,7 +116,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.1-rc.1";
+        static MT_VERSION: &str = "0.5.1-rc.2";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -484,7 +484,7 @@ pub fn query_graph() -> QueryGraph {
 
     pub fn add(
         &self,
-            args: impl Into<NodeArgs<AddArgs>>
+        args: impl Into<NodeArgs<AddArgs>>
     ) -> QueryNode<AddOutput>
     {
         let nodes = selection_to_node_set(
@@ -505,7 +505,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn range(
         &self,
-            args: impl Into<NodeArgs<RangeArgs>>
+        args: impl Into<NodeArgs<RangeArgs>>
     ) -> QueryNode<RangeOutput>
     {
         let nodes = selection_to_node_set(
@@ -546,7 +546,7 @@ pub fn query_graph() -> QueryGraph {
     }
     pub fn identity(
         &self,
-            args: impl Into<NodeArgs<Entity>>
+        args: impl Into<NodeArgs<Entity>>
     ) -> UnselectedNode<EntitySelections, EntitySelections<HasAlias>, QueryMarker, EntityPartial>
     {
         UnselectedNode {

@@ -116,7 +116,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.1-rc.0";
+        static MT_VERSION: &str = "0.5.1-rc.2";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -235,6 +235,11 @@ macro_rules! init_mat {
 use core::marker::PhantomData;
 use metagen_client::prelude::*;
 
+/// Contains constructors for the different transports supported
+/// by the typegate. Namely:
+/// - GraphQl transports ([sync](transports::graphql)/[async](transports::graphql_sync)): reqwest
+///   based transports that talk to the typegate using GraphQl over HTTP.
+/// - [Hostcall transport](transports::hostcall): used by custom functions running in the typegate to access typegraphs.
 pub mod transports {
     use super::*;
 
@@ -272,6 +277,19 @@ mod node_metas {
             input_files: None,
         }
     }    
+    pub fn RemixTrack() -> NodeMeta {
+        NodeMeta {
+            arg_types: Some(
+                [
+                    ("artist".into(), "idv3_title_string".into()),
+                    ("mp3Url".into(), "idv3_mp3Url_string_uri".into()),
+                    ("releaseTime".into(), "idv3_releaseTime_string_datetime".into()),
+                    ("title".into(), "idv3_title_string".into()),
+                ].into()
+            ),
+            ..Idv3()
+        }
+    }
     pub fn Idv3() -> NodeMeta {
         NodeMeta {
             arg_types: None,
@@ -287,27 +305,12 @@ mod node_metas {
             input_files: None,
         }
     }
-    pub fn RemixTrack() -> NodeMeta {
-        NodeMeta {
-            arg_types: Some(
-                [
-                    ("title".into(), "Idv3TitleString".into()),
-                    ("artist".into(), "Idv3TitleString".into()),
-                    ("releaseTime".into(), "Idv3ReleaseTimeStringDatetime".into()),
-                    ("mp3Url".into(), "Idv3Mp3UrlStringUri".into()),
-                ].into()
-            ),
-            ..Idv3()
-        }
-    }
 
 }
 use types::*;
 #[allow(unused)]
 pub mod types {
-    pub type Idv3TitleString = String;
-    pub type Idv3ReleaseTimeStringDatetime = String;
-    pub type Idv3Mp3UrlStringUri = String;
+    // input types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Idv3 {
         pub title: Idv3TitleString,
@@ -317,10 +320,10 @@ pub mod types {
         #[serde(rename = "mp3Url")]
         pub mp3_url: Idv3Mp3UrlStringUri,
     }
-}
-#[allow(unused)]
-pub mod return_types {
-    use super::types::*;
+    pub type Idv3TitleString = String;
+    pub type Idv3ReleaseTimeStringDatetime = String;
+    pub type Idv3Mp3UrlStringUri = String;
+    // partial output types
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Idv3Partial {
         pub title: Option<Idv3TitleString>,
@@ -330,6 +333,7 @@ pub mod return_types {
         #[serde(rename = "mp3Url")]
         pub mp3_url: Option<Idv3Mp3UrlStringUri>,
     }
+    // output types
 }
 #[derive(Default, Debug)]
 pub struct Idv3Selections<ATy = NoAlias> {
@@ -343,19 +347,18 @@ impl_selection_traits!(Idv3Selections, title, artist, release_time, mp3_url);
 pub fn query_graph() -> QueryGraph {
     QueryGraph {
         ty_to_gql_ty_map: std::sync::Arc::new([
-        
-            ("Idv3TitleString".into(), "String!".into()),
-            ("Idv3ReleaseTimeStringDatetime".into(), "String!".into()),
-            ("Idv3Mp3UrlStringUri".into(), "String!".into()),
+            ("idv3_title_string".into(), "String!".into()),
+            ("idv3_releaseTime_string_datetime".into(), "String!".into()),
+            ("idv3_mp3Url_string_uri".into(), "String!".into()),
         ].into()),
     }
 }
-impl QueryGraph {
+    impl QueryGraph{
 
     pub fn remix(
         &self,
         args: impl Into<NodeArgs<Idv3>>
-    ) -> UnselectedNode<Idv3Selections, Idv3Selections<HasAlias>, QueryMarker, return_types::Idv3Partial>
+    ) -> UnselectedNode<Idv3Selections, Idv3Selections<HasAlias>, QueryMarker, Idv3Partial>
     {
         UnselectedNode {
             root_name: "remix".into(),

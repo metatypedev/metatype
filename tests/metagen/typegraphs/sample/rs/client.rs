@@ -587,3 +587,4 @@ pub fn query_graph() -> QueryGraph {
         }
     }
 }
+
