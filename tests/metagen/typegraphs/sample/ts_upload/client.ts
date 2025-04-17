@@ -966,4 +966,3 @@ export class QueryGraph extends _QueryGraphBase {
     return new MutationNode(inner);
   }
 }
-

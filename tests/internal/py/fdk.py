@@ -14,6 +14,7 @@ import urllib.request as request
 import uuid
 from abc import ABC, abstractmethod
 
+
 class Ctx:
     def __init__(
         self,
@@ -27,9 +28,6 @@ class Ctx:
 
     def gql(self, query: str, variables: typing.Mapping):
         return self.__binding(query, dict(variables))
-
-
-
 
 
 def selection_to_nodes(
@@ -846,7 +844,6 @@ class GraphQLTransportUrlib(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
-
 HostcallBinding = typing.Callable[
     [str, typing.Dict[str, typing.Any]], typing.Dict[str, typing.Any]
 ]
@@ -938,8 +935,6 @@ class HostcallTransport(GraphQLTransportBase):
         return PreparedRequest(self, fun, "mutation", name)
 
 
-
-
 class PreparedRequest(typing.Generic[Out, PreparedOut]):
     def __init__(
         self,
@@ -1013,7 +1008,6 @@ class Transports:
             addr, opts or GraphQLTransportOptions({}), qg.ty_to_gql_ty_map
         )
 
-
     @staticmethod
     def hostcall(
         qg: QueryGraphBase,
@@ -1024,16 +1018,16 @@ class Transports:
         )
 
 
-
 #
 # --- --- Typegraph types --- --- #
 #
+
 
 class NodeDescs:
     @staticmethod
     def scalar():
         return NodeMeta()
-    
+
     @staticmethod
     def RootRemoteSumPyFn():
         return_node = NodeDescs.scalar()
@@ -1070,41 +1064,54 @@ class NodeDescs:
             },
         )
 
-RootSumFnInput = typing.TypedDict("RootSumFnInput", {
-    "first": "float",
-    "second": "float",
-}, total=False)
+
+RootSumFnInput = typing.TypedDict(
+    "RootSumFnInput",
+    {
+        "first": "float",
+        "second": "float",
+    },
+    total=False,
+)
 
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
-        super().__init__({
-            "float_d0c49": "Float!",
-        })
-    
-    def sum(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
-        node = selection_to_nodes(
-            {"sum": args}, 
-            {"sum": NodeDescs.RootSumFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+        super().__init__(
+            {
+                "float_d0c49": "Float!",
+            }
+        )
 
-    def remote_sum_deno(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
-        node = selection_to_nodes(
-            {"remoteSumDeno": args}, 
-            {"remoteSumDeno": NodeDescs.RootRemoteSumDenoFn}, 
-            "$q"
-        )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+    def sum(
+        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
+    ) -> QueryNode[float]:
+        node = selection_to_nodes({"sum": args}, {"sum": NodeDescs.RootSumFn}, "$q")[0]
+        return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
 
-    def remote_sum_py(self, args: typing.Union[RootSumFnInput, PlaceholderArgs]) -> QueryNode[float]:
+    def remote_sum_deno(
+        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
+    ) -> QueryNode[float]:
         node = selection_to_nodes(
-            {"remoteSumPy": args}, 
-            {"remoteSumPy": NodeDescs.RootRemoteSumPyFn}, 
-            "$q"
+            {"remoteSumDeno": args},
+            {"remoteSumDeno": NodeDescs.RootRemoteSumDenoFn},
+            "$q",
         )[0]
-        return QueryNode(node.node_name, node.instance_name, node.args, node.sub_nodes, node.files)
+        return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
+
+    def remote_sum_py(
+        self, args: typing.Union[RootSumFnInput, PlaceholderArgs]
+    ) -> QueryNode[float]:
+        node = selection_to_nodes(
+            {"remoteSumPy": args}, {"remoteSumPy": NodeDescs.RootRemoteSumPyFn}, "$q"
+        )[0]
+        return QueryNode(
+            node.node_name, node.instance_name, node.args, node.sub_nodes, node.files
+        )
 
 
 def handler_remote_sum(user_fn: typing.Callable[[RootSumFnInput, Ctx], float]):
@@ -1115,5 +1122,3 @@ def handler_remote_sum(user_fn: typing.Callable[[RootSumFnInput, Ctx], float]):
         return user_fn(raw_inp, cx)
 
     return wrapper
-
-                    
