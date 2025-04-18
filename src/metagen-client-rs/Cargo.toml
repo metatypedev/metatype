@@ -9,12 +9,12 @@ default = ["graphql"]
 graphql = ["tokio-util", "reqwest"]
 
 [dependencies]
-serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0.128"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
 reqwest = { version = "=0.12.9", features = ["blocking", "json", "stream", "multipart"], optional = true }
 mime_guess = "2.0"
 futures = { version = "0.3" }
-derive_more = { version = "1.0", features = ["debug"] }
+derive_more = { version = "2.0", features = ["debug"] }
 lazy_static = "1.5"
 url = "=2.4.1"
 
