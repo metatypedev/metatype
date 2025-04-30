@@ -98,5 +98,37 @@ Meta.test(
         })
         .on(e);
     });
+
+    await t.should("push and pop values", async () => {
+      const key = "test:things";
+      const theList = ["one", "two", "three"];
+      try {
+        let i = 1;
+        for (const value of theList) {
+          await gql`mutation { push(key: $key, value: $value) }`
+            .withVars({ key, value })
+            .expectData({
+              push: i++,
+            })
+            .on(e);
+        }
+  
+        for (const _ of theList) {
+          await gql`mutation { pop(key: $key) }`
+            .withVars({ key })
+            .expectData({
+              pop: theList.pop() ?? null,
+            })
+            .on(e);
+        }
+      } catch(err) {
+        throw err;
+      } finally {
+        await gql`mutation { delete(key: $key) }`
+          .withVars({ key })
+          .expectBody((_) => {})
+          .on(e);
+      }
+    });
   },
 );

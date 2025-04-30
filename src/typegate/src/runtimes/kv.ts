@@ -81,6 +81,17 @@ export class KvRuntime extends Runtime {
         );
         return values;
       };
+    } else if (name === "kv_pop") {
+      resolver = async (args) => {
+        const { key } = args;
+        const value = await this.redis.rpop(key);
+        return value;
+      };
+    } else if (name === "kv_push") {
+      resolver = async (args) => {
+        const { key, value } = args;
+        return await this.redis.rpush(key, value);
+      };
     } else {
       throw new Error(`unrecognized mat name: ${name}`);
     }

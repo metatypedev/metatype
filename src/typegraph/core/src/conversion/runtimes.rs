@@ -400,6 +400,8 @@ impl MaterializerConverter for KvMaterializer {
             KvMaterializer::Delete => "kv_delete".to_string(),
             KvMaterializer::Keys => "kv_keys".to_string(),
             KvMaterializer::Values => "kv_values".to_string(),
+            KvMaterializer::Push => "kv_push".to_string(),
+            KvMaterializer::Pop => "kv_pop".to_string(),
         };
         Ok(Materializer {
             name,

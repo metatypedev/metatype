@@ -77,4 +77,22 @@ export class KvRuntime extends Runtime {
       mat,
     );
   }
+
+  push(): t.Func<
+    t.Struct<{ key: t.String; value: t.String }>,
+    t.Integer,
+    KvOperationMat
+  > {
+    const mat = this.#operation("push", fx.update());
+    return t.func(
+      t.struct({ key: t.string(), value: t.string() }),
+      t.integer(),
+      mat,
+    );
+  }
+
+  pop(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
+    const mat = this.#operation("pop", fx.update());
+    return t.func(t.struct({ key: t.string() }), t.string().optional(), mat);
+  }
 }
