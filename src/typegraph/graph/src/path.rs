@@ -4,7 +4,9 @@
 use crate::injection::InjectionNode;
 use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
 use crate::{Edge, TypeNode as _, TypeNodeExt as _};
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
+use std::sync::Mutex;
 
 pub type Path = Vec<PathSegment>;
 
@@ -237,19 +239,40 @@ impl std::fmt::Debug for RelativePath {
         match self {
             Self::Function(idx) => write!(f, "Function({})", idx),
             Self::NsObject(path) => write!(f, "NsObject(/{:?})", path.join("/")),
-            Self::Input(k) => write!(
-                f,
-                "Input(fn={}; {:?})",
-                k.owner.upgrade().expect("no strong pointer for type").idx(),
-                k.path
-            ),
-            Self::Output(k) => write!(
-                f,
-                "Output(fn={}; {:?})",
-                k.owner.upgrade().expect("no strong pointer for type").idx(),
-                k.path
-            ),
+            Self::Input(k) => {
+                write!(
+                    f,
+                    "Input(fn={}; ",
+                    k.owner.upgrade().expect("no strong pointer for type").idx(),
+                )?;
+                Self::write_path(f, &k.path)?;
+                write!(f, ")")
+            }
+            Self::Output(k) => {
+                write!(
+                    f,
+                    "Output(fn={}; ",
+                    k.owner.upgrade().expect("no strong pointer for type").idx(),
+                )?;
+                Self::write_path(f, &k.path)?;
+                write!(f, ")")
+            }
         }
+    }
+}
+
+impl RelativePath {
+    fn write_path(f: &mut impl std::fmt::Write, path: &[PathSegment]) -> std::fmt::Result {
+        for seg in path.iter() {
+            f.write_str("/")?;
+            match seg {
+                PathSegment::ObjectProp(key) => f.write_str(key)?,
+                PathSegment::ListItem => f.write_str("[]")?,
+                PathSegment::OptionalItem => f.write_str("?")?,
+                PathSegment::UnionVariant(idx) => write!(f, "({})", idx)?,
+            }
+        }
+        Ok(())
     }
 }
 

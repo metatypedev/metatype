@@ -78,7 +78,7 @@ pub struct TypeBase {
     pub title: String,
     pub name: Once<Arc<str>>,
     pub description: Option<String>,
-    pub injection: Option<Arc<InjectionNode>>,
+    pub injection: Option<Arc<InjectionNode>>, // why here??
 }
 
 impl TypeBase {
@@ -86,7 +86,7 @@ impl TypeBase {
         schema: &tg_schema::TypeNodeBase,
         parent: WeakType,
         key: TypeKey,
-        rpath: &RelativePath,
+        injection: Option<Arc<InjectionNode>>,
     ) -> Self {
         Self {
             parent,
@@ -94,7 +94,7 @@ impl TypeBase {
             title: schema.title.clone(),
             name: Default::default(),
             description: schema.description.clone(),
-            injection: rpath.get_injection(),
+            injection,
         }
     }
 }
@@ -241,8 +241,10 @@ impl Type {
     }
 
     pub fn assert_object(&self) -> Result<&Arc<ObjectType>> {
-        self.as_object()
+        Ok(self
+            .as_object()
             .ok_or_else(|| eyre!("expected object type, got {}", self.tag()))
+            .unwrap())
     }
 
     pub fn as_func(&self) -> Option<&Arc<FunctionType>> {

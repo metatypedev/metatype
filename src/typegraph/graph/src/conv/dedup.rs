@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{injection::InjectionNode, interlude::*, Type, TypeNodeExt as _, Wrap};
+use crate::{injection::InjectionNode, interlude::*, FunctionType, Type, TypeNodeExt as _, Wrap};
 
-use super::{key::TypeKeyEx, ConversionMap, MapItem, PathSegment, RelativePath, TypeKey};
+use super::{ConversionMap, MapItem, PathSegment, RelativePath, SecondaryRegistry, TypeKey};
 
 // TODO rename to `DuplicationKey`
 pub trait DupKey: std::hash::Hash + Eq + Clone {
@@ -11,76 +11,79 @@ pub trait DupKey: std::hash::Hash + Eq + Clone {
 }
 
 pub trait DuplicationKeyGenerator: Clone {
-    type Key: DupKey;
+    type Key: DupKey + std::fmt::Debug + 'static;
 
-    fn gen_from_rpath(&self, rpath: &RelativePath) -> Self::Key;
+    // fn gen_from_rpath(&self, rpath: &RelativePath) -> Self::Key;
     fn gen_from_type(&self, ty: &Type) -> Self::Key;
+
+    fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key;
+    fn gen_for_fn_output(&self, fn_type: &FunctionType) -> Self::Key;
 
     fn apply_path_segment(&self, key: &Self::Key, path_seg: &PathSegment) -> Self::Key;
 
-    fn find_type_in_rpath(
-        &self,
-        ty: &Type,
-        rpath: &RelativePath,
-        schema: &tg_schema::Typegraph,
-    ) -> bool {
-        use RelativePath as RP;
-        match rpath {
-            RP::Function(_) => false,
-            RP::NsObject(_) => false,
-            RP::Input(p) => {
-                let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let input_type = match &schema.types[owner.base.key.0 as usize] {
-                    tg_schema::TypeNode::Function { data, .. } => data.input,
-                    _ => unreachable!("expected a function node"),
-                };
-                let xkey = TypeKeyEx(ty.idx(), self.gen_from_type(ty));
-                let mut cursor = TypeKeyEx(
-                    input_type,
-                    self.gen_from_rpath(&RelativePath::input(Arc::downgrade(&owner), vec![])),
-                );
-                // let mut cursor = TypeKeyEx(input_type, DuplicationKey { injection });
-                for seg in &p.path {
-                    let next_dkey = self.apply_path_segment(&cursor.1, seg);
-                    // FIXME why unwrap?
-                    let idx = seg.apply_on_schema_node(&schema.types, cursor.0).unwrap();
-                    let next = TypeKeyEx(idx, next_dkey);
-                    if next == xkey {
-                        return true;
-                    }
-                    cursor = next;
-                }
-
-                false
-            }
-
-            RP::Output(p) => {
-                let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let out_ty = match &schema.types[owner.base.key.0 as usize] {
-                    tg_schema::TypeNode::Function { data, .. } => data.output,
-                    _ => unreachable!("expected a function node"),
-                };
-
-                let xkey = TypeKeyEx(ty.idx(), self.gen_from_type(ty));
-
-                let mut cursor = TypeKeyEx(
-                    out_ty,
-                    self.gen_from_rpath(&RelativePath::output(Arc::downgrade(&owner), vec![])),
-                );
-                for seg in &p.path {
-                    let next_dkey = self.apply_path_segment(&cursor.1, seg);
-                    let idx = seg.apply_on_schema_node(&schema.types, cursor.0).unwrap();
-                    let next = TypeKeyEx(idx, next_dkey);
-                    if next == xkey {
-                        return true;
-                    }
-                    cursor = next;
-                }
-
-                false
-            }
-        }
-    }
+    // fn find_type_in_rpath(
+    //     &self,
+    //     ty: &Type,
+    //     rpath: &RelativePath,
+    //     schema: &tg_schema::Typegraph,
+    // ) -> bool {
+    //     use RelativePath as RP;
+    //     match rpath {
+    //         RP::Function(_) => false,
+    //         RP::NsObject(_) => false,
+    //         RP::Input(p) => {
+    //             let owner = p.owner.upgrade().expect("no strong pointer for type");
+    //             let input_type = match &schema.types[owner.base.key.0 as usize] {
+    //                 tg_schema::TypeNode::Function { data, .. } => data.input,
+    //                 _ => unreachable!("expected a function node"),
+    //             };
+    //             let xkey = TypeKeyEx(ty.idx(), self.gen_from_type(ty));
+    //             let mut cursor = TypeKeyEx(
+    //                 input_type,
+    //                 self.gen_from_rpath(&RelativePath::input(Arc::downgrade(&owner), vec![])),
+    //             );
+    //             // let mut cursor = TypeKeyEx(input_type, DuplicationKey { injection });
+    //             for seg in &p.path {
+    //                 let next_dkey = self.apply_path_segment(&cursor.1, seg);
+    //                 // FIXME why unwrap?
+    //                 let idx = seg.apply_on_schema_node(&schema.types, cursor.0).unwrap();
+    //                 let next = TypeKeyEx(idx, next_dkey);
+    //                 if next == xkey {
+    //                     return true;
+    //                 }
+    //                 cursor = next;
+    //             }
+    //
+    //             false
+    //         }
+    //
+    //         RP::Output(p) => {
+    //             let owner = p.owner.upgrade().expect("no strong pointer for type");
+    //             let out_ty = match &schema.types[owner.base.key.0 as usize] {
+    //                 tg_schema::TypeNode::Function { data, .. } => data.output,
+    //                 _ => unreachable!("expected a function node"),
+    //             };
+    //
+    //             let xkey = TypeKeyEx(ty.idx(), self.gen_from_type(ty));
+    //
+    //             let mut cursor = TypeKeyEx(
+    //                 out_ty,
+    //                 self.gen_from_rpath(&RelativePath::output(Arc::downgrade(&owner), vec![])),
+    //             );
+    //             for seg in &p.path {
+    //                 let next_dkey = self.apply_path_segment(&cursor.1, seg);
+    //                 let idx = seg.apply_on_schema_node(&schema.types, cursor.0).unwrap();
+    //                 let next = TypeKeyEx(idx, next_dkey);
+    //                 if next == xkey {
+    //                     return true;
+    //                 }
+    //                 cursor = next;
+    //             }
+    //
+    //             false
+    //         }
+    //     }
+    // }
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq, Hash)]
@@ -94,11 +97,11 @@ pub struct DefaultDuplicationKeyGenerator;
 impl DuplicationKeyGenerator for DefaultDuplicationKeyGenerator {
     type Key = DefaultDuplicationKey;
 
-    fn gen_from_rpath(&self, rpath: &RelativePath) -> Self::Key {
-        Self::Key {
-            injection: rpath.get_injection(),
-        }
-    }
+    // fn gen_from_rpath(&self, rpath: &RelativePath) -> Self::Key {
+    //     Self::Key {
+    //         injection: rpath.get_injection(),
+    //     }
+    // }
 
     fn gen_from_type(&self, ty: &Type) -> Self::Key {
         Self::Key {
@@ -113,7 +116,22 @@ impl DuplicationKeyGenerator for DefaultDuplicationKeyGenerator {
             .and_then(|inj| path_seg.apply_on_injection(inj));
         Self::Key { injection: inj }
     }
+
+    fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key {
+        Self::Key {
+            // TODO we can optimize this by using the function's injections; placing the
+            // Arc<InjectionNode> at that point
+            injection: Some(Arc::new(InjectionNode::Parent {
+                children: fn_type.injections.clone(),
+            })),
+        }
+    }
+
+    fn gen_for_fn_output(&self, _fn_type: &FunctionType) -> Self::Key {
+        Self::Key { injection: None }
+    }
 }
+
 impl DupKey for DefaultDuplicationKey {
     fn is_default(&self) -> bool {
         self.injection

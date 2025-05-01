@@ -7,6 +7,7 @@ pub mod naming;
 mod path;
 mod policies;
 mod runtimes;
+mod type_registry;
 mod types;
 pub mod visitor;
 
@@ -49,7 +50,7 @@ pub enum MapItem<K: DupKey> {
     Value(ValueType<K>),
 }
 
-impl<K: DupKey> TryFrom<conv::MapItem<K>> for MapItem<K> {
+impl<K: DupKey + std::fmt::Debug> TryFrom<conv::MapItem<K>> for MapItem<K> {
     type Error = color_eyre::Report;
 
     fn try_from(value: conv::MapItem<K>) -> Result<Self> {
@@ -91,6 +92,7 @@ impl<K: DupKey> Typegraph<K> {
     fn new<G>(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Result<Self>
     where
         G: DuplicationKeyGenerator<Key = K>,
+        K: Default,
     {
         conv::Conversion::convert(schema, dup_key_gen, DefaultNamingEngine::default())
     }
