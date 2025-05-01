@@ -36,6 +36,7 @@ const cmdBase = [
   "meta-cli",
   "--",
   "serialize",
+  "-vvv",
   "-f",
 ];
 const tgs: TypeGraphDS[] = [];

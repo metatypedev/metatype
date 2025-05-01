@@ -1,0 +1,12 @@
+{
+  "name": "api-tgs",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@typegraph/sdk": "link:../../src/typegraph/node"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}

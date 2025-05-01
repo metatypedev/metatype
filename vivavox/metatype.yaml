@@ -1,0 +1,156 @@
+typegraphs:
+  # TODO: add these by default to template
+  # TODO: add support for MCLI_LOADER here
+  # TODO: auto-exclude .gitignore
+  typescript:
+    # FIXME: appending ./ in front of path doesn't work
+    include:
+      - "typegraphs/vivavox.ts"
+  javascript:
+    exclude:
+      - "**/*"
+  materializers:
+    prisma:
+      migrations_path: "migrations"
+
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+    secrets:
+      vivavox:
+        BASIC_vivavox_web: thesecretishere
+        BASIC_worker: thesecretishere_worker
+
+        POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=vivavox"
+
+        GOOGLE_CLIENT_ID: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/GOOGLE_CLIENT_ID
+        GOOGLE_CLIENT_SECRET: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/GOOGLE_CLIENT_SECRET
+
+        # this supports both smtp and http addresses
+        # if http, will look for bearer token under EMAILIT_CREDS
+        MAIL_SERVICE_URL: smtp://localhost:2500/
+        # NOTE: the secret contains the smtp url for mailit, not http
+        # MAIL_SERVICE_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/dev/EMAILIT_SMTP_URL
+
+        # creds are only used when using the HTTP mailit API
+        #EMAILIT_CREDS: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/EMAILIT_HTTP_CREDS
+        EMAILIT_CREDS: unused
+
+        MAIL_SENDER_ADDR: noreply@vivavox.io
+        MAIL_SENDER_NAME: Vivavox
+        MAIL_SUPPORT_ADDR: support@vivavox.io
+
+        # TODO: decide on better expiration strategy
+        # 24 hours
+        VIVA_SESSION_LIFESPAN_SECS: "86400"
+
+        VIVAVOX_WEB_URL: http://localhost:3000
+
+        CACHE_REDIS_URL: "redis://:password@localhost:6379/0"
+        SUBS_REDIS_URL: "redis://:password@localhost:6379/0"
+        WORKER_REDIS_URL: "redis://:password@localhost:6379/0"
+
+        VIVAVOX_S3_HOST: http://localhost:9000
+        VIVAVOX_S3_REGION: local
+        VIVAVOX_S3_ACCESS_KEY: minio
+        VIVAVOX_S3_SECRET_KEY: password
+        VIVAVOX_S3_PATH_STYLE: "true"
+
+        LIVEKIT_HOST: http://localhost:7880
+        LIVEKIT_KEY: livekit
+        LIVEKIT_SECRET: password000password000password000password
+
+  staging:
+    url: "https://tgate-stg.vivavox.io"
+    username: admin
+    password: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_ADMIN_PASSWORD
+    secrets:
+      vivavox:
+        BASIC_vivavox_web: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_BASIC_VV_WEB_SECRET
+        BASIC_worker: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_BASIC_WORKER_SECRET
+
+        POSTGRES_CONN: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_POSTGRES_CONN
+
+        GOOGLE_CLIENT_ID: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/GOOGLE_CLIENT_ID
+        GOOGLE_CLIENT_SECRET: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/GOOGLE_CLIENT_SECRET
+
+        MAIL_SERVICE_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/EMAILIT_HTTP_URL
+        EMAILIT_CREDS: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/EMAILIT_HTTP_CREDS
+
+        MAIL_SENDER_ADDR: noreply@vivavox.io
+        MAIL_SENDER_NAME: Vivavox
+        MAIL_SUPPORT_ADDR: support@vivavox.io
+
+        # TODO: decide on better expiration strategy
+        # 24 hours
+        VIVA_SESSION_LIFESPAN_SECS: "86400"
+
+        VIVAVOX_WEB_URL: https://www-stg.vivavox.io
+
+        CACHE_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_REDIS_URL
+        SUBS_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_REDIS_URL
+        WORKER_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_REDIS_URL
+
+        VIVAVOX_S3_HOST: https://blobs-stg.vivavox.io
+        VIVAVOX_S3_REGION: local
+        VIVAVOX_S3_ACCESS_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_S3_ACCESS_KEY
+        VIVAVOX_S3_SECRET_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_S3_SECRET_KEY
+        VIVAVOX_S3_PATH_STYLE: "true"
+
+        LIVEKIT_HOST: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_LIVEKIT_HOST
+        LIVEKIT_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_LIVEKIT_KEY
+        LIVEKIT_SECRET: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/staging/TG_VV_LIVEKIT_SECRET
+
+  prod:
+    url: "https://tgate.vivavox.io"
+    username: admin
+    password: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_ADMIN_PASSWORD
+    secrets:
+      vivavox:
+        BASIC_vivavox_web: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_BASIC_VV_WEB_SECRET
+        BASIC_worker: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_BASIC_WORKER_SECRET
+
+        POSTGRES_CONN: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_POSTGRES_CONN
+
+        GOOGLE_CLIENT_ID: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/GOOGLE_CLIENT_ID
+        GOOGLE_CLIENT_SECRET: infisical://app.infisical.com/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/GOOGLE_CLIENT_SECRET
+
+        MAIL_SERVICE_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/EMAILIT_HTTP_URL
+        EMAILIT_CREDS: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/EMAILIT_HTTP_CREDS
+
+        MAIL_SENDER_ADDR: noreply@vivavox.io
+        MAIL_SENDER_NAME: Vivavox
+        MAIL_SUPPORT_ADDR: support@vivavox.io
+
+        # TODO: decide on better expiration strategy
+        # 24 hours
+        VIVA_SESSION_LIFESPAN_SECS: "86400"
+
+        VIVAVOX_WEB_URL: https://www.vivavox.io
+
+        CACHE_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_REDIS_URL
+        SUBS_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_REDIS_URL
+        WORKER_REDIS_URL: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_REDIS_URL
+
+        VIVAVOX_S3_HOST: https://blobs.vivavox.io
+        VIVAVOX_S3_REGION: local
+        VIVAVOX_S3_ACCESS_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_S3_ACCESS_KEY
+        VIVAVOX_S3_SECRET_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_S3_SECRET_KEY
+        VIVAVOX_S3_PATH_STYLE: "true"
+
+        LIVEKIT_HOST: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_LIVEKIT_HOST
+        LIVEKIT_KEY: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_LIVEKIT_KEY
+        LIVEKIT_SECRET: infisical://infisical.triage.dev/39bbe4e4-20c2-42fa-8a6c-1bcafcc74faf/prod/TG_VV_LIVEKIT_SECRET
+
+metagen:
+  targets:
+    client:
+      - generator: fdk_ts
+        path: ./client/
+        typegraph_path: ./typegraphs/vivavox.ts
+    funcs:
+      - generator: fdk_ts
+        path: ./typegraphs/funcs
+        typegraph_path: ./typegraphs/vivavox.ts

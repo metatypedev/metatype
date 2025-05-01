@@ -5,7 +5,6 @@
       "jsr:@david/dax@0.41.0": "jsr:@david/dax@0.41.0",
       "jsr:@david/which@^0.4.1": "jsr:@david/which@0.4.1",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.4",
-      "jsr:@std/assert": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0.10": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.10",
@@ -368,6 +367,10 @@
         "integrity": "sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==",
         "dependencies": {}
       },
+      "esprima@4.0.1": {
+        "integrity": "sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==",
+        "dependencies": {}
+      },
       "ffi-rs@1.2.10": {
         "integrity": "sha512-veJXMuLkQRdoFi/WULIyBUi2pOg4HMJvSbnVwDBKlRZJZ63BArDKm+k4NzXTjL68T2V+Aj3Fu9g4Iefph14c5g==",
         "dependencies": {
@@ -383,10 +386,6 @@
           "@yuuang/ffi-rs-win32-ia32-msvc": "@yuuang/ffi-rs-win32-ia32-msvc@1.2.10",
           "@yuuang/ffi-rs-win32-x64-msvc": "@yuuang/ffi-rs-win32-x64-msvc@1.2.10"
         }
-      },
-      "esprima@4.0.1": {
-        "integrity": "sha512-eGuFFw7Upda+g4p+QHvnW0RyTX/SVeJBDM/gCtMARO0cLuT2HcEKnTPvhjV6aGeqrCB/sbNop0Kszm0jsaWU4A==",
-        "dependencies": {}
       },
       "format-util@1.0.5": {
         "integrity": "sha512-varLbTj0e0yVyRpqQhuWV+8hlePAgaoFRhNFj50BNjEIrw1/DphHSObtqwskVCPWNgzwPoQrZAbfa/SBiicNeg==",

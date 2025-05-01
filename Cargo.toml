@@ -51,7 +51,7 @@ typegraph = { path = "src/typegraph/graph" }
 clap = "=4.5.13"
 clap_complete = "=4.5.12"
 clap-verbosity-flag = "2.2.2"
-colored = "2.1.0"
+colored = "3"
 dialoguer = "0.11.0"
 self_update = "0.41.0"
 tabled = "0.15.0"
@@ -151,7 +151,7 @@ env_logger = "=0.11.0"
 log = "0.4.22"         # FIXME: replace with tracing
 tracing = "0.1"
 # tracing core helper
-tracing-subscriber = { version = "0.3.18", features = [
+tracing-subscriber = { version = "0.3.19", features = [
   "env-filter",
   "parking_lot",
   "tracing-log",
