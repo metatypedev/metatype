@@ -24,32 +24,6 @@ pub struct MapValueItem {
     pub relative_paths: IndexSet<ValueTypePath>,
 }
 
-impl MapValueItem {
-    pub fn branches(&self) -> (bool, bool) {
-        let mut input = false;
-        let mut output = false;
-
-        for path in &self.relative_paths {
-            match &path.branch {
-                ValueTypeKind::Input => {
-                    input = true;
-                    if output {
-                        break;
-                    }
-                }
-                ValueTypeKind::Output => {
-                    output = true;
-                    if input {
-                        break;
-                    }
-                }
-            }
-        }
-
-        (input, output)
-    }
-}
-
 #[derive(Debug)]
 pub struct ValueType<K: DupKey> {
     pub default: Option<MapValueItem>,
