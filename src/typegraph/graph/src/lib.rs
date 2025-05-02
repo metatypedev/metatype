@@ -1,6 +1,27 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+//! The typegraph expansion creates a version of the typegraph where type
+//! references are inlined. This will remove the need to fetch from the array
+//! of types each time. Also, it will eventually duplicate some types
+//! according to the duplication mechanism based on the duplication keys
+//! (`DupKey` trait).
+//!
+//! The expansion works in 3 passes:
+//! - The first pass traverse the typegraph schema from the root using BFS.
+//!   Each step will convert the type if it has not been converted yet.
+//!   Also, the step will output the `LinkStep`, informing the system on how
+//!   should the created type be associated with others.
+//! - The second pass iterates through the created link steps. It sets the
+//!   references to child types. This pass is necessary since the child types
+//!   are not yet converted at each step. Recursive algorithm will not work
+//!   since the graph might have cycles.
+//! - The third pass traverse the generated graph, collected each types into
+//!   the matching entry in the registry. It also serves as a validation step,
+//!   ensuring that each converted type has valid references to their children.
+//!   (FIXME: the third pass could be optional. But it is required for metagen,
+//!   and currently, only metagen uses the expanded typegraph).
+
 pub mod conv;
 pub mod injection;
 pub mod naming;
