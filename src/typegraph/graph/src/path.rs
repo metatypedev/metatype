@@ -4,9 +4,7 @@
 use crate::injection::InjectionNode;
 use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
 use crate::{Edge, TypeNode as _, TypeNodeExt as _};
-use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
-use std::sync::Mutex;
 
 pub type Path = Vec<PathSegment>;
 
@@ -144,25 +142,11 @@ impl PathSegment {
         }
     }
 
-    // pub fn apply_on_schema_node_ex<K: DupKey>(
-    //     &self,
-    //     nodes: &[tg_schema::TypeNode],
-    //     xkey: TypeKeyEx<K>,
-    // ) -> Result<TypeKeyEx<K>> {
-    //     let idx = self.apply_on_schema_node(nodes, xkey.0)?;
-    //     let injection = xkey
-    //         .1
-    //         .injection
-    //         .and_then(|inj| self.apply_on_injection(&inj));
-    //
-    //     Ok(TypeKeyEx(idx, DuplicationKey { injection }))
-    // }
-
     pub fn apply_on_injection(&self, node: &Arc<InjectionNode>) -> Option<Arc<InjectionNode>> {
         match self {
             PathSegment::ObjectProp(key) => match node.as_ref() {
                 InjectionNode::Parent { children } => children.get(key.as_ref()).cloned(),
-                _ => unreachable!("expected parent node"),
+                _ => None,
             },
             _ => Some(node.clone()),
         }
@@ -433,34 +417,5 @@ impl RelativePath {
                 }
             }
         })
-    }
-
-    pub(crate) fn pop(&self) -> Self {
-        match self {
-            Self::NsObject(path) => {
-                let mut path = path.clone();
-                path.pop();
-                Self::NsObject(path)
-            }
-            Self::Input(k) => {
-                let mut path = k.path.clone();
-                path.pop();
-                Self::Input(ValueTypePath {
-                    owner: k.owner.clone(),
-                    path,
-                    branch: ValueTypeKind::Input,
-                })
-            }
-            Self::Output(k) => {
-                let mut path = k.path.clone();
-                path.pop();
-                Self::Output(ValueTypePath {
-                    owner: k.owner.clone(),
-                    path,
-                    branch: ValueTypeKind::Output,
-                })
-            }
-            Self::Function(_) => self.clone(),
-        }
     }
 }

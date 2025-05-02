@@ -10,7 +10,6 @@ use crate::type_registry::TypeRegistryBuilder;
 use crate::Type;
 use crate::{interlude::*, Wrap as _};
 use dedup::DuplicationKeyGenerator;
-use indexmap::IndexMap;
 pub use map::{ConversionMap, MapItem, MapValueItem, ValueType};
 use step::ConversionStep;
 use tg_schema::runtimes::TGRuntime;
@@ -28,31 +27,21 @@ pub mod interlude {
 }
 use interlude::*;
 
+#[derive(Default)]
+pub struct Registry {
+    pub runtimes: Vec<Arc<TGRuntime>>,
+    pub materializers: Vec<Materializer>,
+    pub policies: Vec<Policy>,
+}
+
 /// Conversion state; used when converting a `tg_schema::Typegraph` into a `crate::Typegraph`
 pub struct Conversion<G>
 where
     G: DuplicationKeyGenerator,
 {
-    schema: Arc<tg_schema::Typegraph>,
     conversion_map: ConversionMap<G>,
     dup_key_gen: G,
-    // types: TypeRegistry,
-    secondary_registry: SecondaryRegistry,
-}
-
-// #[derive(Default)]
-// struct TypeRegistry {
-//     input_types: IndexMap<TypeKey, Type>,
-//     output_types: IndexMap<TypeKey, Type>,
-//     functions: IndexMap<u32, Arc<FunctionType>>,
-//     namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
-// }
-
-#[derive(Default)]
-pub struct SecondaryRegistry {
-    pub runtimes: Vec<Arc<TGRuntime>>,
-    pub materializers: Vec<Materializer>,
-    pub policies: Vec<Policy>,
+    registry: Registry,
 }
 
 pub trait TypeConversionResult<G: DuplicationKeyGenerator> {
@@ -103,9 +92,8 @@ where
             .collect();
 
         Conversion {
-            schema: schema.clone(),
             conversion_map: ConversionMap::new(&schema, &dup_key_gen),
-            secondary_registry: SecondaryRegistry {
+            registry: Registry {
                 runtimes,
                 materializers,
                 policies,
@@ -124,7 +112,6 @@ where
         G::Key: Default,
     {
         let mut conv = Conversion::new(schema.clone(), dup_key_gen);
-        eprintln!("starting conversion");
 
         let mut conversion_steps: VecDeque<ConversionStep<G>> = Default::default();
         let mut link_steps: Vec<LinkStep<G>> = Default::default();
@@ -132,17 +119,7 @@ where
         conversion_steps.push_back(ConversionStep::root());
 
         while let Some(current_step) = conversion_steps.pop_front() {
-            eprintln!(
-                "step: {}; queue_size: {}; rpath: {:?}",
-                current_step.idx(),
-                conversion_steps.len(),
-                current_step.rpath,
-            );
             let result = current_step.convert(&schema, &mut conv)?;
-            eprintln!(
-                "    > next: {:?}",
-                result.next.iter().map(|s| &s.rpath).collect::<Vec<_>>()
-            );
             conversion_steps.extend(result.next);
             link_steps.extend(result.link_step);
         }
@@ -152,7 +129,7 @@ where
         }
 
         let root = {
-            let map_item = conv.conversion_map.direct.get(0).unwrap();
+            let map_item = conv.conversion_map.direct.first().unwrap();
             match map_item {
                 MapItem::Namespace(root, _) => root.clone(),
                 _ => unreachable!(),
@@ -173,42 +150,25 @@ where
                 .unwrap_or(&MapItem::Unset)
             {
                 MapItem::Unset => {
-                    bail!("no type for type idx: {}", idx);
+                    // It is possible that some types are not reachable from the root type of the
+                    // typegraph.
+                    // This is the case for the profiler functions and (eventually) its child
+                    // types.
                 }
                 MapItem::Function(ty) => {
-                    eprintln!("#{idx} function");
                     ne.name_function(ty)?;
-                    // functions.insert(idx, ty.clone());
                 }
-                MapItem::Namespace(ty, path) => {
-                    eprintln!("#{idx} namespace");
+                MapItem::Namespace(ty, _) => {
                     ne.name_ns_object(ty)?;
-                    // namespaces.insert(path.clone(), ty.clone());
                 }
                 MapItem::Value(vtypes) => {
                     ne.name_value_types(vtypes)?;
-                    // for (key, i) in vtypes.iter(idx as u32) {
-                    //     let (input, output) = i.branches();
-                    //     eprintln!("{key:?} input={input} output={output}");
-                    //     if input {
-                    //         input_types.insert(key, i.ty.clone());
-                    //     }
-                    //     if output {
-                    //         output_types.insert(key, i.ty.clone());
-                    //     }
-                    // }
                 }
             }
         }
 
         let reg = std::mem::take(ne.registry());
 
-        eprintln!("<<< finalizing conversion");
-        eprintln!(
-            "input_types: {}; output_types: {}",
-            type_reg.input_types.len(),
-            type_reg.output_types.len()
-        );
         Ok(crate::Typegraph {
             schema,
             root,
@@ -223,8 +183,8 @@ where
                 .into_iter()
                 .map(TryFrom::try_from)
                 .collect::<Result<Vec<_>>>()?,
-            runtimes: conv.secondary_registry.runtimes,
-            materializers: conv.secondary_registry.materializers,
+            runtimes: conv.registry.runtimes,
+            materializers: conv.registry.materializers,
         })
     }
 
@@ -435,12 +395,12 @@ where
     pub fn convert_policies(&self, policies: &[tg_schema::PolicyIndices]) -> Vec<PolicySpec> {
         policies
             .iter()
-            .map(|pol| convert_policy_spec(&self.secondary_registry.policies, pol))
+            .map(|pol| convert_policy_spec(&self.registry.policies, pol))
             .collect()
     }
 
     pub fn get_materializer(&self, idx: u32) -> Result<&Materializer> {
-        self.secondary_registry
+        self.registry
             .materializers
             .get(idx as usize)
             .ok_or_else(|| eyre!("materializer index out of bounds: {}", idx))

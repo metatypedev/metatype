@@ -5,7 +5,6 @@ use crate::{
     conv::key::TypeKey,
     injection::InjectionNode,
     interlude::*,
-    path::RelativePath,
     visitor::{Infallible, PathExt as _, VisitNext},
 };
 use enum_dispatch::enum_dispatch;

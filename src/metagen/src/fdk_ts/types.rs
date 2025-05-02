@@ -150,17 +150,22 @@ impl ManifestEntry for TsType {
                 }
             }
             TsType::Object { name, properties } => {
-                writeln!(out, "export type {name} = {{")?;
-                for prop in properties {
-                    let prop_name = &prop.name;
-                    let prop_ty = page.get_ref(&prop.ty).unwrap();
-                    if prop.optional {
-                        writeln!(out, "  {prop_name}?: {prop_ty};")?;
-                    } else {
-                        writeln!(out, "  {prop_name}: {prop_ty};")?;
+                if properties.is_empty() {
+                    writeln!(out, "export type {name} = Record<string, never>;")?;
+                } else {
+                    writeln!(out, "export type {name} = {{")?;
+                    for prop in properties {
+                        let prop_name = &prop.name;
+                        eprintln!("name: {name}; key={}; prop.ty: {:?}", prop.name, prop.ty);
+                        let prop_ty = page.get_ref(&prop.ty).unwrap();
+                        if prop.optional {
+                            writeln!(out, "  {prop_name}?: {prop_ty};")?;
+                        } else {
+                            writeln!(out, "  {prop_name}: {prop_ty};")?;
+                        }
                     }
+                    writeln!(out, "}};")?;
                 }
-                writeln!(out, "}};")?;
             }
             TsType::Enum { name, variants } => {
                 write!(out, "export type {name} =")?;
@@ -248,11 +253,6 @@ impl TsTypesPage {
         let mut map = IndexMap::new();
 
         for (key, ty) in tg.input_types.iter() {
-            if let Type::Object(ty) = ty {
-                if ty.properties().is_empty() {
-                    continue;
-                }
-            }
             map.insert(*key, ty.into());
         }
 

@@ -1,5 +1,8 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use color_eyre::eyre::{eyre, Result};
-use std::{sync::Arc, sync::Weak};
+use std::sync::Arc;
 
 use crate::conv::map::ValueTypeKind;
 use crate::conv::Conversion;
@@ -22,9 +25,6 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G>
 where
     G::Key: Default,
 {
-    pub fn idx(&self) -> u32 {
-        self.idx
-    }
     pub fn root() -> Self {
         Self {
             parent: WeakType::Object(Default::default()),
@@ -54,16 +54,11 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
             if let MapItem::Unset = map_entry {
                 key = map_entry.next_key(self.idx, &self.rpath, &self.dkey)?;
             } else {
-                // eprintln!(" 0 map entry: {map_entry:?}");
                 let mut map_entry = map_entry;
                 match (&mut map_entry, &self.rpath) {
                     (MapItem::Value(value_type), RelativePath::Input(vtype_path))
                     | (MapItem::Value(value_type), RelativePath::Output(vtype_path)) => {
                         if let Some(item) = value_type.find_mut(&self.dkey) {
-                            eprintln!(
-                                "skipped: step ty#{} dkey={:?}; vtype_path={:?}",
-                                self.idx, self.dkey, vtype_path
-                            );
                             // hum
                             item.relative_paths.insert(vtype_path.clone());
                             return Ok(Default::default());
@@ -278,16 +273,18 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                             _ => None,
                         }
                     });
-                    // Create LinkObjectProperty for each property
+
+                    let as_id = data.id.iter().any(|id| id == name.as_ref());
+                    let required = data.required.iter().any(|r| r == name.as_ref());
                     properties.insert(
                         name,
                         crate::types::LinkObjectProperty {
                             xkey: crate::conv::key::TypeKeyEx(*ty_idx, dkey.clone()),
                             policies: vec![],
-                            injection: None,
+                            injection: injection.clone(), // Why do we have two versions??
                             outjection: None,
-                            required: false,
-                            as_id: false,
+                            required,
+                            as_id,
                         },
                     );
                     result.next.push(ConversionStep {

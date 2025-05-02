@@ -64,9 +64,9 @@ impl<K: DupKey + std::fmt::Debug> ValueType<K> {
             .map(move |i| (TypeKey(idx, 0), i))
             .chain(
                 self.variants
-                    .iter()
+                    .values()
                     .enumerate()
-                    .map(move |(i, (k, v))| (TypeKey(idx, i as u32 + 1), v)),
+                    .map(move |(i, v)| (TypeKey(idx, i as u32 + 1), v)),
             )
     }
 
@@ -76,8 +76,6 @@ impl<K: DupKey + std::fmt::Debug> ValueType<K> {
                 bail!("cannot merge more than a single item into ValueType")
             }
             self.default = other.default;
-        } else {
-            bail!("ValueType::default already set; cannot merge")
         }
         match other.variants.len() {
             0 => {}
@@ -199,11 +197,12 @@ impl<K: DupKey + std::fmt::Debug> MapItem<K> {
         Ok(match &rpath {
             RelativePath::Function(_) => MapItem::Function(ty.assert_func()?.clone()),
             RelativePath::NsObject(path) => {
-                eprintln!("namespace object: {:?}", path);
                 MapItem::Namespace(ty.assert_object()?.clone(), path.clone())
             }
             RelativePath::Input(_) => {
-                if dkey.is_default() || !ty.is_composite() {
+                // TODO non-composite types always have a single variant; so `dkey` won't be
+                // considered
+                if dkey.is_default() {
                     MapItem::Value(ValueType {
                         default: Some(MapValueItem {
                             ty: ty.clone(),

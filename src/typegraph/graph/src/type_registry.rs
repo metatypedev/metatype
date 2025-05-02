@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::{
     conv::{dedup::DuplicationKeyGenerator, ConversionMap},
     prelude::*,
@@ -55,7 +58,7 @@ impl<'map, G: DuplicationKeyGenerator> TypeRegistryBuilder<'map, G> {
             I::Function(ty) => {
                 self.registry.functions.insert(ty.idx(), ty.clone());
                 self.register_value_type(&ty.input().wrap(), input_slot)?;
-                self.register_value_type(&ty.output(), output_slot)?;
+                self.register_value_type(ty.output(), output_slot)?;
             }
             I::Value(_) => {
                 bail!("unexpected")
@@ -84,7 +87,7 @@ impl<'map, G: DuplicationKeyGenerator> TypeRegistryBuilder<'map, G> {
                 if !map.contains_key(&ty.key()) {
                     map.insert(ty.key(), ty.clone());
                     for child_ty in ty.children().iter() {
-                        self.register_value_type(&child_ty, slot)?;
+                        self.register_value_type(child_ty, slot)?;
                     }
                 }
             }

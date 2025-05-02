@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType, Wrap as _};
+use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
 use crate::conv::dedup::{DupKey, DuplicationKeyGenerator};
 use crate::conv::key::TypeKeyEx;
-use crate::{conv::interlude::*, Arc, Once};
 use crate::{interlude::*, TypeNodeExt as _};
+use crate::{Arc, Once};
 
 #[derive(Debug)]
 pub struct OptionalType {
