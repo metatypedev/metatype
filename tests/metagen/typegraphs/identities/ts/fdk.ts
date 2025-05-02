@@ -1330,27 +1330,31 @@ export type PrimitivesSelections = {
   float?: ScalarSelectNoArgs;
   "boolean"?: ScalarSelectNoArgs;
 };
-export type Branch2Selections = {
-  branch2?: ScalarSelectNoArgs;
-};
-export type CompositesEitherEitherSelections = {
-  "primitives"?: CompositeSelectNoArgs<PrimitivesSelections>;
-  "branch2"?: CompositeSelectNoArgs<Branch2Selections>;
-};
 export type CompositesSelections = {
   opt?: ScalarSelectNoArgs;
   either?: CompositeSelectNoArgs<CompositesEitherEitherSelections>;
   union?: ScalarSelectNoArgs;
   list?: ScalarSelectNoArgs;
 };
-export type Cycles3Selections = {
-  "branch33A"?: CompositeSelectNoArgs<Branch33ASelections>;
-  "branch33B"?: CompositeSelectNoArgs<Branch33BSelections>;
+export type CompositesEitherEitherSelections = {
+  "primitives"?: CompositeSelectNoArgs<PrimitivesSelections>;
+  "branch2"?: CompositeSelectNoArgs<Branch2Selections>;
+};
+export type Branch2Selections = {
+  branch2?: ScalarSelectNoArgs;
 };
 export type Cycles1Selections = {
   phantom1?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<Cycles2Selections>;
   list3?: CompositeSelectNoArgs<Cycles3Selections>;
+};
+export type Cycles2Selections = {
+  "cycles3"?: CompositeSelectNoArgs<Cycles3Selections>;
+  "cycles1"?: CompositeSelectNoArgs<Cycles1Selections>;
+};
+export type Cycles3Selections = {
+  "branch33A"?: CompositeSelectNoArgs<Branch33ASelections>;
+  "branch33B"?: CompositeSelectNoArgs<Branch33BSelections>;
 };
 export type Branch33ASelections = {
   phantom3a?: ScalarSelectNoArgs;
@@ -1360,21 +1364,17 @@ export type Branch33BSelections = {
   phantom3b?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<Cycles2Selections>;
 };
-export type Cycles2Selections = {
-  "cycles3"?: CompositeSelectNoArgs<Cycles3Selections>;
-  "cycles1"?: CompositeSelectNoArgs<Cycles1Selections>;
-};
 export type SimpleCycles1Selections = {
   phantom1?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<SimpleCycles2Selections>;
 };
-export type SimpleCycles3Selections = {
-  phantom3?: ScalarSelectNoArgs;
-  to1?: CompositeSelectNoArgs<SimpleCycles1Selections>;
-};
 export type SimpleCycles2Selections = {
   phantom2?: ScalarSelectNoArgs;
   to3?: CompositeSelectNoArgs<SimpleCycles3Selections>;
+};
+export type SimpleCycles3Selections = {
+  phantom3?: ScalarSelectNoArgs;
+  to1?: CompositeSelectNoArgs<SimpleCycles1Selections>;
 };
 
 export class QueryGraph extends _QueryGraphBase {
@@ -1385,9 +1385,9 @@ export class QueryGraph extends _QueryGraphBase {
       "cycles1": "cycles1!",
       "simple_cycles_1": "simple_cycles_1!",
       "branch2": "branch2!",
+      "cycles3": "cycles3!",
       "branch33A": "branch33A!",
       "branch33B": "branch33B!",
-      "cycles3": "cycles3!",
     });
   }
             

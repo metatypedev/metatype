@@ -1060,12 +1060,13 @@ const nodeMetas = {
     };
   },
 };
-export type StringUuid4 = string;
+export type RootGetUserFnInput = Record<string, never>;
 export type Post = {
   id: StringUuid4;
   slug: string;
   title: string;
 };
+export type StringUuid4 = string;
 export type RootCompositeArgsFnInput = {
   id: string;
 };

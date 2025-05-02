@@ -156,8 +156,7 @@ impl ManifestEntry for TsType {
                     writeln!(out, "export type {name} = {{")?;
                     for prop in properties {
                         let prop_name = &prop.name;
-                        eprintln!("name: {name}; key={}; prop.ty: {:?}", prop.name, prop.ty);
-                        let prop_ty = page.get_ref(&prop.ty).unwrap();
+                        let prop_ty = page.get_ref(&prop.ty).unwrap_or_else(|| "void".to_owned());
                         if prop.optional {
                             writeln!(out, "  {prop_name}?: {prop_ty};")?;
                         } else {
