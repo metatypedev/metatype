@@ -212,7 +212,7 @@ type KvRuntimeData = {
   url: string;
 };
 
-type KvMaterializer = "get" | "set" | "delete" | "keys" | "values" | "push" | "pop";
+type KvMaterializer = "get" | "set" | "delete" | "keys" | "values" | "lpush" | "rpush" | "lpop" | "rpop";
 
 type GrpcRuntimeData = {
   proto_file: string;

@@ -16,6 +16,8 @@ def kv(g: Graph):
         delete=kv.delete(),
         keys=kv.keys(),
         values=kv.values(),
-        push=kv.push(),
-        pop=kv.pop(),
+        lpush=kv.lpush(),
+        rpush=kv.rpush(),
+        lpop=kv.lpop(),
+        rpop=kv.rpop(),
     )

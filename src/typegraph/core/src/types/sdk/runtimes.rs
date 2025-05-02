@@ -282,8 +282,10 @@ pub enum KvMaterializer {
     Delete,
     Keys,
     Values,
-    Push,
-    Pop,
+    Lpush,
+    Rpush,
+    Lpop,
+    Rpop,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

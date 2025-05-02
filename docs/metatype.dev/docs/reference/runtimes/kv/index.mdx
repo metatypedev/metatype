@@ -19,7 +19,7 @@ The KvRuntime enables interaction with a Redis database by setting, retrieving, 
 | `get`     | Retrieve the value associated with a specific key. | `kv.get()`    |
 | `set`     | Assign a value to a specific key.                  | `kv.set()`    |
 | `delete`  | Remove a key and its associated value from Redis.  | `kv.delete()` |
-| `push`    | Push in a stack with a specific key.               | `kv.push()`   |
-| `pop`     | Pop from a stack with a specific key.              | `kv.pop()`    |
+| `lpush`/`rpush` | Push left/right a list with a specific key.| `kv.lpush()`/`kv.rpush`   |
+| `lpop`/`rpop`   | Pop left/right a list with a specific key. | `kv.lpop()/`kv.rpop()`    |
 | `keys`    | List all keys currently stored in Redis.           | `kv.keys()`   |
 | `values`  | List all values currently stored in Redis.         | `kv.values()` |

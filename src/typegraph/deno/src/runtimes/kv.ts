@@ -78,12 +78,12 @@ export class KvRuntime extends Runtime {
     );
   }
 
-  push(): t.Func<
+  lpush(): t.Func<
     t.Struct<{ key: t.String; value: t.String }>,
     t.Integer,
     KvOperationMat
   > {
-    const mat = this.#operation("push", fx.update());
+    const mat = this.#operation("lpush", fx.update());
     return t.func(
       t.struct({ key: t.string(), value: t.string() }),
       t.integer(),
@@ -91,8 +91,26 @@ export class KvRuntime extends Runtime {
     );
   }
 
-  pop(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
-    const mat = this.#operation("pop", fx.update());
+  rpush(): t.Func<
+    t.Struct<{ key: t.String; value: t.String }>,
+    t.Integer,
+    KvOperationMat
+  > {
+  const mat = this.#operation("rpush", fx.update());
+  return t.func(
+    t.struct({ key: t.string(), value: t.string() }),
+    t.integer(),
+    mat,
+  );
+}
+
+  lpop(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
+    const mat = this.#operation("lpop", fx.update());
+    return t.func(t.struct({ key: t.string() }), t.string().optional(), mat);
+  }
+
+  rpop(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
+    const mat = this.#operation("rpop", fx.update());
     return t.func(t.struct({ key: t.string() }), t.string().optional(), mat);
   }
 }

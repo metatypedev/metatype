@@ -100,32 +100,48 @@ Meta.test(
     });
 
     await t.should("push and pop values", async () => {
-      const key = "test:things";
+      const key1 = "test:first";
+      const key2 = "test:second";
       const theList = ["one", "two", "three"];
       try {
         let i = 1;
         for (const value of theList) {
-          await gql`mutation { push(key: $key, value: $value) }`
-            .withVars({ key, value })
+          await gql`mutation {
+            lpush(key: $key1, value: $value)
+            rpush(key: $key2, value: $value)
+          }`
+            .withVars({ key1, key2, value })
             .expectData({
-              push: i++,
+              lpush: i,
+              rpush: i,
             })
             .on(e);
+          i += 1;
         }
   
+        let pos = theList.length - 1;
         for (const _ of theList) {
-          await gql`mutation { pop(key: $key) }`
-            .withVars({ key })
+          await gql`mutation {
+            lpop(key: $key1)
+            rpop(key: $key2)
+          }`
+            .withVars({ key1, key2 })
             .expectData({
-              pop: theList.pop() ?? null,
+              lpop: theList.at(pos) ?? null,
+              rpop: theList.at(pos) ?? null,
             })
             .on(e);
+
+          pos -= 1;
         }
       } catch(err) {
         throw err;
       } finally {
-        await gql`mutation { delete(key: $key) }`
-          .withVars({ key })
+        await gql`mutation { 
+          delete(key: $key1)
+          delete(key: $key2)
+        }`
+          .withVars({ key1, key2 })
           .expectBody((_) => {})
           .on(e);
       }
