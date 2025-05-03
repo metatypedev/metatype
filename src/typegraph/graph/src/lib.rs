@@ -56,7 +56,7 @@ use conv::{
 };
 use indexmap::IndexMap;
 use interlude::*;
-use naming::DefaultNamingEngine;
+use naming::DefaultNamingEngineFactory;
 use runtimes::Materializer;
 use std::collections::HashMap;
 use tg_schema::runtimes::TGRuntime;
@@ -94,7 +94,7 @@ impl<K: DupKey> Typegraph<K> {
         G: DupKeyGen<Key = K>,
         K: Default,
     {
-        conv::Conversion::convert(schema, dup_key_gen, DefaultNamingEngine::default())
+        conv::convert(schema, dup_key_gen, DefaultNamingEngineFactory)
     }
 }
 

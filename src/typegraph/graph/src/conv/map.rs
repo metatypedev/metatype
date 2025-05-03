@@ -4,6 +4,7 @@
 use indexmap::IndexMap;
 
 use crate::interlude::*;
+use crate::naming::{NameRegistry, NamingEngine};
 use crate::{Arc, FunctionType, ObjectType, Type, TypeNodeExt as _};
 
 use super::dedup::{DupKey, DupKeyGen};
@@ -42,6 +43,8 @@ impl<K: DupKey> ValueType<K> {
                 bail!("cannot merge more than a single item into ValueType")
             }
             self.default = other.default;
+        } else if other.default.is_some() {
+            bail!("ValueType::default already exists: cannot merge")
         }
         match other.variants.len() {
             0 => {}
@@ -190,6 +193,14 @@ impl<G: DupKeyGen> ConversionMap<G> {
         Self { direct }
     }
 
+    pub fn merge_item(&mut self, idx: u32, item: MapItem<G::Key>) -> Result<()> {
+        self.direct
+            .get_mut(idx as usize)
+            .ok_or_else(|| eyre!("type index out of bounds: {}", idx))?
+            .merge(item)?;
+        Ok(())
+    }
+
     pub fn get(&self, key: TypeKey) -> Option<Type> {
         match self.direct.get(key.0 as usize) {
             Some(MapItem::Unset) => None,
@@ -237,5 +248,34 @@ impl<G: DupKeyGen> ConversionMap<G> {
             }
             None => None, // unreachable
         }
+    }
+
+    pub fn assign_names<NE: NamingEngine>(
+        &self,
+        naming_engine: &mut NE,
+        schema: &tg_schema::Typegraph,
+    ) -> Result<NameRegistry> {
+        for idx in 0..schema.types.len() {
+            let idx = idx as u32;
+            match self.direct.get(idx as usize).unwrap_or(&MapItem::Unset) {
+                MapItem::Unset => {
+                    // It is possible that some types are not reachable from the root type of the
+                    // typegraph.
+                    // This is the case for the profiler functions and (eventually) its child
+                    // types.
+                }
+                MapItem::Function(ty) => {
+                    naming_engine.name_function(ty)?;
+                }
+                MapItem::Namespace(ty, _) => {
+                    naming_engine.name_ns_object(ty)?;
+                }
+                MapItem::Value(vtypes) => {
+                    naming_engine.name_value_types(vtypes)?;
+                }
+            }
+        }
+
+        Ok(std::mem::take(naming_engine.registry()))
     }
 }

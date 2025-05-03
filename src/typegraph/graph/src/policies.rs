@@ -32,30 +32,3 @@ pub fn convert_policy(materializers: &[Materializer], policy: &tg_schema::Policy
         materializer,
     })
 }
-
-trait OptionalIndex<I> {
-    type Item;
-    fn opt_get(&self, index: Option<I>) -> Option<Self::Item>;
-}
-
-impl OptionalIndex<u32> for &[Policy] {
-    type Item = Policy;
-    fn opt_get(&self, index: Option<u32>) -> Option<Policy> {
-        index
-            .map(|i| self.get(i as usize).expect("policy index out of bounds"))
-            .cloned()
-    }
-}
-
-pub fn convert_policy_spec(policies: &[Policy], spec: &tg_schema::PolicyIndices) -> PolicySpec {
-    use tg_schema::PolicyIndices as PI;
-    match spec {
-        PI::Policy(i) => PolicySpec::Simple(policies[*i as usize].clone()),
-        PI::EffectPolicies(pp) => PolicySpec::Conditional(ConditionalPolicy {
-            read: policies.opt_get(pp.read),
-            create: policies.opt_get(pp.create),
-            update: policies.opt_get(pp.update),
-            delete: policies.opt_get(pp.delete),
-        }),
-    }
-}

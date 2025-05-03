@@ -27,6 +27,11 @@ impl NameRegistry {
     }
 }
 
+pub trait NamingEngineFactory {
+    type Engine: NamingEngine;
+    fn create(&self) -> Self::Engine;
+}
+
 pub trait NamingEngine {
     fn name_value_types<K: DupKey>(&mut self, types: &ValueType<K>) -> Result<()>;
     fn name_function(&mut self, function: &Arc<FunctionType>) -> Result<()>;
@@ -40,6 +45,18 @@ mod default {
     use super::*;
 
     #[derive(Default)]
+    pub struct DefaultNamingEngineFactory;
+
+    impl NamingEngineFactory for DefaultNamingEngineFactory {
+        type Engine = DefaultNamingEngine;
+
+        fn create(&self) -> Self::Engine {
+            Self::Engine {
+                reg: Default::default(),
+            }
+        }
+    }
+
     pub struct DefaultNamingEngine {
         reg: NameRegistry,
     }
@@ -77,4 +94,4 @@ mod default {
     }
 }
 
-pub use default::DefaultNamingEngine;
+pub use default::{DefaultNamingEngine, DefaultNamingEngineFactory};

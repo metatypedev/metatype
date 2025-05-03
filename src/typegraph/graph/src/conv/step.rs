@@ -4,18 +4,19 @@
 use color_eyre::eyre::{eyre, Result};
 use std::sync::Arc;
 
+use crate::conv::key::TypeKeyEx;
 use crate::conv::map::ValueTypeKind;
-use crate::conv::Conversion;
 use crate::injection::InjectionNode;
 use crate::path::{PathSegment, ValueTypePath};
 use crate::types::{LinkFunction, LinkList, LinkObject, LinkOptional, LinkUnion};
 use crate::{BooleanType, IntegerType, Type, TypeBase, WeakType};
 
+use super::Registry;
 use super::{dedup::DupKeyGen, ConversionMap, MapItem, RelativePath, TypeKey};
 
 pub struct ConversionStep<G: DupKeyGen> {
     parent: WeakType,
-    idx: u32,
+    pub idx: u32,            // TODO
     pub rpath: RelativePath, // pub??
     dkey: G::Key,
     injection: Option<Arc<crate::injection::InjectionNode>>,
@@ -36,60 +37,21 @@ where
     }
 }
 
+pub enum StepPlan {
+    /// the node has already been converted in a previous step
+    Skip,
+    /// the node needs to be converted under the given `TypeKey`
+    Create(TypeKey),
+}
+
 impl<G: DupKeyGen> ConversionStep<G> {
     pub fn convert(
         &self,
         schema: &Arc<tg_schema::Typegraph>,
-        conv: &mut Conversion<G>,
-    ) -> Result<StepResult<G>> {
-        let key: TypeKey;
-
-        {
-            let map_entry = conv
-                .conversion_map
-                .direct
-                .get_mut(self.idx as usize)
-                .ok_or_else(|| eyre!("type index out of bounds: {}", self.idx))?;
-            if let MapItem::Unset = map_entry {
-                key = map_entry.next_key(self.idx, &self.rpath, &self.dkey)?;
-            } else {
-                let mut map_entry = map_entry;
-                match (&mut map_entry, &self.rpath) {
-                    (MapItem::Value(value_type), RelativePath::Input(_))
-                    | (MapItem::Value(value_type), RelativePath::Output(_)) => {
-                        if value_type.find(&self.dkey).is_some() {
-                            // hum
-                            return Ok(Default::default());
-                        } else {
-                            key = map_entry.next_key(self.idx, &self.rpath, &self.dkey)?;
-                        }
-                    }
-                    (MapItem::Namespace(_, _), RelativePath::NsObject(_)) => {
-                        unreachable!("namespace type should not be converted more than once");
-                    }
-                    _ => {
-                        // return error
-                        unreachable!("mismatched type and path");
-                    }
-                }
-            }
-        }
-
-        let (result, item) = self.convert_new(schema, key, conv)?;
-        conv.conversion_map
-            .direct
-            .get_mut(self.idx as usize)
-            .ok_or_else(|| eyre!("type index out of bounds: {}", self.idx))?
-            .merge(item)?;
-
-        Ok(result)
-    }
-
-    fn convert_new(
-        &self,
-        schema: &Arc<tg_schema::Typegraph>,
         key: TypeKey,
-        conv: &mut Conversion<G>,
+        dkey_gen: &G,
+        registry: &Registry,
+        // conv: &mut Conversion<G>,
     ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
         let type_node = schema
             .types
@@ -194,7 +156,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 let mut result = StepResult::default();
 
                 let path_seg = PathSegment::OptionalItem;
-                let item_dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
+                let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.item,
@@ -206,7 +168,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 // Add link_step for Optional
                 result.link_step = Some(LinkStep::Optional(LinkOptional {
                     ty: ty_inner.clone(),
-                    item: crate::conv::key::TypeKeyEx(data.item, item_dkey),
+                    item: TypeKeyEx(data.item, item_dkey),
                 }));
 
                 Ok((
@@ -228,7 +190,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 let mut result = StepResult::default();
 
                 let path_seg = PathSegment::ListItem;
-                let item_dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
+                let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.items,
@@ -240,7 +202,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 // Add link_step for List
                 result.link_step = Some(LinkStep::List(LinkList {
                     ty: ty_inner.clone(),
-                    item: crate::conv::key::TypeKeyEx(data.items, item_dkey),
+                    item: TypeKeyEx(data.items, item_dkey),
                 }));
 
                 Ok((
@@ -263,7 +225,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 for (name, ty_idx) in &data.properties {
                     let name: Arc<str> = name.clone().into();
                     let path_seg = PathSegment::ObjectProp(name.clone());
-                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
+                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
                     let injection = self.injection.as_ref().and_then(|inj| {
                         use crate::injection::InjectionNode as I;
                         match inj.as_ref() {
@@ -277,7 +239,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                     properties.insert(
                         name,
                         crate::types::LinkObjectProperty {
-                            xkey: crate::conv::key::TypeKeyEx(*ty_idx, dkey.clone()),
+                            xkey: TypeKeyEx(*ty_idx, dkey.clone()),
                             policies: vec![],
                             injection: injection.clone(), // Why do we have two versions??
                             outjection: None,
@@ -319,8 +281,8 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
                 for (i, variant) in data.one_of.iter().enumerate() {
                     let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
-                    variants.push(crate::conv::key::TypeKeyEx(*variant, dkey.clone()));
+                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+                    variants.push(TypeKeyEx(*variant, dkey.clone()));
                     result.next.push(ConversionStep {
                         parent: ty.downgrade(),
                         idx: *variant,
@@ -354,8 +316,8 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
                 for (i, variant) in data.any_of.iter().enumerate() {
                     let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
-                    variants.push(crate::conv::key::TypeKeyEx(*variant, dkey.clone()));
+                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+                    variants.push(TypeKeyEx(*variant, dkey.clone()));
                     result.next.push(ConversionStep {
                         parent: ty.downgrade(),
                         idx: *variant,
@@ -377,7 +339,11 @@ impl<G: DupKeyGen> ConversionStep<G> {
             }
             N::Function { data, .. } => {
                 // Get the materializer from the conversion context
-                let materializer = conv.get_materializer(data.materializer)?.clone();
+                let materializer = registry
+                    .materializers
+                    .get(data.materializer as usize)
+                    .ok_or_else(|| eyre!("materializer index out of bounds"))?
+                    .clone();
                 let effect = materializer
                     .effect
                     .effect
@@ -413,7 +379,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
                 let mut result = StepResult::default();
 
-                let input_dkey = conv.dup_key_gen.gen_for_fn_input(&ty_inner);
+                let input_dkey = dkey_gen.gen_for_fn_input(&ty_inner);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.input,
@@ -426,7 +392,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
                     injection,
                 });
 
-                let output_dkey = conv.dup_key_gen.gen_for_fn_output(&ty_inner);
+                let output_dkey = dkey_gen.gen_for_fn_output(&ty_inner);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.output,
@@ -442,8 +408,8 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 // Add link_step for Function
                 result.link_step = Some(LinkStep::Function(LinkFunction {
                     ty: ty_inner.clone(),
-                    input: crate::conv::key::TypeKeyEx(data.input, input_dkey),
-                    output: crate::conv::key::TypeKeyEx(data.output, output_dkey),
+                    input: TypeKeyEx(data.input, input_dkey),
+                    output: TypeKeyEx(data.output, output_dkey),
                 }));
 
                 Ok((
@@ -452,6 +418,42 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 ))
             }
             N::Any { .. } => unreachable!(), // FIXME is this still used?
+        }
+    }
+
+    pub fn plan(&self, map: &ConversionMap<G>) -> Result<StepPlan> {
+        let map_entry = map
+            .direct
+            .get(self.idx as usize)
+            .ok_or_else(|| eyre!("type index out of bounds: {}", self.idx))?;
+        if let MapItem::Unset = map_entry {
+            Ok(StepPlan::Create(map_entry.next_key(
+                self.idx,
+                &self.rpath,
+                &self.dkey,
+            )?))
+        } else {
+            match (&map_entry, &self.rpath) {
+                (MapItem::Value(value_type), RelativePath::Input(_))
+                | (MapItem::Value(value_type), RelativePath::Output(_)) => {
+                    if value_type.find(&self.dkey).is_some() {
+                        Ok(StepPlan::Skip)
+                    } else {
+                        Ok(StepPlan::Create(map_entry.next_key(
+                            self.idx,
+                            &self.rpath,
+                            &self.dkey,
+                        )?))
+                    }
+                }
+                (MapItem::Namespace(_, _), RelativePath::NsObject(_)) => {
+                    unreachable!("namespace type should not be converted more than once");
+                }
+                _ => {
+                    // return error
+                    unreachable!("mismatched type and path");
+                }
+            }
         }
     }
 
