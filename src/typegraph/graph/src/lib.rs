@@ -54,7 +54,7 @@ use conv::{
         DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DuplicationKeyGenerator,
     },
     key::TypeKey,
-    ValueType,
+    MapItem,
 };
 use indexmap::IndexMap;
 use interlude::*;
@@ -63,28 +63,6 @@ use runtimes::Materializer;
 use std::collections::HashMap;
 use tg_schema::runtimes::TGRuntime;
 pub use types::*;
-
-#[derive(Debug)]
-pub enum MapItem<K: DupKey> {
-    U, // TODO
-    Namespace(Arc<ObjectType>, Vec<Arc<str>>),
-    Function(Arc<FunctionType>),
-    Value(ValueType<K>),
-}
-
-impl<K: DupKey + std::fmt::Debug> TryFrom<conv::MapItem<K>> for MapItem<K> {
-    type Error = color_eyre::Report;
-
-    fn try_from(value: conv::MapItem<K>) -> Result<Self> {
-        Ok(match value {
-            conv::MapItem::Unset => MapItem::U,
-            // conv::MapItem::Unset => bail!("type was not converted"),
-            conv::MapItem::Namespace(object, path) => MapItem::Namespace(object, path),
-            conv::MapItem::Function(function) => MapItem::Function(function),
-            conv::MapItem::Value(value) => MapItem::Value(value),
-        })
-    }
-}
 
 #[derive(Debug)]
 pub struct Typegraph<K: DupKey = DefaultDuplicationKey> {
@@ -104,10 +82,10 @@ impl<K: DupKey> Typegraph<K> {
     pub fn find_type(&self, key: TypeKey) -> Option<Type> {
         let TypeKey(idx, variant) = key;
         match self.conversion_map.get(idx as usize)? {
-            MapItem::U => panic!("type not converted"),
+            MapItem::Unset => None,
             MapItem::Namespace(object, _) => Some(object.wrap()),
             MapItem::Function(function) => Some(function.wrap()),
-            MapItem::Value(value) => Some(value.get(variant).unwrap().ty.clone()),
+            MapItem::Value(value) => Some(value.get(variant).unwrap().clone()),
         }
     }
 }

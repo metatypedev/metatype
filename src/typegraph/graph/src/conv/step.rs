@@ -56,11 +56,10 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
             } else {
                 let mut map_entry = map_entry;
                 match (&mut map_entry, &self.rpath) {
-                    (MapItem::Value(value_type), RelativePath::Input(vtype_path))
-                    | (MapItem::Value(value_type), RelativePath::Output(vtype_path)) => {
-                        if let Some(item) = value_type.find_mut(&self.dkey) {
+                    (MapItem::Value(value_type), RelativePath::Input(_))
+                    | (MapItem::Value(value_type), RelativePath::Output(_)) => {
+                        if value_type.find(&self.dkey).is_some() {
                             // hum
-                            item.relative_paths.insert(vtype_path.clone());
                             return Ok(Default::default());
                         } else {
                             key = map_entry.next_key(self.idx, &self.rpath, &self.dkey)?;
@@ -112,7 +111,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 let ty = Type::Boolean(BooleanType { base }.into());
                 Ok((
                     Default::default(),
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Integer { data, .. } => {
@@ -129,7 +128,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 );
                 Ok((
                     Default::default(),
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Float { data, .. } => {
@@ -146,7 +145,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 );
                 Ok((
                     Default::default(),
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::String {
@@ -166,7 +165,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 );
                 Ok((
                     Default::default(),
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::File { data, .. } => {
@@ -181,7 +180,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 );
                 Ok((
                     Default::default(),
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Optional { data, .. } => {
@@ -213,7 +212,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::List { data, .. } => {
@@ -247,7 +246,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Object { data, .. } => {
@@ -304,7 +303,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Either { data, .. } => {
@@ -339,7 +338,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Union { data, .. } => {
@@ -374,7 +373,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, self.rpath.clone(), self.dkey.clone())?,
+                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
                 ))
             }
             N::Function { data, .. } => {
@@ -456,7 +455,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 Ok((
                     result,
-                    MapItem::new2(&ty, RelativePath::Function(self.idx), self.dkey.clone())?,
+                    MapItem::new(&ty, RelativePath::Function(self.idx), self.dkey.clone())?,
                 ))
             }
             N::Any { .. } => unreachable!(), // FIXME is this still used?

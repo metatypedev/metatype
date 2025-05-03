@@ -6,12 +6,12 @@ use crate::{injection::InjectionNode, interlude::*, FunctionType, Type, TypeNode
 use super::{ConversionMap, MapItem, PathSegment, TypeKey};
 
 // TODO rename to `DuplicationKey`
-pub trait DupKey: std::hash::Hash + Eq + Clone {
+pub trait DupKey: std::hash::Hash + std::fmt::Debug + Eq + Clone {
     fn is_default(&self) -> bool;
 }
 
 pub trait DuplicationKeyGenerator: Clone {
-    type Key: DupKey + std::fmt::Debug + 'static;
+    type Key: DupKey + 'static;
 
     fn gen_from_type(&self, ty: &Type) -> Self::Key;
 
@@ -108,14 +108,14 @@ impl<DKG: DuplicationKeyGenerator> ConversionMap<DKG> {
             Some(MapItem::Value(value_type)) => {
                 if dkey.is_default() {
                     if let Some(item) = value_type.default.as_ref() {
-                        Ok(Deduplication::reuse(item.ty.clone()))
+                        Ok(Deduplication::reuse(item.clone()))
                     } else {
                         Ok(Deduplication::register(type_idx, 0))
                     }
                 } else {
                     let found = value_type.variants.get(dkey);
                     if let Some(variant) = found {
-                        Ok(Deduplication::reuse(variant.ty.clone()))
+                        Ok(Deduplication::reuse(variant.clone()))
                     } else {
                         Ok(Deduplication::register(
                             type_idx,

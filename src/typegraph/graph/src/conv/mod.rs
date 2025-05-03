@@ -7,10 +7,9 @@ use crate::naming::NamingEngine;
 use crate::policies::{convert_policy, convert_policy_spec, Policy, PolicySpec};
 use crate::runtimes::{convert_materializer, Materializer};
 use crate::type_registry::TypeRegistryBuilder;
-use crate::Type;
 use crate::{interlude::*, Wrap as _};
 use dedup::DuplicationKeyGenerator;
-pub use map::{ConversionMap, MapItem, MapValueItem, ValueType};
+pub use map::{ConversionMap, MapItem, ValueType};
 use step::ConversionStep;
 use tg_schema::runtimes::TGRuntime;
 
@@ -22,7 +21,7 @@ mod step;
 pub mod interlude {
     pub use super::key::TypeKey;
     pub use super::step::LinkStep;
-    pub use super::{Conversion, TypeConversionResult};
+    pub use super::Conversion;
     pub use crate::path::{PathSegment, RelativePath};
 }
 use interlude::*;
@@ -44,14 +43,6 @@ where
     registry: Registry,
 }
 
-pub trait TypeConversionResult<G: DuplicationKeyGenerator> {
-    fn get_type(&self) -> Type;
-    /// convert children
-    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()>
-    where
-        G: DuplicationKeyGenerator;
-}
-
 impl<G> Conversion<G>
 where
     G: DuplicationKeyGenerator,
@@ -71,7 +62,7 @@ where
             .collect();
 
         Conversion {
-            conversion_map: ConversionMap::new(&schema, &dup_key_gen),
+            conversion_map: ConversionMap::new(&schema),
             registry: Registry {
                 runtimes,
                 materializers,
@@ -156,12 +147,7 @@ where
             functions: type_reg.functions,
             namespace_objects: type_reg.namespaces,
             named: reg.map,
-            conversion_map: conv
-                .conversion_map
-                .direct
-                .into_iter()
-                .map(TryFrom::try_from)
-                .collect::<Result<Vec<_>>>()?,
+            conversion_map: conv.conversion_map.direct,
             runtimes: conv.registry.runtimes,
             materializers: conv.registry.materializers,
         })

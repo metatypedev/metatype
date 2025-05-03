@@ -52,11 +52,11 @@ mod default {
             }
             if let Some(item) = value_type.default.as_ref() {
                 self.registry()
-                    .register(item.ty.title().to_owned(), item.ty.clone())?;
+                    .register(item.title().to_owned(), item.clone())?;
             }
             for (idx, item) in value_type.variants.values().enumerate() {
                 self.registry()
-                    .register(format!("{}_{}", item.ty.title(), idx + 1), item.ty.clone())?;
+                    .register(format!("{}_{}", item.title(), idx + 1), item.clone())?;
             }
             Ok(())
         }
