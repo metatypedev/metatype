@@ -51,14 +51,11 @@ impl<G: DupKeyGen> ConversionStep<G> {
         key: TypeKey,
         dkey_gen: &G,
         registry: &Registry,
-        // conv: &mut Conversion<G>,
     ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
         let type_node = schema
             .types
             .get(self.idx as usize)
             .ok_or_else(|| eyre!("type index out of bounds: {} (schema)", self.idx))?;
-
-        use tg_schema::TypeNode as N;
 
         let base = TypeBase::new(
             type_node.base(),
@@ -67,358 +64,423 @@ impl<G: DupKeyGen> ConversionStep<G> {
             self.injection.clone(),
         );
 
+        use tg_schema::TypeNode as N;
         match type_node {
-            N::Boolean { .. } => {
-                let ty = Type::Boolean(BooleanType { base }.into());
-                Ok((
-                    Default::default(),
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Integer { data, .. } => {
-                let ty = Type::Integer(
-                    IntegerType {
-                        base,
-                        minimum: data.minimum,
-                        maximum: data.maximum,
-                        exclusive_minimum: data.exclusive_minimum,
-                        exclusive_maximum: data.exclusive_maximum,
-                        multiple_of: data.multiple_of,
-                    }
-                    .into(),
-                );
-                Ok((
-                    Default::default(),
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Float { data, .. } => {
-                let ty = Type::Float(
-                    crate::FloatType {
-                        base,
-                        minimum: data.minimum,
-                        maximum: data.maximum,
-                        exclusive_minimum: data.exclusive_minimum,
-                        exclusive_maximum: data.exclusive_maximum,
-                        multiple_of: data.multiple_of,
-                    }
-                    .into(),
-                );
-                Ok((
-                    Default::default(),
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
+            N::Boolean { .. } => self.convert_boolean(base),
+            N::Integer { data, .. } => self.convert_integer(base, data),
+            N::Float { data, .. } => self.convert_float(base, data),
             N::String {
                 data,
                 base: node_base,
-            } => {
-                let ty = Type::String(
-                    crate::StringType {
-                        base,
-                        pattern: data.pattern.clone(),
-                        format: data.format.clone(),
-                        min_length: data.min_length,
-                        max_length: data.max_length,
-                        enumeration: node_base.enumeration.clone(),
-                    }
-                    .into(),
-                );
-                Ok((
-                    Default::default(),
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::File { data, .. } => {
-                let ty = Type::File(
-                    crate::FileType {
-                        base,
-                        min_size: data.min_size,
-                        max_size: data.max_size,
-                        mime_types: data.mime_types.clone(),
-                    }
-                    .into(),
-                );
-                Ok((
-                    Default::default(),
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Optional { data, .. } => {
-                let ty_inner = Arc::new(crate::OptionalType {
-                    base,
-                    item: crate::Once::default(),
-                    default_value: data.default_value.clone(),
-                });
-
-                let ty = Type::Optional(ty_inner.clone());
-
-                let mut result = StepResult::default();
-
-                let path_seg = PathSegment::OptionalItem;
-                let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
-                result.next.push(ConversionStep {
-                    parent: ty.downgrade(),
-                    idx: data.item,
-                    rpath: self.rpath.push(path_seg)?,
-                    dkey: item_dkey.clone(),
-                    injection: self.injection.clone(),
-                });
-
-                // Add link_step for Optional
-                result.link_step = Some(LinkStep::Optional(LinkOptional {
-                    ty: ty_inner.clone(),
-                    item: TypeKeyEx(data.item, item_dkey),
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::List { data, .. } => {
-                let ty_inner = Arc::new(crate::ListType {
-                    base,
-                    item: crate::Once::default(),
-                    min_items: data.min_items,
-                    max_items: data.max_items,
-                    unique_items: data.unique_items.unwrap_or(false),
-                });
-
-                let ty = Type::List(ty_inner.clone());
-
-                let mut result = StepResult::default();
-
-                let path_seg = PathSegment::ListItem;
-                let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
-                result.next.push(ConversionStep {
-                    parent: ty.downgrade(),
-                    idx: data.items,
-                    rpath: self.rpath.push(path_seg)?,
-                    dkey: item_dkey.clone(),
-                    injection: self.injection.clone(),
-                });
-
-                // Add link_step for List
-                result.link_step = Some(LinkStep::List(LinkList {
-                    ty: ty_inner.clone(),
-                    item: TypeKeyEx(data.items, item_dkey),
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Object { data, .. } => {
-                let ty_inner = Arc::new(crate::ObjectType {
-                    base,
-                    properties: crate::Once::default(),
-                });
-
-                let ty = Type::Object(ty_inner.clone());
-
-                let mut result = StepResult::default();
-
-                let mut properties = indexmap::IndexMap::new();
-
-                for (name, ty_idx) in &data.properties {
-                    let name: Arc<str> = name.clone().into();
-                    let path_seg = PathSegment::ObjectProp(name.clone());
-                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
-                    let injection = self.injection.as_ref().and_then(|inj| {
-                        use crate::injection::InjectionNode as I;
-                        match inj.as_ref() {
-                            I::Parent { children } => children.get(name.as_ref()).cloned(),
-                            _ => None,
-                        }
-                    });
-
-                    let as_id = data.id.iter().any(|id| id == name.as_ref());
-                    let required = data.required.iter().any(|r| r == name.as_ref());
-                    properties.insert(
-                        name,
-                        crate::types::LinkObjectProperty {
-                            xkey: TypeKeyEx(*ty_idx, dkey.clone()),
-                            policies: vec![],
-                            injection: injection.clone(), // Why do we have two versions??
-                            outjection: None,
-                            required,
-                            as_id,
-                        },
-                    );
-                    result.next.push(ConversionStep {
-                        parent: ty.downgrade(),
-                        idx: *ty_idx,
-                        rpath: self.rpath.push(path_seg)?,
-                        dkey,
-                        injection,
-                    });
-                }
-
-                // Add link_step for Object
-                result.link_step = Some(LinkStep::Object(LinkObject {
-                    ty: ty_inner.clone(),
-                    properties,
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Either { data, .. } => {
-                let ty_inner = Arc::new(crate::UnionType {
-                    base,
-                    variants: crate::Once::default(),
-                    either: true,
-                });
-
-                let ty = Type::Union(ty_inner.clone());
-
-                let mut result = StepResult::default();
-                let mut variants = Vec::new();
-
-                for (i, variant) in data.one_of.iter().enumerate() {
-                    let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
-                    variants.push(TypeKeyEx(*variant, dkey.clone()));
-                    result.next.push(ConversionStep {
-                        parent: ty.downgrade(),
-                        idx: *variant,
-                        rpath: self.rpath.push(path_seg)?,
-                        dkey,
-                        injection: self.injection.clone(),
-                    });
-                }
-
-                result.link_step = Some(LinkStep::Union(LinkUnion {
-                    ty: ty_inner.clone(),
-                    variants,
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Union { data, .. } => {
-                let ty_inner = Arc::new(crate::UnionType {
-                    base,
-                    variants: crate::Once::default(),
-                    either: false,
-                });
-
-                let ty = Type::Union(ty_inner.clone());
-
-                let mut result = StepResult::default();
-                let mut variants = Vec::new();
-
-                for (i, variant) in data.any_of.iter().enumerate() {
-                    let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
-                    variants.push(TypeKeyEx(*variant, dkey.clone()));
-                    result.next.push(ConversionStep {
-                        parent: ty.downgrade(),
-                        idx: *variant,
-                        rpath: self.rpath.push(path_seg)?,
-                        dkey,
-                        injection: self.injection.clone(),
-                    });
-                }
-
-                result.link_step = Some(LinkStep::Union(LinkUnion {
-                    ty: ty_inner.clone(),
-                    variants,
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
-                ))
-            }
-            N::Function { data, .. } => {
-                // Get the materializer from the conversion context
-                let materializer = registry
-                    .materializers
-                    .get(data.materializer as usize)
-                    .ok_or_else(|| eyre!("materializer index out of bounds"))?
-                    .clone();
-                let effect = materializer
-                    .effect
-                    .effect
-                    .unwrap_or(tg_schema::EffectType::Read);
-
-                let injection = Some(&data.injections)
-                    .filter(|injections| !injections.is_empty())
-                    .map(|injections| {
-                        Arc::new(InjectionNode::Parent {
-                            children: injections
-                                .iter()
-                                .filter_map(|(k, v)| {
-                                    crate::injection::InjectionNode::from_schema(v, effect)
-                                        .map(|inj| (k.clone(), inj))
-                                })
-                                .collect(),
-                        })
-                    });
-
-                let ty_inner = Arc::new(crate::FunctionType {
-                    base,
-                    input: crate::Once::default(),
-                    output: crate::Once::default(),
-                    parameter_transform: data.parameter_transform.clone(),
-                    injection: injection.clone(),
-                    runtime_config: data.runtime_config.clone(),
-                    materializer,
-                    rate_weight: data.rate_weight,
-                    rate_calls: data.rate_calls,
-                });
-
-                let ty = Type::Function(ty_inner.clone());
-
-                let mut result = StepResult::default();
-
-                let input_dkey = dkey_gen.gen_for_fn_input(&ty_inner);
-                result.next.push(ConversionStep {
-                    parent: ty.downgrade(),
-                    idx: data.input,
-                    rpath: RelativePath::Input(ValueTypePath {
-                        owner: Arc::downgrade(&ty_inner),
-                        branch: ValueTypeKind::Input,
-                        path: vec![],
-                    }),
-                    dkey: input_dkey.clone(),
-                    injection,
-                });
-
-                let output_dkey = dkey_gen.gen_for_fn_output(&ty_inner);
-                result.next.push(ConversionStep {
-                    parent: ty.downgrade(),
-                    idx: data.output,
-                    rpath: RelativePath::Output(ValueTypePath {
-                        owner: Arc::downgrade(&ty_inner),
-                        branch: ValueTypeKind::Output,
-                        path: vec![],
-                    }),
-                    dkey: output_dkey.clone(),
-                    injection: None, // TODO outjection
-                });
-
-                // Add link_step for Function
-                result.link_step = Some(LinkStep::Function(LinkFunction {
-                    ty: ty_inner.clone(),
-                    input: TypeKeyEx(data.input, input_dkey),
-                    output: TypeKeyEx(data.output, output_dkey),
-                }));
-
-                Ok((
-                    result,
-                    MapItem::new(&ty, RelativePath::Function(self.idx), self.dkey.clone())?,
-                ))
-            }
+            } => self.convert_string(base, data, node_base),
+            N::File { data, .. } => self.convert_file(base, data),
+            N::Optional { data, .. } => self.convert_optional(base, data, dkey_gen),
+            N::List { data, .. } => self.convert_list(base, data, dkey_gen),
+            N::Object { data, .. } => self.convert_object(base, data, dkey_gen),
+            N::Either { data, .. } => self.convert_either(base, data, dkey_gen),
+            N::Union { data, .. } => self.convert_union(base, data, dkey_gen),
+            N::Function { data, .. } => self.convert_function(base, data, dkey_gen, registry),
             N::Any { .. } => unreachable!(), // FIXME is this still used?
         }
+    }
+
+    fn convert_boolean(&self, base: TypeBase) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty = Type::Boolean(BooleanType { base }.into());
+        Ok((
+            Default::default(),
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_integer(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::IntegerTypeData,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty = Type::Integer(
+            IntegerType {
+                base,
+                minimum: data.minimum,
+                maximum: data.maximum,
+                exclusive_minimum: data.exclusive_minimum,
+                exclusive_maximum: data.exclusive_maximum,
+                multiple_of: data.multiple_of,
+            }
+            .into(),
+        );
+        Ok((
+            Default::default(),
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_float(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::FloatTypeData,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty = Type::Float(
+            crate::FloatType {
+                base,
+                minimum: data.minimum,
+                maximum: data.maximum,
+                exclusive_minimum: data.exclusive_minimum,
+                exclusive_maximum: data.exclusive_maximum,
+                multiple_of: data.multiple_of,
+            }
+            .into(),
+        );
+        Ok((
+            Default::default(),
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_string(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::StringTypeData,
+        node_base: &tg_schema::TypeNodeBase,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty = Type::String(
+            crate::StringType {
+                base,
+                pattern: data.pattern.clone(),
+                format: data.format.clone(),
+                min_length: data.min_length,
+                max_length: data.max_length,
+                enumeration: node_base.enumeration.clone(),
+            }
+            .into(),
+        );
+        Ok((
+            Default::default(),
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_file(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::FileTypeData,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty = Type::File(
+            crate::FileType {
+                base,
+                min_size: data.min_size,
+                max_size: data.max_size,
+                mime_types: data.mime_types.clone(),
+            }
+            .into(),
+        );
+        Ok((
+            Default::default(),
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_optional(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::OptionalTypeData,
+        dkey_gen: &G,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty_inner = Arc::new(crate::OptionalType {
+            base,
+            item: crate::Once::default(),
+            default_value: data.default_value.clone(),
+        });
+
+        let ty = Type::Optional(ty_inner.clone());
+
+        let mut result = StepResult::default();
+
+        let path_seg = PathSegment::OptionalItem;
+        let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+        result.next.push(ConversionStep {
+            parent: ty.downgrade(),
+            idx: data.item,
+            rpath: self.rpath.push(path_seg)?,
+            dkey: item_dkey.clone(),
+            injection: self.injection.clone(),
+        });
+
+        result.link_step = Some(LinkStep::Optional(LinkOptional {
+            ty: ty_inner.clone(),
+            item: TypeKeyEx(data.item, item_dkey),
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_list(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::ListTypeData,
+        dkey_gen: &G,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty_inner = Arc::new(crate::ListType {
+            base,
+            item: crate::Once::default(),
+            min_items: data.min_items,
+            max_items: data.max_items,
+            unique_items: data.unique_items.unwrap_or(false),
+        });
+
+        let ty = Type::List(ty_inner.clone());
+
+        let mut result = StepResult::default();
+
+        let path_seg = PathSegment::ListItem;
+        let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+        result.next.push(ConversionStep {
+            parent: ty.downgrade(),
+            idx: data.items,
+            rpath: self.rpath.push(path_seg)?,
+            dkey: item_dkey.clone(),
+            injection: self.injection.clone(),
+        });
+
+        result.link_step = Some(LinkStep::List(LinkList {
+            ty: ty_inner.clone(),
+            item: TypeKeyEx(data.items, item_dkey),
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_object(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::ObjectTypeData,
+        dkey_gen: &G,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty_inner = Arc::new(crate::ObjectType {
+            base,
+            properties: crate::Once::default(),
+        });
+
+        let ty = Type::Object(ty_inner.clone());
+
+        let mut result = StepResult::default();
+        let mut properties = indexmap::IndexMap::new();
+
+        for (name, ty_idx) in &data.properties {
+            let name: Arc<str> = name.clone().into();
+            let path_seg = PathSegment::ObjectProp(name.clone());
+            let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+            let injection = self.injection.as_ref().and_then(|inj| {
+                use crate::injection::InjectionNode as I;
+                match inj.as_ref() {
+                    I::Parent { children } => children.get(name.as_ref()).cloned(),
+                    _ => None,
+                }
+            });
+
+            let as_id = data.id.iter().any(|id| id == name.as_ref());
+            let required = data.required.iter().any(|r| r == name.as_ref());
+            properties.insert(
+                name,
+                crate::types::LinkObjectProperty {
+                    xkey: TypeKeyEx(*ty_idx, dkey.clone()),
+                    policies: vec![],
+                    injection: injection.clone(),
+                    outjection: None,
+                    required,
+                    as_id,
+                },
+            );
+            result.next.push(ConversionStep {
+                parent: ty.downgrade(),
+                idx: *ty_idx,
+                rpath: self.rpath.push(path_seg)?,
+                dkey,
+                injection,
+            });
+        }
+
+        result.link_step = Some(LinkStep::Object(LinkObject {
+            ty: ty_inner.clone(),
+            properties,
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_either(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::EitherTypeData,
+        dkey_gen: &G,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty_inner = Arc::new(crate::UnionType {
+            base,
+            variants: crate::Once::default(),
+            either: true,
+        });
+
+        let ty = Type::Union(ty_inner.clone());
+
+        let mut result = StepResult::default();
+        let mut variants = Vec::new();
+
+        for (i, variant) in data.one_of.iter().enumerate() {
+            let path_seg = PathSegment::UnionVariant(i as u32);
+            let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+            variants.push(TypeKeyEx(*variant, dkey.clone()));
+            result.next.push(ConversionStep {
+                parent: ty.downgrade(),
+                idx: *variant,
+                rpath: self.rpath.push(path_seg)?,
+                dkey,
+                injection: self.injection.clone(),
+            });
+        }
+
+        result.link_step = Some(LinkStep::Union(LinkUnion {
+            ty: ty_inner.clone(),
+            variants,
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_union(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::UnionTypeData,
+        dkey_gen: &G,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let ty_inner = Arc::new(crate::UnionType {
+            base,
+            variants: crate::Once::default(),
+            either: false,
+        });
+
+        let ty = Type::Union(ty_inner.clone());
+
+        let mut result = StepResult::default();
+        let mut variants = Vec::new();
+
+        for (i, variant) in data.any_of.iter().enumerate() {
+            let path_seg = PathSegment::UnionVariant(i as u32);
+            let dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
+            variants.push(TypeKeyEx(*variant, dkey.clone()));
+            result.next.push(ConversionStep {
+                parent: ty.downgrade(),
+                idx: *variant,
+                rpath: self.rpath.push(path_seg)?,
+                dkey,
+                injection: self.injection.clone(),
+            });
+        }
+
+        result.link_step = Some(LinkStep::Union(LinkUnion {
+            ty: ty_inner.clone(),
+            variants,
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
+        ))
+    }
+
+    fn convert_function(
+        &self,
+        base: TypeBase,
+        data: &tg_schema::FunctionTypeData,
+        dkey_gen: &G,
+        registry: &Registry,
+    ) -> Result<(StepResult<G>, MapItem<G::Key>)> {
+        let materializer = registry
+            .materializers
+            .get(data.materializer as usize)
+            .ok_or_else(|| eyre!("materializer index out of bounds"))?
+            .clone();
+        let effect = materializer
+            .effect
+            .effect
+            .unwrap_or(tg_schema::EffectType::Read);
+
+        let injection = Some(&data.injections)
+            .filter(|injections| !injections.is_empty())
+            .map(|injections| {
+                Arc::new(InjectionNode::Parent {
+                    children: injections
+                        .iter()
+                        .filter_map(|(k, v)| {
+                            crate::injection::InjectionNode::from_schema(v, effect)
+                                .map(|inj| (k.clone(), inj))
+                        })
+                        .collect(),
+                })
+            });
+
+        let ty_inner = Arc::new(crate::FunctionType {
+            base,
+            input: crate::Once::default(),
+            output: crate::Once::default(),
+            parameter_transform: data.parameter_transform.clone(),
+            injection: injection.clone(),
+            runtime_config: data.runtime_config.clone(),
+            materializer,
+            rate_weight: data.rate_weight,
+            rate_calls: data.rate_calls,
+        });
+
+        let ty = Type::Function(ty_inner.clone());
+
+        let mut result = StepResult::default();
+
+        let input_dkey = dkey_gen.gen_for_fn_input(&ty_inner);
+        result.next.push(ConversionStep {
+            parent: ty.downgrade(),
+            idx: data.input,
+            rpath: RelativePath::Input(ValueTypePath {
+                owner: Arc::downgrade(&ty_inner),
+                branch: ValueTypeKind::Input,
+                path: vec![],
+            }),
+            dkey: input_dkey.clone(),
+            injection,
+        });
+
+        let output_dkey = dkey_gen.gen_for_fn_output(&ty_inner);
+        result.next.push(ConversionStep {
+            parent: ty.downgrade(),
+            idx: data.output,
+            rpath: RelativePath::Output(ValueTypePath {
+                owner: Arc::downgrade(&ty_inner),
+                branch: ValueTypeKind::Output,
+                path: vec![],
+            }),
+            dkey: output_dkey.clone(),
+            injection: None, // TODO outjection
+        });
+
+        result.link_step = Some(LinkStep::Function(LinkFunction {
+            ty: ty_inner.clone(),
+            input: TypeKeyEx(data.input, input_dkey),
+            output: TypeKeyEx(data.output, output_dkey),
+        }));
+
+        Ok((
+            result,
+            MapItem::new(&ty, RelativePath::Function(self.idx), self.dkey.clone())?,
+        ))
     }
 
     pub fn plan(&self, map: &ConversionMap<G>) -> Result<StepPlan> {
