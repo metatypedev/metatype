@@ -240,10 +240,8 @@ impl Type {
     }
 
     pub fn assert_object(&self) -> Result<&Arc<ObjectType>> {
-        Ok(self
-            .as_object()
+        self.as_object()
             .ok_or_else(|| eyre!("expected object type, got {}", self.tag()))
-            .unwrap())
     }
 
     pub fn as_func(&self) -> Option<&Arc<FunctionType>> {

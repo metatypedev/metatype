@@ -168,7 +168,7 @@ impl<K: DupKey> MapItem<K> {
         } else {
             match (self, other) {
                 (Self::Namespace(_, _), _) | (Self::Function(_), _) => {
-                    unreachable!()
+                    bail!("cannot merge into namespace or function type")
                 }
                 (Self::Value(vtype), Self::Value(source_vtype)) => {
                     vtype.merge(source_vtype)?;

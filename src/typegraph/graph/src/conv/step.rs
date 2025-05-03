@@ -456,35 +456,6 @@ impl<G: DupKeyGen> ConversionStep<G> {
             }
         }
     }
-
-    // fn is_skippable(&self, map: &ConversionMap<G>) -> Result<bool> {
-    //     let map_entry = map
-    //         .direct
-    //         .get(self.idx as usize)
-    //         .ok_or_else(|| eyre!("type index out of bounds: {}", self.idx))?;
-    //
-    //     if let MapItem::Unset = &map_entry {
-    //         return Ok(true);
-    //     }
-    //
-    //     match (&map_entry, &self.rpath) {
-    //         (MapItem::Value(value_type), RelativePath::Input(vtype_path)) => {
-    //             if let Some(vtype) = value_type.get(self.idx) {
-    //                 if vtype.relative_paths.contains(&vtype_path) {
-    //                     return Ok(true);
-    //                 }
-    //             }
-    //         }
-    //         (MapItem::Namespace(object, _), RelativePath::NsObject(_)) => {
-    //             if object.key() == self.parent.key() {
-    //                 return Ok(true);
-    //             }
-    //         }
-    //         _ => {}
-    //     }
-    //
-    //     Ok(false)
-    // }
 }
 
 pub struct StepResult<G: DupKeyGen> {
