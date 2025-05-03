@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::{
-    conv::{dedup::DuplicationKeyGenerator, ConversionMap},
+    conv::{dedup::DupKeyGen, ConversionMap},
     prelude::*,
 };
 use color_eyre::eyre::{bail, eyre, Result};
@@ -19,12 +19,12 @@ pub struct TypeRegistry {
     pub output_types: IndexMap<TypeKey, Type>,
 }
 
-pub struct TypeRegistryBuilder<'map, G: DuplicationKeyGenerator> {
+pub struct TypeRegistryBuilder<'map, G: DupKeyGen> {
     map: &'map ConversionMap<G>,
     registry: TypeRegistry,
 }
 
-impl<'map, G: DuplicationKeyGenerator> TypeRegistryBuilder<'map, G> {
+impl<'map, G: DupKeyGen> TypeRegistryBuilder<'map, G> {
     pub fn new(conversion_map: &'map ConversionMap<G>) -> Self {
         Self {
             map: conversion_map,

@@ -50,9 +50,7 @@ pub mod prelude {
 }
 
 use conv::{
-    dedup::{
-        DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DuplicationKeyGenerator,
-    },
+    dedup::{DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DupKeyGen},
     key::TypeKey,
     MapItem,
 };
@@ -93,7 +91,7 @@ impl<K: DupKey> Typegraph<K> {
 impl<K: DupKey> Typegraph<K> {
     fn new<G>(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Result<Self>
     where
-        G: DuplicationKeyGenerator<Key = K>,
+        G: DupKeyGen<Key = K>,
         K: Default,
     {
         conv::Conversion::convert(schema, dup_key_gen, DefaultNamingEngine::default())
@@ -104,7 +102,7 @@ impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
     type Error = color_eyre::Report;
 
     fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
-        Self::new(schema, DefaultDuplicationKeyGenerator)
+        Self::new(schema.clone(), DefaultDuplicationKeyGenerator { schema })
     }
 }
 

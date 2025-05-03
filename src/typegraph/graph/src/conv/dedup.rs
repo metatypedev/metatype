@@ -5,12 +5,11 @@ use crate::{injection::InjectionNode, interlude::*, FunctionType, Type, TypeNode
 
 use super::{ConversionMap, MapItem, PathSegment, TypeKey};
 
-// TODO rename to `DuplicationKey`
 pub trait DupKey: std::hash::Hash + std::fmt::Debug + Eq + Clone {
     fn is_default(&self) -> bool;
 }
 
-pub trait DuplicationKeyGenerator: Clone {
+pub trait DupKeyGen: Clone {
     type Key: DupKey + 'static;
 
     fn gen_from_type(&self, ty: &Type) -> Self::Key;
@@ -18,7 +17,7 @@ pub trait DuplicationKeyGenerator: Clone {
     fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key;
     fn gen_for_fn_output(&self, fn_type: &FunctionType) -> Self::Key;
 
-    fn apply_path_segment(&self, key: &Self::Key, path_seg: &PathSegment) -> Self::Key;
+    fn apply_path_segment(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key;
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq, Hash)]
@@ -27,19 +26,26 @@ pub struct DefaultDuplicationKey {
 }
 
 #[derive(Clone, Debug)]
-pub struct DefaultDuplicationKeyGenerator;
+pub struct DefaultDuplicationKeyGenerator {
+    pub schema: Arc<tg_schema::Typegraph>,
+}
 
-impl DuplicationKeyGenerator for DefaultDuplicationKeyGenerator {
+impl DupKeyGen for DefaultDuplicationKeyGenerator {
     type Key = DefaultDuplicationKey;
 
     fn gen_from_type(&self, ty: &Type) -> Self::Key {
         Self::Key {
-            injection: ty.injection(),
+            injection: if self.schema.is_composite(ty.idx()) {
+                ty.injection()
+            } else {
+                None
+            },
         }
     }
 
-    fn apply_path_segment(&self, key: &Self::Key, path_seg: &PathSegment) -> Self::Key {
-        let inj = key
+    fn apply_path_segment(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key {
+        let dkey = self.gen_from_type(ty);
+        let inj = dkey
             .injection
             .as_ref()
             .and_then(|inj| path_seg.apply_on_injection(inj));
@@ -48,11 +54,7 @@ impl DuplicationKeyGenerator for DefaultDuplicationKeyGenerator {
 
     fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key {
         Self::Key {
-            // TODO we can optimize this by using the function's injections; placing the
-            // Arc<InjectionNode> at that point
-            injection: Some(Arc::new(InjectionNode::Parent {
-                children: fn_type.injections.clone(),
-            })),
+            injection: fn_type.injection.clone(),
         }
     }
 
@@ -86,10 +88,10 @@ impl Deduplication {
     }
 }
 
-impl<DKG: DuplicationKeyGenerator> ConversionMap<DKG> {
+impl<DKG: DupKeyGen> ConversionMap<DKG> {
     pub fn deduplicate(&self, type_idx: u32, dkey: &DKG::Key) -> Result<Deduplication>
     where
-        DKG: DuplicationKeyGenerator,
+        DKG: DupKeyGen,
     {
         match self.direct.get(type_idx as usize) {
             Some(MapItem::Unset) => Ok(Deduplication::register(

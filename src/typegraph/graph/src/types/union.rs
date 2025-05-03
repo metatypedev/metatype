@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DuplicationKeyGenerator};
+use crate::conv::dedup::{DupKey, DupKeyGen};
 use crate::conv::key::TypeKeyEx;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{Arc, Once};
@@ -28,10 +28,7 @@ pub struct LinkUnion<K: DupKey> {
 }
 
 impl<K: DupKey> LinkUnion<K> {
-    pub fn link<G: DuplicationKeyGenerator<Key = K>>(
-        self,
-        map: &crate::conv::ConversionMap<G>,
-    ) -> Result<()> {
+    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
         let mut variants = Vec::with_capacity(self.variants.len());
         for (i, key) in self.variants.into_iter().enumerate() {
             let ty = map.get_ex(key).ok_or_else(|| {

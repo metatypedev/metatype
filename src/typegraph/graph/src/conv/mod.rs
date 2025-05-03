@@ -8,7 +8,7 @@ use crate::policies::{convert_policy, convert_policy_spec, Policy, PolicySpec};
 use crate::runtimes::{convert_materializer, Materializer};
 use crate::type_registry::TypeRegistryBuilder;
 use crate::{interlude::*, Wrap as _};
-use dedup::DuplicationKeyGenerator;
+use dedup::DupKeyGen;
 pub use map::{ConversionMap, MapItem, ValueType};
 use step::ConversionStep;
 use tg_schema::runtimes::TGRuntime;
@@ -36,7 +36,7 @@ pub struct Registry {
 /// Conversion state; used when converting a `tg_schema::Typegraph` into a `crate::Typegraph`
 pub struct Conversion<G>
 where
-    G: DuplicationKeyGenerator,
+    G: DupKeyGen,
 {
     conversion_map: ConversionMap<G>,
     dup_key_gen: G,
@@ -45,7 +45,7 @@ where
 
 impl<G> Conversion<G>
 where
-    G: DuplicationKeyGenerator,
+    G: DupKeyGen,
 {
     fn new(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Self {
         let runtimes: Vec<_> = schema.runtimes.iter().map(|rt| rt.clone().into()).collect();

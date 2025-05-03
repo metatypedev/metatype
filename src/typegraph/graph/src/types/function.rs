@@ -1,10 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
-
 use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DuplicationKeyGenerator};
+use crate::conv::dedup::{DupKey, DupKeyGen};
 use crate::conv::key::TypeKeyEx;
 use crate::injection::InjectionNode;
 use crate::{interlude::*, TypeNodeExt as _};
@@ -21,7 +19,7 @@ pub struct FunctionType {
     pub(crate) output: Once<Type>,
     pub parameter_transform: Option<FunctionParameterTransform>,
     // TODO BTreeMap<Arc<str>, Arc<InjectionNode>>
-    pub injections: BTreeMap<String, Arc<InjectionNode>>,
+    pub injection: Option<Arc<InjectionNode>>,
     pub runtime_config: serde_json::Value, // TODO should not this be removed?
     pub materializer: Materializer,
     pub rate_weight: Option<u32>,
@@ -64,10 +62,7 @@ pub struct LinkFunction<K: DupKey> {
 }
 
 impl<K: DupKey> LinkFunction<K> {
-    pub fn link<G: DuplicationKeyGenerator<Key = K>>(
-        self,
-        map: &crate::conv::ConversionMap<G>,
-    ) -> Result<()> {
+    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
         let input = map.get_ex(self.input).ok_or_else(|| {
             eyre!(
                 "cannot find input type for function; key={:?}",

@@ -303,10 +303,7 @@ impl RelativePath {
             Self::Input(p) => {
                 // TODO (perf): get from parent
                 let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let mut injection = Arc::new(InjectionNode::Parent {
-                    children: owner.injections.clone(),
-                });
-
+                let mut injection = owner.injection.clone()?;
                 for seg in &p.path {
                     injection = seg.apply_on_injection(&injection)?;
                 }

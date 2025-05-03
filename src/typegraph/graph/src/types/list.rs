@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType};
-use crate::conv::dedup::{DupKey, DuplicationKeyGenerator};
+use crate::conv::dedup::{DupKey, DupKeyGen};
 use crate::conv::key::TypeKeyEx;
 use crate::{interlude::*, Arc, Once};
 
@@ -27,10 +27,7 @@ pub struct LinkList<K: DupKey> {
 }
 
 impl<K: DupKey> LinkList<K> {
-    pub fn link<G: DuplicationKeyGenerator<Key = K>>(
-        self,
-        map: &crate::conv::ConversionMap<G>,
-    ) -> Result<()> {
+    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
         self.ty
             .item
             .set(

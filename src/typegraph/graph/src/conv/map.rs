@@ -6,7 +6,7 @@ use indexmap::IndexMap;
 use crate::interlude::*;
 use crate::{Arc, FunctionType, ObjectType, Type, TypeNodeExt as _};
 
-use super::dedup::{DupKey, DuplicationKeyGenerator};
+use super::dedup::{DupKey, DupKeyGen};
 use super::key::TypeKeyEx;
 use super::{RelativePath, TypeKey};
 
@@ -109,8 +109,6 @@ impl<K: DupKey> MapItem<K> {
                 MapItem::Namespace(ty.assert_object()?.clone(), path.clone())
             }
             RelativePath::Input(_) => {
-                // TODO non-composite types always have a single variant; so `dkey` won't be
-                // considered
                 if dkey.is_default() {
                     MapItem::Value(ValueType {
                         default: Some(ty.clone()),
@@ -180,11 +178,11 @@ impl<K: DupKey> MapItem<K> {
 }
 
 #[derive(Debug)]
-pub struct ConversionMap<G: DuplicationKeyGenerator> {
+pub struct ConversionMap<G: DupKeyGen> {
     pub direct: Vec<MapItem<G::Key>>,
 }
 
-impl<G: DuplicationKeyGenerator> ConversionMap<G> {
+impl<G: DupKeyGen> ConversionMap<G> {
     pub fn new(schema: &tg_schema::Typegraph) -> Self {
         let type_count = schema.types.len();
         let mut direct = Vec::with_capacity(type_count);
@@ -206,7 +204,7 @@ impl<G: DuplicationKeyGenerator> ConversionMap<G> {
             Some(MapItem::Value(value_types)) => {
                 let ordinal = key.1 as usize;
                 if ordinal == 0 {
-                    value_types.default.as_ref().map(|item| item.clone())
+                    value_types.default.clone()
                 } else {
                     let index = ordinal - 1;
                     value_types
@@ -232,9 +230,9 @@ impl<G: DuplicationKeyGenerator> ConversionMap<G> {
             }
             Some(MapItem::Value(value_types)) => {
                 if key.1.is_default() {
-                    value_types.default.as_ref().map(|item| item.clone())
+                    value_types.default.clone()
                 } else {
-                    value_types.variants.get(&key.1).map(|item| item.clone())
+                    value_types.variants.get(&key.1).cloned()
                 }
             }
             None => None, // unreachable

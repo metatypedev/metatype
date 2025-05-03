@@ -11,9 +11,9 @@ use crate::path::{PathSegment, ValueTypePath};
 use crate::types::{LinkFunction, LinkList, LinkObject, LinkOptional, LinkUnion};
 use crate::{BooleanType, IntegerType, Type, TypeBase, WeakType};
 
-use super::{dedup::DuplicationKeyGenerator, ConversionMap, MapItem, RelativePath, TypeKey};
+use super::{dedup::DupKeyGen, ConversionMap, MapItem, RelativePath, TypeKey};
 
-pub struct ConversionStep<G: DuplicationKeyGenerator> {
+pub struct ConversionStep<G: DupKeyGen> {
     parent: WeakType,
     idx: u32,
     pub rpath: RelativePath, // pub??
@@ -21,7 +21,7 @@ pub struct ConversionStep<G: DuplicationKeyGenerator> {
     injection: Option<Arc<crate::injection::InjectionNode>>,
 }
 
-impl<G: DuplicationKeyGenerator> ConversionStep<G>
+impl<G: DupKeyGen> ConversionStep<G>
 where
     G::Key: Default,
 {
@@ -36,13 +36,12 @@ where
     }
 }
 
-impl<G: DuplicationKeyGenerator> ConversionStep<G> {
+impl<G: DupKeyGen> ConversionStep<G> {
     pub fn convert(
         &self,
         schema: &Arc<tg_schema::Typegraph>,
         conv: &mut Conversion<G>,
     ) -> Result<StepResult<G>> {
-        // TODO what abount map.indirect
         let key: TypeKey;
 
         {
@@ -195,7 +194,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 let mut result = StepResult::default();
 
                 let path_seg = PathSegment::OptionalItem;
-                let item_dkey = conv.dup_key_gen.apply_path_segment(&self.dkey, &path_seg);
+                let item_dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.item,
@@ -229,7 +228,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 let mut result = StepResult::default();
 
                 let path_seg = PathSegment::ListItem;
-                let item_dkey = conv.dup_key_gen.apply_path_segment(&self.dkey, &path_seg);
+                let item_dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
                     idx: data.items,
@@ -264,7 +263,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
                 for (name, ty_idx) in &data.properties {
                     let name: Arc<str> = name.clone().into();
                     let path_seg = PathSegment::ObjectProp(name.clone());
-                    let dkey = conv.dup_key_gen.apply_path_segment(&self.dkey, &path_seg);
+                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
                     let injection = self.injection.as_ref().and_then(|inj| {
                         use crate::injection::InjectionNode as I;
                         match inj.as_ref() {
@@ -320,7 +319,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 for (i, variant) in data.one_of.iter().enumerate() {
                     let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = conv.dup_key_gen.apply_path_segment(&self.dkey, &path_seg);
+                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
                     variants.push(crate::conv::key::TypeKeyEx(*variant, dkey.clone()));
                     result.next.push(ConversionStep {
                         parent: ty.downgrade(),
@@ -355,7 +354,7 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 for (i, variant) in data.any_of.iter().enumerate() {
                     let path_seg = PathSegment::UnionVariant(i as u32);
-                    let dkey = conv.dup_key_gen.apply_path_segment(&self.dkey, &path_seg);
+                    let dkey = conv.dup_key_gen.apply_path_segment(&ty, &path_seg);
                     variants.push(crate::conv::key::TypeKeyEx(*variant, dkey.clone()));
                     result.next.push(ConversionStep {
                         parent: ty.downgrade(),
@@ -379,33 +378,31 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
             N::Function { data, .. } => {
                 // Get the materializer from the conversion context
                 let materializer = conv.get_materializer(data.materializer)?.clone();
-
-                // Process injections
-                let injections = data
-                    .injections
-                    .iter()
-                    .filter_map(|(k, v)| {
-                        crate::injection::InjectionNode::from_schema(
-                            v,
-                            materializer
-                                .effect
-                                .effect
-                                .unwrap_or(tg_schema::EffectType::Read),
-                        )
-                        .map(|inj| (k.clone(), inj))
-                    })
-                    .collect();
-
                 let effect = materializer
                     .effect
                     .effect
                     .unwrap_or(tg_schema::EffectType::Read);
+
+                let injection = Some(&data.injections)
+                    .filter(|injections| !injections.is_empty())
+                    .map(|injections| {
+                        Arc::new(InjectionNode::Parent {
+                            children: injections
+                                .iter()
+                                .filter_map(|(k, v)| {
+                                    crate::injection::InjectionNode::from_schema(v, effect)
+                                        .map(|inj| (k.clone(), inj))
+                                })
+                                .collect(),
+                        })
+                    });
+
                 let ty_inner = Arc::new(crate::FunctionType {
                     base,
                     input: crate::Once::default(),
                     output: crate::Once::default(),
                     parameter_transform: data.parameter_transform.clone(),
-                    injections,
+                    injection: injection.clone(),
                     runtime_config: data.runtime_config.clone(),
                     materializer,
                     rate_weight: data.rate_weight,
@@ -416,10 +413,6 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
 
                 let mut result = StepResult::default();
 
-                let schema_inj = tg_schema::InjectionNode::Parent {
-                    children: data.injections.clone(), // TODO avoid cloning
-                };
-                let injection = InjectionNode::from_schema(&schema_inj, effect);
                 let input_dkey = conv.dup_key_gen.gen_for_fn_input(&ty_inner);
                 result.next.push(ConversionStep {
                     parent: ty.downgrade(),
@@ -492,12 +485,12 @@ impl<G: DuplicationKeyGenerator> ConversionStep<G> {
     // }
 }
 
-pub struct StepResult<G: DuplicationKeyGenerator> {
+pub struct StepResult<G: DupKeyGen> {
     pub next: Vec<ConversionStep<G>>,
     pub link_step: Option<LinkStep<G>>,
 }
 
-impl<G: DuplicationKeyGenerator> Default for StepResult<G> {
+impl<G: DupKeyGen> Default for StepResult<G> {
     fn default() -> Self {
         Self {
             next: vec![],
@@ -506,7 +499,7 @@ impl<G: DuplicationKeyGenerator> Default for StepResult<G> {
     }
 }
 
-pub enum LinkStep<G: DuplicationKeyGenerator> {
+pub enum LinkStep<G: DupKeyGen> {
     Function(LinkFunction<G::Key>),
     Object(LinkObject<G::Key>),
     Union(LinkUnion<G::Key>),
@@ -514,7 +507,7 @@ pub enum LinkStep<G: DuplicationKeyGenerator> {
     Optional(LinkOptional<G::Key>),
 }
 
-impl<G: DuplicationKeyGenerator> LinkStep<G> {
+impl<G: DupKeyGen> LinkStep<G> {
     pub fn link(self, map: &ConversionMap<G>) -> Result<()> {
         match self {
             LinkStep::Function(link) => link.link(map),
