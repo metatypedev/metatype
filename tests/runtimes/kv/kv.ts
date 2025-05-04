@@ -13,5 +13,9 @@ export const tg = await typegraph("kv", (g) => {
     delete: kv.delete(),
     keys: kv.keys(),
     values: kv.values(),
+    lpush: kv.lpush(),
+    rpush: kv.rpush(),
+    lpop: kv.lpop(),
+    rpop: kv.rpop(),
   }, pub);
 });

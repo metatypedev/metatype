@@ -51,6 +51,34 @@ class KvRuntime(Runtime):
             mat,
         )
 
+    def lpush(self):
+        mat = self.__operation("lpush", fx.update())
+        return t.func(
+            t.struct({"key": t.string(), "value": t.string()}), t.integer(), mat
+        )
+
+    def rpush(self):
+        mat = self.__operation("rpush", fx.update())
+        return t.func(
+            t.struct({"key": t.string(), "value": t.string()}), t.integer(), mat
+        )
+
+    def lpop(self):
+        mat = self.__operation("lpop", fx.update())
+        return t.func(
+            t.struct({"key": t.string()}),
+            t.optional(t.string()),
+            mat,
+        )
+
+    def rpop(self):
+        mat = self.__operation("rpop", fx.update())
+        return t.func(
+            t.struct({"key": t.string()}),
+            t.optional(t.string()),
+            mat,
+        )
+
     def __operation(self, operation: KvMaterializer, effect: Effect):
         mat_id = runtimes.kv_operation(BaseMaterializer(self.id, effect), operation)
 

@@ -17,7 +17,7 @@ repos:
         name: "Check typegraph poetry lock"
         always_run: true
         language: system
-        entry: bash -c 'poetry -C ./typegraph/python check --lock'
+        entry: bash -c 'poetry -C ./src/typegraph/python check --lock'
         pass_filenames: false
       - id: sed-lock
         name: "Lock versions"
@@ -82,15 +82,15 @@ repos:
       - id: end-of-file-fixer
         # exclude all generated files
         exclude: (?x)(
-            .ghjk/.*|
-            .*deno.lock|
-            CHANGELOG.md|
-            .*\.snap$|
-            src/typegate/src/typegraphs/.*\.json|
-            docs/metatype.dev/reference/|
-            src/pyrt_wit_wire/pyrt|
-            migration_lock.toml|
-            tests/metagen/typegraphs/sample/[rs|ts|py]/client\.[rs|ts|py]
+          .ghjk/.*|
+          .*deno.lock|
+          CHANGELOG.md|
+          .*\.snap$|
+          src/typegate/src/typegraphs/.*\.json|
+          docs/metatype.dev/reference/|
+          src/pyrt_wit_wire/pyrt|
+          migration_lock.toml|
+          tests/metagen/typegraphs/sample/[rs|ts|py]/client\.[rs|ts|py]
           )
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.5
@@ -141,8 +141,8 @@ repos:
         exclude: tests/runtimes/python/py_fail/.*\.py
       - id: ruff-format
         exclude: (?x)(
-            tests/metagen/typegraphs/sample/py/client.py"|
-            tests/runtimes/python/py_fail/.*\.py
+          tests/metagen/typegraphs/sample/py/client.py"|
+          tests/runtimes/python/py_fail/.*\.py
           )
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.27.0
