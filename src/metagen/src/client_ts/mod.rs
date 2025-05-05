@@ -49,7 +49,7 @@ struct Maps {
 
 pub struct TsClientManifest {
     tg: Arc<Typegraph>,
-    types: ManifestPage<TsType>,
+    pub types: ManifestPage<TsType>,
     node_metas: ManifestPage<TsNodeMeta>,
     selections: ManifestPage<TsSelection>,
     maps: Maps,

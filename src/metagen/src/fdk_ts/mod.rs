@@ -93,13 +93,15 @@ impl FdkTypescriptTemplate {
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
 
-        if config.exclude_client.unwrap_or_default() {
+        let map = if config.exclude_client.unwrap_or_default() {
             let manif = TsTypesPage::new(&tg);
             manif.render_all(&mut fdk_ts)?;
+            manif.get_cached_refs()
         } else {
             let manif = TsClientManifest::new(tg.clone())?;
             manif.render_client(&mut fdk_ts, &GenClientTsOpts { hostcall: true })?;
-        }
+            manif.types.get_cached_refs()
+        };
 
         writeln!(&mut fdk_ts)?;
         {
@@ -111,8 +113,8 @@ impl FdkTypescriptTemplate {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let inp_ty = utils::normalize_type_title(&fun.input().name());
-                let out_ty = utils::normalize_type_title(&fun.output().name());
+                let inp_ty = map.get(&fun.input().key()).unwrap();
+                let out_ty = map.get(&fun.output().key()).unwrap();
                 let type_name: String = utils::normalize_type_title(&fun.name());
                 writeln!(
                     &mut fdk_ts,

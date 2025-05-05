@@ -511,9 +511,22 @@ impl<G: DupKeyGen> ConversionStep<G> {
                 (MapItem::Namespace(_, _), RelativePath::NsObject(_)) => {
                     unreachable!("namespace type should not be converted more than once");
                 }
+                (MapItem::Function(_), RelativePath::Output(_)) => Ok(StepPlan::Skip),
                 _ => {
+                    let map_item = match &map_entry {
+                        MapItem::Unset => "unset",
+                        MapItem::Value(_) => "value",
+                        MapItem::Namespace(_, _) => "namespace",
+                        MapItem::Function(_) => "function",
+                    };
+                    let rp = match &self.rpath {
+                        RelativePath::Input(_) => "input",
+                        RelativePath::Output(_) => "output",
+                        RelativePath::NsObject(_) => "namespace",
+                        RelativePath::Function(_) => "function",
+                    };
                     // return error
-                    unreachable!("mismatched type and path");
+                    unreachable!("mismatched type and path: {map_item:?} vs {rp:?}");
                 }
             }
         }
