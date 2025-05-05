@@ -62,7 +62,7 @@ ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
 RUN ghjk envs cook
 
-SHELL ["/bin/sh", "-c", ". .ghjk/envs/oci/activate.sh && sh -c \"$*\"", "sh"]
+SHELL ["/bin/sh", "-c", ". ${GHJK_ACTIVATE} && sh -c \"$*\"", "sh"]
 
 COPY --from=plan /app/recipe.json recipe.json
 

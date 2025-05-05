@@ -122,10 +122,8 @@ export class PythonRuntime extends Runtime {
 
     // add default vm for lambda/def
     const uuid = crypto.randomUUID();
-    const token = await InternalAuth.emit(typegate.cryptoKeys);
 
     const hostcallCtx = {
-      authToken: token,
       typegate,
       typegraphUrl: new URL(
         `internal+hostcall+witwire://typegate/${typegraphName}`,

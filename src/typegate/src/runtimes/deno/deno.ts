@@ -163,10 +163,7 @@ export class DenoRuntime extends Runtime {
       }
     }
 
-    const token = await InternalAuth.emit(typegate.cryptoKeys);
-
     const hostcallCtx = {
-      authToken: token,
       typegate,
       typegraphUrl: new URL(
         `internal+hostcall+deno://typegate/${typegraphName}`,

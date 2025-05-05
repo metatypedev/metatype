@@ -118,10 +118,7 @@ export class SubstantialRuntime extends Runtime {
       maxAcquirePerTick: typegate.config.base.substantial_max_acquire_per_tick!,
     } satisfies AgentConfig;
 
-    const token = await InternalAuth.emit(typegate.cryptoKeys);
-
     const hostcallCtx = {
-      authToken: token,
       typegate,
       typegraphUrl: new URL(
         `internal+hostcall+subs://typegate/${params.typegraphName}`,
