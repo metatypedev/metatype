@@ -7,6 +7,7 @@
   <style>
   :root {
     --header-height: 3rem;
+    --statusbar-height: 1.5rem;
 
     --selected-header-bg: #d1e7e8;
     --selected-subtree-bg: #e3f2f3;
@@ -37,6 +38,20 @@
   body>header>label {
     margin: 0 1em;
   }
+  body>footer {
+    height: var(--statusbar-height);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #f0f0f0;
+    border-top: 1px solid var(--border-color);
+    font-family: 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace';
+    font-size: 0.8rem;
+    padding: 0 0.5rem;
+    display: flex;
+    align-items: center;
+  }
   #tree {
     position: fixed;
     top: var(--header-height);
@@ -54,8 +69,8 @@
   #details {
     position: fixed;
     top: var(--header-height);
+    bottom: var(--statusbar-height);
     right: 0;
-    bottom: 0;
     margin: 0;
     width: clamp(0px, 360px, 40vw);
     overflow-y: auto;
@@ -193,6 +208,9 @@
       <pre id="selected-data"></pre>
     </section>
   </main>
+  <footer>
+    Loading...
+  </footer>
 </body>
 
 <script type="module">
@@ -205,8 +223,28 @@
   const $root = document.getElementById('root');
   const $reset = document.getElementById('reset');
 
+  const url = new URL(window.location.href);
+
+  const status = {
+    loading: true,
+    typeCount: null,
+  };
+
+  const $footer = document.querySelector('footer');
+  function updateStatus(s) {
+    Object.assign(status, s);
+    const entries = [];
+    if (status.loading) {
+      entries.push('Loading...');
+    } 
+    if (status.typeCount != null) {
+      entries.push(`typeCount=${status.typeCount}`);
+    }
+    $footer.textContent = entries.join(' | ');
+  }
+
   // TODO read from query params
-  $depth.value = 6;
+  $depth.value = +(url.searchParams.get('defaultDepth') || 6)
   $depth.min = 2;
   $root.value = '<root>';
 
@@ -328,6 +366,12 @@
         case 'optional': {
           return [{ edge: '?', idx: node.item }];
         }
+        case 'union': {
+          return node.anyOf.map((idx, i) => ({ edge: `(${i})`, idx }));
+        }
+        case 'either': {
+          return node.oneOf.map((idx, i) => ({ edge: `(${i})`, idx }));
+        }
         case 'function': {
           return [{ edge: 'in', idx: node.input }, { edge: 'out', idx: node.output }];
         }
@@ -357,6 +401,7 @@
   });
 
   function updateTree(tg, depth, root = { idx: 0, path: '<root>' }){
+    updateStatus({ loading: true });
     selectedNodeLock = false;
     selectedNode = null;
     highlightedNode = null;
@@ -373,6 +418,8 @@
     typegraph.renderSubtreeHeader($root, { idx: root.idx, tag: root.path, type: rootNode.type, title: rootNode.title, path: root.path });
     typegraph.renderChildren($root, rootNode, depth, root.path);
     $tree.appendChild($root);
+
+    updateStatus({ loading: false  });
   }
 
   const tgs = await fetch('./tg.json').then(res => res.json());
@@ -383,6 +430,7 @@
     $select.appendChild(option);
   }
   if (tgs.length > 0) {
+    updateStatus({ loading: false, typeCount: tgs[0].types.length });
     updateTree(tgs[0], +$depth.value);
   }
 </script>

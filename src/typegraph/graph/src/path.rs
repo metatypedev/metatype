@@ -142,25 +142,11 @@ impl PathSegment {
         }
     }
 
-    // pub fn apply_on_schema_node_ex<K: DupKey>(
-    //     &self,
-    //     nodes: &[tg_schema::TypeNode],
-    //     xkey: TypeKeyEx<K>,
-    // ) -> Result<TypeKeyEx<K>> {
-    //     let idx = self.apply_on_schema_node(nodes, xkey.0)?;
-    //     let injection = xkey
-    //         .1
-    //         .injection
-    //         .and_then(|inj| self.apply_on_injection(&inj));
-    //
-    //     Ok(TypeKeyEx(idx, DuplicationKey { injection }))
-    // }
-
     pub fn apply_on_injection(&self, node: &Arc<InjectionNode>) -> Option<Arc<InjectionNode>> {
         match self {
             PathSegment::ObjectProp(key) => match node.as_ref() {
                 InjectionNode::Parent { children } => children.get(key.as_ref()).cloned(),
-                _ => unreachable!("expected parent node"),
+                _ => None,
             },
             _ => Some(node.clone()),
         }
@@ -237,19 +223,40 @@ impl std::fmt::Debug for RelativePath {
         match self {
             Self::Function(idx) => write!(f, "Function({})", idx),
             Self::NsObject(path) => write!(f, "NsObject(/{:?})", path.join("/")),
-            Self::Input(k) => write!(
-                f,
-                "Input(fn={}; {:?})",
-                k.owner.upgrade().expect("no strong pointer for type").idx(),
-                k.path
-            ),
-            Self::Output(k) => write!(
-                f,
-                "Output(fn={}; {:?})",
-                k.owner.upgrade().expect("no strong pointer for type").idx(),
-                k.path
-            ),
+            Self::Input(k) => {
+                write!(
+                    f,
+                    "Input(fn={}; ",
+                    k.owner.upgrade().expect("no strong pointer for type").idx(),
+                )?;
+                Self::write_path(f, &k.path)?;
+                write!(f, ")")
+            }
+            Self::Output(k) => {
+                write!(
+                    f,
+                    "Output(fn={}; ",
+                    k.owner.upgrade().expect("no strong pointer for type").idx(),
+                )?;
+                Self::write_path(f, &k.path)?;
+                write!(f, ")")
+            }
         }
+    }
+}
+
+impl RelativePath {
+    fn write_path(f: &mut impl std::fmt::Write, path: &[PathSegment]) -> std::fmt::Result {
+        for seg in path.iter() {
+            f.write_str("/")?;
+            match seg {
+                PathSegment::ObjectProp(key) => f.write_str(key)?,
+                PathSegment::ListItem => f.write_str("[]")?,
+                PathSegment::OptionalItem => f.write_str("?")?,
+                PathSegment::UnionVariant(idx) => write!(f, "({})", idx)?,
+            }
+        }
+        Ok(())
     }
 }
 
@@ -296,10 +303,7 @@ impl RelativePath {
             Self::Input(p) => {
                 // TODO (perf): get from parent
                 let owner = p.owner.upgrade().expect("no strong pointer for type");
-                let mut injection = Arc::new(InjectionNode::Parent {
-                    children: owner.injections.clone(),
-                });
-
+                let mut injection = owner.injection.clone()?;
                 for seg in &p.path {
                     injection = seg.apply_on_injection(&injection)?;
                 }
@@ -410,34 +414,5 @@ impl RelativePath {
                 }
             }
         })
-    }
-
-    pub(crate) fn pop(&self) -> Self {
-        match self {
-            Self::NsObject(path) => {
-                let mut path = path.clone();
-                path.pop();
-                Self::NsObject(path)
-            }
-            Self::Input(k) => {
-                let mut path = k.path.clone();
-                path.pop();
-                Self::Input(ValueTypePath {
-                    owner: k.owner.clone(),
-                    path,
-                    branch: ValueTypeKind::Input,
-                })
-            }
-            Self::Output(k) => {
-                let mut path = k.path.clone();
-                path.pop();
-                Self::Output(ValueTypePath {
-                    owner: k.owner.clone(),
-                    path,
-                    branch: ValueTypeKind::Output,
-                })
-            }
-            Self::Function(_) => self.clone(),
-        }
     }
 }

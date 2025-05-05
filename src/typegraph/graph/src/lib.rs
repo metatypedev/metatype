@@ -1,12 +1,34 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+//! The typegraph expansion creates a version of the typegraph where type
+//! references are inlined. This will remove the need to fetch from the array
+//! of types each time. Also, it will eventually duplicate some types
+//! according to the duplication mechanism based on the duplication keys
+//! (`DupKey` trait).
+//!
+//! The expansion works in 3 passes:
+//! - The first pass traverse the typegraph schema from the root using BFS.
+//!   Each step will convert the type if it has not been converted yet.
+//!   Also, the step will output the `LinkStep`, informing the system on how
+//!   should the created type be associated with others.
+//! - The second pass iterates through the created link steps. It sets the
+//!   references to child types. This pass is necessary since the child types
+//!   are not yet converted at each step. Recursive algorithm will not work
+//!   since the graph might have cycles.
+//! - The third pass traverse the generated graph, collected each types into
+//!   the matching entry in the registry. It also serves as a validation step,
+//!   ensuring that each converted type has valid references to their children.
+//!   (FIXME: the third pass could be optional. But it is required for metagen,
+//!   and currently, only metagen uses the expanded typegraph).
+
 pub mod conv;
 pub mod injection;
 pub mod naming;
 mod path;
 mod policies;
 mod runtimes;
+mod type_registry;
 mod types;
 pub mod visitor;
 
@@ -28,39 +50,17 @@ pub mod prelude {
 }
 
 use conv::{
-    dedup::{
-        DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DuplicationKeyGenerator,
-    },
+    dedup::{DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DupKeyGen},
     key::TypeKey,
-    ValueType,
+    MapItem,
 };
 use indexmap::IndexMap;
 use interlude::*;
-use naming::DefaultNamingEngine;
+use naming::DefaultNamingEngineFactory;
 use runtimes::Materializer;
 use std::collections::HashMap;
 use tg_schema::runtimes::TGRuntime;
 pub use types::*;
-
-#[derive(Debug)]
-pub enum MapItem<K: DupKey> {
-    Namespace(Arc<ObjectType>, Vec<Arc<str>>),
-    Function(Arc<FunctionType>),
-    Value(ValueType<K>),
-}
-
-impl<K: DupKey> TryFrom<conv::MapItem<K>> for MapItem<K> {
-    type Error = color_eyre::Report;
-
-    fn try_from(value: conv::MapItem<K>) -> Result<Self> {
-        Ok(match value {
-            conv::MapItem::Unset => bail!("type was not converted"),
-            conv::MapItem::Namespace(object, path) => MapItem::Namespace(object, path),
-            conv::MapItem::Function(function) => MapItem::Function(function),
-            conv::MapItem::Value(value) => MapItem::Value(value),
-        })
-    }
-}
 
 #[derive(Debug)]
 pub struct Typegraph<K: DupKey = DefaultDuplicationKey> {
@@ -80,9 +80,10 @@ impl<K: DupKey> Typegraph<K> {
     pub fn find_type(&self, key: TypeKey) -> Option<Type> {
         let TypeKey(idx, variant) = key;
         match self.conversion_map.get(idx as usize)? {
+            MapItem::Unset => None,
             MapItem::Namespace(object, _) => Some(object.wrap()),
             MapItem::Function(function) => Some(function.wrap()),
-            MapItem::Value(value) => Some(value.get(variant).unwrap().ty.clone()),
+            MapItem::Value(value) => Some(value.get(variant).unwrap().clone()),
         }
     }
 }
@@ -90,9 +91,10 @@ impl<K: DupKey> Typegraph<K> {
 impl<K: DupKey> Typegraph<K> {
     fn new<G>(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Result<Self>
     where
-        G: DuplicationKeyGenerator<Key = K>,
+        G: DupKeyGen<Key = K>,
+        K: Default,
     {
-        conv::Conversion::convert(schema, dup_key_gen, DefaultNamingEngine::default())
+        conv::convert(schema, dup_key_gen, DefaultNamingEngineFactory)
     }
 }
 
@@ -100,7 +102,7 @@ impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
     type Error = color_eyre::Report;
 
     fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
-        Self::new(schema, DefaultDuplicationKeyGenerator)
+        Self::new(schema.clone(), DefaultDuplicationKeyGenerator { schema })
     }
 }
 

@@ -10,6 +10,7 @@ use tg_schema::EffectType;
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub enum InjectionNode {
     Parent {
+        // TODO Arc<str>??
         children: BTreeMap<String, Arc<InjectionNode>>,
     },
     Leaf {

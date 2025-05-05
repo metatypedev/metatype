@@ -273,13 +273,13 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootGetUserFnInput {
     }
-    pub type UserIdStringUuid = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Post {
         pub id: UserIdStringUuid,
         pub slug: String,
         pub title: String,
     }
+    pub type UserIdStringUuid = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RootCompositeArgsFnInput {
         pub id: String,

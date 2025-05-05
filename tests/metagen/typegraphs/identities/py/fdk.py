@@ -1536,11 +1536,14 @@ PrimitivesSelections = typing.TypedDict(
     total=False,
 )
 
-Branch2Selections = typing.TypedDict(
-    "Branch2Selections",
+CompositesSelections = typing.TypedDict(
+    "CompositesSelections",
     {
         "_": SelectionFlags,
-        "branch2": ScalarSelectNoArgs,
+        "opt": ScalarSelectNoArgs,
+        "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
+        "union": ScalarSelectNoArgs,
+        "list": ScalarSelectNoArgs,
     },
     total=False,
 )
@@ -1555,24 +1558,11 @@ CompositesEitherEitherSelections = typing.TypedDict(
     total=False,
 )
 
-CompositesSelections = typing.TypedDict(
-    "CompositesSelections",
+Branch2Selections = typing.TypedDict(
+    "Branch2Selections",
     {
         "_": SelectionFlags,
-        "opt": ScalarSelectNoArgs,
-        "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
-        "union": ScalarSelectNoArgs,
-        "list": ScalarSelectNoArgs,
-    },
-    total=False,
-)
-
-Cycles3Selections = typing.TypedDict(
-    "Cycles3Selections",
-    {
-        "_": SelectionFlags,
-        "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
-        "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
+        "branch2": ScalarSelectNoArgs,
     },
     total=False,
 )
@@ -1584,6 +1574,26 @@ Cycles1Selections = typing.TypedDict(
         "phantom1": ScalarSelectNoArgs,
         "to2": CompositeSelectNoArgs["Cycles2Selections"],
         "list3": CompositeSelectNoArgs["Cycles3Selections"],
+    },
+    total=False,
+)
+
+Cycles2Selections = typing.TypedDict(
+    "Cycles2Selections",
+    {
+        "_": SelectionFlags,
+        "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
+        "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
+    },
+    total=False,
+)
+
+Cycles3Selections = typing.TypedDict(
+    "Cycles3Selections",
+    {
+        "_": SelectionFlags,
+        "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
+        "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
     },
     total=False,
 )
@@ -1608,32 +1618,12 @@ Branch33BSelections = typing.TypedDict(
     total=False,
 )
 
-Cycles2Selections = typing.TypedDict(
-    "Cycles2Selections",
-    {
-        "_": SelectionFlags,
-        "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
-        "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
-    },
-    total=False,
-)
-
 SimpleCycles1Selections = typing.TypedDict(
     "SimpleCycles1Selections",
     {
         "_": SelectionFlags,
         "phantom1": ScalarSelectNoArgs,
         "to2": CompositeSelectNoArgs["SimpleCycles2Selections"],
-    },
-    total=False,
-)
-
-SimpleCycles3Selections = typing.TypedDict(
-    "SimpleCycles3Selections",
-    {
-        "_": SelectionFlags,
-        "phantom3": ScalarSelectNoArgs,
-        "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
     },
     total=False,
 )
@@ -1648,6 +1638,16 @@ SimpleCycles2Selections = typing.TypedDict(
     total=False,
 )
 
+SimpleCycles3Selections = typing.TypedDict(
+    "SimpleCycles3Selections",
+    {
+        "_": SelectionFlags,
+        "phantom3": ScalarSelectNoArgs,
+        "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
+    },
+    total=False,
+)
+
 
 class QueryGraph(QueryGraphBase):
     def __init__(self):
@@ -1658,9 +1658,9 @@ class QueryGraph(QueryGraphBase):
                 "cycles1": "cycles1!",
                 "simple_cycles_1": "simple_cycles_1!",
                 "branch2": "branch2!",
+                "cycles3": "cycles3!",
                 "branch33A": "branch33A!",
                 "branch33B": "branch33B!",
-                "cycles3": "cycles3!",
             }
         )
 

@@ -1,15 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
-
-use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType, Wrap as _};
-use crate::conv::dedup::DuplicationKeyGenerator;
-use crate::conv::interlude::*;
+use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
+use crate::conv::dedup::{DupKey, DupKeyGen};
+use crate::conv::key::TypeKeyEx;
 use crate::injection::InjectionNode;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{
-    runtimes::{Materializer, MaterializerNode, Runtime},
+    runtimes::{Materializer, Runtime},
     Arc, Once,
 };
 use tg_schema::parameter_transform::FunctionParameterTransform;
@@ -20,8 +18,7 @@ pub struct FunctionType {
     pub(crate) input: Once<Arc<ObjectType>>,
     pub(crate) output: Once<Type>,
     pub parameter_transform: Option<FunctionParameterTransform>,
-    // TODO BTreeMap<Arc<str>, Arc<InjectionNode>>
-    pub injections: BTreeMap<String, Arc<InjectionNode>>,
+    pub injection: Option<Arc<InjectionNode>>,
     pub runtime_config: serde_json::Value, // TODO should not this be removed?
     pub materializer: Materializer,
     pub rate_weight: Option<u32>,
@@ -57,6 +54,52 @@ impl FunctionType {
     }
 }
 
+pub struct LinkFunction<K: DupKey> {
+    pub ty: Arc<FunctionType>,
+    pub input: TypeKeyEx<K>,
+    pub output: TypeKeyEx<K>,
+}
+
+impl<K: DupKey> LinkFunction<K> {
+    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+        let input = map.get_ex(self.input).ok_or_else(|| {
+            eyre!(
+                "cannot find input type for function; key={:?}",
+                self.ty.key()
+            )
+        })?;
+        match &input {
+            Type::Object(obj) => {
+                self.ty.input.set(obj.clone()).map_err(|_| {
+                    eyre!(
+                        "OnceLock: cannot set function input more than once; key={:?}",
+                        self.ty.key()
+                    )
+                })?;
+            }
+            _ => {
+                return Err(eyre!(
+                    "function input must be an object type; key={:?}",
+                    self.ty.key()
+                ));
+            }
+        }
+
+        let output = map.get_ex(self.output).ok_or_else(|| {
+            eyre!(
+                "cannot find output type for function; key={:?}",
+                self.ty.key()
+            )
+        })?;
+        self.ty.output.set(output.clone()).map_err(|_| {
+            eyre!(
+                "OnceLock: cannot set function output more than once; key={:?}",
+                self.ty.key()
+            )
+        })
+    }
+}
+
 impl TypeNode for Arc<FunctionType> {
     fn base(&self) -> &TypeBase {
         &self.base
@@ -83,94 +126,5 @@ impl TypeNode for Arc<FunctionType> {
                 kind: EdgeKind::FunctionOutput,
             },
         ]
-    }
-}
-
-pub(crate) fn convert_function<G: DuplicationKeyGenerator>(
-    base: TypeBase,
-    data: &tg_schema::FunctionTypeData,
-    materializer: Arc<MaterializerNode>,
-) -> Box<dyn TypeConversionResult<G>> {
-    let injections = data
-        .injections
-        .iter()
-        .filter_map(|(k, v)| {
-            InjectionNode::from_schema(
-                v,
-                materializer
-                    .effect
-                    .effect
-                    .unwrap_or(tg_schema::EffectType::Read),
-            )
-            .map(|inj| (k.clone(), inj))
-        })
-        .collect();
-
-    let ty = FunctionType {
-        base,
-        input: Default::default(),
-        output: Default::default(),
-        parameter_transform: data.parameter_transform.clone(),
-        runtime_config: data.runtime_config.clone(),
-        materializer,
-        rate_weight: data.rate_weight,
-        rate_calls: data.rate_calls,
-        injections,
-    }
-    .into();
-
-    Box::new(FunctionTypeConversionResult {
-        ty,
-        input_idx: data.input,
-        output_idx: data.output,
-    })
-}
-
-struct FunctionTypeConversionResult {
-    ty: Arc<FunctionType>,
-    input_idx: u32,
-    output_idx: u32,
-}
-
-impl<G: DuplicationKeyGenerator> TypeConversionResult<G> for FunctionTypeConversionResult {
-    fn get_type(&self) -> Type {
-        self.ty.clone().wrap()
-    }
-
-    fn finalize(&mut self, conv: &mut Conversion<G>) -> Result<()> {
-        let weak = self.ty.clone().wrap().downgrade();
-
-        let mut input_res = conv.convert_type(
-            weak.clone(),
-            self.input_idx,
-            RelativePath::input(Arc::downgrade(&self.ty), vec![]),
-        )?;
-        match &input_res.get_type() {
-            Type::Object(input) => {
-                self.ty.input.set(input.clone()).map_err(|_| {
-                    eyre!(
-                        "OnceLock: cannot set function input type more than once; key={:?}",
-                        self.ty.key()
-                    )
-                })?;
-            }
-            _ => bail!("expected object type for function input"),
-        }
-        input_res.finalize(conv)?;
-
-        let mut output_res = conv.convert_type(
-            weak,
-            self.output_idx,
-            RelativePath::output(Arc::downgrade(&self.ty), vec![]),
-        )?;
-        self.ty.output.set(output_res.get_type()).map_err(|_| {
-            eyre!(
-                "OnceLock: cannot set function output type more than once; key={:?}",
-                self.ty.key()
-            )
-        })?;
-        output_res.finalize(conv)?;
-
-        Ok(())
     }
 }

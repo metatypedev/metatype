@@ -152,9 +152,6 @@ where
         let fut = async move {
             match action.get_command().await {
                 Ok(cmd) => {
-                    let std_cmd = cmd.as_std();
-                    debug!("std command: {std_cmd:?}");
-                    debug!("command: {cmd:?}");
                     addr.do_send(StartProcess(cmd));
                 }
                 Err(e) => {

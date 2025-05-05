@@ -135,6 +135,10 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
                 let ty_props = ty.properties();
                 let mut props = Vec::with_capacity(ty_props.len());
                 for (prop_name, prop) in ty_props {
+                    // TODO support for nested functions (MET-862)
+                    if matches!(prop.ty, Type::Function(_)) {
+                        continue;
+                    }
                     let prop_name = normalize_struct_prop_name(prop_name);
                     let select_ty = selection_for_field(&prop.ty);
                     props.push((prop_name, select_ty));
