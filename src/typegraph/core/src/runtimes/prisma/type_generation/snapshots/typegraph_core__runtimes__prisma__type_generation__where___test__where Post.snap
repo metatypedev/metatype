@@ -2,25 +2,25 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(context.generate(&Where::new(post))?)"
 ---
-root: struct 'Post_where' #106
-├── [author]: optional #104
-│   └── item: struct 'User_where_excluding_Post' #103
-│       ├── [id]: optional #91
-│       │   └── item: &_prisma_integer_filter_ex #33
-│       ├── [name]: optional #92
-│       │   └── item: &_prisma_string_filter_ex #11
-│       └── [posts]: optional #101
-│           └── item: union #100
-│               ├── variant_0: struct #95
-│               │   └── [every]: optional #94
-│               │       └── item: &Post_where #93
-│               ├── variant_1: struct #97
-│               │   └── [some]: optional #96
-│               │       └── item: &Post_where #93
-│               └── variant_2: struct #99
-│                   └── [none]: optional #98
-│                       └── item: &Post_where #93
-├── [id]: optional #88
-│   └── item: &_prisma_integer_filter_ex #33
-└── [title]: optional #89
-    └── item: &_prisma_string_filter_ex #11
+root: struct 'Post_where' #146
+├── [author]: optional #144
+│   └── item: struct 'User_where_excluding_Post' #143
+│       ├── [id]: optional #131
+│       │   └── item: &_prisma_integer_filter_ex #53
+│       ├── [name]: optional #132
+│       │   └── item: &_prisma_string_filter_ex #32
+│       └── [posts]: optional #141
+│           └── item: union #140
+│               ├── variant_0: struct #135
+│               │   └── [every]: optional #134
+│               │       └── item: &Post_where #133
+│               ├── variant_1: struct #137
+│               │   └── [some]: optional #136
+│               │       └── item: &Post_where #133
+│               └── variant_2: struct #139
+│                   └── [none]: optional #138
+│                       └── item: &Post_where #133
+├── [id]: optional #128
+│   └── item: &_prisma_integer_filter_ex #53
+└── [title]: optional #129
+    └── item: &_prisma_string_filter_ex #32
