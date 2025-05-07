@@ -100,7 +100,7 @@ export const handlePlaygroundGraphQL = (
               </GraphiQL.Logo>
             </GraphiQL>
           );
-          ReactDOM.render(app, document.getElementById('graphiql'));
+          ReactDOM.createRoot(document.getElementById('graphiql')).render(app);
         </script>
       </body>
     </html>
