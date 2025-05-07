@@ -53,9 +53,9 @@ export class WasmRuntimeWire extends Runtime {
     };
 
     const uuid = crypto.randomUUID();
-    const token = await InternalAuth.emit(typegate.cryptoKeys);
-    const componentPath =
-      await typegate.artifactStore.getLocalPath(artifactMeta);
+    const componentPath = await typegate.artifactStore.getLocalPath(
+      artifactMeta,
+    );
 
     const wireMat = materializers.map((mat) => ({
       op_name: mat.data.op_name as string,
@@ -66,9 +66,10 @@ export class WasmRuntimeWire extends Runtime {
     }));
 
     const hostcallCtx = {
-      authToken: token,
       typegate,
-      typegraphUrl: new URL(`internal+hostcall+witwire://typegate/${typegraphName}`),
+      typegraphUrl: new URL(
+        `internal+hostcall+witwire://typegate/${typegraphName}`,
+      ),
     };
 
     const workerManager = new WorkerManager(hostcallCtx);

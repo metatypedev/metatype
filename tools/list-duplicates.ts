@@ -337,46 +337,52 @@ export function listDuplicates(tg: TypeGraphDS, rootIdx = 0) {
   }
 }
 
-const args = parseArgs(Deno.args, {
-  string: ["root"],
-});
+// const args = parseArgs(Deno.args, {
+//   string: ["root"],
+// });
+//
+// const rootIdx = argToInt(args.root, 0);
+//
+// const files = args._ as string[];
+// if (files.length === 0) {
+//   throw new Error("Path to typegraph definition module is required.");
+// }
+// if (files.length > 1) {
+//   throw new Error("Cannot accept more than one file");
+// }
+// const cmd = [
+//   "cargo",
+//   "run",
+//   "--manifest-path",
+//   `${projectDir}/Cargo.toml`,
+//   "-p",
+//   "meta-cli",
+//   "--",
+//   "serialize",
+//   "-f",
+//   files[0],
+// ];
+// const { stdout } = await new Deno.Command(cmd[0], {
+//   args: cmd.slice(1),
+//   stdout: "piped",
+//   stderr: "inherit",
+// }).output();
+//
+// function argToInt(arg: string | undefined, defaultValue: number): number {
+//   const parsed = parseInt(arg ?? `${defaultValue}`);
+//   return isNaN(parsed) ? defaultValue : parsed;
+// }
 
-const rootIdx = argToInt(args.root, 0);
-
-const files = args._ as string[];
-if (files.length === 0) {
-  throw new Error("Path to typegraph definition module is required.");
+let raw = "";
+const decoder = new TextDecoder();
+for await (const chunk of Deno.stdin.readable) {
+  raw += decoder.decode(chunk);
+  // do something with the text
 }
-if (files.length > 1) {
-  throw new Error("Cannot accept more than one file");
-}
-const cmd = [
-  "cargo",
-  "run",
-  "--manifest-path",
-  `${projectDir}/Cargo.toml`,
-  "-p",
-  "meta-cli",
-  "--",
-  "serialize",
-  "-f",
-  files[0],
-];
-const { stdout } = await new Deno.Command(cmd[0], {
-  args: cmd.slice(1),
-  stdout: "piped",
-  stderr: "inherit",
-}).output();
 
-const tgs: TypeGraphDS[] = JSON.parse(
-  new TextDecoder().decode(stdout),
-);
+// const raw = new TextDecoder().decode(stdout),
+const tgs: TypeGraphDS[] = JSON.parse(raw);
 
 for (const tg of tgs) {
-  listDuplicatesEnhanced(tg, rootIdx);
-}
-
-function argToInt(arg: string | undefined, defaultValue: number): number {
-  const parsed = parseInt(arg ?? `${defaultValue}`);
-  return isNaN(parsed) ? defaultValue : parsed;
+  listDuplicatesEnhanced(tg, 0);
 }

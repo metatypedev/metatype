@@ -4,12 +4,12 @@
 import * as zod from "zod";
 import type { Typegate } from "../../typegate/mod.ts";
 import { getLogger } from "../../log.ts";
+import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 
 const logger = getLogger(import.meta);
 
 export type HostCallCtx = {
   typegate: Typegate;
-  authToken: string;
   typegraphUrl: URL;
 };
 
@@ -64,7 +64,7 @@ async function gql(cx: HostCallCtx, args: object) {
     throw new Error("error validating gql args", {
       cause: {
         zodErr: parseRes.error,
-        args
+        args,
       },
     });
   }
@@ -82,12 +82,13 @@ async function gql(cx: HostCallCtx, args: object) {
     }
   }
 
+  const token = await InternalAuth.emit(cx.typegate.cryptoKeys);
   const request = new Request(cx.typegraphUrl, {
     method: "POST",
     headers: {
       accept: "application/json",
       "content-type": "application/json",
-      authorization: `Bearer ${cx.authToken}`,
+      authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
       query: parsed.query,
