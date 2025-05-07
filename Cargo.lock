@@ -13081,6 +13081,7 @@ name = "typegraph"
 version = "0.5.1-rc.2"
 dependencies = [
  "color-eyre",
+ "derive_more 1.0.0",
  "enum_dispatch",
  "indexmap 2.6.0",
  "insta",

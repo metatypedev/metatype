@@ -7,9 +7,10 @@ use crate::conv::key::TypeKeyEx;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{Arc, Once};
 
-#[derive(Debug)]
+#[derive(derive_more::Debug)]
 pub struct UnionType {
     pub base: TypeBase,
+    #[debug("{:?}", variants.get().map(|i| i.iter().map(|v| v.tag()).collect::<Vec<_>>()))]
     pub(crate) variants: Once<Vec<Type>>,
     pub either: bool,
 }

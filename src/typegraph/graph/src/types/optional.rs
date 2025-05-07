@@ -7,9 +7,10 @@ use crate::conv::key::TypeKeyEx;
 use crate::{interlude::*, TypeNodeExt as _};
 use crate::{Arc, Once};
 
-#[derive(Debug)]
+#[derive(derive_more::Debug)]
 pub struct OptionalType {
     pub base: TypeBase,
+    #[debug("{}", item.get().map(|ty| ty.tag()).unwrap_or("<unset>"))]
     pub(crate) item: Once<Type>,
     pub default_value: Option<serde_json::Value>,
 }

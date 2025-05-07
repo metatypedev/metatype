@@ -9,8 +9,9 @@ use crate::policies::PolicySpec;
 use crate::{interlude::*, TypeNodeExt as _};
 use indexmap::IndexMap;
 
-#[derive(Debug)]
+#[derive(derive_more::Debug)]
 pub struct ObjectProperty {
+    #[debug("{}", ty.tag())]
     pub ty: Type,
     pub policies: Vec<PolicySpec>,
     pub injection: Option<Arc<InjectionNode>>,

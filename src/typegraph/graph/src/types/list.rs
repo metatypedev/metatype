@@ -6,9 +6,10 @@ use crate::conv::dedup::{DupKey, DupKeyGen};
 use crate::conv::key::TypeKeyEx;
 use crate::{interlude::*, Arc, Once};
 
-#[derive(Debug)]
+#[derive(derive_more::Debug)]
 pub struct ListType {
     pub base: TypeBase,
+    #[debug("{:?}", item.get().map(|ty| ty.tag()))]
     pub(crate) item: Once<Type>,
     pub min_items: Option<u32>,
     pub max_items: Option<u32>,
