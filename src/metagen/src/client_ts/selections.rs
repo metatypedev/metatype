@@ -13,6 +13,7 @@ use crate::{interlude::*, shared::client::*};
 pub enum TsSelection {
     Object(Object),
     Union(Union),
+    Alias(TypeKey),
 }
 
 #[derive(Debug)]
@@ -105,13 +106,15 @@ impl ManifestEntry for TsSelection {
         match self {
             TsSelection::Object(obj) => obj.render(dest, page),
             TsSelection::Union(union) => union.render(dest, page),
+            TsSelection::Alias(_) => Ok(()),
         }
     }
 
-    fn get_reference_expr(&self, _page: &ManifestPage<Self>) -> Option<String> {
+    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
         match self {
             TsSelection::Object(obj) => Some(obj.name.clone()),
             TsSelection::Union(union) => Some(union.name.clone()),
+            TsSelection::Alias(key) => page.get_ref(key),
         }
     }
 }
@@ -130,7 +133,13 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
             | Type::Integer(_)
             | Type::String(_)
             | Type::File(_) => unreachable!("scalars don't get to have selections"),
-            Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
+            Type::Optional(ty) => {
+                map.insert(*key, TsSelection::Alias(ty.item().key()));
+            }
+            Type::List(ty) => {
+                map.insert(*key, TsSelection::Alias(ty.item().key()));
+            }
+            Type::Function(_) => {} // TODO
             Type::Object(ty) => {
                 let ty_props = ty.properties();
                 let mut props = Vec::with_capacity(ty_props.len());

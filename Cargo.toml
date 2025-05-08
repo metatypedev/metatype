@@ -93,7 +93,7 @@ lazy_static = "1.5.0"                                # FIXME: replace with Lazy 
 crossbeam-channel = "0.5.13"
 enum_dispatch = "0.3.13"
 tap = "1.0.1"
-derive_more = { version = "1", features = ["from"] }
+derive_more = { version = "1", features = ["from", "debug"] }
 cached = "0.53.1"                                    # FIXME: replace usage with a Lazy Cell + dashmap
 garde = "0.20"
 paste = "1.0.15"
