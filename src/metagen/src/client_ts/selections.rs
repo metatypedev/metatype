@@ -24,7 +24,12 @@ pub struct Object {
 
 impl Object {
     fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsSelection>) -> std::fmt::Result {
-        writeln!(dest, "export type {} = {{", self.name)?;
+        writeln!(
+            dest,
+            "export type {} = {{
+  _?: SelectionFlags;",
+            self.name,
+        )?;
         for (name, select_ty) in &self.props {
             use SelectionTy::*;
             match select_ty {
