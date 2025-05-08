@@ -20,9 +20,9 @@ export const handlePlaygroundGraphQL = (
       <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-        <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
+        <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/graphiql@4/graphiql.min.css" />
         <style>
           body {
             margin: 0;
@@ -76,7 +76,7 @@ export const handlePlaygroundGraphQL = (
       <body>
         <div id="graphiql">Loading...</div>
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-        <script src="https://unpkg.com/graphiql/graphiql.min.js" type="application/javascript"></script>
+        <script src="https://unpkg.com/graphiql@4/graphiql.min.js" type="application/javascript"></script>
         <script data-plugins="transform-es2015-modules-umd" type="text/babel">
           const fetcher = GraphiQL.createFetcher({
             url: "${url}"
@@ -100,7 +100,7 @@ export const handlePlaygroundGraphQL = (
               </GraphiQL.Logo>
             </GraphiQL>
           );
-          ReactDOM.render(app, document.getElementById('graphiql'));
+          ReactDOM.createRoot(document.getElementById('graphiql')).render(app);
         </script>
       </body>
     </html>
