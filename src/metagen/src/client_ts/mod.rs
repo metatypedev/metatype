@@ -8,7 +8,7 @@ use core::fmt::Write;
 
 use fdk_ts::types::{TsType, TsTypesPage};
 use node_metas::TsNodeMeta;
-use selections::TsSelection;
+use selections::TsSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
@@ -42,7 +42,7 @@ impl ClienTsGenConfig {
 }
 
 struct Maps {
-    types: IndexMap<TypeKey, String>,
+    types: Arc<IndexMap<TypeKey, String>>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
@@ -51,7 +51,7 @@ pub struct TsClientManifest {
     tg: Arc<Typegraph>,
     pub types: ManifestPage<TsType>,
     node_metas: ManifestPage<TsNodeMeta>,
-    selections: ManifestPage<TsSelection>,
+    selections: TsSelectionManifestPage,
     maps: Maps,
 }
 
@@ -59,13 +59,13 @@ impl TsClientManifest {
     pub fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
         let types = TsTypesPage::new(&tg);
         types.cache_references();
-        let types_memo = types.get_cached_refs();
+        let types_memo = Arc::new(types.get_cached_refs());
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build();
         node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg);
+        let selections = selections::manifest_page(&tg, types_memo.clone());
         selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 

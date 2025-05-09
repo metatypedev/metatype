@@ -89,7 +89,10 @@ impl TsType {
             .iter()
             .filter(|(_, prop)| !prop.is_injected())
             .map(|(name, prop)| {
-                let ty = prop.ty.key();
+                let ty = match &prop.ty {
+                    Type::Function(fn_ty) => fn_ty.output().key(),
+                    _ => prop.ty.key(),
+                };
                 let optional = matches!(prop.ty, Type::Optional(_));
                 ObjectProp {
                     name: normalize_struct_prop_name(&name[..]),

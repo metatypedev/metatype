@@ -9,6 +9,12 @@ use super::shared::manifest::{ManifestEntry, ManifestPage};
 use super::utils::*;
 use crate::{interlude::*, shared::client::*};
 
+pub struct TsSelectionExtras {
+    types_memo: Arc<IndexMap<TypeKey, String>>,
+}
+
+pub type TsSelectionManifestPage = ManifestPage<TsSelection, TsSelectionExtras>;
+
 #[derive(Debug)]
 pub enum TsSelection {
     Object(Object),
@@ -23,7 +29,7 @@ pub struct Object {
 }
 
 impl Object {
-    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsSelection>) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &TsSelectionManifestPage) -> std::fmt::Result {
         writeln!(
             dest,
             "export type {} = {{
@@ -35,7 +41,8 @@ impl Object {
             match select_ty {
                 Scalar => writeln!(dest, r#"  {name}?: ScalarSelectNoArgs;"#)?,
                 ScalarArgs { arg_ty } => {
-                    let arg_ty = page.get_ref(arg_ty).unwrap();
+                    // let arg_ty = page.get_ref(arg_ty).unwrap();
+                    let arg_ty = page.extras.types_memo.get(arg_ty).unwrap();
                     writeln!(dest, r#"  {name}?: ScalarSelectArgs<{arg_ty}>;"#)?
                 }
                 Composite { select_ty } => {
@@ -43,7 +50,8 @@ impl Object {
                     writeln!(dest, r#"  {name}?: CompositeSelectNoArgs<{select_ty}>;"#)?
                 }
                 CompositeArgs { arg_ty, select_ty } => {
-                    let arg_ty = page.get_ref(arg_ty).unwrap();
+                    // let arg_ty = page.get_ref(arg_ty).unwrap();
+                    let arg_ty = page.extras.types_memo.get(arg_ty).unwrap();
                     let select_ty = page.get_ref(select_ty).unwrap();
                     writeln!(
                         dest,
@@ -70,7 +78,7 @@ pub struct Union {
 }
 
 impl Union {
-    fn render(&self, dest: &mut impl Write, page: &ManifestPage<TsSelection>) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &TsSelectionManifestPage) -> std::fmt::Result {
         writeln!(dest, "export type {} = {{", self.name)?;
         for variant in &self.variants {
             use SelectionTy::*;
@@ -105,9 +113,9 @@ impl Union {
 }
 
 impl ManifestEntry for TsSelection {
-    type Extras = ();
+    type Extras = TsSelectionExtras;
 
-    fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
+    fn render(&self, dest: &mut impl Write, page: &TsSelectionManifestPage) -> std::fmt::Result {
         match self {
             TsSelection::Object(obj) => obj.render(dest, page),
             TsSelection::Union(union) => union.render(dest, page),
@@ -115,7 +123,7 @@ impl ManifestEntry for TsSelection {
         }
     }
 
-    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
+    fn get_reference_expr(&self, page: &TsSelectionManifestPage) -> Option<String> {
         match self {
             TsSelection::Object(obj) => Some(obj.name.clone()),
             TsSelection::Union(union) => Some(union.name.clone()),
@@ -124,7 +132,10 @@ impl ManifestEntry for TsSelection {
     }
 }
 
-pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
+pub fn manifest_page(
+    tg: &typegraph::Typegraph,
+    types_memo: Arc<IndexMap<TypeKey, String>>,
+) -> TsSelectionManifestPage {
     let mut map = IndexMap::new();
 
     for (key, ty) in tg.output_types.iter() {
@@ -144,15 +155,11 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
             Type::List(ty) => {
                 map.insert(*key, TsSelection::Alias(ty.item().key()));
             }
-            Type::Function(_) => {} // TODO
+            Type::Function(_) => {} // unreachable
             Type::Object(ty) => {
                 let ty_props = ty.properties();
                 let mut props = Vec::with_capacity(ty_props.len());
                 for (prop_name, prop) in ty_props {
-                    // TODO support for nested functions (MET-862)
-                    if matches!(prop.ty, Type::Function(_)) {
-                        continue;
-                    }
                     let prop_name = normalize_struct_prop_name(prop_name);
                     let select_ty = selection_for_field(&prop.ty);
                     props.push((prop_name, select_ty));
@@ -189,5 +196,5 @@ pub fn manifest_page(tg: &typegraph::Typegraph) -> ManifestPage<TsSelection> {
         }
     }
 
-    map.into()
+    ManifestPage::with_extras(map, TsSelectionExtras { types_memo })
 }
