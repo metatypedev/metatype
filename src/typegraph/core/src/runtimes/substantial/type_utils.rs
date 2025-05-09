@@ -101,7 +101,7 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
 
     let op_value = save("op", |n| t::either(ops.clone().into_iter()).build_named(n))?;
 
-    let special = ["started_at", "ended_at", "status"]
+    let special = ["run_id", "started_at", "ended_at", "status"]
         .into_iter()
         .map(|sp| save(sp, |n| t::struct_().prop(sp, op_value).build_named(n)))
         .collect::<Result<Vec<_>>>()?;

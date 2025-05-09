@@ -638,6 +638,7 @@ export function childWorkflowTestTemplate(
                   {
                     and: [
                       { status: { contains: JSON.stringify("COMPL") } },
+                      { run_id: { contains: JSON.stringify("_") } },
                       { contains: JSON.stringify("substantial") },
                     ],
                   },
