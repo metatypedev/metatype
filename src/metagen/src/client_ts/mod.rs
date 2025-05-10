@@ -12,7 +12,7 @@ use selections::TsSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::TypeNodeExt as _;
+use typegraph::{TypeNodeExt as _, TypegraphExpansionConfig};
 
 use crate::interlude::*;
 use crate::utils::processed_write;
@@ -56,8 +56,8 @@ pub struct TsClientManifest {
 }
 
 impl TsClientManifest {
-    pub fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
-        let types = TsTypesPage::new(&tg);
+    pub fn new(tg: Arc<Typegraph>, fdk: bool) -> Result<TsClientManifest> {
+        let types = TsTypesPage::new(&tg, fdk);
         types.cache_references();
         let types_memo = Arc::new(types.get_cached_refs());
 
@@ -125,12 +125,14 @@ impl crate::Plugin for Generator {
             .get(Self::INPUT_TG)
             .context("missing generator input")?
         {
-            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
-            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw.clone(),
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
+
+        let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
         let mut out = IndexMap::new();
-        let manif = TsClientManifest::new(tg.clone())?;
+        let manif = TsClientManifest::new(tg.clone(), false)?;
         let mut buf = String::new();
         manif.render(&mut buf)?;
         out.insert(

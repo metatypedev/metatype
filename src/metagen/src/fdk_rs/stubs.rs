@@ -176,8 +176,6 @@ mod test {
             })
         };
 
-        let tg: Arc<Typegraph> = Arc::new(tg.try_into()?);
-
         let generator = Generator::new(FdkRustGenConfig {
             base: crate::config::FdkGeneratorConfigBase {
                 path: "/".into(),

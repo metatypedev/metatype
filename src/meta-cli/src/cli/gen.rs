@@ -171,9 +171,7 @@ impl InputResolver for MetagenCtx {
                     })
                     .await?;
 
-                GeneratorInputResolved::TypegraphFromTypegate {
-                    raw: Arc::new(raw.try_into()?),
-                }
+                GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
             GeneratorInputOrder::TypegraphFromPath { path, name } => {
                 let config = self.config.clone();
@@ -195,9 +193,7 @@ impl InputResolver for MetagenCtx {
                     )
                     .await?;
 
-                GeneratorInputResolved::TypegraphFromTypegate {
-                    raw: Arc::new(raw.try_into()?),
-                }
+                GeneratorInputResolved::TypegraphFromTypegate { raw }
             }
             GeneratorInputOrder::LoadFdkTemplate {
                 default,

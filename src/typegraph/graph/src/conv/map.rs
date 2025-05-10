@@ -185,6 +185,14 @@ pub struct ConversionMap<G: DupKeyGen> {
     pub direct: Vec<MapItem<G::Key>>,
 }
 
+impl<G: DupKeyGen> Default for ConversionMap<G> {
+    fn default() -> Self {
+        Self {
+            direct: Default::default(),
+        }
+    }
+}
+
 impl<G: DupKeyGen> ConversionMap<G> {
     pub fn new(schema: &tg_schema::Typegraph) -> Self {
         let type_count = schema.types.len();
