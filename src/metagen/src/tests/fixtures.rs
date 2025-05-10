@@ -6,7 +6,7 @@ use crate::interlude::*;
 pub fn create_typegraph(
     tg_name: String,
     test_types: Vec<tg_schema::TypeNode>,
-) -> Result<Arc<Typegraph>> {
+) -> Result<Arc<tg_schema::Typegraph>> {
     let types = {
         use tg_schema::*;
         let mut types = vec![
@@ -100,12 +100,12 @@ pub fn create_typegraph(
         path: None,
     };
 
-    let tg: Typegraph = Arc::new(schema).try_into()?;
+    let tg = Arc::new(schema);
 
-    Ok(Arc::new(tg))
+    Ok(tg)
 }
 
-pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
+pub async fn test_typegraph_1() -> anyhow::Result<Arc<tg_schema::Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f fixtures/tg.ts -vvv"
@@ -128,7 +128,7 @@ pub async fn test_typegraph_1() -> anyhow::Result<Arc<Typegraph>> {
         })?;
 
     let tg = Arc::new(tg.pop().unwrap());
-    Ok(Arc::new(tg.try_into()?))
+    Ok(tg)
 }
 
 // #[allow(unused)]
@@ -209,7 +209,7 @@ pub fn default_type_node_base() -> tg_schema::TypeNodeBase {
     }
 }
 
-pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
+pub async fn test_typegraph_3() -> anyhow::Result<Arc<tg_schema::Typegraph>> {
     let out = tokio::process::Command::new("cargo")
         .args(
             "run -p meta-cli -- serialize -f fixtures/tg2.ts -vvv"
@@ -233,5 +233,5 @@ pub async fn test_typegraph_3() -> anyhow::Result<Arc<Typegraph>> {
         })?;
 
     let tg = Arc::new(tg.pop().unwrap());
-    Ok(Arc::new(tg.try_into()?))
+    Ok(tg)
 }

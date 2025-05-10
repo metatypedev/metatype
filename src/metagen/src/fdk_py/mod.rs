@@ -9,6 +9,7 @@ use crate::shared::*;
 use crate::utils::GenDestBuf;
 use crate::*;
 use client_py::ClientPyManifest;
+use typegraph::TypegraphExpansionConfig;
 use types::PyTypesPage;
 
 pub mod types;
@@ -201,6 +202,9 @@ impl crate::Plugin for Generator {
         };
 
         let mut out = IndexMap::new();
+        let tg = TypegraphExpansionConfig::default()
+            .always_convert_original()
+            .expand_with_default_params(tg)?;
         out.insert(
             self.config.base.path.join("fdk.py"),
             GeneratedFile {

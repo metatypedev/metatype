@@ -24,7 +24,7 @@ impl ObjectProperty {
     pub fn is_injected(&self) -> bool {
         self.injection
             .as_ref()
-            .filter(|inj| !inj.is_empty())
+            .filter(|inj| matches!(inj.as_ref(), InjectionNode::Leaf { .. }))
             .is_some()
     }
 }

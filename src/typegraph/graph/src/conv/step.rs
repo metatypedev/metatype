@@ -35,6 +35,22 @@ where
             injection: None,
         }
     }
+
+    pub fn disconnected(idx: u32) -> Self {
+        Self {
+            // no parent
+            parent: WeakType::Object(Default::default()),
+            idx,
+            rpath: RelativePath::Input(ValueTypePath {
+                owner: Default::default(), // no owner function
+                // TODO remove branch
+                branch: ValueTypeKind::Input,
+                path: vec![],
+            }),
+            dkey: Default::default(),
+            injection: None,
+        }
+    }
 }
 
 pub enum StepPlan {
@@ -87,7 +103,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
     fn convert_boolean(&self, base: TypeBase) -> Result<(StepResult<G>, MapItem<G::Key>)> {
         let ty = Type::Boolean(BooleanType { base }.into());
         Ok((
-            Default::default(),
+            StepResult::<G>::new(ty.clone()),
             MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
         ))
     }
@@ -109,7 +125,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
             .into(),
         );
         Ok((
-            Default::default(),
+            StepResult::<G>::new(ty.clone()),
             MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
         ))
     }
@@ -131,7 +147,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
             .into(),
         );
         Ok((
-            Default::default(),
+            StepResult::<G>::new(ty.clone()),
             MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
         ))
     }
@@ -154,7 +170,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
             .into(),
         );
         Ok((
-            Default::default(),
+            StepResult::<G>::new(ty.clone()),
             MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
         ))
     }
@@ -174,7 +190,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
             .into(),
         );
         Ok((
-            Default::default(),
+            StepResult::<G>::new(ty.clone()),
             MapItem::new(&ty, self.rpath.clone(), self.dkey.clone())?,
         ))
     }
@@ -193,7 +209,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::Optional(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
 
         let path_seg = PathSegment::OptionalItem;
         let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
@@ -232,7 +248,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::List(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
 
         let path_seg = PathSegment::ListItem;
         let item_dkey = dkey_gen.apply_path_segment(&ty, &path_seg);
@@ -268,7 +284,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::Object(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
         let mut properties = indexmap::IndexMap::new();
 
         for (name, ty_idx) in &data.properties {
@@ -330,7 +346,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::Union(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
         let mut variants = Vec::new();
 
         for (i, variant) in data.one_of.iter().enumerate() {
@@ -371,7 +387,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::Union(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
         let mut variants = Vec::new();
 
         for (i, variant) in data.any_of.iter().enumerate() {
@@ -443,7 +459,7 @@ impl<G: DupKeyGen> ConversionStep<G> {
 
         let ty = Type::Function(ty_inner.clone());
 
-        let mut result = StepResult::default();
+        let mut result = StepResult::<G>::new(ty.clone());
 
         let input_dkey = dkey_gen.gen_for_fn_input(&ty_inner);
         result.next.push(ConversionStep {
@@ -534,14 +550,16 @@ impl<G: DupKeyGen> ConversionStep<G> {
 }
 
 pub struct StepResult<G: DupKeyGen> {
+    pub ty: Type,
     pub next: Vec<ConversionStep<G>>,
     pub link_step: Option<LinkStep<G>>,
 }
 
-impl<G: DupKeyGen> Default for StepResult<G> {
-    fn default() -> Self {
+impl<G: DupKeyGen> StepResult<G> {
+    fn new(ty: Type) -> Self {
         Self {
-            next: vec![],
+            ty,
+            next: Default::default(),
             link_step: None,
         }
     }

@@ -76,8 +76,8 @@ pub enum GeneratorInputOrder {
 /// by [GeneratorInputOrder].
 #[derive(Debug)]
 pub enum GeneratorInputResolved {
-    TypegraphFromTypegate { raw: Arc<Typegraph> },
-    TypegraphFromPath { raw: Arc<Typegraph> },
+    TypegraphFromTypegate { raw: Arc<tg_schema::Typegraph> },
+    TypegraphFromPath { raw: Arc<tg_schema::Typegraph> },
     FdkTemplate { template: FdkTemplate },
 }
 
