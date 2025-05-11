@@ -57,14 +57,18 @@ impl From<&tg_schema::Typegraph> for Registry {
 
 #[derive(Default, Clone)]
 pub struct TypegraphExpansionConfig {
-    original: bool,
+    /// Conservative expansion will always convert original types even if they
+    /// are not reachable from the root of the typegraph.
+    /// (Original types are the versions that are not refined by injection or
+    /// other parameters).
+    conservative: bool,
 }
 
 impl TypegraphExpansionConfig {
     /// Always convert original types even if they are not referenced in the typegraph.
     /// Original types are the types whose duplication key is default.
-    pub fn always_convert_original(mut self) -> Self {
-        self.original = true;
+    pub fn conservative(mut self) -> Self {
+        self.conservative = true;
         self
     }
 
@@ -144,7 +148,7 @@ where
         while self.run_conversion_steps()? {
             self.run_link_steps()?;
 
-            if self.config.original {
+            if self.config.conservative {
                 for (idx, map_item) in self.conversion_map.direct.iter().enumerate() {
                     if let MapItem::Value(vtype) = map_item {
                         if vtype.default.is_none() {

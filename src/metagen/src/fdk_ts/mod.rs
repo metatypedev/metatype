@@ -190,7 +190,7 @@ impl crate::Plugin for Generator {
         };
 
         let tg = TypegraphExpansionConfig::default()
-            .always_convert_original()
+            .conservative()
             .expand_with_default_params(tg)?;
 
         let mut out = IndexMap::new();
