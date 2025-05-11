@@ -95,12 +95,18 @@ impl FdkTypescriptTemplate {
         self.gen_static(&mut fdk_ts)?;
 
         let map = if config.exclude_client.unwrap_or_default() {
+            info!("building render manifest...");
             let manif = TsTypesPage::new(&tg, true);
+            info!("rendering...");
             manif.render_all(&mut fdk_ts)?;
+            info!("rendering done successfully");
             manif.get_cached_refs()
         } else {
+            info!("building render manifest...");
             let manif = TsClientManifest::new(tg.clone(), true)?;
+            info!("rendering...");
             manif.render_client(&mut fdk_ts, &GenClientTsOpts { hostcall: true })?;
+            info!("rendering done successfully");
             manif.types.get_cached_refs()
         };
 

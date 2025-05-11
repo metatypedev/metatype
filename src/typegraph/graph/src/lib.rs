@@ -114,7 +114,6 @@ pub struct RootFnsIter {
 }
 
 impl Iterator for RootFnsIter {
-    // Item = Result<Arc<FunctionType>, Error>;
     type Item = Result<(Vec<Arc<str>>, Arc<FunctionType>)>;
 
     fn next(&mut self) -> Option<Self::Item> {

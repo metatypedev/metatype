@@ -132,9 +132,12 @@ impl crate::Plugin for Generator {
 
         let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
         let mut out = IndexMap::new();
+        info!("building render manifest");
         let manif = TsClientManifest::new(tg.clone(), false)?;
         let mut buf = String::new();
+        info!("rendering...");
         manif.render(&mut buf)?;
+        info!("rendering done successfully");
         out.insert(
             self.config.base.path.join("client.ts"),
             GeneratedFile {

@@ -71,7 +71,7 @@ impl TypegateInit {
         })
     }
 
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     pub async fn start(self, console: Addr<ConsoleActor>) -> Result<(Addr<TypegateActor>, u16)> {
         let (ready_tx, ready_rx) = oneshot::channel();
 

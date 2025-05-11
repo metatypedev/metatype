@@ -87,10 +87,13 @@ impl crate::Plugin for Generator {
             _ => bail!("unexpected input type"),
         };
         let mut out = IndexMap::new();
+        info!("building render manifest");
         let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
         let manif = ClientPyManifest::new(tg.clone())?;
         let mut contents = String::new();
+        info!("rendering...");
         manif.render(&mut contents, &self.config)?;
+        info!("rendering done successfully");
         out.insert(
             self.config.base.path.join("client.py"),
             GeneratedFile {

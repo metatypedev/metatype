@@ -108,7 +108,7 @@ impl NodeConfig {
         }
     }
 
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     pub async fn get_admin_password(
         &self,
         dir: impl AsRef<Path> + std::fmt::Debug,
@@ -142,7 +142,7 @@ impl NodeConfig {
         Ok(password)
     }
 
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     pub async fn build<P: AsRef<Path> + core::fmt::Debug>(&self, dir: P) -> Result<Node> {
         Node::new(
             self.url.clone(),

@@ -22,7 +22,7 @@ pub struct Completion {
 
 #[async_trait]
 impl Action for Completion {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, _args: ConfigArgs) -> Result<()> {
         let mut cmd = Args::command();
         let name = cmd.get_name().to_string();

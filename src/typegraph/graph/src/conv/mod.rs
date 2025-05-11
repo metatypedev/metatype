@@ -136,6 +136,9 @@ where
     }
 
     fn run(&mut self) -> Result<Arc<crate::Typegraph<G::Key>>> {
+        tracing::info!("starting typegraph expansion");
+        #[cfg(debug_assertions)]
+        let start_time = std::time::Instant::now();
         self.conversion_steps.push_back(ConversionStep::root());
 
         while self.run_conversion_steps()? {
@@ -143,7 +146,6 @@ where
 
             if self.config.original {
                 for (idx, map_item) in self.conversion_map.direct.iter().enumerate() {
-                    eprintln!("another round needed for #{idx}");
                     if let MapItem::Value(vtype) = map_item {
                         if vtype.default.is_none() {
                             self.conversion_steps
@@ -172,6 +174,17 @@ where
 
         let conversion_map = std::mem::take(&mut self.conversion_map).direct;
         let registry = std::mem::take(&mut self.registry);
+
+        tracing::info!("typegraph successfully expanded");
+        #[cfg(debug_assertions)]
+        {
+            let end_time = std::time::Instant::now();
+            let duration = end_time.duration_since(start_time);
+            tracing::debug!(
+                "typegraph expansion took {} milliseconds",
+                duration.as_millis(),
+            )
+        }
 
         Ok(crate::Typegraph {
             schema: self.schema.clone(),
