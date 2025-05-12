@@ -57,7 +57,7 @@ use shadow_rs::shadow;
 
 shadow!(build);
 
-#[tracing::instrument]
+#[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
 fn main() -> Result<()> {
     /* FIXME: handle broken pipe on all `println!` calls
      * setting default SIG_PIPE behaviour would be one
@@ -82,7 +82,14 @@ fn main() -> Result<()> {
 
     if args.verbose.is_present() {
         let filter = args.verbose.log_level_filter().to_string();
-        unsafe { std::env::set_var("RUST_LOG", format!("warn,meta={filter}")) };
+        unsafe {
+            std::env::set_var(
+                "RUST_LOG",
+                format!(
+                    "warn,meta={filter},metagen={filter},tg_schema={filter},typegraph={filter}"
+                ),
+            )
+        };
     }
     logger::init();
     if args.version {

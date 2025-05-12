@@ -13,7 +13,7 @@ use node_metas::PyNodeMetasPage;
 use selections::PySelectionsPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::TypeNodeExt as _;
+use typegraph::{ExpansionConfig, TypeNodeExt as _};
 
 use crate::interlude::*;
 use crate::*;
@@ -82,14 +82,18 @@ impl crate::Plugin for Generator {
             .get(Self::INPUT_TG)
             .context("missing generator input")?
         {
-            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
-            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw.clone(),
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
         let mut out = IndexMap::new();
+        info!("building render manifest");
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let manif = ClientPyManifest::new(tg.clone())?;
         let mut contents = String::new();
+        info!("rendering...");
         manif.render(&mut contents, &self.config)?;
+        info!("rendering done successfully");
         out.insert(
             self.config.base.path.join("client.py"),
             GeneratedFile {

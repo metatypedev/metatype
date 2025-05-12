@@ -9,6 +9,7 @@ use std::borrow::Cow;
 
 use client_ts::GenClientTsOpts;
 use client_ts::TsClientManifest;
+use typegraph::ExpansionConfig;
 use typegraph::TypeNodeExt as _;
 use types::TsTypesPage;
 
@@ -94,12 +95,18 @@ impl FdkTypescriptTemplate {
         self.gen_static(&mut fdk_ts)?;
 
         let map = if config.exclude_client.unwrap_or_default() {
-            let manif = TsTypesPage::new(&tg);
+            info!("building render manifest...");
+            let manif = TsTypesPage::new(&tg, true);
+            info!("rendering...");
             manif.render_all(&mut fdk_ts)?;
+            info!("rendering done successfully");
             manif.get_cached_refs()
         } else {
-            let manif = TsClientManifest::new(tg.clone())?;
+            info!("building render manifest...");
+            let manif = TsClientManifest::new(tg.clone(), true)?;
+            info!("rendering...");
             manif.render_client(&mut fdk_ts, &GenClientTsOpts { hostcall: true })?;
+            info!("rendering done successfully");
             manif.types.get_cached_refs()
         };
 
@@ -113,7 +120,8 @@ impl FdkTypescriptTemplate {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let inp_ty = map.get(&fun.input().key()).unwrap();
+                // we need the original version
+                let inp_ty = map.get(&fun.input().key().original()).unwrap();
                 let out_ty = map.get(&fun.output().key()).unwrap();
                 let type_name: String = utils::normalize_type_title(&fun.name());
                 writeln!(
@@ -180,6 +188,10 @@ impl crate::Plugin for Generator {
             GeneratorInputResolved::FdkTemplate { template } => template.into(),
             _ => unreachable!(),
         };
+
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
 
         let mut out = IndexMap::new();
         out.insert(

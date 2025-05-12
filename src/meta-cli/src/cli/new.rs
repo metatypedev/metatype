@@ -42,7 +42,7 @@ pub struct New {
 
 #[async_trait]
 impl Action for New {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = PathBuf::from(&self.dir);
         let target_dir = if dir.is_absolute() {
@@ -50,13 +50,13 @@ impl Action for New {
         } else {
             args.dir()?.join(&dir)
         };
-        println!("target directory {}", target_dir.display());
+        debug!("target directory {}", target_dir.display());
 
         let template_name = self.template.name();
         match TEMPLATES.get_dir(template_name) {
             Some(template) => {
                 if !target_dir.exists() {
-                    println!("creating directory: {}", target_dir.display());
+                    info!("creating directory: {}", target_dir.display());
                     std::fs::create_dir(&target_dir)?;
                 } else if target_dir.is_file() {
                     bail!("target directory is a file: {}", target_dir.display());

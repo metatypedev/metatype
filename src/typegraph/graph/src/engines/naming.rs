@@ -3,8 +3,7 @@
 
 use std::collections::HashMap;
 
-use crate::conv::dedup::DupKey;
-use crate::conv::ValueType;
+use crate::expansion::ValueType;
 use crate::interlude::*;
 use crate::{Arc, FunctionType, ObjectType, Type, TypeNode as _};
 
@@ -27,7 +26,7 @@ impl NameRegistry {
     }
 }
 
-pub trait NamingEngineFactory {
+pub trait NamingEngineFactory: Clone {
     type Engine: NamingEngine;
     fn create(&self) -> Self::Engine;
 }
@@ -44,7 +43,7 @@ mod default {
 
     use super::*;
 
-    #[derive(Default)]
+    #[derive(Default, Clone)]
     pub struct DefaultNamingEngineFactory;
 
     impl NamingEngineFactory for DefaultNamingEngineFactory {
@@ -95,3 +94,5 @@ mod default {
 }
 
 pub use default::{DefaultNamingEngine, DefaultNamingEngineFactory};
+
+use super::DupKey;

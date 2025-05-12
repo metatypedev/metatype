@@ -89,7 +89,10 @@ impl TsType {
             .iter()
             .filter(|(_, prop)| !prop.is_injected())
             .map(|(name, prop)| {
-                let ty = prop.ty.key();
+                let ty = match &prop.ty {
+                    Type::Function(fn_ty) => fn_ty.output().key(),
+                    _ => prop.ty.key(),
+                };
                 let optional = matches!(prop.ty, Type::Optional(_));
                 ObjectProp {
                     name: normalize_struct_prop_name(&name[..]),
@@ -248,11 +251,21 @@ impl From<&Type> for TsType {
 }
 
 impl TsTypesPage {
-    pub fn new(tg: &Typegraph) -> Self {
+    pub fn new(tg: &Typegraph, fdk: bool) -> Self {
         let mut map = IndexMap::new();
 
         for (key, ty) in tg.input_types.iter() {
             map.insert(*key, ty.into());
+            if fdk {
+                // Always generate original input types for fdk because they will
+                // be used in the handler definitions.
+                // TODO filter the types that are actually used in handlers (MET-882)
+                if !tg.input_types.contains_key(&key.original()) {
+                    if let Some(ty) = tg.disconnected_types.get(&key.0) {
+                        map.insert(ty.key(), ty.into());
+                    }
+                }
+            }
         }
 
         for (key, ty) in tg.output_types.iter() {

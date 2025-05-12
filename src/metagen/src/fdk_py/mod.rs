@@ -9,6 +9,7 @@ use crate::shared::*;
 use crate::utils::GenDestBuf;
 use crate::*;
 use client_py::ClientPyManifest;
+use typegraph::ExpansionConfig;
 use types::PyTypesPage;
 
 pub mod types;
@@ -87,13 +88,19 @@ impl FdkPythonTemplate {
         writeln!(&mut fdk_py)?;
         self.gen_static(&mut fdk_py)?;
         let ty_name_memo = if config.exclude_client.unwrap_or_default() {
+            info!("building render manifest...");
             let manif = PyTypesPage::new(&tg);
             manif.cache_references();
+            info!("rendering...");
             manif.render_all(&mut fdk_py)?;
+            info!("rendering done successfully");
             manif.get_cached_refs()
         } else {
+            info!("building render manifest...");
             let manif = ClientPyManifest::new(tg.clone())?;
+            info!("rendering...");
             manif.render_client(&mut fdk_py, true)?;
+            info!("rendering done successfully");
             manif.maps.types
         };
         writeln!(&mut fdk_py)?;
@@ -201,6 +208,9 @@ impl crate::Plugin for Generator {
         };
 
         let mut out = IndexMap::new();
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
         out.insert(
             self.config.base.path.join("fdk.py"),
             GeneratedFile {

@@ -70,7 +70,7 @@ export async function buildSearchableItems(
       }
     }
 
-    const isOk = "Ok" in result;
+    const isOk = result && "Ok" in result;
     const kind = isOk ? "Ok" : "Err";
     const stoppedStatus = isOk ? "COMPLETED" : "COMPLETED_WITH_ERROR";
 
@@ -128,7 +128,7 @@ export function evalExpr(
       const fn = op == "or" ? "some" : "every";
       if (
         !exprList[fn]((subFilter, index) =>
-          evalExpr(sResult, subFilter, [...newPath, `#${index}`]),
+          evalExpr(sResult, subFilter, [...newPath, `#${index}`])
         )
       ) {
         return false;

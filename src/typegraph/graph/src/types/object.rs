@@ -1,12 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DupKeyGen};
-use crate::conv::key::TypeKeyEx;
+use super::interlude::*;
 use crate::injection::InjectionNode;
+use crate::interlude::*;
 use crate::policies::PolicySpec;
-use crate::{interlude::*, TypeNodeExt as _};
 use indexmap::IndexMap;
 
 #[derive(derive_more::Debug)]
@@ -24,7 +22,7 @@ impl ObjectProperty {
     pub fn is_injected(&self) -> bool {
         self.injection
             .as_ref()
-            .filter(|inj| !inj.is_empty())
+            .filter(|inj| matches!(inj.as_ref(), InjectionNode::Leaf { .. }))
             .is_some()
     }
 }
@@ -32,7 +30,7 @@ impl ObjectProperty {
 #[derive(Debug)]
 pub struct ObjectType {
     pub base: TypeBase,
-    pub(crate) properties: Once<IndexMap<Arc<str>, ObjectProperty>>,
+    pub(crate) properties: OnceLock<IndexMap<Arc<str>, ObjectProperty>>,
 }
 
 impl ObjectType {
@@ -66,7 +64,7 @@ pub struct LinkObjectProperty<K: DupKey> {
 }
 
 impl<K: DupKey> LinkObject<K> {
-    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+    pub fn link<G: DuplicationEngine<Key = K>>(self, map: &ConversionMap<G>) -> Result<()> {
         let mut properties = IndexMap::with_capacity(self.properties.len());
         for (name, prop) in self.properties {
             let ty = map.get_ex(prop.xkey).ok_or_else(|| {

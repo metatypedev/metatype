@@ -106,7 +106,7 @@ pub struct Deploy {
 }
 
 impl Deploy {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     pub async fn new(deploy: &DeploySubcommand, args: &ConfigArgs) -> Result<Self> {
         let dir: Arc<Path> = args.dir()?.into();
 
@@ -143,7 +143,7 @@ impl Deploy {
 
 #[async_trait]
 impl Action for DeploySubcommand {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let deploy = Deploy::new(self, &args).await?;
 
@@ -285,7 +285,7 @@ mod watch_mode {
 
     use super::*;
 
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     pub async fn enter_watch_mode(deploy: Deploy) -> Result<()> {
         if deploy.file.is_some() {
             bail!("Cannot use --file in watch mode");

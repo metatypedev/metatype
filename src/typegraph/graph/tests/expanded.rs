@@ -19,13 +19,17 @@ fn test_expanded_graph() -> color_eyre::Result<()> {
         )
         .arg(path)
         .output()?;
+    eprintln!(
+        "---stderr-start---\n{}\n---stderr-end---",
+        String::from_utf8(output.stderr)?,
+    );
     assert!(output.status.success());
 
     let schema = String::from_utf8(output.stdout)?;
     let schema: tg_schema::Typegraph = serde_json::from_str(&schema)?;
     let schema: Arc<_> = schema.into();
 
-    let tg = typegraph::Typegraph::try_from(schema.clone())?;
+    let tg = typegraph::ExpansionConfig::with_default_engines().expand(schema)?;
 
     insta::assert_debug_snapshot!(tg
         .namespace_objects

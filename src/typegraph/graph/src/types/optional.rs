@@ -1,17 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DupKeyGen};
-use crate::conv::key::TypeKeyEx;
-use crate::{interlude::*, TypeNodeExt as _};
-use crate::{Arc, Once};
+use super::interlude::*;
+use crate::interlude::*;
 
 #[derive(derive_more::Debug)]
 pub struct OptionalType {
     pub base: TypeBase,
     #[debug("{}", item.get().map(|ty| ty.tag()).unwrap_or("<unset>"))]
-    pub(crate) item: Once<Type>,
+    pub(crate) item: OnceLock<Type>,
     pub default_value: Option<serde_json::Value>,
 }
 
@@ -51,7 +48,7 @@ pub struct LinkOptional<K: DupKey> {
 }
 
 impl<K: DupKey> LinkOptional<K> {
-    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+    pub fn link<G: DuplicationEngine<Key = K>>(self, map: &ConversionMap<G>) -> Result<()> {
         self.ty
             .item
             .set(map.get_ex(self.item).ok_or_else(|| {

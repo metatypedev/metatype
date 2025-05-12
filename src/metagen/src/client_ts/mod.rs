@@ -8,11 +8,11 @@ use core::fmt::Write;
 
 use fdk_ts::types::{TsType, TsTypesPage};
 use node_metas::TsNodeMeta;
-use selections::TsSelection;
+use selections::TsSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::TypeNodeExt as _;
+use typegraph::{ExpansionConfig, TypeNodeExt as _};
 
 use crate::interlude::*;
 use crate::utils::processed_write;
@@ -42,7 +42,7 @@ impl ClienTsGenConfig {
 }
 
 struct Maps {
-    types: IndexMap<TypeKey, String>,
+    types: Arc<IndexMap<TypeKey, String>>,
     node_metas: IndexMap<TypeKey, String>,
     selections: IndexMap<TypeKey, String>,
 }
@@ -51,21 +51,21 @@ pub struct TsClientManifest {
     tg: Arc<Typegraph>,
     pub types: ManifestPage<TsType>,
     node_metas: ManifestPage<TsNodeMeta>,
-    selections: ManifestPage<TsSelection>,
+    selections: TsSelectionManifestPage,
     maps: Maps,
 }
 
 impl TsClientManifest {
-    pub fn new(tg: Arc<Typegraph>) -> Result<TsClientManifest> {
-        let types = TsTypesPage::new(&tg);
+    pub fn new(tg: Arc<Typegraph>, fdk: bool) -> Result<TsClientManifest> {
+        let types = TsTypesPage::new(&tg, fdk);
         types.cache_references();
-        let types_memo = types.get_cached_refs();
+        let types_memo = Arc::new(types.get_cached_refs());
 
         let node_metas = MetasPageBuilder::new(tg.clone())?.build();
         node_metas.cache_references();
         let node_metas_memo = node_metas.get_cached_refs();
 
-        let selections = selections::manifest_page(&tg);
+        let selections = selections::manifest_page(&tg, types_memo.clone());
         selections.cache_references();
         let selections_memo = selections.get_cached_refs();
 
@@ -125,14 +125,19 @@ impl crate::Plugin for Generator {
             .get(Self::INPUT_TG)
             .context("missing generator input")?
         {
-            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
-            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw.clone(),
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
+
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let mut out = IndexMap::new();
-        let manif = TsClientManifest::new(tg.clone())?;
+        info!("building render manifest");
+        let manif = TsClientManifest::new(tg.clone(), false)?;
         let mut buf = String::new();
+        info!("rendering...");
         manif.render(&mut buf)?;
+        info!("rendering successful");
         out.insert(
             self.config.base.path.join("client.ts"),
             GeneratedFile {

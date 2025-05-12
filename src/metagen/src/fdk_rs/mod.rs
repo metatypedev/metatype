@@ -17,6 +17,7 @@ pub mod utils;
 use client_rs::GenClientRsOpts;
 use client_rs::RsClientManifest;
 use client_rs::RsClientManifestOpts;
+use typegraph::ExpansionConfig;
 use types::OutputTypes;
 use types::RustTypesConfig;
 
@@ -140,6 +141,10 @@ impl crate::Plugin for Generator {
 
         let mut out = IndexMap::new();
 
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
+
         out.insert(
             self.config.base.path.join("fdk.rs"),
             GeneratedFile {
@@ -202,12 +207,15 @@ impl FdkRustTemplate {
         self.gen_static(&mut mod_rs, config)?;
 
         let maps = if config.exclude_client.unwrap_or_default() {
+            info!("building render manifest...");
             let manifest = RustTypesConfig::default()
                 .output_types(OutputTypes::NonPartial)
                 .derive_serde(true)
                 .derive_debug(true)
                 .build_manifest(&tg);
+            info!("rendering...");
             manifest.render_full(&mut mod_rs.buf)?;
+            info!("rendering done successfully");
 
             Maps {
                 inputs: manifest.inputs.get_cached_refs(),
@@ -216,24 +224,21 @@ impl FdkRustTemplate {
                     .as_ref()
                     .map(|p| p.get_cached_refs())
                     .unwrap_or_default(),
-                // partial_outputs: manifest
-                //     .partial_outputs
-                //     .as_ref()
-                //     .map(|p| p.get_cached_refs())
-                //     .unwrap_or_default(),
             }
         } else {
+            info!("building render manifest...");
             let manifest = RsClientManifest::new(
                 tg.clone(),
                 &RsClientManifestOpts {
                     non_partial_output_types: true,
                 },
             )?;
+            info!("rendering...");
             manifest.render_client(&mut mod_rs.buf, &GenClientRsOpts { hostcall: true })?;
+            info!("rendering done successfully");
             Maps {
                 inputs: manifest.maps.input_types,
                 outputs: manifest.maps.output_types,
-                // partial_outputs: manifest.maps.partial_output_types,
             }
         };
 

@@ -1,22 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, ObjectType, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DupKeyGen};
-use crate::conv::key::TypeKeyEx;
+use super::interlude::*;
+use super::ObjectType;
 use crate::injection::InjectionNode;
-use crate::{interlude::*, TypeNodeExt as _};
-use crate::{
-    runtimes::{Materializer, Runtime},
-    Arc, Once,
-};
+use crate::interlude::*;
+use crate::runtimes::{Materializer, Runtime};
 use tg_schema::parameter_transform::FunctionParameterTransform;
 
 #[derive(Debug)]
 pub struct FunctionType {
     pub base: TypeBase,
-    pub(crate) input: Once<Arc<ObjectType>>,
-    pub(crate) output: Once<Type>,
+    pub(crate) input: OnceLock<Arc<ObjectType>>,
+    pub(crate) output: OnceLock<Type>,
     pub parameter_transform: Option<FunctionParameterTransform>,
     pub injection: Option<Arc<InjectionNode>>,
     pub runtime_config: serde_json::Value, // TODO should not this be removed?
@@ -61,7 +57,7 @@ pub struct LinkFunction<K: DupKey> {
 }
 
 impl<K: DupKey> LinkFunction<K> {
-    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+    pub fn link<G: DuplicationEngine<Key = K>>(self, map: &ConversionMap<G>) -> Result<()> {
         let input = map.get_ex(self.input).ok_or_else(|| {
             eyre!(
                 "cannot find input type for function; key={:?}",

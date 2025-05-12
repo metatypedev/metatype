@@ -22,9 +22,10 @@
 //!   (FIXME: the third pass could be optional. But it is required for metagen,
 //!   and currently, only metagen uses the expanded typegraph).
 
-pub mod conv;
+pub mod engines;
+mod expansion;
 pub mod injection;
-pub mod naming;
+mod key;
 mod path;
 mod policies;
 mod runtimes;
@@ -33,30 +34,26 @@ mod types;
 pub mod visitor;
 
 mod interlude {
-    pub use std::sync::Arc;
-    pub use std::sync::Weak;
-    pub type Once<T> = std::sync::OnceLock<T>;
+    pub use crate::engines::*;
+    pub use crate::key::TypeKey;
     pub use color_eyre::{
         eyre::{bail, eyre},
         Result,
     };
+    pub use std::sync::{Arc, OnceLock, Weak};
 }
 
 pub mod prelude {
-    pub use crate::conv::key::TypeKey;
+    pub use crate::key::TypeKey;
     pub use crate::path::{PathSegment, RelativePath};
     pub use crate::types::*;
     pub use crate::Typegraph;
 }
 
-use conv::{
-    dedup::{DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKey, DupKeyGen},
-    key::TypeKey,
-    MapItem,
-};
+pub use crate::expansion::ExpansionConfig;
+use expansion::MapItem;
 use indexmap::IndexMap;
 use interlude::*;
-use naming::DefaultNamingEngineFactory;
 use runtimes::Materializer;
 use std::collections::HashMap;
 use tg_schema::runtimes::TGRuntime;
@@ -70,6 +67,7 @@ pub struct Typegraph<K: DupKey = DefaultDuplicationKey> {
     pub output_types: IndexMap<TypeKey, Type>,
     pub functions: IndexMap<u32, Arc<FunctionType>>,
     pub namespace_objects: IndexMap<Vec<Arc<str>>, Arc<ObjectType>>,
+    pub disconnected_types: IndexMap<u32, Type>,
     pub named: HashMap<Arc<str>, Type>,
     pub conversion_map: Vec<MapItem<K>>,
     pub runtimes: Vec<Arc<TGRuntime>>,
@@ -85,24 +83,6 @@ impl<K: DupKey> Typegraph<K> {
             MapItem::Function(function) => Some(function.wrap()),
             MapItem::Value(value) => Some(value.get(variant).unwrap().clone()),
         }
-    }
-}
-
-impl<K: DupKey> Typegraph<K> {
-    fn new<G>(schema: Arc<tg_schema::Typegraph>, dup_key_gen: G) -> Result<Self>
-    where
-        G: DupKeyGen<Key = K>,
-        K: Default,
-    {
-        conv::convert(schema, dup_key_gen, DefaultNamingEngineFactory)
-    }
-}
-
-impl TryFrom<Arc<tg_schema::Typegraph>> for Typegraph {
-    type Error = color_eyre::Report;
-
-    fn try_from(schema: Arc<tg_schema::Typegraph>) -> Result<Self> {
-        Self::new(schema.clone(), DefaultDuplicationKeyGenerator { schema })
     }
 }
 
@@ -131,7 +111,6 @@ pub struct RootFnsIter {
 }
 
 impl Iterator for RootFnsIter {
-    // Item = Result<Arc<FunctionType>, Error>;
     type Item = Result<(Vec<Arc<str>>, Arc<FunctionType>)>;
 
     fn next(&mut self) -> Option<Self::Item> {

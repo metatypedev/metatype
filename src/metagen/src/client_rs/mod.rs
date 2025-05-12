@@ -12,6 +12,7 @@ use selections::RustSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
+use typegraph::ExpansionConfig;
 
 use crate::interlude::*;
 use crate::*;
@@ -154,11 +155,13 @@ impl crate::Plugin for Generator {
             .get(Self::INPUT_TG)
             .context("missing generator input")?
         {
-            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
-            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw.clone(),
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let mut out = IndexMap::new();
+        info!("building render manifest");
         let manif = RsClientManifest::new(
             tg.clone(),
             &RsClientManifestOpts {
@@ -166,7 +169,9 @@ impl crate::Plugin for Generator {
             },
         )?;
         let mut buf = String::new();
+        info!("rendering...");
         manif.render(&mut buf)?;
+        info!("rendering done successfully");
         out.insert(
             self.config.base.path.join("client.rs"),
             GeneratedFile {

@@ -28,7 +28,7 @@ pub struct CreateFdkTemplate {
 
 #[async_trait]
 impl Action for CreateFdkTemplate {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?.join(&self.dir);
         tracing::info!("creating fdk template at {:?}", dir);
