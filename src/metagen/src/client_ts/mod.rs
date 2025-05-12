@@ -12,7 +12,7 @@ use selections::TsSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::{TypeNodeExt as _, TypegraphExpansionConfig};
+use typegraph::{ExpansionConfig, TypeNodeExt as _};
 
 use crate::interlude::*;
 use crate::utils::processed_write;
@@ -130,14 +130,14 @@ impl crate::Plugin for Generator {
             _ => bail!("unexpected input type"),
         };
 
-        let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let mut out = IndexMap::new();
         info!("building render manifest");
         let manif = TsClientManifest::new(tg.clone(), false)?;
         let mut buf = String::new();
         info!("rendering...");
         manif.render(&mut buf)?;
-        info!("rendering done successfully");
+        info!("rendering successful");
         out.insert(
             self.config.base.path.join("client.ts"),
             GeneratedFile {

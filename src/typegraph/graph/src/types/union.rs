@@ -1,17 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, WeakType};
-use crate::conv::dedup::{DupKey, DupKeyGen};
-use crate::conv::key::TypeKeyEx;
-use crate::{interlude::*, TypeNodeExt as _};
-use crate::{Arc, Once};
+use super::interlude::*;
+use crate::interlude::*;
 
 #[derive(derive_more::Debug)]
 pub struct UnionType {
     pub base: TypeBase,
     #[debug("{:?}", variants.get().map(|i| i.iter().map(|v| v.tag()).collect::<Vec<_>>()))]
-    pub(crate) variants: Once<Vec<Type>>,
+    pub(crate) variants: OnceLock<Vec<Type>>,
     pub either: bool,
 }
 
@@ -29,7 +26,7 @@ pub struct LinkUnion<K: DupKey> {
 }
 
 impl<K: DupKey> LinkUnion<K> {
-    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+    pub fn link<G: DuplicationEngine<Key = K>>(self, map: &ConversionMap<G>) -> Result<()> {
         let mut variants = Vec::with_capacity(self.variants.len());
         for (i, key) in self.variants.into_iter().enumerate() {
             let ty = map.get_ex(key).ok_or_else(|| {

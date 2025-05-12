@@ -566,7 +566,7 @@ impl RustTypesSubmanifest {
 
 #[cfg(test)]
 mod test {
-    use typegraph::TypegraphExpansionConfig;
+    use typegraph::ExpansionConfig;
 
     use super::*;
     use crate::tests::{create_typegraph, default_type_node_base};
@@ -1024,7 +1024,7 @@ pub enum CEither {
             // });
 
             let tg = create_typegraph(name.into(), nodes)?;
-            let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
+            let tg = ExpansionConfig::with_default_engines().expand(tg)?;
             let mut manifest = RustTypesConfig::default()
                 .output_types(OutputTypes::NonPartial)
                 .build_manifest(&tg);

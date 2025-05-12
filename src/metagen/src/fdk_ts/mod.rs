@@ -9,8 +9,8 @@ use std::borrow::Cow;
 
 use client_ts::GenClientTsOpts;
 use client_ts::TsClientManifest;
+use typegraph::ExpansionConfig;
 use typegraph::TypeNodeExt as _;
-use typegraph::TypegraphExpansionConfig;
 use types::TsTypesPage;
 
 use crate::interlude::*;
@@ -189,9 +189,9 @@ impl crate::Plugin for Generator {
             _ => unreachable!(),
         };
 
-        let tg = TypegraphExpansionConfig::default()
+        let tg = ExpansionConfig::with_default_engines()
             .conservative()
-            .expand_with_default_params(tg)?;
+            .expand(tg)?;
 
         let mut out = IndexMap::new();
         out.insert(

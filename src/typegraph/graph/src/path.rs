@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::injection::InjectionNode;
-use crate::{conv::map::ValueTypeKind, interlude::*, EdgeKind, FunctionType, Type};
+use crate::{interlude::*, EdgeKind, FunctionType, Type};
 use crate::{Edge, TypeNode as _, TypeNodeExt as _};
 use std::hash::{Hash, Hasher};
 
@@ -158,7 +158,6 @@ impl PathSegment {
 #[derive(Debug, Clone)]
 pub struct ValueTypePath {
     pub owner: Weak<FunctionType>,
-    pub branch: ValueTypeKind,
     pub path: Path,
 }
 
@@ -179,7 +178,7 @@ impl PartialEq for ValueTypePath {
         let left = self.owner.upgrade().expect("no strong pointer for type");
         let right = other.owner.upgrade().expect("no strong pointer for type");
 
-        self.branch == other.branch && left.base.key == right.base.key && self.path == other.path
+        left.base.key == right.base.key && self.path == other.path
     }
 }
 
@@ -193,7 +192,6 @@ impl Hash for ValueTypePath {
             .base
             .key
             .hash(state);
-        self.branch.hash(state);
         self.path.hash(state);
     }
 }
@@ -270,19 +268,11 @@ impl RelativePath {
     }
 
     pub fn input(owner: Weak<FunctionType>, path: Path) -> Self {
-        Self::Input(ValueTypePath {
-            owner,
-            path,
-            branch: ValueTypeKind::Input,
-        })
+        Self::Input(ValueTypePath { owner, path })
     }
 
     pub fn output(owner: Weak<FunctionType>, path: Path) -> Self {
-        Self::Output(ValueTypePath {
-            owner,
-            path,
-            branch: ValueTypeKind::Output,
-        })
+        Self::Output(ValueTypePath { owner, path })
     }
 
     pub fn is_input(&self) -> bool {
@@ -332,7 +322,6 @@ impl RelativePath {
                 Self::Input(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
-                    branch: ValueTypeKind::Input,
                 })
             }
             Self::Output(k) => {
@@ -341,7 +330,6 @@ impl RelativePath {
                 Self::Output(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
-                    branch: ValueTypeKind::Output,
                 })
             }
             Self::Function(_) => {
@@ -377,7 +365,6 @@ impl RelativePath {
                 Self::Input(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
-                    branch: ValueTypeKind::Input,
                 })
             }
             Self::Output(k) => {
@@ -391,7 +378,6 @@ impl RelativePath {
                 Self::Output(ValueTypePath {
                     owner: k.owner.clone(),
                     path,
-                    branch: ValueTypeKind::Output,
                 })
             }
             Self::Function(_) => {
@@ -402,12 +388,10 @@ impl RelativePath {
                 match &edge.kind {
                     EdgeKind::FunctionInput => Self::Input(ValueTypePath {
                         owner,
-                        branch: ValueTypeKind::Input,
                         path: Default::default(),
                     }),
                     EdgeKind::FunctionOutput => Self::Output(ValueTypePath {
                         owner,
-                        branch: ValueTypeKind::Output,
                         path: Default::default(),
                     }),
                     _ => bail!("unexpected edge pushed on function {:?}", edge.kind),

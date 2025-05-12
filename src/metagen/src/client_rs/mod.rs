@@ -12,7 +12,7 @@ use selections::RustSelectionManifestPage;
 use shared::manifest::ManifestPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::TypegraphExpansionConfig;
+use typegraph::ExpansionConfig;
 
 use crate::interlude::*;
 use crate::*;
@@ -159,7 +159,7 @@ impl crate::Plugin for Generator {
             GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
-        let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let mut out = IndexMap::new();
         info!("building render manifest");
         let manif = RsClientManifest::new(

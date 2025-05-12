@@ -17,7 +17,7 @@ pub mod utils;
 use client_rs::GenClientRsOpts;
 use client_rs::RsClientManifest;
 use client_rs::RsClientManifestOpts;
-use typegraph::TypegraphExpansionConfig;
+use typegraph::ExpansionConfig;
 use types::OutputTypes;
 use types::RustTypesConfig;
 
@@ -141,9 +141,9 @@ impl crate::Plugin for Generator {
 
         let mut out = IndexMap::new();
 
-        let tg = TypegraphExpansionConfig::default()
+        let tg = ExpansionConfig::with_default_engines()
             .conservative()
-            .expand_with_default_params(tg)?;
+            .expand(tg)?;
 
         out.insert(
             self.config.base.path.join("fdk.rs"),

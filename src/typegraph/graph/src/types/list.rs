@@ -1,16 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType};
-use crate::conv::dedup::{DupKey, DupKeyGen};
-use crate::conv::key::TypeKeyEx;
-use crate::{interlude::*, Arc, Once};
+use super::interlude::*;
+use crate::interlude::*;
 
 #[derive(derive_more::Debug)]
 pub struct ListType {
     pub base: TypeBase,
     #[debug("{:?}", item.get().map(|ty| ty.tag()))]
-    pub(crate) item: Once<Type>,
+    pub(crate) item: OnceLock<Type>,
     pub min_items: Option<u32>,
     pub max_items: Option<u32>,
     pub unique_items: bool,
@@ -28,7 +26,10 @@ pub struct LinkList<K: DupKey> {
 }
 
 impl<K: DupKey> LinkList<K> {
-    pub fn link<G: DupKeyGen<Key = K>>(self, map: &crate::conv::ConversionMap<G>) -> Result<()> {
+    pub fn link<G: DuplicationEngine<Key = K>>(
+        self,
+        map: &crate::expansion::ConversionMap<G>,
+    ) -> Result<()> {
         self.ty
             .item
             .set(

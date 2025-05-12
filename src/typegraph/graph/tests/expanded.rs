@@ -29,7 +29,7 @@ fn test_expanded_graph() -> color_eyre::Result<()> {
     let schema: tg_schema::Typegraph = serde_json::from_str(&schema)?;
     let schema: Arc<_> = schema.into();
 
-    let tg = typegraph::TypegraphExpansionConfig::default().expand_with_default_params(schema)?;
+    let tg = typegraph::ExpansionConfig::with_default_engines().expand(schema)?;
 
     insta::assert_debug_snapshot!(tg
         .namespace_objects

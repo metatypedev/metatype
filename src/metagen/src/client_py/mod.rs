@@ -13,7 +13,7 @@ use node_metas::PyNodeMetasPage;
 use selections::PySelectionsPage;
 use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
-use typegraph::{TypeNodeExt as _, TypegraphExpansionConfig};
+use typegraph::{ExpansionConfig, TypeNodeExt as _};
 
 use crate::interlude::*;
 use crate::*;
@@ -88,7 +88,7 @@ impl crate::Plugin for Generator {
         };
         let mut out = IndexMap::new();
         info!("building render manifest");
-        let tg = TypegraphExpansionConfig::default().expand_with_default_params(tg)?;
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let manif = ClientPyManifest::new(tg.clone())?;
         let mut contents = String::new();
         info!("rendering...");

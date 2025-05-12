@@ -3,25 +3,25 @@
 
 use std::collections::VecDeque;
 
-use crate::naming::{DefaultNamingEngineFactory, NamingEngine, NamingEngineFactory};
+use crate::engines::DuplicationEngineFactory;
+use crate::engines::{DefaultDuplicationEngineFactory, DuplicationEngine};
+use crate::engines::{DefaultNamingEngineFactory, NamingEngine, NamingEngineFactory};
+use crate::interlude::*;
 use crate::policies::{convert_policy, Policy};
 use crate::runtimes::{convert_materializer, Materializer};
 use crate::type_registry::TypeRegistryBuilder;
-use crate::{interlude::*, Type, Wrap as _};
-use dedup::{DefaultDuplicationKey, DefaultDuplicationKeyGenerator, DupKeyGen};
+use crate::{Type, Wrap as _};
 use indexmap::IndexMap;
 pub use map::{ConversionMap, MapItem, ValueType};
 use step::{ConversionStep, StepPlan};
 use tg_schema::runtimes::TGRuntime;
 
-pub mod dedup;
-pub mod key;
 pub mod map;
-mod step;
+pub mod step;
 
 pub mod interlude {
-    pub use super::key::TypeKey;
     pub use super::step::LinkStep;
+    pub use crate::key::TypeKey;
     pub use crate::path::{PathSegment, RelativePath};
 }
 use interlude::*;
@@ -55,16 +55,56 @@ impl From<&tg_schema::Typegraph> for Registry {
     }
 }
 
-#[derive(Default, Clone)]
-pub struct TypegraphExpansionConfig {
+#[derive(Clone)]
+pub struct NoDuplication;
+#[derive(Clone)]
+pub struct NoNamingEngine;
+
+#[derive(Clone)]
+pub struct ExpansionConfig<D: Clone = NoDuplication, N: Clone = NoNamingEngine> {
     /// Conservative expansion will always convert original types even if they
     /// are not reachable from the root of the typegraph.
     /// (Original types are the versions that are not refined by injection or
     /// other parameters).
     conservative: bool,
+    duplication_engine_factory: D,
+    naming_engine_factory: N,
 }
 
-impl TypegraphExpansionConfig {
+pub struct ExpansionConfigX<D: DuplicationEngine, N: NamingEngine> {
+    conservative: bool,
+    duplication_engine: D,
+    naming_engine: N,
+}
+
+impl Default for ExpansionConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl ExpansionConfig {
+    pub fn new() -> Self {
+        Self {
+            conservative: false,
+            duplication_engine_factory: NoDuplication,
+            naming_engine_factory: NoNamingEngine,
+        }
+    }
+
+    pub fn with_default_engines(
+    ) -> ExpansionConfig<DefaultDuplicationEngineFactory, DefaultNamingEngineFactory> {
+        Self::new()
+            .with_duplication(DefaultDuplicationEngineFactory)
+            .with_naming_engine(DefaultNamingEngineFactory)
+    }
+}
+
+impl<D, N> ExpansionConfig<D, N>
+where
+    D: Clone,
+    N: Clone,
+{
     /// Always convert original types even if they are not referenced in the typegraph.
     /// Original types are the types whose duplication key is default.
     pub fn conservative(mut self) -> Self {
@@ -72,65 +112,77 @@ impl TypegraphExpansionConfig {
         self
     }
 
-    pub fn expand_with_default_params(
-        &self,
-        schema: Arc<tg_schema::Typegraph>,
-    ) -> Result<Arc<crate::Typegraph<DefaultDuplicationKey>>> {
-        let dup_key_gen = DefaultDuplicationKeyGenerator {
-            schema: schema.clone(),
-        };
-        self.expand(schema, dup_key_gen, DefaultNamingEngineFactory)
+    pub fn with_naming_engine<N2: NamingEngineFactory>(
+        self,
+        naming_engine_factory: N2,
+    ) -> ExpansionConfig<D, N2> {
+        ExpansionConfig {
+            conservative: self.conservative,
+            duplication_engine_factory: self.duplication_engine_factory,
+            naming_engine_factory,
+        }
     }
 
-    pub fn expand<G, NF>(
+    pub fn with_duplication<D2: DuplicationEngineFactory>(
+        self,
+        duplication_engine_factory: D2,
+    ) -> ExpansionConfig<D2, N> {
+        ExpansionConfig {
+            conservative: self.conservative,
+            naming_engine_factory: self.naming_engine_factory,
+            duplication_engine_factory,
+        }
+    }
+}
+
+impl<D, N> ExpansionConfig<D, N>
+where
+    D: DuplicationEngineFactory,
+    N: NamingEngineFactory,
+{
+    pub fn expand<DE>(
         &self,
         schema: Arc<tg_schema::Typegraph>,
-        dup_key_gen: G,
-        naming_engine_factory: NF,
-    ) -> Result<Arc<crate::Typegraph<G::Key>>>
+    ) -> Result<Arc<crate::Typegraph<DE::Key>>>
     where
-        G: DupKeyGen,
-        G::Key: Default,
-        NF: NamingEngineFactory,
+        D: DuplicationEngineFactory<Engine = DE>,
+        DE: DuplicationEngine,
+        DE::Key: Default,
     {
-        let naming_engine = naming_engine_factory.create();
-        let mut expansion =
-            TypegraphExpansion::new(self.clone(), schema, dup_key_gen, naming_engine);
+        let duplication_engine = self.duplication_engine_factory.create(schema.clone());
+        let naming_engine = self.naming_engine_factory.create();
+        let config = ExpansionConfigX {
+            conservative: self.conservative,
+            duplication_engine,
+            naming_engine,
+        };
+        let mut expansion = TypegraphExpansion::new(config, schema);
         expansion.run()
     }
 }
 
-pub struct TypegraphExpansion<G: DupKeyGen, NE: NamingEngine> {
-    config: TypegraphExpansionConfig,
+pub struct TypegraphExpansion<D: DuplicationEngine, N: NamingEngine> {
+    config: ExpansionConfigX<D, N>,
     schema: Arc<tg_schema::Typegraph>,
     registry: Registry,
-    dup_key_gen: G,
-    naming_engine: NE,
-    conversion_map: ConversionMap<G>,
-    conversion_steps: VecDeque<ConversionStep<G>>,
-    link_steps: Vec<LinkStep<G>>,
+    conversion_map: ConversionMap<D>,
+    conversion_steps: VecDeque<ConversionStep<D>>,
+    link_steps: Vec<LinkStep<D>>,
     disconnected_types: IndexMap<u32, Type>,
     converting_disconnected_types: bool,
 }
 
-impl<G: DupKeyGen, NE: NamingEngine> TypegraphExpansion<G, NE>
+impl<D: DuplicationEngine, N: NamingEngine> TypegraphExpansion<D, N>
 where
-    G::Key: Default,
+    D::Key: Default,
 {
-    fn new(
-        config: TypegraphExpansionConfig,
-        schema: Arc<tg_schema::Typegraph>,
-        dup_key_gen: G,
-        naming_engine: NE,
-    ) -> Self {
+    fn new(config: ExpansionConfigX<D, N>, schema: Arc<tg_schema::Typegraph>) -> Self {
         let registry = Registry::from(schema.as_ref());
-        let conversion_map = ConversionMap::<G>::new(&schema);
+        let conversion_map = ConversionMap::<D>::new(&schema);
         Self {
             config,
             schema,
             registry,
-            dup_key_gen,
-            naming_engine,
             conversion_map,
             conversion_steps: Default::default(),
             link_steps: Default::default(),
@@ -139,7 +191,7 @@ where
         }
     }
 
-    fn run(&mut self) -> Result<Arc<crate::Typegraph<G::Key>>> {
+    fn run(&mut self) -> Result<Arc<crate::Typegraph<D::Key>>> {
         tracing::info!("starting typegraph expansion");
         #[cfg(debug_assertions)]
         let start_time = std::time::Instant::now();
@@ -174,7 +226,7 @@ where
 
         let name_registry = self
             .conversion_map
-            .assign_names(&mut self.naming_engine, &self.schema)?;
+            .assign_names(&mut self.config.naming_engine, &self.schema)?;
 
         let conversion_map = std::mem::take(&mut self.conversion_map).direct;
         let registry = std::mem::take(&mut self.registry);
@@ -218,7 +270,7 @@ where
                     let (result, map_item) = current_step.convert(
                         &self.schema,
                         key,
-                        &self.dup_key_gen,
+                        &self.config.duplication_engine,
                         &self.registry,
                     )?;
                     if self.converting_disconnected_types {

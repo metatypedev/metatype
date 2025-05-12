@@ -22,9 +22,10 @@
 //!   (FIXME: the third pass could be optional. But it is required for metagen,
 //!   and currently, only metagen uses the expanded typegraph).
 
-pub mod conv;
+pub mod engines;
+mod expansion;
 pub mod injection;
-pub mod naming;
+mod key;
 mod path;
 mod policies;
 mod runtimes;
@@ -33,28 +34,24 @@ mod types;
 pub mod visitor;
 
 mod interlude {
-    pub use std::sync::Arc;
-    pub use std::sync::Weak;
-    pub type Once<T> = std::sync::OnceLock<T>;
+    pub use crate::engines::*;
+    pub use crate::key::TypeKey;
     pub use color_eyre::{
         eyre::{bail, eyre},
         Result,
     };
+    pub use std::sync::{Arc, OnceLock, Weak};
 }
 
 pub mod prelude {
-    pub use crate::conv::key::TypeKey;
+    pub use crate::key::TypeKey;
     pub use crate::path::{PathSegment, RelativePath};
     pub use crate::types::*;
     pub use crate::Typegraph;
 }
 
-pub use conv::TypegraphExpansionConfig;
-use conv::{
-    dedup::{DefaultDuplicationKey, DupKey},
-    key::TypeKey,
-    MapItem,
-};
+pub use crate::expansion::ExpansionConfig;
+use expansion::MapItem;
 use indexmap::IndexMap;
 use interlude::*;
 use runtimes::Materializer;

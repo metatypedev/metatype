@@ -1,23 +1,40 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{injection::InjectionNode, interlude::*, FunctionType, Type, TypeNodeExt as _, Wrap};
+use crate::expansion::{interlude::*, ConversionMap, MapItem};
+use crate::{injection::InjectionNode, FunctionType, Wrap};
+use crate::{interlude::*, Type, TypeNodeExt as _};
 
-use super::{ConversionMap, MapItem, PathSegment, TypeKey};
+pub trait DuplicationEngineFactory: Clone {
+    type Engine: DuplicationEngine;
+
+    fn create(&self, schema: Arc<tg_schema::Typegraph>) -> Self::Engine;
+}
 
 pub trait DupKey: std::hash::Hash + std::fmt::Debug + Eq + Clone {
     fn is_default(&self) -> bool;
 }
 
-pub trait DupKeyGen: Clone {
+pub trait DuplicationEngine: Clone {
     type Key: DupKey + 'static;
 
-    fn gen_from_type(&self, ty: &Type) -> Self::Key;
+    fn key_from_type(&self, ty: &Type) -> Self::Key;
 
-    fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key;
-    fn gen_for_fn_output(&self, fn_type: &FunctionType) -> Self::Key;
+    fn key_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key;
+    fn key_for_fn_output(&self, fn_type: &FunctionType) -> Self::Key;
 
-    fn apply_path_segment(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key;
+    fn shifted_key(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key;
+}
+
+#[derive(Default, Clone)]
+pub struct DefaultDuplicationEngineFactory;
+
+impl DuplicationEngineFactory for DefaultDuplicationEngineFactory {
+    type Engine = DefaultDuplicationEngine;
+
+    fn create(&self, schema: Arc<tg_schema::Typegraph>) -> Self::Engine {
+        DefaultDuplicationEngine { schema }
+    }
 }
 
 #[derive(Default, Clone, Debug, PartialEq, Eq, Hash)]
@@ -26,14 +43,14 @@ pub struct DefaultDuplicationKey {
 }
 
 #[derive(Clone, Debug)]
-pub struct DefaultDuplicationKeyGenerator {
+pub struct DefaultDuplicationEngine {
     pub schema: Arc<tg_schema::Typegraph>,
 }
 
-impl DupKeyGen for DefaultDuplicationKeyGenerator {
+impl DuplicationEngine for DefaultDuplicationEngine {
     type Key = DefaultDuplicationKey;
 
-    fn gen_from_type(&self, ty: &Type) -> Self::Key {
+    fn key_from_type(&self, ty: &Type) -> Self::Key {
         Self::Key {
             injection: if self.schema.is_composite(ty.idx()) {
                 ty.injection()
@@ -43,8 +60,8 @@ impl DupKeyGen for DefaultDuplicationKeyGenerator {
         }
     }
 
-    fn apply_path_segment(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key {
-        let dkey = self.gen_from_type(ty);
+    fn shifted_key(&self, ty: &Type, path_seg: &PathSegment) -> Self::Key {
+        let dkey = self.key_from_type(ty);
         let inj = dkey
             .injection
             .as_ref()
@@ -52,13 +69,13 @@ impl DupKeyGen for DefaultDuplicationKeyGenerator {
         Self::Key { injection: inj }
     }
 
-    fn gen_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key {
+    fn key_for_fn_input(&self, fn_type: &FunctionType) -> Self::Key {
         Self::Key {
             injection: fn_type.injection.clone(),
         }
     }
 
-    fn gen_for_fn_output(&self, _fn_type: &FunctionType) -> Self::Key {
+    fn key_for_fn_output(&self, _fn_type: &FunctionType) -> Self::Key {
         Self::Key { injection: None }
     }
 }
@@ -88,10 +105,10 @@ impl Deduplication {
     }
 }
 
-impl<DKG: DupKeyGen> ConversionMap<DKG> {
+impl<DKG: DuplicationEngine> ConversionMap<DKG> {
     pub fn deduplicate(&self, type_idx: u32, dkey: &DKG::Key) -> Result<Deduplication>
     where
-        DKG: DupKeyGen,
+        DKG: DuplicationEngine,
     {
         match self.direct.get(type_idx as usize) {
             Some(MapItem::Unset) => Ok(Deduplication::register(

@@ -2,12 +2,20 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::{
-    conv::key::TypeKey,
     injection::InjectionNode,
     interlude::*,
+    key::TypeKey,
     visitor::{Infallible, PathExt as _, VisitNext},
 };
 use enum_dispatch::enum_dispatch;
+
+mod interlude {
+    pub use super::{Edge, EdgeKind, Type, TypeBase, TypeNode, TypeNodeExt as _, WeakType};
+    pub use crate::engines::{DupKey, DuplicationEngine};
+    pub use crate::expansion::ConversionMap;
+    pub use crate::key::TypeKeyEx;
+    pub use std::sync::Arc;
+}
 
 mod boolean;
 mod file;
@@ -75,7 +83,7 @@ pub struct TypeBase {
     pub parent: WeakType,
     pub key: TypeKey,
     pub title: String,
-    pub name: Once<Arc<str>>,
+    pub name: OnceLock<Arc<str>>,
     pub description: Option<String>,
     pub injection: Option<Arc<InjectionNode>>, // why here??
 }

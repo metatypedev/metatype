@@ -3,25 +3,16 @@
 
 use indexmap::IndexMap;
 
-use crate::interlude::*;
-use crate::naming::{NameRegistry, NamingEngine};
-use crate::{Arc, FunctionType, ObjectType, Type, TypeNodeExt as _};
-
-use super::dedup::{DupKey, DupKeyGen};
-use super::key::TypeKeyEx;
 use super::{RelativePath, TypeKey};
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub enum ValueTypeKind {
-    Input,
-    Output,
-}
+use crate::engines::{DupKey, NameRegistry, NamingEngine};
+use crate::interlude::*;
+use crate::key::TypeKeyEx;
+use crate::{FunctionType, ObjectType, Type, TypeNodeExt as _};
 
 #[derive(Debug)]
 pub struct ValueType<K: DupKey> {
     pub default: Option<Type>,
-    // duplication
-    pub variants: IndexMap<K, Type>,
+    pub variants: IndexMap<K, Type>, // duplicates
 }
 
 impl<K: DupKey> ValueType<K> {
@@ -181,11 +172,11 @@ impl<K: DupKey> MapItem<K> {
 }
 
 #[derive(Debug)]
-pub struct ConversionMap<G: DupKeyGen> {
+pub struct ConversionMap<G: DuplicationEngine> {
     pub direct: Vec<MapItem<G::Key>>,
 }
 
-impl<G: DupKeyGen> Default for ConversionMap<G> {
+impl<G: DuplicationEngine> Default for ConversionMap<G> {
     fn default() -> Self {
         Self {
             direct: Default::default(),
@@ -193,7 +184,7 @@ impl<G: DupKeyGen> Default for ConversionMap<G> {
     }
 }
 
-impl<G: DupKeyGen> ConversionMap<G> {
+impl<G: DuplicationEngine> ConversionMap<G> {
     pub fn new(schema: &tg_schema::Typegraph) -> Self {
         let type_count = schema.types.len();
         let mut direct = Vec::with_capacity(type_count);

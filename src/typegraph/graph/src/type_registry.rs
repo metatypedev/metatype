@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    conv::{dedup::DupKeyGen, ConversionMap},
-    prelude::*,
-};
+use crate::{engines::DuplicationEngine, expansion::ConversionMap, prelude::*};
 use color_eyre::eyre::{bail, eyre, Result};
 
 use super::{FunctionType, ObjectType};
@@ -19,12 +16,12 @@ pub struct TypeRegistry {
     pub output_types: IndexMap<TypeKey, Type>,
 }
 
-pub struct TypeRegistryBuilder<'map, G: DupKeyGen> {
+pub struct TypeRegistryBuilder<'map, G: DuplicationEngine> {
     map: &'map ConversionMap<G>,
     registry: TypeRegistry,
 }
 
-impl<'map, G: DupKeyGen> TypeRegistryBuilder<'map, G> {
+impl<'map, G: DuplicationEngine> TypeRegistryBuilder<'map, G> {
     pub fn new(conversion_map: &'map ConversionMap<G>) -> Self {
         Self {
             map: conversion_map,
@@ -45,7 +42,7 @@ impl<'map, G: DupKeyGen> TypeRegistryBuilder<'map, G> {
             .get(ty.idx() as usize)
             .ok_or_else(|| eyre!("type index out of bounds"))?;
 
-        use crate::conv::MapItem as I;
+        use crate::expansion::MapItem as I;
         match map_item {
             I::Unset => bail!("unexpected"),
             // FIXME we can skip clonning for the path
@@ -78,7 +75,7 @@ impl<'map, G: DupKeyGen> TypeRegistryBuilder<'map, G> {
             .direct
             .get(ty.idx() as usize)
             .ok_or_else(|| eyre!("type index out of bounds"))?;
-        use crate::conv::MapItem as I;
+        use crate::expansion::MapItem as I;
 
         match map_item {
             I::Value(_) => {
