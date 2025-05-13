@@ -7,7 +7,7 @@ import type { ResolverArgs } from "../../types.ts";
 //
 // const logger = getLogger(import.meta);
 
-const METATYPE_VERSION = "0.5.1-rc.2";
+const METATYPE_VERSION = "0.5.1-rc.3";
 
 export class WitWireHandle {
   static async init(params: {
