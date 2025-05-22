@@ -1,6 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+/**
+ * This crate implement the optimization step for the serialized typegraph.
+ * It runs in three steps.
+ * - Step 1: We run the Kosaraju's algorithm to partition the graph (only the
+ *   type related vertices) into strongly connected components.
+ * - Step 2: We assign a bucket for each type, according to its hash. The
+ *   hash function does not currently try to deduplicate types that belong
+ *   in a strongly connected component of size larger than one.
+ * - Step 3: To each bucket is assigned a type index, then we translate all
+ *   the type references in the typegraph into the new type indices.
+ */
 mod dedup;
 mod kosaraju;
 
