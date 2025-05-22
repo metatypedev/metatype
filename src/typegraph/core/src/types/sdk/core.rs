@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -95,12 +96,12 @@ pub struct TypeInteger {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TypeFloat {
-    pub min: Option<f64>,
-    pub max: Option<f64>,
-    pub exclusive_minimum: Option<f64>,
-    pub exclusive_maximum: Option<f64>,
-    pub multiple_of: Option<f64>,
-    pub enumeration: Option<Vec<f64>>,
+    pub min: Option<NotNan<f64>>,
+    pub max: Option<NotNan<f64>>,
+    pub exclusive_minimum: Option<NotNan<f64>>,
+    pub exclusive_maximum: Option<NotNan<f64>>,
+    pub multiple_of: Option<NotNan<f64>>,
+    pub enumeration: Option<Vec<NotNan<f64>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

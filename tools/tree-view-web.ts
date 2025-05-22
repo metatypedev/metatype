@@ -8,15 +8,14 @@
  *   deno run -A tools/tree-view-web.ts [<options>] <file.py>
  */
 
+import { Application, Router, Status } from "jsr:@oak/oak";
 import { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { projectDir } from "./utils.ts";
-import { join, parseArgs } from "./deps.ts";
-
-const dirname = import.meta.dirname ?? new URL(".", import.meta.url).pathname;
-const indexHtml = join(dirname, "tree-view/index.html");
+import { parseArgs } from "./deps.ts";
 
 const args = parseArgs(Deno.args, {
   string: ["port"],
+  boolean: ["json"],
 });
 
 const argsPort = parseInt(args.port ?? "");
@@ -27,35 +26,51 @@ const files = args._ as string[];
 if (files.length === 0) {
   throw new Error("Path to typegraph definition module is required.");
 }
-const cmdBase = [
-  "cargo",
-  "run",
-  "--manifest-path",
-  `${projectDir}/Cargo.toml`,
-  "-p",
-  "meta-cli",
-  "--",
-  "serialize",
-  "-vvv",
-  "-f",
-];
+
 const tgs: TypeGraphDS[] = [];
-for (const file of files) {
-  const cmd = [...cmdBase, file];
-  const { stdout, code } = await new Deno.Command(cmd[0], {
-    args: cmd.slice(1),
-    stdout: "piped",
-    stderr: "inherit",
-  }).output();
-  if (code !== 0) {
-    console.log(
-      `[error] command ${
-        cmd.map((c) => JSON.stringify(c)).join(" ")
-      } failed with code ${code}`,
-    );
-    continue;
+
+if (args.json) {
+  for (const file of files) {
+    const raw = await Deno.readFile(file);
+    const str = new TextDecoder().decode(raw);
+    const parsed = JSON.parse(str);
+    if (Array.isArray(parsed)) {
+      tgs.push(...parsed);
+    } else {
+      tgs.push(parsed);
+    }
   }
-  tgs.push(...JSON.parse(new TextDecoder().decode(stdout)));
+} else {
+  const cmdBase = [
+    "cargo",
+    "run",
+    "--manifest-path",
+    `${projectDir}/Cargo.toml`,
+    "-p",
+    "meta-cli",
+    "--",
+    "serialize",
+    "-vvv",
+    "-f",
+  ];
+
+  for (const file of files) {
+    const cmd = [...cmdBase, file];
+    const { stdout, code } = await new Deno.Command(cmd[0], {
+      args: cmd.slice(1),
+      stdout: "piped",
+      stderr: "inherit",
+    }).output();
+    if (code !== 0) {
+      console.log(
+        `[error] command ${
+          cmd.map((c) => JSON.stringify(c)).join(" ")
+        } failed with code ${code}`,
+      );
+      continue;
+    }
+    tgs.push(...JSON.parse(new TextDecoder().decode(stdout)));
+  }
 }
 
 if (tgs.length === 0) {
@@ -63,33 +78,100 @@ if (tgs.length === 0) {
   Deno.exit(1);
 }
 
-Deno.serve({
-  port,
-  onListen({ port, hostname }) {
-    console.log(
-      `server running at http://${hostname ?? "localhost"}:${port}`,
-    );
-  },
-}, async (req) => {
-  const url = new URL(req.url);
-  const pathname = url.pathname;
-  console.log(`[info] method=${req.method} url=${req.url}`);
+const byName: Map<string, TypeGraphDS> = new Map();
 
-  if (req.method !== "GET") {
-    console.log(`[error] method '${req.method}' not allowed`);
-    return new Response("Method not allowed", { status: 405 });
+for (const tg of tgs) {
+  byName.set(tg.types[0].title, tg);
+}
+
+const router = new Router();
+
+const fsCache: Map<string, string> = new Map();
+
+async function getDistFile(path: string) {
+  const cached = fsCache.get(path);
+  if (cached != null) {
+    return cached;
   }
-  if (pathname === "/") {
-    return new Response(await Deno.readTextFile(indexHtml), {
-      headers: { "content-type": "text/html" },
-    });
-  }
-  // TODO typegraph list and typegraph by name
-  if (pathname === "/tg.json") {
-    return new Response(JSON.stringify(tgs), {
-      headers: { "content-type": "application/json" },
-    });
-  }
-  console.log(`[error] path '${pathname}' not found`);
-  return new Response("Not found", { status: 404 });
+  const value = await Deno.readTextFile(
+    `${projectDir}/tools/tree/dist/${path}`,
+  );
+  fsCache.set(path, value);
+  return value;
+}
+
+router.get("/logo.svg", async (ctx) => {
+  ctx.response.body = await getDistFile("logo.svg");
+  ctx.response.type = "svg";
 });
+
+router.get("/assets/:asset", async (ctx) => {
+  ctx.response.body = await getDistFile(`assets/${ctx.params.asset}`);
+  ctx.response.type = ctx.params.asset.split(".").slice(-1)[0];
+});
+
+router.get("/api/typegraphs", (ctx) => {
+  ctx.response.body = [...byName.keys()];
+  ctx.response.type = "json";
+});
+
+router.get("/api/typegraphs/:tgName", (ctx) => {
+  const tg = byName.get(ctx.params.tgName);
+  if (tg == null) {
+    ctx.response.body = `typegraph "${ctx.params.tgName}" not found`;
+    ctx.response.status = Status.NotFound;
+  } else {
+    ctx.response.body = {
+      stats: {
+        types: tg.types.length,
+        runtimes: tg.runtimes.length,
+        materializers: tg.materializers.length,
+        policies: tg.policies.length,
+      },
+    };
+    ctx.response.type = "json";
+  }
+});
+
+router.get("/api/typegraphs/:tgName/types/:typeIdx", (ctx) => {
+  const tg = byName.get(ctx.params.tgName);
+  if (tg == null) {
+    ctx.response.body = `typegraph "${ctx.params.tgName}" not found`;
+    ctx.response.status = Status.NotFound;
+  } else {
+    ctx.response.body = tg.types[+ctx.params.typeIdx];
+    ctx.response.type = "json";
+  }
+});
+
+const app = new Application();
+
+app.use(async (ctx, next) => {
+  await next();
+  console.log(
+    `- ${ctx.request.method} ${ctx.response.status} - ${ctx.request.url.pathname}${ctx.request.url.search}`,
+  );
+});
+
+app.use(async (ctx, next) => {
+  const pathname = ctx.request.url.pathname;
+  if (
+    pathname.startsWith("/api") ||
+    pathname == "/logo.svg" ||
+    pathname.startsWith("/assets")
+  ) {
+    await next();
+  } else {
+    ctx.response.body = await getDistFile("index.html");
+    ctx.response.type = "html";
+  }
+});
+
+app.use(router.routes());
+app.use(router.allowedMethods());
+
+app.addEventListener("listen", (evt) => {
+  console.log(`[info] server running at http://${evt.hostname}:${evt.port}`);
+});
+
+app.listen({ port });

@@ -8130,11 +8130,13 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "4.3.0"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44d501f1a72f71d3c063a6bbc8f7271fa73aa09fe5d6283b6571e2ed176a2537"
+checksum = "e2c1f9f56e534ac6a9b8a4600bdf0f530fb393b5f393e7b4d03489c3cf0c3f01"
 dependencies = [
  "num-traits",
+ "rand 0.8.5",
+ "serde",
 ]
 
 [[package]]
@@ -9488,6 +9490,7 @@ dependencies = [
  "libc",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
+ "serde",
 ]
 
 [[package]]
@@ -9526,6 +9529,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom 0.2.15",
+ "serde",
 ]
 
 [[package]]
@@ -12280,11 +12284,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "tg-optimize"
+version = "0.5.1-rc.3"
+dependencies = [
+ "color-eyre",
+ "serde",
+ "serde_json",
+ "tg_schema",
+]
+
+[[package]]
 name = "tg_schema"
 version = "0.5.1-rc.3"
 dependencies = [
  "anyhow",
  "indexmap 2.6.0",
+ "ordered-float 5.0.0",
  "serde",
  "serde_json",
  "serde_with",
@@ -13085,6 +13100,7 @@ dependencies = [
  "enum_dispatch",
  "indexmap 2.6.0",
  "insta",
+ "ordered-float 5.0.0",
  "paste",
  "serde",
  "serde_json",
@@ -13108,7 +13124,7 @@ dependencies = [
  "insta",
  "metagen",
  "once_cell",
- "ordered-float 4.3.0",
+ "ordered-float 5.0.0",
  "paste",
  "ptree",
  "regex",

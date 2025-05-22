@@ -10,6 +10,7 @@ use crate::sdk::core::{
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
+use ordered_float::NotNan;
 
 #[cfg(test)]
 use tg_schema::{Injection, InjectionData, SingleValue};
@@ -168,25 +169,25 @@ impl Default for TypeFloat {
 impl FloatBuilder {
     #[allow(dead_code)]
     pub fn min(mut self, min: f64) -> Self {
-        self.data.min = Some(min);
+        self.data.min = Some(NotNan::new(min).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn max(mut self, max: f64) -> Self {
-        self.data.max = Some(max);
+        self.data.max = Some(NotNan::new(max).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn x_min(mut self, min: f64) -> Self {
-        self.data.exclusive_minimum = Some(min);
+        self.data.exclusive_minimum = Some(NotNan::new(min).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn x_max(mut self, max: f64) -> Self {
-        self.data.exclusive_maximum = Some(max);
+        self.data.exclusive_maximum = Some(NotNan::new(max).unwrap());
         self
     }
 }
