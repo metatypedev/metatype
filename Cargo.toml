@@ -38,6 +38,7 @@ edition = "2021"
 # internal crates
 mt_deno = { path = "src/mt_deno/" }
 tg_schema = { path = "src/typegraph/schema" }
+tg_optimize = { path = "src/typegraph/optimize" }
 typegraph_core = { path = "src/typegraph/core" }
 substantial = { path = "src/substantial/" }
 metagen = { path = "src/metagen/" }

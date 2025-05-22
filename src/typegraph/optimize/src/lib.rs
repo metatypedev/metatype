@@ -29,7 +29,7 @@ impl TypeIdx {
     }
 }
 
-pub fn optimize(tg: Arc<Typegraph>) -> Arc<Typegraph> {
+pub fn optimize(tg: Arc<Typegraph>) -> Typegraph {
     let mut k = Kosaraju::new(tg);
     k.run();
 

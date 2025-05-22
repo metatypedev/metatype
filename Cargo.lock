@@ -12284,7 +12284,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "tg-optimize"
+name = "tg_optimize"
 version = "0.5.1-rc.3"
 dependencies = [
  "color-eyre",
@@ -13132,6 +13132,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.8",
+ "tg_optimize",
  "tg_schema",
  "unindent",
 ]

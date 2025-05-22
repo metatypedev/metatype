@@ -177,7 +177,7 @@ impl DedupEngine {
         }
     }
 
-    pub fn get_converted_typegraph(&self) -> Arc<Typegraph> {
+    pub fn get_converted_typegraph(&self) -> Typegraph {
         let map = self.generate_conversion_map();
 
         let types = map
@@ -234,7 +234,6 @@ impl DedupEngine {
             path: self.tg.path.clone(),
             deps: self.tg.deps.clone(),
         }
-        .into()
     }
 
     pub fn generate_conversion_map(&self) -> ConversionMap {

@@ -1,5 +1,5 @@
 [package]
-name = "tg-optimize"
+name = "tg_optimize"
 version.workspace = true
 edition.workspace = true
 

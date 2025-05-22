@@ -241,6 +241,8 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<SdkArtifact>)> 
     }
     .postprocess(&mut tg)?;
 
+    let tg = tg_optimize::optimize(tg.into());
+
     let artifacts = tg
         .meta
         .artifacts
