@@ -81,19 +81,25 @@ if (tgs.length === 0) {
 const byName: Map<string, TypeGraphDS> = new Map();
 
 for (const tg of tgs) {
+  const name = tg.types[0].title;
+  if (byName.has(name)) {
+    console.log(
+      `[warn] Duplicate typegraph name '${name}'. The older one will be dropped`,
+    );
+  }
   byName.set(tg.types[0].title, tg);
 }
 
 const router = new Router();
 
-const fsCache: Map<string, string> = new Map();
+const fsCache: Map<string, Uint8Array> = new Map();
 
 async function getDistFile(path: string) {
   const cached = fsCache.get(path);
   if (cached != null) {
     return cached;
   }
-  const value = await Deno.readTextFile(
+  const value = await Deno.readFile(
     `${projectDir}/tools/tree/dist/${path}`,
   );
   fsCache.set(path, value);
@@ -139,8 +145,19 @@ router.get("/api/typegraphs/:tgName/types/:typeIdx", (ctx) => {
     ctx.response.body = `typegraph "${ctx.params.tgName}" not found`;
     ctx.response.status = Status.NotFound;
   } else {
-    ctx.response.body = tg.types[+ctx.params.typeIdx];
-    ctx.response.type = "json";
+    const typeIdx = +ctx.params.typeIdx;
+    if (Number.isNaN(typeIdx)) {
+      ctx.response.body = `invalid type index "${ctx.params.typeIdx}"`;
+      ctx.response.status = Status.BadRequest;
+    }
+    const typeNode = tg.types[typeIdx];
+    if (typeNode == null) {
+      ctx.response.body = `type index out of bounds #${typeIdx}`;
+      ctx.response.status = Status.NotFound;
+    } else {
+      ctx.response.body = tg.types[+ctx.params.typeIdx];
+      ctx.response.type = "json";
+    }
   }
 });
 

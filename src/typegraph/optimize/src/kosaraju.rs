@@ -34,8 +34,7 @@ impl KosarajuOne {
     }
 
     fn visit(&mut self, idx: TypeIdx) {
-        if self.is_visited(idx) {
-        } else {
+        if !self.is_visited(idx) {
             self.set_visited(idx);
             for v in self.tg.out_neighbours(&idx) {
                 self.visit(v);

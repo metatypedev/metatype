@@ -158,9 +158,6 @@ impl DedupEngine {
                 "function".hash(&mut hasher);
                 // TODO do we need to deduplication functions??
                 idx.hash(&mut hasher);
-                // self.hash_type(data.input.into()).hash(&mut hasher);
-                // self.hash_type(data.output.into()).hash(&mut hasher);
-                // if let Some(pt) = data.
             }
 
             N::Any { .. } => unreachable!(),
