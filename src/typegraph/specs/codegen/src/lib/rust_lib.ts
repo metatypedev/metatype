@@ -15,7 +15,7 @@ import type {
 const typeMap = {
   UInt: "u32",
   SInt: "i32",
-  Float: "f64",
+  Float: "NotNan<f64>",
   string: "String",
   boolean: "bool",
   void: "()",
@@ -39,7 +39,8 @@ class RustLibCodeGenerator extends TypeDefProcessor {
   }
 
   override formatHeaders(_moduleName?: string) {
-    const baseImport = "use serde::{Deserialize, Serialize};";
+    const baseImport =
+      "use serde::{Deserialize, Serialize};\n#[allow(unused)] use ordered_float::NotNan;";
 
     const imports = this.imports.map(
       ({ imports, source }) =>

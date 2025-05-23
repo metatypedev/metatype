@@ -11,12 +11,4 @@ expression: "tg.input_types.iter().map(|(idx, ty)|\n            { (idx, (ty.tag(
         "string",
         "string_3fb09",
     ),
-    Ty_9/0: (
-        "object",
-        "TwoInput",
-    ),
-    Ty_11/0: (
-        "object",
-        "root_three_fn_input",
-    ),
 }

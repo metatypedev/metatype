@@ -132,7 +132,7 @@ pub struct Policy {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 pub struct PolicyIndicesByEffect {
     pub read: Option<u32>,
     pub create: Option<u32>,
@@ -141,7 +141,7 @@ pub struct PolicyIndicesByEffect {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(untagged)]
 pub enum PolicyIndices {
     Policy(u32),

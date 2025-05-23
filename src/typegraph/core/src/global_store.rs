@@ -428,7 +428,7 @@ impl Store {
 
 /// Generate a pub fn for asserting/unwrapping a Type as a specific TypeDef variant
 /// e.g.: `as_variant!(Struct)` gives
-/// ```rust
+/// ```ignore
 /// pub fn as_struct(&self) -> Result<Rc<Struct>> {
 ///     match self.as_type()? {
 ///         Type::Def(TypeDef::Struct(inner)) => Ok(inner),
