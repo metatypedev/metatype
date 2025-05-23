@@ -7,6 +7,7 @@
       "jsr:@oak/commons@^1.0": "jsr:@oak/commons@1.0.1",
       "jsr:@oak/oak": "jsr:@oak/oak@17.1.4",
       "jsr:@std/archive@^0.225.0": "jsr:@std/archive@0.225.4",
+      "jsr:@std/assert": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^0.221.0": "jsr:@std/assert@0.221.0",
       "jsr:@std/assert@^1.0": "jsr:@std/assert@1.0.10",
       "jsr:@std/assert@^1.0.3": "jsr:@std/assert@1.0.10",
