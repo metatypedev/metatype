@@ -1469,5 +1469,19 @@
     "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/utils/unarchive.ts": "f6d0e9e75f470eeef5aecd0089169f4350fc30ebfdc05466bb7b30042294d6d3",
     "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/utils/url.ts": "e1ada6fd30fc796b8918c88456ea1b5bbd87a07d0a0538b092b91fd2bb9b7623",
     "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/utils/worker.ts": "ac4caf72a36d2e4af4f4e92f2e0a95f9fc2324b568640f24c7c2ff6dc0c11d62"
+  },
+  "workspace": {
+    "members": {
+      "tests": {
+        "dependencies": [
+          "jsr:@std/async@^1.0.3",
+          "jsr:@std/streams@^1.0.2",
+          "jsr:@std/testing@^1.0.1",
+          "jsr:@std/yaml@^1.0.4",
+          "npm:json-schema-faker@0.5.3",
+          "npm:pg@8.12.0"
+        ]
+      }
+    }
   }
 }

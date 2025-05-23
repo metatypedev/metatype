@@ -112,8 +112,14 @@ router.get("/logo.svg", async (ctx) => {
 });
 
 router.get("/assets/:asset", async (ctx) => {
-  ctx.response.body = await getDistFile(`assets/${ctx.params.asset}`);
-  ctx.response.type = ctx.params.asset.split(".").slice(-1)[0];
+  const asset = ctx.params.asset;
+  if (asset.includes("..") || asset.includes("/")) {
+    ctx.response.body = `invalid assset name '${asset}'`;
+    ctx.response.status = Status.BadRequest;
+  } else {
+    ctx.response.body = await getDistFile(`assets/${ctx.params.asset}`);
+    ctx.response.type = ctx.params.asset.split(".").slice(-1)[0];
+  }
 });
 
 router.get("/api/typegraphs", (ctx) => {
@@ -149,6 +155,7 @@ router.get("/api/typegraphs/:tgName/types/:typeIdx", (ctx) => {
     if (Number.isNaN(typeIdx)) {
       ctx.response.body = `invalid type index "${ctx.params.typeIdx}"`;
       ctx.response.status = Status.BadRequest;
+      return;
     }
     const typeNode = tg.types[typeIdx];
     if (typeNode == null) {
