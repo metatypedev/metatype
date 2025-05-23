@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::core::TypeId;
+#[allow(unused)]
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
