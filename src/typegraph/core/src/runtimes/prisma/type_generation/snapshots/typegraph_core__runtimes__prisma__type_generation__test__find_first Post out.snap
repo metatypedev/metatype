@@ -2,10 +2,5 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: optional #42
-└─ item: struct 'Post_output' #41
-   ├─ [author]: struct 'User_output_excluding_rel_Post_User' #39
-   │  ├─ [id]: integer #15
-   │  └─ [name]: string #16
-   ├─ [id]: integer #23
-   └─ [title]: string #24
+root: optional #37
+└─ item: &Post_output #29
