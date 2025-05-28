@@ -219,7 +219,7 @@ snapshot[`typegate: find available operations 1`] = `
               format: null,
               optional: false,
               policies: [],
-              title: "user_identity_create_input_excluding_rel_user_identity_users_provider_string_enum",
+              title: "user_identity_create_input_provider_string_enum",
               type: "string",
             },
           },
