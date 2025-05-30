@@ -1,6 +1,6 @@
-import { Policy, t, typegraph } from "jsr:@typegraph/sdk@0.5.1-rc.3";
-import { PythonRuntime } from "jsr:@typegraph/sdk@0.5.1-rc.3/runtimes/python";
-import { DenoRuntime } from "jsr:@typegraph/sdk@0.5.1-rc.3/runtimes/deno";
+import { Policy, t, typegraph } from "jsr:@typegraph/sdk@0.5.1-rc.4";
+import { PythonRuntime } from "jsr:@typegraph/sdk@0.5.1-rc.4/runtimes/python";
+import { DenoRuntime } from "jsr:@typegraph/sdk@0.5.1-rc.4/runtimes/deno";
 
 await typegraph("example", (g) => {
   const pub = Policy.public();
