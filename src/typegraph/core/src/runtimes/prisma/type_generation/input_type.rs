@@ -20,7 +20,7 @@ enum Operation {
 
 pub struct InputType {
     model_id: TypeId,
-    skip_rel: std::collections::BTreeSet<String>,
+    // skip_rel: std::collections::BTreeSet<String>,
     operation: Operation,
 }
 
@@ -28,7 +28,7 @@ impl InputType {
     pub fn for_create(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: Default::default(),
+            // skip_rel: Default::default(),
             operation: Operation::Create,
         }
     }
@@ -36,7 +36,7 @@ impl InputType {
     pub fn for_update(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: Default::default(),
+            // skip_rel: Default::default(),
             operation: Operation::Update,
         }
     }
@@ -51,24 +51,24 @@ impl TypeGen for InputType {
         for (k, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let rel_name = model.relationships.get(k).ok_or_else(|| {
-                        format!(
-                            "relationship not registered: {}::{}",
-                            model.model_type.name(),
-                            k
-                        )
-                    })?;
-                    if self.skip_rel.contains(rel_name) {
-                        continue;
-                    }
+                    // let rel_name = model.relationships.get(k).ok_or_else(|| {
+                    //     format!(
+                    //         "relationship not registered: {}::{}",
+                    //         model.model_type.name(),
+                    //         k
+                    //     )
+                    // })?;
+                    // if self.skip_rel.contains(rel_name) {
+                    //     continue;
+                    // }
 
                     let create = context.generate(&InputType {
                         model_id: prop.model_type.type_id,
-                        skip_rel: {
-                            let mut skip_rel = self.skip_rel.clone();
-                            skip_rel.insert(rel_name.to_string());
-                            skip_rel
-                        },
+                        // skip_rel: {
+                        //     let mut skip_rel = self.skip_rel.clone();
+                        //     skip_rel.insert(rel_name.to_string());
+                        //     skip_rel
+                        // },
                         operation: Operation::Create,
                     })?;
                     let create = match prop.quantifier {
@@ -96,11 +96,11 @@ impl TypeGen for InputType {
                     if let Operation::Update = self.operation {
                         let update = context.generate(&InputType {
                             model_id: prop.model_type.type_id,
-                            skip_rel: {
-                                let mut skip_rel = self.skip_rel.clone();
-                                skip_rel.insert(rel_name.to_string());
-                                skip_rel
-                            },
+                            // skip_rel: {
+                            //     let mut skip_rel = self.skip_rel.clone();
+                            //     skip_rel.insert(rel_name.to_string());
+                            //     skip_rel
+                            // },
                             operation: Operation::Update,
                         })?;
                         inner.addx(t::struct_().prop("update", update))?;
@@ -142,12 +142,12 @@ impl TypeGen for InputType {
                         )?)?;
                     }
 
-                    if let (Operation::Create, Cardinality::One) = (self.operation, prop.quantifier)
-                    {
-                        builder.propx(k, inner)?;
-                    } else {
-                        builder.propx(k, t::optionalx(inner)?)?;
-                    }
+                    // if let (Operation::Create, Cardinality::One) = (self.operation, prop.quantifier)
+                    // {
+                    //     builder.propx(k, inner)?;
+                    // } else {
+                    builder.propx(k, t::optionalx(inner)?)?;
+                    // }
                 }
 
                 Property::Scalar(prop) => {
@@ -215,18 +215,19 @@ impl TypeGen for InputType {
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.skip_rel.is_empty() {
-            "".to_string()
-        } else {
-            format!(
-                "_excluding_{}",
-                self.skip_rel
-                    .iter()
-                    .map(|owned| &owned[..])
-                    .collect::<Vec<_>>()
-                    .join("_and_")
-            )
-        };
+        // let suffix = if self.skip_rel.is_empty() {
+        //     "".to_string()
+        // } else {
+        //     format!(
+        //         "_excluding_{}",
+        //         self.skip_rel
+        //             .iter()
+        //             .map(|owned| &owned[..])
+        //             .collect::<Vec<_>>()
+        //             .join("_and_")
+        //     )
+        // };
+        let suffix = "";
         let op = match self.operation {
             Operation::Create => "create",
             Operation::Update => "update",

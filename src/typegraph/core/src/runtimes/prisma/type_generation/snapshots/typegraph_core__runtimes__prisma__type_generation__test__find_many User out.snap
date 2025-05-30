@@ -2,14 +2,15 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: list #189
-└─ item: struct 'User_with_nested_count' #188
-   ├─ [_count]: struct #186
-   │  └─ [posts]: optional '_count' #185
-   │     └─ item: integer #183
+root: list #188
+└─ item: struct 'User_with_nested_count' #187
+   ├─ [_count]: struct #185
+   │  └─ [posts]: optional '_count' #184
+   │     └─ item: integer #182
    ├─ [id]: integer #110
    ├─ [name]: string #112
-   └─ [posts]: list #181
-      └─ item: struct 'Post_with_nested_count_excluding_rel_Post_User' #180
+   └─ [posts]: list #180
+      └─ item: struct 'Post_with_nested_count' #179
+         ├─ [author]: &User #121
          ├─ [id]: integer #117
          └─ [title]: string #120

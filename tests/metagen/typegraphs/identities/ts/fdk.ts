@@ -1317,6 +1317,7 @@ export type SimpleCycles3 = {
 };
 export type SimpleCycles3To1SimpleCycles1Optional = (SimpleCycles1) | null | undefined;
 export type PrimitivesSelections = {
+  _?: SelectionFlags;
   str?: ScalarSelectNoArgs;
   "enum"?: ScalarSelectNoArgs;
   uuid?: ScalarSelectNoArgs;
@@ -1331,6 +1332,7 @@ export type PrimitivesSelections = {
   "boolean"?: ScalarSelectNoArgs;
 };
 export type CompositesSelections = {
+  _?: SelectionFlags;
   opt?: ScalarSelectNoArgs;
   either?: CompositeSelectNoArgs<CompositesEitherEitherSelections>;
   union?: ScalarSelectNoArgs;
@@ -1341,9 +1343,11 @@ export type CompositesEitherEitherSelections = {
   "branch2"?: CompositeSelectNoArgs<Branch2Selections>;
 };
 export type Branch2Selections = {
+  _?: SelectionFlags;
   branch2?: ScalarSelectNoArgs;
 };
 export type Cycles1Selections = {
+  _?: SelectionFlags;
   phantom1?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<Cycles2Selections>;
   list3?: CompositeSelectNoArgs<Cycles3Selections>;
@@ -1357,22 +1361,27 @@ export type Cycles3Selections = {
   "branch33B"?: CompositeSelectNoArgs<Branch33BSelections>;
 };
 export type Branch33ASelections = {
+  _?: SelectionFlags;
   phantom3a?: ScalarSelectNoArgs;
   to1?: CompositeSelectNoArgs<Cycles1Selections>;
 };
 export type Branch33BSelections = {
+  _?: SelectionFlags;
   phantom3b?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<Cycles2Selections>;
 };
 export type SimpleCycles1Selections = {
+  _?: SelectionFlags;
   phantom1?: ScalarSelectNoArgs;
   to2?: CompositeSelectNoArgs<SimpleCycles2Selections>;
 };
 export type SimpleCycles2Selections = {
+  _?: SelectionFlags;
   phantom2?: ScalarSelectNoArgs;
   to3?: CompositeSelectNoArgs<SimpleCycles3Selections>;
 };
 export type SimpleCycles3Selections = {
+  _?: SelectionFlags;
   phantom3?: ScalarSelectNoArgs;
   to1?: CompositeSelectNoArgs<SimpleCycles1Selections>;
 };

@@ -64,6 +64,6 @@ pub(crate) fn unregistered_prop(key: &str, type_name: &str) -> Error {
     format!("Property not registered: {}.{}", type_name, key).into()
 }
 
-pub fn unregistered_relationship(type_name: &str, prop_name: &str) -> Error {
-    format!("Relationship not registered: {}::{}", type_name, prop_name).into()
-}
+// pub fn unregistered_relationship(type_name: &str, prop_name: &str) -> Error {
+//     format!("Relationship not registered: {}::{}", type_name, prop_name).into()
+// }

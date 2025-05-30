@@ -2,5 +2,5 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(out)
 ---
-root: struct #148
-└─ [count]: integer #147
+root: struct #121
+└─ [count]: integer #120

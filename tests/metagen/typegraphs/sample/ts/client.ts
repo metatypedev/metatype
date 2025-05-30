@@ -1108,11 +1108,13 @@ export type RootNestedCompositeFnOutputListStruct = {
   value: number;
 };
 export type UserSelections = {
+  _?: SelectionFlags;
   id?: ScalarSelectNoArgs;
   email?: ScalarSelectNoArgs;
   posts?: CompositeSelectNoArgs<PostSelections>;
 };
 export type PostSelections = {
+  _?: SelectionFlags;
   id?: ScalarSelectNoArgs;
   slug?: ScalarSelectNoArgs;
   title?: ScalarSelectNoArgs;
@@ -1126,21 +1128,26 @@ export type RootMixedUnionFnOutputSelections = {
   "user"?: CompositeSelectNoArgs<UserSelections>;
 };
 export type RootNestedCompositeFnOutputSelections = {
+  _?: SelectionFlags;
   scalar?: ScalarSelectNoArgs;
   composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
   list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
 export type RootNestedCompositeFnOutputCompositeStructSelections = {
+  _?: SelectionFlags;
   value?: ScalarSelectNoArgs;
   nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
 };
 export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
+  _?: SelectionFlags;
   inner?: ScalarSelectNoArgs;
 };
 export type RootNestedCompositeFnOutputListStructSelections = {
+  _?: SelectionFlags;
   value?: ScalarSelectNoArgs;
 };
 export type RootIdentityFnInputSelections = {
+  _?: SelectionFlags;
   input?: ScalarSelectNoArgs;
 };
 

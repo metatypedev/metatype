@@ -2,58 +2,40 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct 'Post_query_input' #243
-├─ [cursor]: optional #236
-│  └─ item: union 'Post_cursor' #235
-│     ├─ variant_0: struct #232
+root: struct 'Post_query_input' #218
+├─ [cursor]: optional #211
+│  └─ item: union 'Post_cursor' #210
+│     ├─ variant_0: struct #207
 │     │  └─ [id]: integer #119
-│     └─ variant_1: struct #233
+│     └─ variant_1: struct #208
 │        └─ [title]: string #120
-├─ [distinct]: optional #241
-│  └─ item: list 'Post_keys_union' #240
-│     └─ item: string #238 enum{ '"id"', '"title"', '"author"' }
-├─ [orderBy]: optional #228
-│  └─ item: list 'Post_order_by' #227
-│     └─ item: struct #225
-│        ├─ [author]: optional #224
-│        │  └─ item: list 'User_order_by_withoutrel_Post_User' #223
-│        │     └─ item: struct #221
-│        │        ├─ [id]: &_prisma_sort #63
-│        │        └─ [name]: &_prisma_sort #63
+├─ [distinct]: optional #216
+│  └─ item: list 'Post_keys_union' #215
+│     └─ item: string #213 enum{ '"id"', '"title"', '"author"' }
+├─ [orderBy]: optional #203
+│  └─ item: list 'Post_order_by' #202
+│     └─ item: struct #200
+│        ├─ [author]: optional #199
+│        │  └─ item: &User_order_by #152
 │        ├─ [id]: &_prisma_sort #63
 │        └─ [title]: &_prisma_sort #63
-├─ [skip]: optional #230
+├─ [skip]: optional #205
 │  └─ item: &_skip #87
-├─ [take]: optional #229
+├─ [take]: optional #204
 │  └─ item: &_take #83
-└─ [where]: optional #218
-   └─ item: struct 'Post_query_where_input' #217
-      ├─ [AND]: optional #214
-      │  └─ item: list #213
-      │     └─ item: &Post_query_where_input #212
-      ├─ [NOT]: optional #215
-      │  └─ item: &Post_query_where_input #212
-      ├─ [OR]: optional #214
-      │  └─ item: list #213
-      │     └─ item: &Post_query_where_input #212
-      ├─ [author]: optional #209
-      │  └─ item: struct 'User_where_excluding_Post' #208
-      │     ├─ [id]: optional #196
-      │     │  └─ item: &_prisma_integer_filter_ex #35
-      │     ├─ [name]: optional #197
-      │     │  └─ item: &_prisma_string_filter_ex #13
-      │     └─ [posts]: optional #206
-      │        └─ item: union #205
-      │           ├─ variant_0: struct #200
-      │           │  └─ [every]: optional #199
-      │           │     └─ item: &Post_where #198
-      │           ├─ variant_1: struct #202
-      │           │  └─ [some]: optional #201
-      │           │     └─ item: &Post_where #198
-      │           └─ variant_2: struct #204
-      │              └─ [none]: optional #203
-      │                 └─ item: &Post_where #198
-      ├─ [id]: optional #193
+└─ [where]: optional #197
+   └─ item: struct 'Post_query_where_input' #196
+      ├─ [AND]: optional #193
+      │  └─ item: list #192
+      │     └─ item: &Post_query_where_input #191
+      ├─ [NOT]: optional #194
+      │  └─ item: &Post_query_where_input #191
+      ├─ [OR]: optional #193
+      │  └─ item: list #192
+      │     └─ item: &Post_query_where_input #191
+      ├─ [author]: optional #132
+      │  └─ item: &User_where #126
+      ├─ [id]: optional #130
       │  └─ item: &_prisma_integer_filter_ex #35
-      └─ [title]: optional #194
+      └─ [title]: optional #131
          └─ item: &_prisma_string_filter_ex #13
