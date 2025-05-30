@@ -29,7 +29,7 @@ function initInlineWitWire(
 Meta.test({
   name: "Python VM performance",
   // FIXME: performance regressions keep breaking this
-  skip: true,
+  ignore: true,
 }, async (t) => {
   await t.should("work with low latency for lambdas", async () => {
     const wire = await initInlineWitWire(
