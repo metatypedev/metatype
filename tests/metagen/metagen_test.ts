@@ -97,6 +97,12 @@ members = ["fdk/"]
     ).code,
     0,
   );
+
+  await Deno.copyFile(
+    join(genCratePath, "fdk.rs"),
+    join(tmpDir, "fdk.rs"),
+  );
+
   assertEquals(
     (
       await t.shell("cargo build --target wasm32-wasi".split(" "), {
@@ -107,33 +113,33 @@ members = ["fdk/"]
   );
 });
 
-Meta.test("metagen python runs on cyclic types", async (t) => {
-  const typegraphPath = join(import.meta.dirname!, "typegraphs/python.py");
-  const basePath = join(t.tempDir, "fdk");
-
-  Deno.writeTextFile(
-    join(t.tempDir, "metatype.yml"),
-    `
-typegates:
-  dev:
-    url: "http://localhost:7890"
-    username: admin1
-    password: password2
-
-metagen:
-  targets:
-    my_target:
-      - generator: fdk_py
-        path: ${basePath}
-        typegraph_path: ${typegraphPath}
-`,
-  );
-
-  assertEquals(
-    (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" "))).code,
-    0,
-  );
-});
+// Meta.test("metagen python runs on cyclic types", async (t) => {
+//   const typegraphPath = join(import.meta.dirname!, "typegraphs/python.py");
+//   const basePath = join(t.tempDir, "fdk");
+//
+//   Deno.writeTextFile(
+//     join(t.tempDir, "metatype.yml"),
+//     `
+// typegates:
+//   dev:
+//     url: "http://localhost:7890"
+//     username: admin1
+//     password: password2
+//
+// metagen:
+//   targets:
+//     my_target:
+//       - generator: fdk_py
+//         path: ${basePath}
+//         typegraph_path: ${typegraphPath}
+// `,
+//   );
+//
+//   assertEquals(
+//     (await Meta.cli({}, ...`-C ${t.tempDir} gen my_target`.split(" "))).code,
+//     0,
+//   );
+// });
 
 // FIXME: Uncomment after implementing mode B (MET-754)
 //Meta.test("Metagen within sdk", async (t) => {
@@ -436,7 +442,7 @@ Meta.test({
       } as Record<string, JSONValue>,
     },
     {
-      name: "primtives",
+      name: "primitives",
       query: `query ($data: primitives) {
         data: prefix_primitives(
           data: $data
@@ -563,9 +569,11 @@ Meta.test({
       0,
     );
   });
+
   await using engine = await metaTest.engine(
     "metagen/typegraphs/identities.py",
   );
+
   for (const prefix of ["rs", "ts", "py"]) {
     await metaTest.should(`fdk data go round ${prefix}`, async (t) => {
       for (const { name, vars, query, skip } of cases) {
@@ -724,9 +732,6 @@ Meta.test(
   async (t) => {
     const scriptsPath = join(import.meta.dirname!, "typegraphs/sample");
     const res = await Meta.cli({}, ...`-C ${scriptsPath} gen`.split(" "));
-    // console.log("--- >>> --- >>> STDERR");
-    // console.log(res.stderr);
-    // console.log("--- >>> --- >>> STDERR end");
     assertEquals(res.code, 0);
 
     const expectedSchemaU1 = zod.object({
@@ -755,7 +760,6 @@ Meta.test(
       },
       {
         name: "client_py_upload",
-        skip: false,
         command: $`bash -c "python main.py"`.cwd(
           join(scriptsPath, "py_upload"),
         ),

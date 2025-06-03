@@ -12,7 +12,7 @@ use futures_lite::StreamExt as _;
 
 #[derive(Clone)]
 struct TestCtx {
-    typegraphs: Arc<IndexMap<String, Arc<Typegraph>>>,
+    typegraphs: Arc<IndexMap<String, Arc<tg_schema::Typegraph>>>,
 }
 
 impl InputResolver for TestCtx {
@@ -76,7 +76,7 @@ pub struct E2eTestCase {
     pub target: String,
     pub config: config::Config,
     pub target_dir: Option<PathBuf>,
-    pub typegraphs: IndexMap<String, Arc<Typegraph>>,
+    pub typegraphs: IndexMap<String, Arc<tg_schema::Typegraph>>,
     pub build_fn: fn(BuildArgs) -> BoxFuture<anyhow::Result<()>>,
 }
 

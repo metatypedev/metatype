@@ -1,33 +1,43 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, fmt::Write};
+use std::fmt::Write;
 
-use tg_schema::*;
+use heck::ToPascalCase as _;
+use typegraph::TypeNodeExt as _;
 
-use super::utils::normalize_type_title;
+use super::{
+    shared::{
+        manifest::{ManifestEntry, ManifestPage},
+        node_metas::{MetaFactory, MetasPageBuilder},
+    },
+    utils::normalize_type_title,
+};
 use crate::{
     interlude::*,
-    shared::{
-        files::{serialize_typepaths_json, TypePath},
-        types::*,
-    },
+    shared::files::{get_path_to_files, serialize_typepaths_json},
 };
 
-pub struct PyNodeMetasRenderer {
-    pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+pub type PyNodeMetasPage = ManifestPage<PyNodeMeta>;
+
+#[derive(Debug)]
+pub enum PyNodeMeta {
+    Alias { target: TypeKey },
+    Scalar,
+    Object(Object),
+    Union(Union),
+    Function(Function),
 }
 
-impl PyNodeMetasRenderer {
-    /// `props` is a map of prop_name -> (TypeName, subNodeName)
-    fn render_for_object(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
-    ) -> std::fmt::Result {
+#[derive(Debug)]
+pub struct Object {
+    name: String,
+    props: IndexMap<Arc<str>, TypeKey>,
+}
+
+impl Object {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<PyNodeMeta>) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
@@ -36,11 +46,12 @@ impl PyNodeMetasRenderer {
         return NodeMeta(
             sub_nodes={{"#
         )?;
-        for (key, node_ref) in props {
+        for (prop_key, ty_key) in self.props.iter() {
+            let ty_ref = page.get_ref(ty_key).unwrap();
             write!(
                 dest,
                 r#"
-                "{key}": NodeDescs.{node_ref},"#
+                "{prop_key}": NodeDescs.{ty_ref},"#
             )?;
         }
         write!(
@@ -52,26 +63,67 @@ impl PyNodeMetasRenderer {
         )?;
         Ok(())
     }
+}
 
-    fn render_for_func(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        return_node: &str,
-        argument_fields: Option<IndexMap<String, Rc<str>>>,
-        input_files: Option<String>,
-    ) -> std::fmt::Result {
+#[derive(Debug)]
+pub struct Union {
+    name: String,
+    variants: IndexMap<Arc<str>, TypeKey>,
+}
+
+impl Union {
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<PyNodeMeta>) -> std::fmt::Result {
+        let name = &self.name;
         write!(
             dest,
             r#"
     @staticmethod
-    def {ty_name}():
-        return_node = NodeDescs.{return_node}()
+    def {name}():
+        return NodeMeta(
+            variants={{"#
+        )?;
+        for (key, variant_ty) in &self.variants {
+            let variant_ref = page.get_ref(variant_ty).unwrap();
+            write!(
+                dest,
+                r#"
+                "{key}": NodeDescs.{variant_ref},"#
+            )?;
+        }
+        write!(
+            dest,
+            r#"
+            }},
+        )
+"#
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct Function {
+    name: String,
+    return_ty: TypeKey,
+    args: Option<BTreeMap<Arc<str>, Arc<str>>>,
+    input_files: Option<String>,
+}
+
+impl Function {
+    fn render(&self, dest: &mut impl Write, page: &PyNodeMetasPage) -> std::fmt::Result {
+        let name = &self.name;
+        let return_name = page.get_ref(&self.return_ty).unwrap();
+        write!(
+            dest,
+            r#"
+    @staticmethod
+    def {name}():
+        return_node = NodeDescs.{return_name}()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,"#
         )?;
-        if let Some(fields) = argument_fields {
+        if let Some(fields) = &self.args {
             write!(
                 dest,
                 r#"
@@ -92,7 +144,7 @@ impl PyNodeMetasRenderer {
             }},"#
             )?;
         }
-        if let Some(input_files) = input_files {
+        if let Some(input_files) = &self.input_files {
             write!(
                 dest,
                 r#"
@@ -107,149 +159,118 @@ impl PyNodeMetasRenderer {
         )?;
         Ok(())
     }
+}
 
-    fn render_for_union(
-        &self,
-        dest: &mut TypeRenderer,
-        ty_name: &str,
-        variants: IndexMap<String, Rc<str>>,
-    ) -> std::fmt::Result {
-        write!(
-            dest,
-            r#"
-    @staticmethod
-    def {ty_name}():
-        return NodeMeta(
-            variants={{"#
-        )?;
-        for (key, node_ref) in variants {
-            write!(
-                dest,
-                r#"
-                "{key}": NodeDescs.{node_ref},"#
-            )?;
+impl ManifestEntry for PyNodeMeta {
+    type Extras = ();
+
+    fn render(&self, dest: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
+        match self {
+            PyNodeMeta::Alias { .. } => Ok(()),
+            PyNodeMeta::Scalar => Ok(()),
+            PyNodeMeta::Object(obj) => obj.render(dest, page),
+            PyNodeMeta::Union(union) => union.render(dest, page),
+            PyNodeMeta::Function(func) => func.render(dest, page),
         }
-        write!(
-            dest,
-            r#"
-            }},
-        )
-"#
-        )?;
-        Ok(())
+    }
+
+    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
+        Some(match self {
+            PyNodeMeta::Alias { target } => page.get_ref(target).unwrap(),
+            PyNodeMeta::Scalar => "scalar".to_string(),
+            PyNodeMeta::Object(obj) => obj.name.clone(),
+            PyNodeMeta::Union(union) => union.name.clone(),
+            PyNodeMeta::Function(func) => func.name.clone(),
+        })
     }
 }
 
-impl RenderType for PyNodeMetasRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        use heck::ToPascalCase;
+impl MetaFactory<PyNodeMeta> for MetasPageBuilder {
+    fn build_meta(&self, ty: Type) -> PyNodeMeta {
+        match ty {
+            Type::Boolean(_)
+            | Type::Integer(_)
+            | Type::Float(_)
+            | Type::String(_)
+            | Type::File(_) => PyNodeMeta::Scalar,
+            Type::Optional(ty) => self.alias(ty.item().clone()),
+            Type::List(ty) => self.alias(ty.item().clone()),
+            Type::Object(ty) => self.build_object(ty),
+            Type::Union(ty) => self.build_union(ty),
+            Type::Function(ty) => self.build_func(ty),
+        }
+    }
+}
 
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => "scalar".into(),
-            // list and optional node just return the meta of the wrapped type
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
-                .0
-                .unwrap()
-                .to_string(),
-            TypeNode::Function { data, base } => {
-                let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
-                let return_ty_name = return_ty_name.unwrap();
-                let props = match renderer.nodes[data.input as usize].deref() {
-                    TypeNode::Object { data, .. } if !data.properties.is_empty() => {
-                        let props = data
-                            .properties
-                            .iter()
-                            // generate property types first
-                            .map(|(name, &dep_id)| {
-                                eyre::Ok((name.clone(), self.name_mapper.name_for(dep_id)))
-                            })
-                            .collect::<Result<IndexMap<_, _>, _>>()?;
-                        Some(props)
-                    }
-                    _ => None,
-                };
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                let input_files = self
-                    .input_files
-                    .get(&cursor.id)
-                    .and_then(|files| serialize_typepaths_json(files));
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
-                ty_name
-            }
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = ty_name.unwrap();
-                        eyre::Ok((name.clone(), ty_name))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_object(renderer, &ty_name, props)?;
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let mut named_set = vec![];
-                let variants = variants
-                    .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
-                            return None;
-                        }
-                        named_set.push(inner);
-                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
-                            Ok(val) => val,
-                            Err(err) => return Some(Err(err)),
-                        };
-                        let ty_name = ty_name.unwrap();
-                        Some(eyre::Ok((
-                            renderer.nodes[inner as usize].deref().base().title.clone(),
-                            ty_name,
-                        )))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                if !variants.is_empty() {
-                    {
-                        let mut named_types = self.named_types.lock().unwrap();
-                        named_types.extend(named_set)
-                    }
-                    let ty_name = normalize_type_title(&base.title);
-                    self.render_for_union(renderer, &ty_name, variants)?;
-                    ty_name
-                } else {
-                    "scalar".into()
-                }
-            }
-        };
-        Ok(name)
+trait PyMetasExt {
+    fn alias(&self, ty: Type) -> PyNodeMeta;
+    fn build_object(&self, ty: Arc<ObjectType>) -> PyNodeMeta;
+    fn build_union(&self, ty: Arc<UnionType>) -> PyNodeMeta;
+    fn build_func(&self, ty: Arc<FunctionType>) -> PyNodeMeta;
+}
+
+impl PyMetasExt for MetasPageBuilder {
+    fn alias(&self, ty: Type) -> PyNodeMeta {
+        let key = ty.key();
+        self.push(ty);
+        PyNodeMeta::Alias { target: key }
+    }
+
+    fn build_object(&self, ty: Arc<ObjectType>) -> PyNodeMeta {
+        let props = ty.properties();
+        let props = props
+            .iter()
+            .map(|(name, prop)| {
+                self.push(prop.ty.clone());
+                (name.clone(), prop.ty.key())
+            })
+            .collect::<IndexMap<_, _>>();
+
+        PyNodeMeta::Object(Object {
+            name: normalize_type_title(&ty.name()).to_pascal_case(),
+            props,
+        })
+    }
+
+    fn build_union(&self, ty: Arc<UnionType>) -> PyNodeMeta {
+        let variants = ty.variants();
+        let variants = variants
+            .iter()
+            .filter_map(|v| {
+                self.push(v.clone());
+                v.is_composite().then(|| (v.name(), v.key()))
+            })
+            .collect::<IndexMap<_, _>>();
+
+        if !variants.is_empty() {
+            PyNodeMeta::Union(Union {
+                name: normalize_type_title(&ty.name()).to_pascal_case(),
+                variants,
+            })
+        } else {
+            PyNodeMeta::Scalar
+        }
+    }
+
+    fn build_func(&self, ty: Arc<FunctionType>) -> PyNodeMeta {
+        let out = ty.output();
+        let out_key = out.key();
+        self.push(out.clone());
+        let props = ty.input().properties();
+        let args = (!props.is_empty()).then(|| {
+            props
+                .iter()
+                .map(|(name, prop)| (name.clone(), prop.ty.name()))
+                .collect()
+        });
+
+        let input_files = get_path_to_files(ty.clone());
+
+        PyNodeMeta::Function(Function {
+            return_ty: out_key,
+            args,
+            input_files: serialize_typepaths_json(&input_files),
+            name: normalize_type_title(&ty.name()).to_pascal_case(),
+        })
     }
 }

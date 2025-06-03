@@ -165,10 +165,10 @@ task("version-bump", async ($) => {
         LATEST_PRE_RELEASE_VERSION || LATEST_RELEASE_VERSION
       } → ${CURRENT_VERSION}`,
     );
-    lines.push([
-      /^(export const PUBLISHED_VERSION = ").*(";)$/,
-      CURRENT_VERSION,
-    ]);
+    // lines.push([
+    //   /^(export const LATEST_RELEASE_VERSION = ").*(";)$/,
+    //   CURRENT_VERSION,
+    // ]);
   }
 
   await sedLock($.workingDir, {

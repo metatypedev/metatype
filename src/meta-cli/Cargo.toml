@@ -27,6 +27,7 @@ path = "src/main.rs"
 [features]
 default = []
 typegate = ["dep:typegate_engine"]
+tracing-instrument = []
 
 [dependencies]
 

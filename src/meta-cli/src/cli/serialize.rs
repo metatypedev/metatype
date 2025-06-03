@@ -51,7 +51,7 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();

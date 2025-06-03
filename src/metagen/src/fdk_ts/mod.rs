@@ -7,14 +7,18 @@ pub mod utils;
 use core::fmt::Write;
 use std::borrow::Cow;
 
+use client_ts::GenClientTsOpts;
+use client_ts::TsClientManifest;
+use typegraph::ExpansionConfig;
+use typegraph::TypeNodeExt as _;
+use types::TsTypesPage;
+
 use crate::interlude::*;
 use crate::shared::*;
+use crate::utils::processed_write;
 use crate::*;
 
 use crate::utils::GenDestBuf;
-
-use self::shared::types::NameMemo;
-use self::shared::types::TypeRenderer;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.ts", include_str!("static/fdk.ts"))];
 
@@ -74,7 +78,7 @@ impl FdkTypescriptTemplate {
     fn render_fdk_ts(
         &self,
         config: &FdkTypescriptGenConfig,
-        tg: &Typegraph,
+        tg: Arc<Typegraph>,
     ) -> anyhow::Result<String> {
         let mut fdk_ts = GenDestBuf {
             buf: Default::default(),
@@ -89,35 +93,37 @@ impl FdkTypescriptTemplate {
         )?;
         writeln!(&mut fdk_ts)?;
         self.gen_static(&mut fdk_ts)?;
-        let ty_name_memo = if config.exclude_client.unwrap_or_default() {
-            render_types(&mut fdk_ts, tg)?
+
+        let map = if config.exclude_client.unwrap_or_default() {
+            info!("building render manifest...");
+            let manif = TsTypesPage::new(&tg, true);
+            info!("rendering...");
+            manif.render_all(&mut fdk_ts)?;
+            info!("rendering done successfully");
+            manif.get_cached_refs()
         } else {
-            super::client_ts::render_client(
-                &mut fdk_ts,
-                tg,
-                super::client_ts::GenClientTsOpts { hostcall: true },
-            )?
+            info!("building render manifest...");
+            let manif = TsClientManifest::new(tg.clone(), true)?;
+            info!("rendering...");
+            manif.render_client(&mut fdk_ts, &GenClientTsOpts { hostcall: true })?;
+            info!("rendering done successfully");
+            manif.types.get_cached_refs()
         };
+
         writeln!(&mut fdk_ts)?;
         {
             let stubbed_rts = config
                 .stubbed_runtimes
                 .clone()
                 .unwrap_or_else(|| vec!["deno".to_string()]);
-            let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            let stubbed_funs = filter_stubbed_funcs(&tg, &stubbed_rts).wrap_err_with(|| {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let TypeNode::Function { base, data } = &fun.node else {
-                    unreachable!()
-                };
-                let inp_ty = ty_name_memo
-                    .get(&data.input)
-                    .context("input type for function not found")?;
-                let out_ty = ty_name_memo
-                    .get(&data.output)
-                    .context("output type for function not found")?;
-                let type_name: String = utils::normalize_type_title(&base.title);
+                // we need the original version
+                let inp_ty = map.get(&fun.input().key().original()).unwrap();
+                let out_ty = map.get(&fun.output().key()).unwrap();
+                let type_name: String = utils::normalize_type_title(&fun.name());
                 writeln!(
                     &mut fdk_ts,
                     "export type {type_name}Handler = Handler<{inp_ty}, {out_ty}>;"
@@ -127,9 +133,13 @@ impl FdkTypescriptTemplate {
         Ok(fdk_ts.buf)
     }
 
-    pub fn gen_static(&self, dest: &mut GenDestBuf) -> core::fmt::Result {
+    pub fn gen_static(&self, dest: &mut GenDestBuf) -> anyhow::Result<()> {
         let fdk_ts = self.fdk_ts.as_ref();
-        writeln!(dest, "{}", fdk_ts)?;
+        processed_write(
+            dest,
+            fdk_ts,
+            &[("HOSTCALL".to_string(), true)].into_iter().collect(),
+        )?;
         Ok(())
     }
 }
@@ -179,34 +189,21 @@ impl crate::Plugin for Generator {
             _ => unreachable!(),
         };
 
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
+
         let mut out = IndexMap::new();
         out.insert(
             self.config.base.path.join("fdk.ts"),
             GeneratedFile {
-                contents: template.render_fdk_ts(&self.config, &tg)?,
+                contents: template.render_fdk_ts(&self.config, tg)?,
                 overwrite: true,
             },
         );
 
         Ok(GeneratorOutput(out))
     }
-}
-
-fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-        Rc::new(types::TypescriptTypeRenderer {}),
-        [],
-    );
-    // remove the root type which we don't want to generate types for
-    // TODO: gql types || function wrappers for exposed functions
-    // skip object 0, the root object where the `exposed` items are locted
-    for id in 1..tg.types.len() {
-        _ = renderer.render(id as u32)?;
-    }
-    let (types_ts, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "{}", types_ts)?;
-    Ok(name_memo)
 }
 
 #[test]
@@ -251,6 +248,10 @@ fn e2e() -> anyhow::Result<()> {
                 config,
                 build_fn: |args| {
                     Box::pin(async move {
+                        println!(
+                            "file content:fdk.ts:\n{}\n--end--",
+                            std::fs::read_to_string(args.path.join("fdk.ts"))?
+                        );
                         let status = tokio::process::Command::new("deno")
                             .args("check fdk.ts".split(' ').collect::<Vec<_>>())
                             .current_dir(&args.path)

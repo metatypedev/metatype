@@ -12,7 +12,11 @@ snapshot[`Typegraph using kv 1`] = `
           "set": 5,
           "delete": 7,
           "keys": 9,
-          "values": 12
+          "values": 12,
+          "lpush": 13,
+          "rpush": 14,
+          "lpop": 15,
+          "rpop": 16
         },
         "id": [],
         "required": [
@@ -20,7 +24,11 @@ snapshot[`Typegraph using kv 1`] = `
           "set",
           "delete",
           "keys",
-          "values"
+          "values",
+          "lpush",
+          "rpush",
+          "lpop",
+          "rpop"
         ],
         "policies": {
           "get": [
@@ -36,6 +44,18 @@ snapshot[`Typegraph using kv 1`] = `
             0
           ],
           "values": [
+            0
+          ],
+          "lpush": [
+            0
+          ],
+          "rpush": [
+            0
+          ],
+          "lpop": [
+            0
+          ],
+          "rpop": [
             0
           ]
         }
@@ -146,6 +166,46 @@ snapshot[`Typegraph using kv 1`] = `
         "materializer": 5,
         "rate_weight": null,
         "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_lpush_fn",
+        "input": 6,
+        "output": 8,
+        "runtimeConfig": null,
+        "materializer": 6,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_rpush_fn",
+        "input": 6,
+        "output": 8,
+        "runtimeConfig": null,
+        "materializer": 7,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_lpop_fn",
+        "input": 2,
+        "output": 4,
+        "runtimeConfig": null,
+        "materializer": 8,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_rpop_fn",
+        "input": 2,
+        "output": 4,
+        "runtimeConfig": null,
+        "materializer": 9,
+        "rate_weight": null,
+        "rate_calls": false
       }
     ],
     "materializers": [
@@ -202,6 +262,42 @@ snapshot[`Typegraph using kv 1`] = `
         "effect": {
           "effect": "read",
           "idempotent": true
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_lpush",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_rpush",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_lpop",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_rpop",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
         },
         "data": {}
       }
@@ -264,7 +360,11 @@ snapshot[`Typegraph using kv 2`] = `
           "set": 5,
           "delete": 7,
           "keys": 9,
-          "values": 12
+          "values": 12,
+          "lpush": 13,
+          "rpush": 14,
+          "lpop": 15,
+          "rpop": 16
         },
         "id": [],
         "required": [
@@ -272,7 +372,11 @@ snapshot[`Typegraph using kv 2`] = `
           "set",
           "delete",
           "keys",
-          "values"
+          "values",
+          "lpush",
+          "rpush",
+          "lpop",
+          "rpop"
         ],
         "policies": {
           "get": [
@@ -288,6 +392,18 @@ snapshot[`Typegraph using kv 2`] = `
             0
           ],
           "values": [
+            0
+          ],
+          "lpush": [
+            0
+          ],
+          "rpush": [
+            0
+          ],
+          "lpop": [
+            0
+          ],
+          "rpop": [
             0
           ]
         }
@@ -398,6 +514,46 @@ snapshot[`Typegraph using kv 2`] = `
         "materializer": 5,
         "rate_weight": null,
         "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_lpush_fn",
+        "input": 6,
+        "output": 8,
+        "runtimeConfig": null,
+        "materializer": 6,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_rpush_fn",
+        "input": 6,
+        "output": 8,
+        "runtimeConfig": null,
+        "materializer": 7,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_lpop_fn",
+        "input": 2,
+        "output": 4,
+        "runtimeConfig": null,
+        "materializer": 8,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "function",
+        "title": "root_rpop_fn",
+        "input": 2,
+        "output": 4,
+        "runtimeConfig": null,
+        "materializer": 9,
+        "rate_weight": null,
+        "rate_calls": false
       }
     ],
     "materializers": [
@@ -454,6 +610,42 @@ snapshot[`Typegraph using kv 2`] = `
         "effect": {
           "effect": "read",
           "idempotent": true
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_lpush",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_rpush",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_lpop",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
+        },
+        "data": {}
+      },
+      {
+        "name": "kv_rpop",
+        "runtime": 1,
+        "effect": {
+          "effect": "update",
+          "idempotent": false
         },
         "data": {}
       }

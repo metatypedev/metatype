@@ -25,7 +25,7 @@ pub struct Upgrade {
 
 #[async_trait]
 impl Action for Upgrade {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, _args: ConfigArgs) -> Result<()> {
         // https://github.com/jaemk/self_update/issues/44
         let opts = self.clone();
@@ -60,7 +60,7 @@ impl Action for Upgrade {
     }
 }
 
-#[tracing::instrument]
+#[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
 pub async fn upgrade_check() -> Result<()> {
     let config_path = GlobalConfig::default_path()?;
     let mut local_config = GlobalConfig::load(&config_path).await?;

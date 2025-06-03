@@ -18,14 +18,14 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "v0.2.1"
+  GHJK_VERSION: "v0.2.2"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   DOCKER_BUILD_NO_SUMMARY: true
 
 jobs:
   check-bump:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.ref_type == 'tag' || ( github.event_name == 'workflow_dispatch' && inputs.checkBump )
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
             target: aarch64-apple-darwin
             suffix: ""
             cross: false
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             suffix: ""
             cross: false
@@ -94,7 +94,7 @@ jobs:
           #   target: x86_64-unknown-linux-musl
           #   suffix: ""
           #   cross: false
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             suffix: ""
             cross: true
@@ -170,7 +170,7 @@ jobs:
         needs.check-bump.result == 'success'
         || github.event_name == 'workflow_dispatch'
       )
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
       id-token: write # The OIDC ID token is used for authentication with JSR.    
@@ -245,7 +245,7 @@ jobs:
       matrix:
         include:
           - platform: linux/amd64
-            runner: ubuntu-latest
+            runner: ubuntu-22.04
           - platform: linux/arm64
             runner: custom-macos
     steps:
@@ -282,7 +282,7 @@ jobs:
     # needs hack required here as well because
     # `build-docker` uses it
     if: always() && needs.build-docker.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -311,7 +311,7 @@ jobs:
       - pub-typegraph
       - build-docker
       - pub-docker
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       contents: write
       pull-requests: write

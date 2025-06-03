@@ -1,6 +1,6 @@
 [package]
 name = "xtask"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 edition = "2021"
 
 # this allows us to exclude the rust files

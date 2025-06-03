@@ -48,7 +48,7 @@ pub struct Dev {
 
 #[async_trait]
 impl Action for Dev {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         log::info!("'meta dev' subcommand is an alias to 'meta deploy --codegen --allow-dirty --watch --create-migration'");
         let options = DeployOptions {

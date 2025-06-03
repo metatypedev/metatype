@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { type Logger } from "@std/log";
+import type { Logger } from "@std/log";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import type { TypeGraph } from "../../typegraph/mod.ts";
 import type {
@@ -275,7 +275,9 @@ export class OperationPolicies {
           }'[${polIdx}] with effect '${effect}'...`,
         );
       if (outputCache.has(polIdx)) {
-        return outputCache.get(polIdx);
+        const res = outputCache.get(polIdx);
+        verbose && logger.info(`> authorize[cached]: ${res}`);
+        return res;
       }
 
       const resolver = this.#resolvers.get(polIdx);

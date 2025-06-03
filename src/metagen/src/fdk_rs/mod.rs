@@ -14,6 +14,13 @@ mod stubs;
 pub mod types;
 pub mod utils;
 
+use client_rs::GenClientRsOpts;
+use client_rs::RsClientManifest;
+use client_rs::RsClientManifestOpts;
+use typegraph::ExpansionConfig;
+use types::OutputTypes;
+use types::RustTypesConfig;
+
 use crate::interlude::*;
 use crate::shared::*;
 use crate::utils::*;
@@ -133,16 +140,21 @@ impl crate::Plugin for Generator {
         };
 
         let mut out = IndexMap::new();
+
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
+
         out.insert(
             self.config.base.path.join("fdk.rs"),
             GeneratedFile {
-                contents: template.gen_mod_rs(&self.config, &tg)?,
+                contents: template.gen_mod_rs(&self.config, tg.clone())?,
                 overwrite: true,
             },
         );
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
-            let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
+            let tg_name = tg.name();
             format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
@@ -170,8 +182,15 @@ impl crate::Plugin for Generator {
     }
 }
 
+#[derive(Debug)]
+struct Maps {
+    inputs: IndexMap<TypeKey, String>,
+    // partial_outputs: IndexMap<TypeKey, String>,
+    outputs: IndexMap<TypeKey, String>,
+}
+
 impl FdkRustTemplate {
-    fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+    fn gen_mod_rs(&self, config: &FdkRustGenConfig, tg: Arc<Typegraph>) -> anyhow::Result<String> {
         let mut mod_rs = GenDestBuf {
             buf: Default::default(),
         };
@@ -187,40 +206,42 @@ impl FdkRustTemplate {
         writeln!(&mut mod_rs.buf)?;
         self.gen_static(&mut mod_rs, config)?;
 
-        let ty_name_memo = if config.exclude_client.unwrap_or_default() {
-            writeln!(&mut mod_rs.buf, "use types::*;")?;
-            writeln!(&mut mod_rs.buf, "pub mod types {{")?;
-            let mut renderer = shared::types::TypeRenderer::new(
-                tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-                Rc::new(types::RustTypeRenderer {
-                    derive_serde: true,
-                    derive_debug: true,
-                    all_fields_optional: false,
-                }),
-                [],
-            );
-            // remove the root type which we don't want to generate types for
-            // TODO: gql types || function wrappers for exposed functions
-            for id in 1..tg.types.len() {
-                _ = renderer.render(id as u32)?;
+        let maps = if config.exclude_client.unwrap_or_default() {
+            info!("building render manifest...");
+            let manifest = RustTypesConfig::default()
+                .output_types(OutputTypes::NonPartial)
+                .derive_serde(true)
+                .derive_debug(true)
+                .build_manifest(&tg);
+            info!("rendering...");
+            manifest.render_full(&mut mod_rs.buf)?;
+            info!("rendering done successfully");
+
+            Maps {
+                inputs: manifest.inputs.get_cached_refs(),
+                outputs: manifest
+                    .outputs
+                    .as_ref()
+                    .map(|p| p.get_cached_refs())
+                    .unwrap_or_default(),
             }
-            let (types_rs, name_memo) = renderer.finalize();
-            for line in types_rs.lines() {
-                if !line.is_empty() {
-                    writeln!(&mut mod_rs.buf, "    {line}")?;
-                } else {
-                    writeln!(&mut mod_rs.buf)?;
-                }
-            }
-            writeln!(&mut mod_rs.buf, "}}")?;
-            name_memo
         } else {
-            super::client_rs::render_client(
-                &mut mod_rs,
-                tg,
-                &super::client_rs::GenClientRsOpts { hostcall: true },
-            )?
+            info!("building render manifest...");
+            let manifest = RsClientManifest::new(
+                tg.clone(),
+                &RsClientManifestOpts {
+                    non_partial_output_types: true,
+                },
+            )?;
+            info!("rendering...");
+            manifest.render_client(&mut mod_rs.buf, &GenClientRsOpts { hostcall: true })?;
+            info!("rendering done successfully");
+            Maps {
+                inputs: manifest.maps.input_types,
+                outputs: manifest.maps.output_types,
+            }
         };
+
         writeln!(&mut mod_rs.buf, "pub mod stubs {{")?;
         writeln!(&mut mod_rs.buf, "    use super::*;")?;
         {
@@ -232,14 +253,15 @@ impl FdkRustTemplate {
                 .stubbed_runtimes
                 .clone()
                 .unwrap_or_else(|| vec!["wasm_wire".to_string()]);
-            let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            let stubbed_funs = filter_stubbed_funcs(&tg, &stubbed_rts).wrap_err_with(|| {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             let mut op_to_mat_map = BTreeMap::new();
             for fun in &stubbed_funs {
-                let trait_name =
-                    stubs::gen_stub(fun, &mut stubs_rs, &ty_name_memo, &gen_stub_opts)?;
-                if let Some(Some(op_name)) = fun.mat.data.get("op_name").map(|val| val.as_str()) {
+                let trait_name = stubs::gen_stub(fun, &mut stubs_rs, &maps, &gen_stub_opts)?;
+                if let Some(Some(op_name)) =
+                    fun.materializer.data.get("op_name").map(|val| val.as_str())
+                {
                     op_to_mat_map.insert(op_name.to_string(), trait_name);
                 }
             }
@@ -297,7 +319,7 @@ impl FdkRustTemplate {
         let gen_end = "// gen-end\n";
         let wit_end = "// wit-end\n";
         processed_write(
-            dest,
+            &mut dest.buf,
             &mod_rs[mod_rs.find(wit_end).unwrap() + wit_end.len()..mod_rs.find(gen_end).unwrap()],
             &flags,
         )?;
@@ -338,20 +360,17 @@ fn gen_cargo_toml(crate_name: Option<&str>, hostcall: bool) -> String {
 name = "{crate_name}"
 edition = "2021"
 version = "0.0.1"
-
 [dependencies]
 {dependency}
 anyhow = "1"
 serde = {{ version = "1", features = ["derive"] }}
 serde_json = "1"
 wit-bindgen = "0.34"
-
 # The options after here are configured for crates intended to be
 # wasm artifacts. Remove them if your usage is different
 [lib]
 path = "lib.rs"
 crate-type = ["cdylib", "rlib"]
-
 [profile.release]
 strip = "symbols"
 opt-level = "z"

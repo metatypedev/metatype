@@ -6,11 +6,11 @@ on:
       - main
 
 env:
-  GHJK_VERSION: "v0.2.1"
+  GHJK_VERSION: "v0.2.2"
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -26,7 +26,7 @@ jobs:
   deploy:
     needs: changes
     if: ${{ needs.changes.outputs.website == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       

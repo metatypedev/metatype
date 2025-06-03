@@ -22,7 +22,10 @@ type ORD = KVHelper<["eq", "lt", "lte", "gt", "gte"], string>;
 type INCL = KVHelper<["in", "contains"], string>;
 type Terms = ORD & INCL;
 
-type SpecialTerms = KVHelper<["started_at", "ended_at", "status"], Terms>;
+type SpecialTerms = KVHelper<
+  ["run_id", "started_at", "ended_at", "status"],
+  Terms
+>;
 
 export type Expr = Terms & SpecialTerms & AND & OR & NOT;
 
@@ -67,7 +70,7 @@ export async function buildSearchableItems(
       }
     }
 
-    const isOk = "Ok" in result;
+    const isOk = result && "Ok" in result;
     const kind = isOk ? "Ok" : "Err";
     const stoppedStatus = isOk ? "COMPLETED" : "COMPLETED_WITH_ERROR";
 
@@ -101,7 +104,6 @@ export async function applyFilter(
   return searchResults;
 }
 
-
 export function evalExpr(
   sResult: SearchItem,
   filter: Expr,
@@ -121,9 +123,7 @@ export function evalExpr(
       const exprList = filter[op];
       if (!Array.isArray(exprList)) {
         // should be unreachable since filter is validated at push
-        throw new Error(
-          `Fatal: array expected at ${path.join(".")}`,
-        );
+        throw new Error(`Fatal: array expected at ${path.join(".")}`);
       }
       const fn = op == "or" ? "some" : "every";
       if (
@@ -142,6 +142,7 @@ export function evalExpr(
       break;
     }
     // Special
+    case "run_id":
     case "status":
     case "started_at":
     case "ended_at": {
@@ -182,7 +183,7 @@ function evalTerm(sResult: SearchItem, terms: Terms, path: Array<string>) {
         return false;
       }
 
-      if (!testCompare(value,  toJS(terms[op]))) {
+      if (!testCompare(value, toJS(terms[op]))) {
         return false;
       }
 
@@ -199,17 +200,13 @@ function evalTerm(sResult: SearchItem, terms: Terms, path: Array<string>) {
     }
     case "contains":
     case "in": {
-      if (
-        !inclusion(value, toJS(terms[op]), op, newPath)
-      ) {
+      if (!inclusion(value, toJS(terms[op]), op, newPath)) {
         return false;
       }
       break;
     }
     default: {
-      throw new Error(
-        `Unknown operator "${op}" at ${path.join(".")}`,
-      );
+      throw new Error(`Unknown operator "${op}" at ${path.join(".")}`);
     }
   }
 
@@ -241,8 +238,8 @@ function ord(l: unknown, r: unknown, cp: keyof ORD, path: Array<string>) {
   }
 
   if (
-    typeof l == "string" && typeof r == "string" ||
-    typeof l == "number" && typeof r == "number"
+    (typeof l == "string" && typeof r == "string") ||
+    (typeof l == "number" && typeof r == "number")
   ) {
     switch (cp) {
       case "lt":
@@ -278,7 +275,9 @@ function inclusion(
   } else if (typeof left == "string" && typeof right == "string") {
     return right.includes(left);
   } else if (
-    typeof left == typeof right && typeof left == "object" && left != null
+    typeof left == typeof right &&
+    typeof left == "object" &&
+    left != null
   ) {
     // Example: { a: { b: 1 } } in { a: { b: 1 }, c: 2 } => true
     const rightV = (right ?? {}) as Record<string, unknown>;

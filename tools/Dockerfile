@@ -52,7 +52,7 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=v0.2.1
+ARG GHJK_VERSION=v0.2.2
 RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
     | GHJK_INSTALL_EXE_DIR=/usr/bin sh
 
@@ -62,7 +62,7 @@ ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
 RUN ghjk envs cook
 
-SHELL ["/bin/sh", "-c", ". .ghjk/envs/oci/activate.sh && sh -c \"$*\"", "sh"]
+SHELL ["/bin/sh", "-c", ". ${GHJK_ACTIVATE} && sh -c \"$*\"", "sh"]
 
 COPY --from=plan /app/recipe.json recipe.json
 

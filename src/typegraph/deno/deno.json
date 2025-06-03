@@ -1,6 +1,6 @@
 {
   "name": "@typegraph/sdk",
-  "version": "0.5.1-rc.1",
+  "version": "0.5.1-rc.4",
   "publish": {
     "exclude": ["!src/gen", "!LICENSE.md", "!README.md"]
   },

@@ -23,7 +23,7 @@ pub struct Undeploy {
 
 #[async_trait]
 impl Action for Undeploy {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: super::ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
         let config_path = args.config.clone();

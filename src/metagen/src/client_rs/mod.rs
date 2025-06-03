@@ -6,18 +6,19 @@ mod selections;
 
 use core::fmt::Write;
 
-use shared::get_gql_type;
+use fdk_rs::types::{OutputTypes, RustTypesConfig, RustTypesSubmanifest};
+use node_metas::RsNodeMeta;
+use selections::RustSelectionManifestPage;
+use shared::manifest::ManifestPage;
+use shared::node_metas::MetasPageBuilder;
 use tg_schema::EffectType;
+use typegraph::ExpansionConfig;
 
 use crate::interlude::*;
 use crate::*;
 
 use crate::fdk_rs::utils;
 use crate::shared::client::*;
-use crate::shared::types::NameMemo;
-use crate::shared::types::TypeRenderer;
-use crate::utils::GenDestBuf;
-use utils::normalize_type_title;
 
 #[derive(Serialize, Deserialize, Debug, garde::Validate)]
 pub struct ClienRsGenConfig {
@@ -42,6 +43,73 @@ impl ClienRsGenConfig {
             .as_ref()
             .map(|path| workspace_path.join(path));
         Ok(config)
+    }
+}
+
+pub(super) struct Maps {
+    pub(super) input_types: IndexMap<TypeKey, String>,
+    pub(super) output_types: IndexMap<TypeKey, String>,
+    pub(super) partial_output_types: IndexMap<TypeKey, String>,
+    node_metas: IndexMap<TypeKey, String>,
+    selections: IndexMap<TypeKey, String>,
+}
+
+pub(super) struct RsClientManifest {
+    tg: Arc<Typegraph>,
+    types: RustTypesSubmanifest,
+    node_metas: ManifestPage<RsNodeMeta>,
+    selections: RustSelectionManifestPage,
+    pub maps: Maps,
+}
+
+pub struct RsClientManifestOpts {
+    pub non_partial_output_types: bool,
+}
+
+impl RsClientManifest {
+    pub(super) fn new(tg: Arc<Typegraph>, opts: &RsClientManifestOpts) -> anyhow::Result<Self> {
+        let types = RustTypesConfig::default()
+            .output_types(if opts.non_partial_output_types {
+                OutputTypes::Both
+            } else {
+                OutputTypes::Partial
+            })
+            .derive_serde(true)
+            .derive_debug(true)
+            .build_manifest(&tg);
+        let input_types_memo = types.inputs.get_cached_refs();
+        let output_types_memo = types
+            .outputs
+            .as_ref()
+            .map(|o| o.get_cached_refs())
+            .unwrap_or_default();
+        let partial_output_types_memo = types
+            .partial_outputs
+            .as_ref()
+            .map(|p| p.get_cached_refs())
+            .unwrap_or_default();
+
+        let node_metas = MetasPageBuilder::new(tg.clone())?.build();
+        node_metas.cache_references();
+        let node_metas_memo = node_metas.get_cached_refs();
+
+        let selections = selections::manifest_page(&tg, input_types_memo.clone());
+        selections.cache_references();
+        let selections_memo = selections.get_cached_refs();
+
+        Ok(Self {
+            tg,
+            types,
+            node_metas,
+            selections,
+            maps: Maps {
+                input_types: input_types_memo,
+                output_types: output_types_memo,
+                partial_output_types: partial_output_types_memo,
+                node_metas: node_metas_memo,
+                selections: selections_memo,
+            },
+        })
     }
 }
 
@@ -87,21 +155,33 @@ impl crate::Plugin for Generator {
             .get(Self::INPUT_TG)
             .context("missing generator input")?
         {
-            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw,
-            GeneratorInputResolved::TypegraphFromPath { raw } => raw,
+            GeneratorInputResolved::TypegraphFromTypegate { raw } => raw.clone(),
+            GeneratorInputResolved::TypegraphFromPath { raw } => raw.clone(),
             _ => bail!("unexpected input type"),
         };
+        let tg = ExpansionConfig::with_default_engines().expand(tg)?;
         let mut out = IndexMap::new();
+        info!("building render manifest");
+        let manif = RsClientManifest::new(
+            tg.clone(),
+            &RsClientManifestOpts {
+                non_partial_output_types: false,
+            },
+        )?;
+        let mut buf = String::new();
+        info!("rendering...");
+        manif.render(&mut buf)?;
+        info!("rendering done successfully");
         out.insert(
             self.config.base.path.join("client.rs"),
             GeneratedFile {
-                contents: render_client_rs(&self.config, tg)?,
+                contents: buf,
                 overwrite: true,
             },
         );
         let crate_name = self.config.crate_name.clone().unwrap_or_else(|| {
             use heck::ToSnekCase;
-            let tg_name = tg.name().unwrap_or_else(|_| "generated".to_string());
+            let tg_name = tg.name();
             format!("{}_fdk", tg_name.to_snek_case())
         });
         if !matches!(self.config.skip_cargo_toml, Some(true)) {
@@ -127,130 +207,129 @@ impl crate::Plugin for Generator {
     }
 }
 
-fn render_client_rs(_config: &ClienRsGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
-    let mut client_rs = GenDestBuf {
-        buf: Default::default(),
-    };
-
-    writeln!(
-        &mut client_rs,
-        "// This file was @generated by metagen and is intended"
-    )?;
-    writeln!(
-        &mut client_rs,
-        "// to be generated again on subsequent metagen runs."
-    )?;
-    writeln!(&mut client_rs)?;
-
-    render_client(&mut client_rs, tg, &GenClientRsOpts { hostcall: false })?;
-
-    writeln!(&mut client_rs)?;
-    Ok(client_rs.buf)
-}
-
 pub struct GenClientRsOpts {
     pub hostcall: bool,
 }
 
-pub fn render_client(
-    dest: &mut GenDestBuf,
-    tg: &Typegraph,
-    opts: &GenClientRsOpts,
-) -> anyhow::Result<NameMemo> {
-    render_static(dest, opts.hostcall)?;
+impl RsClientManifest {
+    fn render(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+        writeln!(
+            dest,
+            "// This file was @generated by metagen and is intended"
+        )?;
+        writeln!(dest, "// to be generated again on subsequent metagen runs.")?;
+        writeln!(dest)?;
 
-    let manifest = get_manifest(tg)?;
+        self.render_client(dest, &GenClientRsOpts { hostcall: false })?;
 
-    let name_mapper = NameMapper {
-        nodes: tg.types.iter().cloned().map(Rc::new).collect(),
-        memo: Default::default(),
-    };
-    let name_mapper = Rc::new(name_mapper);
+        writeln!(dest)?;
 
-    let (node_metas, named_types) = render_node_metas(dest, &manifest, name_mapper.clone())?;
-    let (data_types, return_types) = render_data_types(dest, tg, &manifest, name_mapper.clone())?;
-    let data_types = Rc::new(data_types);
-    let selection_names =
-        render_selection_types(dest, &manifest, data_types.clone(), name_mapper.clone())?;
+        Ok(())
+    }
 
-    write!(
-        dest,
-        r#"
+    pub fn render_client(
+        &self,
+        dest: &mut impl Write,
+        opts: &GenClientRsOpts,
+    ) -> anyhow::Result<()> {
+        render_static(dest, opts.hostcall)?;
+
+        let methods = self.node_metas.render_all_buffered()?;
+        with_metas_namespace(dest, methods)?;
+
+        self.types.render_full(dest)?;
+
+        self.selections.render_all(dest)?;
+
+        self.render_query_graph(dest)?;
+        Ok(())
+    }
+
+    fn render_query_graph(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+        let gql_types = get_gql_types(&self.tg);
+
+        write!(
+            dest,
+            r#"
 pub fn query_graph() -> QueryGraph {{
     QueryGraph {{
-        ty_to_gql_ty_map: std::sync::Arc::new([
-        "#
-    )?;
-    for (&id, ty_name) in name_mapper.memo.borrow().deref() {
-        let gql_ty = get_gql_type(&tg.types, id, false);
+        ty_to_gql_ty_map: std::sync::Arc::new(["#
+        )?;
+
+        for (key, gql_ty) in gql_types.into_iter() {
+            let ty_name = self.tg.find_type(key).unwrap().name();
+            write!(
+                dest,
+                r#"
+            ("{ty_name}".into(), "{gql_ty}".into()),"#
+            )?;
+        }
+
         write!(
             dest,
             r#"
-            ("{ty_name}".into(), "{gql_ty}".into()),"#
-        )?;
-    }
-    for id in named_types {
-        let ty_name = &tg.types[id as usize].base().title;
-        let gql_ty = get_gql_type(&tg.types, id, false);
-        write!(
-            dest,
-            r#"
-            ("{ty_name}".into(), "{gql_ty}".into()),"#
-        )?;
-    }
-    write!(
-        dest,
-        r#"
         ].into()),
     }}
 }}
-"#
-    )?;
+    "#
+        )?;
 
-    writeln!(dest, r#"impl QueryGraph {{"#)?;
-    for fun in manifest.root_fns {
-        use heck::ToSnekCase;
+        self.render_root_functions(dest)?;
 
-        let node_name = fun.name;
-        let method_name = node_name.to_snek_case();
-        let out_ty_name = return_types.get(&fun.out_id).unwrap();
-        let out_ty_name = if shared::is_composite(&tg.types, fun.out_id) {
-            format!("return_types::{out_ty_name}",)
-        } else {
-            out_ty_name.to_string()
-        };
+        Ok(())
+    }
 
-        let arg_ty = fun.in_id.map(|id| data_types.get(&id).unwrap());
-        let select_ty = fun.select_ty.map(|id| selection_names.get(&id).unwrap());
+    fn render_root_functions(&self, dest: &mut impl Write) -> anyhow::Result<()> {
+        writeln!(dest, r#"impl QueryGraph{{"#)?;
+        for func in self.tg.root_functions() {
+            let (path, ty) = func?;
+            use heck::ToSnekCase;
 
-        let (marker_ty, node_ty) = match fun.effect {
-            EffectType::Read => ("QueryMarker", "QueryNode"),
-            EffectType::Update | EffectType::Delete | EffectType::Create => {
-                ("MutationMarker", "MutationNode")
-            }
-        };
+            let node_name = path.join("_");
+            let method_name = node_name.to_snek_case();
+            let out_ty_name = self
+                .maps
+                .partial_output_types
+                .get(&ty.output().key())
+                .unwrap();
 
-        let meta_method = node_metas
-            .get(&fun.id)
-            .map(|str| &str[..])
-            .unwrap_or_else(|| "scalar");
+            let arg_ty = ty
+                .non_empty_input()
+                .map(|ty| self.maps.input_types.get(&ty.key()).unwrap());
 
-        let args_row = match &arg_ty {
-            Some(arg_ty) => format!(
-                "
+            let select_ty = self.maps.selections.get(&ty.output().key());
+
+            let (marker_ty, node_ty) = match ty.effect() {
+                EffectType::Read => ("QueryMarker", "QueryNode"),
+                EffectType::Update | EffectType::Delete | EffectType::Create => {
+                    ("MutationMarker", "MutationNode")
+                }
+            };
+
+            let meta_method = self
+                .maps
+                .node_metas
+                .get(&ty.key())
+                .map(|s| s.as_str())
+                .unwrap_or("scalar");
+
+            let args_row = match &arg_ty {
+                Some(arg_ty) => format!(
+                    "
         args: impl Into<NodeArgs<{arg_ty}>>"
-            ),
-            None => "".into(),
-        };
-        match &select_ty {
-            Some(select_ty) => {
-                let arg_value = match &arg_ty {
-                    Some(_) => "args.into().into()",
-                    None => "NodeArgsErased::None",
-                };
-                write!(
-                    dest,
-                    r#"
+                ),
+                None => "".into(),
+            };
+
+            match select_ty {
+                Some(select_ty) => {
+                    let arg_value = match &arg_ty {
+                        Some(_) => "args.into().into()",
+                        None => "NodeArgsErased::None",
+                    };
+                    write!(
+                        dest,
+                        r#"
     pub fn {method_name}(
         &self,{args_row}
     ) -> UnselectedNode<{select_ty}, {select_ty}<HasAlias>, {marker_ty}, {out_ty_name}>
@@ -262,16 +341,16 @@ pub fn query_graph() -> QueryGraph {{
             _marker: PhantomData,
         }}
     }}"#
-                )?;
-            }
-            None => {
-                let arg_value = match &arg_ty {
-                    Some(_) => "SelectionErased::ScalarArgs(args.into().into())",
-                    None => "SelectionErased::Scalar",
-                };
-                write!(
-                    dest,
-                    r#"
+                    )?;
+                }
+                None => {
+                    let arg_value = match &arg_ty {
+                        Some(_) => "SelectionErased::ScalarArgs(args.into().into())",
+                        None => "SelectionErased::Scalar",
+                    };
+                    write!(
+                        dest,
+                        r#"
     pub fn {method_name}(
         &self,{args_row}
     ) -> {node_ty}<{out_ty_name}>
@@ -292,20 +371,22 @@ pub fn query_graph() -> QueryGraph {{
         .unwrap();
         {node_ty}(nodes.into_iter().next().unwrap(), PhantomData)
     }}"#
-                )?;
-            }
-        };
-    }
-    writeln!(
-        dest,
-        "
+                    )?;
+                }
+            };
+        }
+        writeln!(
+            dest,
+            "
 }}"
-    )?;
-    Ok(Rc::into_inner(data_types).unwrap())
+        )?;
+
+        Ok(())
+    }
 }
 
 /// Render the common sections like the transports
-fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
+fn render_static(dest: &mut impl Write, hostcall: bool) -> anyhow::Result<()> {
     let client_rs = include_str!("static/client.rs");
     crate::utils::processed_write(
         dest,
@@ -315,123 +396,7 @@ fn render_static(dest: &mut GenDestBuf, hostcall: bool) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Render the types that'll actually hold the data, the ones
-/// used for serialization
-fn render_data_types(
-    dest: &mut GenDestBuf,
-    tg: &Typegraph,
-    manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
-) -> anyhow::Result<(NameMemo, NameMemo)> {
-    // we first render all types under the `types`
-    // module for general use
-    let name_memo = {
-        let mut renderer = TypeRenderer::new(
-            name_mapper.nodes.clone(),
-            Rc::new(fdk_rs::types::RustTypeRenderer {
-                derive_debug: true,
-                derive_serde: true,
-                all_fields_optional: false,
-            }),
-            [],
-        );
-        for id in 1..tg.types.len() {
-            _ = renderer.render(id as u32)?;
-        }
-        let (types_rs, name_memo) = renderer.finalize();
-        writeln!(dest.buf, "use types::*;")?;
-        writeln!(dest.buf, "#[allow(unused)]")?;
-        writeln!(dest.buf, "pub mod types {{")?;
-        for line in types_rs.lines() {
-            writeln!(dest.buf, "    {line}")?;
-        }
-        writeln!(dest.buf, "}}")?;
-        name_memo
-    };
-    // for types used for fn return types
-    // we separately render types that are
-    // fully partial
-    let name_memo_partial = {
-        let mut renderer = TypeRenderer::new(
-            name_mapper.nodes.clone(),
-            Rc::new(fdk_rs::types::RustTypeRenderer {
-                derive_debug: true,
-                derive_serde: true,
-                all_fields_optional: true,
-            }),
-            // we pre seed the renderer with names for those that
-            // aren't composites
-            name_memo.iter().filter_map(|(&ii, name)| {
-                if tg.types[ii as usize].type_name() == "function" {
-                    return None;
-                }
-                if !shared::is_composite(&tg.types, ii) {
-                    Some((ii, name.clone()))
-                } else {
-                    None
-                }
-            }),
-        );
-        for &id in &manifest.return_types {
-            _ = renderer.render(id)?;
-        }
-        let (types_rs, name_memo) = renderer.finalize();
-        // writeln!(dest.buf, "use return_types::*;")?;
-        writeln!(dest.buf, "#[allow(unused)]")?;
-        writeln!(dest.buf, "pub mod return_types {{")?;
-        writeln!(dest.buf, "    use super::types::*;")?;
-        for line in types_rs.lines() {
-            writeln!(dest.buf, "    {line}")?;
-        }
-        writeln!(dest.buf, "}}")?;
-        name_memo
-    };
-    Ok((name_memo, name_memo_partial))
-}
-
-/// Render the type used for selecting fields
-fn render_selection_types(
-    dest: &mut GenDestBuf,
-    manifest: &RenderManifest,
-    arg_types_memo: Rc<NameMemo>,
-    name_mapper: Rc<NameMapper>,
-) -> Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(selections::RsNodeSelectionsRenderer {
-            arg_ty_names: arg_types_memo,
-        }),
-        [],
-    );
-    for &id in &manifest.selections {
-        _ = renderer.render(id)?;
-    }
-    let (buf, memo) = renderer.finalize();
-    write!(dest, "{buf}")?;
-    Ok(memo)
-}
-
-/// Render the `nodeMetas` object used to encode the query
-/// graph metadata
-fn render_node_metas(
-    dest: &mut GenDestBuf,
-    manifest: &RenderManifest,
-    name_mapper: Rc<NameMapper>,
-) -> Result<(NameMemo, IndexSet<u32>)> {
-    let named_types = Rc::new(std::sync::Mutex::new(IndexSet::new()));
-    let mut renderer = TypeRenderer::new(
-        name_mapper.nodes.clone(),
-        Rc::new(node_metas::RsNodeMetasRenderer {
-            name_mapper,
-            named_types: named_types.clone(),
-            input_files: manifest.input_files.clone(),
-        }),
-        [],
-    );
-    for &id in &manifest.node_metas {
-        _ = renderer.render(id)?;
-    }
-    let (methods, memo) = renderer.finalize();
+fn with_metas_namespace(dest: &mut impl Write, methods: String) -> std::fmt::Result {
     write!(
         dest,
         r#"
@@ -456,27 +421,7 @@ mod node_metas {{
 }}
 "#
     )?;
-    Ok((
-        memo,
-        Rc::try_unwrap(named_types).unwrap().into_inner().unwrap(),
-    ))
-}
-
-struct NameMapper {
-    nodes: Vec<Rc<TypeNode>>,
-    memo: std::cell::RefCell<NameMemo>,
-}
-
-impl NameMapper {
-    pub fn name_for(&self, id: u32) -> Rc<str> {
-        self.memo
-            .borrow_mut()
-            .entry(id)
-            .or_insert_with(|| {
-                Rc::from(normalize_type_title(&self.nodes[id as usize].base().title))
-            })
-            .clone()
-    }
+    Ok(())
 }
 
 pub fn gen_cargo_toml(crate_name: Option<&str>) -> String {

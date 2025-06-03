@@ -6,12 +6,13 @@ use std::borrow::Cow;
 
 use crate::interlude::*;
 use crate::shared::*;
-use crate::*;
-
 use crate::utils::GenDestBuf;
+use crate::*;
+use client_py::ClientPyManifest;
+use typegraph::ExpansionConfig;
+use types::PyTypesPage;
 
-use self::shared::types::NameMemo;
-use self::shared::types::TypeRenderer;
+pub mod types;
 
 pub const DEFAULT_TEMPLATE: &[(&str, &str)] = &[("fdk.py", include_str!("static/fdk.py"))];
 
@@ -68,7 +69,11 @@ impl Generator {
 }
 
 impl FdkPythonTemplate {
-    fn render_fdk_py(&self, config: &FdkPythonGenConfig, tg: &Typegraph) -> anyhow::Result<String> {
+    fn render_fdk_py(
+        &self,
+        config: &FdkPythonGenConfig,
+        tg: Arc<Typegraph>,
+    ) -> anyhow::Result<String> {
         let mut fdk_py = GenDestBuf {
             buf: Default::default(),
         };
@@ -83,13 +88,20 @@ impl FdkPythonTemplate {
         writeln!(&mut fdk_py)?;
         self.gen_static(&mut fdk_py)?;
         let ty_name_memo = if config.exclude_client.unwrap_or_default() {
-            render_types(&mut fdk_py, tg)?
+            info!("building render manifest...");
+            let manif = PyTypesPage::new(&tg);
+            manif.cache_references();
+            info!("rendering...");
+            manif.render_all(&mut fdk_py)?;
+            info!("rendering done successfully");
+            manif.get_cached_refs()
         } else {
-            super::client_py::render_client(
-                &mut fdk_py,
-                tg,
-                super::client_py::GenClientPyOpts { hostcall: true },
-            )?
+            info!("building render manifest...");
+            let manif = ClientPyManifest::new(tg.clone())?;
+            info!("rendering...");
+            manif.render_client(&mut fdk_py, true)?;
+            info!("rendering done successfully");
+            manif.maps.types
         };
         writeln!(&mut fdk_py)?;
         {
@@ -97,15 +109,12 @@ impl FdkPythonTemplate {
                 .stubbed_runtimes
                 .clone()
                 .unwrap_or_else(|| vec!["python".to_string()]);
-            let stubbed_funs = filter_stubbed_funcs(tg, &stubbed_rts).wrap_err_with(|| {
+            let stubbed_funs = filter_stubbed_funcs(&tg, &stubbed_rts).wrap_err_with(|| {
                 format!("error collecting materializers for runtimes {stubbed_rts:?}")
             })?;
             for fun in &stubbed_funs {
-                let TypeNode::Function { base: _base, data } = &fun.node else {
-                    unreachable!()
-                };
                 let def_name = serde_json::from_value::<String>(
-                    fun.mat
+                    fun.materializer
                         .data
                         .get("name")
                         .wrap_err("missing python mod name")
@@ -113,12 +122,11 @@ impl FdkPythonTemplate {
                         .clone(),
                 )?;
                 let inp_ty = ty_name_memo
-                    .get(&data.input)
-                    .context("input type for function not found")?;
+                    .get(&fun.input().key())
+                    .ok_or_eyre("input type for function not found")?;
                 let out_ty = ty_name_memo
-                    .get(&data.output)
-                    .context("output type for function not found")?;
-                // let type_name: String = client_py::utils::normalize_type_title(&base.title);
+                    .get(&fun.output().key())
+                    .ok_or_eyre("output type for function not found")?;
                 writeln!(
                     &mut fdk_py,
                     r#"
@@ -200,33 +208,19 @@ impl crate::Plugin for Generator {
         };
 
         let mut out = IndexMap::new();
+        let tg = ExpansionConfig::with_default_engines()
+            .conservative()
+            .expand(tg)?;
         out.insert(
             self.config.base.path.join("fdk.py"),
             GeneratedFile {
-                contents: template.render_fdk_py(&self.config, &tg)?,
+                contents: template.render_fdk_py(&self.config, tg)?,
                 overwrite: true,
             },
         );
 
         Ok(GeneratorOutput(out))
     }
-}
-
-fn render_types(dest: &mut GenDestBuf, tg: &Typegraph) -> anyhow::Result<NameMemo> {
-    let mut renderer = TypeRenderer::new(
-        tg.types.iter().cloned().map(Rc::new).collect::<Vec<_>>(),
-        Rc::new(client_py::types::PyTypeRenderer {}),
-        [],
-    );
-    // remove the root type which we don't want to generate types for
-    // TODO: gql types || function wrappers for exposed functions
-    // skip object 0, the root object where the `exposed` items are locted
-    for id in 1..tg.types.len() {
-        _ = renderer.render(id as u32)?;
-    }
-    let (types_ts, name_memo) = renderer.finalize();
-    writeln!(dest.buf, "{}", types_ts)?;
-    Ok(name_memo)
 }
 
 #[test]

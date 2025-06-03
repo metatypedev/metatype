@@ -37,7 +37,7 @@ pub struct Gen {
 
 #[async_trait]
 impl Action for Gen {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?;
         let config = Config::load_or_find(args.config.as_deref(), &dir)?;
@@ -84,12 +84,21 @@ impl Action for Gen {
             resolver,
         )
         .await?;
+
+        let working_dir = args.dir()?;
+        let working_dir = &working_dir;
+
         files
             .0
             .into_iter()
             .map(|(path, file)| async move {
                 tokio::fs::create_dir_all(path.parent().unwrap()).await?;
                 if file.overwrite || !tokio::fs::try_exists(&path).await? {
+                    let relative_path = pathdiff::diff_paths(&path, working_dir);
+                    info!(
+                        "writing to {:?}...",
+                        relative_path.as_deref().unwrap_or(path.as_path()),
+                    );
                     tokio::fs::write(path, file.contents).await?;
                 }
                 Ok::<_, tokio::io::Error>(())
@@ -97,6 +106,7 @@ impl Action for Gen {
             .collect::<Vec<_>>()
             .try_join()
             .await?;
+        info!("all outputs have successfully been written");
 
         Ok(())
     }
@@ -158,7 +168,7 @@ async fn load_fdk_template(
 }
 
 impl InputResolver for MetagenCtx {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn resolve(&self, order: GeneratorInputOrder) -> Result<GeneratorInputResolved> {
         Ok(match order {
             GeneratorInputOrder::TypegraphFromTypegate { name } => {
@@ -206,7 +216,7 @@ impl InputResolver for MetagenCtx {
     }
 }
 
-#[tracing::instrument]
+#[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
 async fn load_tg_at(
     config: Arc<Config>,
     path: PathBuf,

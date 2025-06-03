@@ -27,8 +27,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GHJK_VERSION: "v0.2.1"
   # GHJK_LOG: "debug"
+  GHJK_VERSION: "v0.2.2"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -46,7 +46,7 @@ env:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions:
       pull-requests: read
     steps:
@@ -78,7 +78,7 @@ jobs:
       full: ${{ steps.filter.outputs.full }}
 
   pre-commit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: dsherret/rust-toolchain-file@v1
@@ -161,7 +161,7 @@ jobs:
   test-website:
     needs: changes
     if: ${{ needs.changes.outputs.website == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       # - name: Cache deno dir
@@ -189,7 +189,7 @@ jobs:
           ghjk x install-website
           ghjk x test-website
 
-  bulid-docker:
+  build-docker:
     needs: changes
     if: ${{ needs.changes.outputs.typegate == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ${{ matrix.runner }}
@@ -200,7 +200,7 @@ jobs:
           - platform: linux/amd64
             runner: custom-ubuntu-large
           - platform: linux/arm64
-            runner: custom-arm
+            runner: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3

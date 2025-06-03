@@ -3,262 +3,275 @@
 
 use std::fmt::Write;
 
-use tg_schema::*;
-
+use super::manifest::{ManifestEntry, ManifestPage};
+use super::shared::types::type_body_required;
 use super::utils::{normalize_struct_prop_name, normalize_type_title};
-use crate::{interlude::*, shared::types::*};
+use crate::interlude::*;
 
-pub struct TypescriptTypeRenderer {}
-impl TypescriptTypeRenderer {
-    fn render_alias(
-        &self,
-        out: &mut impl Write,
-        alias_name: &str,
-        aliased_ty: &str,
-    ) -> std::fmt::Result {
-        writeln!(out, "export type {alias_name} = {aliased_ty};")
+pub type TsTypesPage = ManifestPage<TsType>;
+
+#[derive(Debug)]
+pub enum Alias {
+    BuiltIn(&'static str),
+    Optional(TypeKey),
+    Container { name: &'static str, item: TypeKey },
+}
+
+#[derive(Debug)]
+pub enum TsType {
+    Alias {
+        alias: Alias,
+        /// inlined if name is none
+        name: Option<String>,
+    },
+    Object {
+        name: String,
+        properties: Vec<ObjectProp>,
+    },
+    Enum {
+        name: String,
+        variants: Vec<TypeKey>,
+    },
+    LiteralEnum {
+        name: String,
+        variants: Vec<String>,
+    },
+}
+
+impl TsType {
+    fn builtin(target: &'static str, name: Option<String>) -> Self {
+        Self::Alias {
+            alias: Alias::BuiltIn(target),
+            name,
+        }
     }
 
-    /// `props` is a map of prop_name -> (TypeName, serialization_name)
-    fn render_object_type(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, (Rc<str>, bool)>,
-    ) -> std::fmt::Result {
-        writeln!(dest, "export type {ty_name} = {{")?;
-        for (name, (ty_name, optional)) in props.into_iter() {
-            if optional {
-                writeln!(dest, "  {name}?: {ty_name};")?;
-            } else {
-                writeln!(dest, "  {name}: {ty_name};")?;
+    fn build_string(ty: &Arc<StringType>, name: String) -> TsType {
+        if let Some(variants) = &ty.enumeration {
+            TsType::LiteralEnum {
+                name,
+                variants: variants.clone(),
             }
+        } else if let Some(format) = ty.format_only() {
+            let ty_name = normalize_type_title(&format!("string_{format}_{}", ty.idx()));
+            TsType::builtin("string", Some(ty_name))
+        } else {
+            TsType::builtin("string", Some(name))
         }
-        writeln!(dest, "}};")?;
-        Ok(())
     }
 
-    fn render_union_type(
-        &self,
-        dest: &mut impl Write,
-        ty_name: &str,
-        variants: Vec<Rc<str>>,
-    ) -> std::fmt::Result {
-        write!(dest, "export type {ty_name} =")?;
-        for ty_name in variants.into_iter() {
-            write!(dest, "\n  | ({ty_name})")?;
+    fn build_optional(ty: &Arc<OptionalType>, name: String) -> TsType {
+        let item_ty = ty.item();
+        let explicit_alias = ty.default_value.is_some() || !ty.title().starts_with("optional_");
+        TsType::Alias {
+            alias: Alias::Optional(item_ty.key()),
+            name: explicit_alias.then_some(name),
         }
-        writeln!(dest, ";")?;
-        Ok(())
+    }
+
+    fn build_list(ty: &Arc<ListType>, name: String) -> TsType {
+        let explicit_alias = !matches!((ty.max_items, ty.min_items), (None, None))
+            || !ty.title().starts_with("list_");
+        let name = explicit_alias.then_some(name);
+
+        TsType::Alias {
+            alias: Alias::Container {
+                name: "Array",
+                item: ty.item().key(),
+            },
+            name,
+        }
+    }
+
+    fn build_object(ty: &Arc<ObjectType>, name: String) -> TsType {
+        let props = ty
+            .properties()
+            .iter()
+            .filter(|(_, prop)| !prop.is_injected())
+            .map(|(name, prop)| {
+                let ty = match &prop.ty {
+                    Type::Function(fn_ty) => fn_ty.output().key(),
+                    _ => prop.ty.key(),
+                };
+                let optional = matches!(prop.ty, Type::Optional(_));
+                ObjectProp {
+                    name: normalize_struct_prop_name(&name[..]),
+                    ty,
+                    optional,
+                }
+            })
+            .collect::<Vec<_>>();
+        TsType::Object {
+            name,
+            properties: props,
+        }
+    }
+
+    fn build_union(ty: &Arc<UnionType>, name: String) -> TsType {
+        let variants = ty
+            .variants()
+            .iter()
+            .map(|variant| variant.key())
+            .collect::<Vec<_>>();
+        TsType::Enum { name, variants }
     }
 }
 
-impl RenderType for TypescriptTypeRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        let body_required = type_body_required(cursor.node.clone());
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Function { .. } => "void".into(),
-            TypeNode::Boolean { base } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "boolean")?;
-                ty_name
-            }
-            TypeNode::Boolean { .. } => "boolean".into(),
-            TypeNode::Float { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "number")?;
-                ty_name
-            }
-            TypeNode::Float { .. } => "number".into(),
-            TypeNode::Integer { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "number")?;
-                ty_name
-            }
-            TypeNode::Integer { .. } => "number".into(),
-            TypeNode::String {
-                base:
-                    TypeNodeBase {
-                        enumeration: Some(variants),
-                        title,
-                        ..
-                    },
-                ..
-            } if body_required => {
-                let ty_name = normalize_type_title(title);
-                // variants are valid strings in JSON (validated by the validator)
-                self.render_alias(renderer, &ty_name, &variants.join(" | "))?;
-                ty_name
-            }
-            TypeNode::String {
-                data:
-                    StringTypeData {
-                        format: Some(format),
-                        pattern: None,
-                        min_length: None,
-                        max_length: None,
-                    },
-                base:
-                    TypeNodeBase {
-                        title,
-                        enumeration: None,
-                        ..
-                    },
-            } if title.starts_with("string_") => {
-                let ty_name = normalize_type_title(&format!("string_{format}_{}", cursor.id));
-                self.render_alias(renderer, &ty_name, "string")?;
-                ty_name
-            }
-            TypeNode::String { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "string")?;
-                ty_name
-            }
-            TypeNode::String { .. } => "string".into(),
-            TypeNode::File { base, .. } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "File")?;
-                ty_name
-            }
-            TypeNode::File { .. } => "File".into(),
-            TypeNode::Any { base } if body_required => {
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(renderer, &ty_name, "any")?;
-                ty_name
-            }
-            TypeNode::Any { .. } => "any".into(),
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
-                        let optional = matches!(
-                            renderer.nodes[dep_id as usize].deref(),
-                            TypeNode::Optional { .. }
-                        );
-                        Ok::<_, anyhow::Error>((
-                            normalize_struct_prop_name(&name[..]),
-                            (ty_name, optional),
-                        ))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
+#[derive(Debug)]
+pub struct ObjectProp {
+    name: String,
+    ty: TypeKey,
+    optional: bool,
+}
 
-                let ty_name = normalize_type_title(&base.title);
-                if !props.is_empty() {
-                    self.render_object_type(renderer, &ty_name, props)?;
-                } else {
-                    self.render_alias(renderer, &ty_name, "Record<string, never>")?;
-                }
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let variants = variants
-                    .iter()
-                    .map(|&inner| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(inner, cursor)?;
-                        let ty_name = match ty_name {
-                            RenderedName::Name(name) => name,
-                            RenderedName::Placeholder(name) => name,
-                        };
-                        Ok::<_, anyhow::Error>(ty_name)
-                    })
-                    .collect::<Result<Vec<_>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
-                self.render_union_type(renderer, &ty_name, variants)?;
-                ty_name
-            }
-            TypeNode::Optional {
-                // NOTE: keep this condition
-                // in sync with similar one above
-                base,
-                data:
-                    OptionalTypeData {
-                        default_value: None,
-                        item,
-                    },
-            } if base.title.starts_with("optional_") => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                format!("({inner_ty_name}) | null | undefined")
-            }
-            TypeNode::Optional { data, base } => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.item, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let ty_name = normalize_type_title(&base.title);
-                self.render_alias(
-                    renderer,
-                    &ty_name,
-                    &format!("{inner_ty_name} | null | undefined"),
-                )?;
-                ty_name
-            }
-            TypeNode::List {
-                // NOTE: keep this condition
-                // in sync with similar one above
-                base,
-                data:
-                    ListTypeData {
-                        min_items: None,
-                        max_items: None,
-                        unique_items,
-                        items,
-                    },
-            } if base.title.starts_with("list_") => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(*items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                if let Some(true) = unique_items {
-                    // TODO: use sets?
-                    format!("Array<{inner_ty_name}>")
-                } else {
-                    format!("Array<{inner_ty_name}>")
+impl ManifestEntry for TsType {
+    type Extras = ();
+
+    fn render(&self, out: &mut impl Write, page: &TsTypesPage) -> std::fmt::Result {
+        match self {
+            TsType::Alias { name, alias } => {
+                if let Some(name) = name {
+                    match alias {
+                        Alias::BuiltIn(target) => {
+                            writeln!(out, "export type {name} = {target};")?;
+                        }
+                        Alias::Optional(inner) => {
+                            let inner_name = page.get_ref(inner).unwrap();
+                            writeln!(
+                                out,
+                                "export type {name} = ({inner_name}) | null | undefined;"
+                            )?;
+                        }
+                        Alias::Container {
+                            name: container,
+                            item,
+                        } => {
+                            let item_name = page.get_ref(item).unwrap();
+                            writeln!(out, "export type {name} = {container}<{item_name}>;")?;
+                        }
+                    }
                 }
             }
-            TypeNode::List { data, base } => {
-                // TODO: handle cyclic case where entire cycle is aliases
-                let (inner_ty_name, _) = renderer.render_subgraph(data.items, cursor)?;
-                let inner_ty_name = match inner_ty_name {
-                    RenderedName::Name(name) => name,
-                    RenderedName::Placeholder(name) => name,
-                };
-                let ty_name = normalize_type_title(&base.title);
-                if let Some(true) = data.unique_items {
-                    // FIXME: use set?
-                    self.render_alias(renderer, &ty_name, &format!("Array<{inner_ty_name}>"))?;
+            TsType::Object { name, properties } => {
+                if properties.is_empty() {
+                    writeln!(out, "export type {name} = Record<string, never>;")?;
                 } else {
-                    self.render_alias(renderer, &ty_name, &format!("Array<{inner_ty_name}>"))?;
-                };
-                ty_name
+                    writeln!(out, "export type {name} = {{")?;
+                    for prop in properties {
+                        let prop_name = &prop.name;
+                        let prop_ty = page.get_ref(&prop.ty).unwrap_or_else(|| "void".to_owned());
+                        if prop.optional {
+                            writeln!(out, "  {prop_name}?: {prop_ty};")?;
+                        } else {
+                            writeln!(out, "  {prop_name}: {prop_ty};")?;
+                        }
+                    }
+                    writeln!(out, "}};")?;
+                }
             }
-        };
-        Ok(name)
+            TsType::Enum { name, variants } => {
+                write!(out, "export type {name} =")?;
+                for variant in variants {
+                    let variant_name = page.get_ref(variant).unwrap();
+                    write!(out, "\n  | ({variant_name})")?;
+                }
+                writeln!(out, ";")?;
+            }
+            TsType::LiteralEnum { name, variants } => {
+                writeln!(out, "export type {name} =")?;
+                for variant in variants {
+                    write!(out, "\n  | {variant}")?;
+                }
+                writeln!(out, ";")?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn get_reference_expr(&self, page: &TsTypesPage) -> Option<String> {
+        match self {
+            TsType::Alias { name, alias } => {
+                if let Some(name) = name {
+                    Some(name.clone())
+                } else {
+                    match alias {
+                        Alias::BuiltIn(target) => Some(target.to_string()),
+                        Alias::Optional(inner) => {
+                            let inner_name = page.get_ref(inner).unwrap();
+                            Some(format!("({inner_name}) | null | undefined"))
+                        }
+                        Alias::Container {
+                            name: container,
+                            item,
+                        } => {
+                            let item_name = page.get_ref(item).unwrap();
+                            Some(format!("{container}<{item_name}>"))
+                        }
+                    }
+                }
+            }
+            TsType::Object { name, .. } => Some(name.clone()),
+            TsType::Enum { name, .. } => Some(name.clone()),
+            TsType::LiteralEnum { name, .. } => Some(name.clone()),
+        }
+    }
+}
+
+impl From<&Type> for TsType {
+    fn from(ty: &Type) -> Self {
+        if type_body_required(ty) {
+            let name = normalize_type_title(&ty.name());
+            match ty {
+                Type::Boolean(_) => TsType::builtin("boolean", Some(name)),
+                Type::Integer(_) => TsType::builtin("number", Some(name)),
+                Type::Float(_) => TsType::builtin("number", Some(name)),
+                Type::String(ty) => Self::build_string(ty, name),
+                Type::File(_) => TsType::builtin("File", Some(name)),
+                Type::Optional(ty) => Self::build_optional(ty, name),
+                Type::List(ty) => Self::build_list(ty, name),
+                Type::Object(ty) => Self::build_object(ty, name),
+                Type::Union(ty) => Self::build_union(ty, name),
+
+                Type::Function(_) => unreachable!("unexpected function type"),
+            }
+        } else {
+            TsType::builtin(
+                match ty {
+                    Type::Boolean(_) => "boolean",
+                    Type::Integer(_) | Type::Float(_) => "number",
+                    Type::String(_) => "string",
+                    Type::File(_) => "File",
+                    _ => unreachable!("unexpected non-composite type: {:?}", ty.tag()),
+                },
+                None,
+            )
+        }
+    }
+}
+
+impl TsTypesPage {
+    pub fn new(tg: &Typegraph, fdk: bool) -> Self {
+        let mut map = IndexMap::new();
+
+        for (key, ty) in tg.input_types.iter() {
+            map.insert(*key, ty.into());
+            if fdk {
+                // Always generate original input types for fdk because they will
+                // be used in the handler definitions.
+                // TODO filter the types that are actually used in handlers (MET-882)
+                if !tg.input_types.contains_key(&key.original()) {
+                    if let Some(ty) = tg.disconnected_types.get(&key.0) {
+                        map.insert(ty.key(), ty.into());
+                    }
+                }
+            }
+        }
+
+        for (key, ty) in tg.output_types.iter() {
+            map.insert(*key, ty.into());
+        }
+
+        map.into()
     }
 }

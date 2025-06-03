@@ -3,44 +3,95 @@
 
 use std::fmt::Write;
 
-use tg_schema::*;
+use typegraph::TypeNodeExt as _;
 
-use super::utils::*;
-use crate::{interlude::*, shared::client::*, shared::types::*};
+use super::{
+    shared::manifest::{ManifestEntry, ManifestPage},
+    utils::*,
+};
+use crate::{interlude::*, shared::client::*};
 
-pub struct RsNodeSelectionsRenderer {
-    pub arg_ty_names: Rc<NameMemo>,
+#[derive(Debug)]
+pub struct UnionProp {
+    name: String,
+    variant_ty: String,
+    select_ty: SelectionTy,
 }
 
-impl RsNodeSelectionsRenderer {
+#[derive(Debug)]
+pub enum RustSelection {
+    Struct {
+        name: String,
+        props: Vec<(String, SelectionTy)>,
+    },
+    Union {
+        name: String,
+        variants: Vec<UnionProp>,
+    },
+}
+
+impl ManifestEntry for RustSelection {
+    type Extras = Extras;
+
+    fn render(&self, out: &mut impl Write, page: &ManifestPage<Self, Extras>) -> std::fmt::Result {
+        match self {
+            Self::Struct { name, props } => {
+                self.render_for_struct(out, name, props, page)?;
+            }
+            Self::Union { name, variants } => {
+                self.render_for_union(out, name, variants, page)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn get_reference_expr(&self, _page: &ManifestPage<Self, Extras>) -> Option<String> {
+        match self {
+            Self::Struct { name, .. } | Self::Union { name, .. } => Some(name.clone()),
+        }
+    }
+}
+
+impl RustSelection {
     fn render_for_struct(
         &self,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, SelectionTy>,
+        name: &str,
+        props: &[(String, SelectionTy)],
+        page: &ManifestPage<Self, Extras>,
     ) -> std::fmt::Result {
         // derive prop
         writeln!(dest, "#[derive(Default, Debug)]")?;
-        writeln!(dest, "pub struct {ty_name}<ATy = NoAlias> {{")?;
-        for (name, select_ty) in &props {
-            use SelectionTy::*;
+        writeln!(dest, "pub struct {name}<ATy = NoAlias> {{")?;
+
+        for (name, select_ty) in props {
+            use SelectionTy as S;
             match select_ty {
-                Scalar => writeln!(dest, r#"    pub {name}: ScalarSelect<ATy>,"#)?,
-                ScalarArgs { arg_ty } => {
+                S::Scalar => writeln!(dest, r#"    pub {name}: ScalarSelect<ATy>,"#)?,
+                S::ScalarArgs { arg_ty } => {
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
                     writeln!(dest, r#"    pub {name}: ScalarSelectArgs<{arg_ty}, ATy>,"#)?
                 }
-                Composite { select_ty } => writeln!(
-                    dest,
-                    r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, ATy>,"#
-                )?,
-                CompositeArgs { arg_ty, select_ty } => writeln!(
-                    dest,
-                    r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, ATy>,"#
-                )?,
+                S::Composite { select_ty } => {
+                    let select_ty = page.get_ref(select_ty).unwrap();
+                    writeln!(
+                        dest,
+                        r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, ATy>,"#
+                    )?
+                }
+                S::CompositeArgs { arg_ty, select_ty } => {
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
+                    writeln!(
+                        dest,
+                        r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, ATy>,"#
+                    )?
+                }
             };
         }
         writeln!(dest, "}}")?;
-        write!(dest, "impl_selection_traits!({ty_name}, ")?;
+        write!(dest, "impl_selection_traits!({name}, ")?;
         let len = props.len();
         for (idx, (name, _)) in props.iter().enumerate() {
             if idx < len - 1 {
@@ -51,16 +102,24 @@ impl RsNodeSelectionsRenderer {
         }
         Ok(())
     }
+
     fn render_for_union(
         &self,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, (String, SelectionTy)>,
+        name: &str,
+        props: &[UnionProp],
+        page: &ManifestPage<Self, Extras>,
     ) -> std::fmt::Result {
         // derive prop
         writeln!(dest, "#[derive(Default, Debug)]")?;
-        writeln!(dest, "pub struct {ty_name}<ATy = NoAlias> {{")?;
-        for (name, (_variant_ty, select_ty)) in &props {
+        writeln!(dest, "pub struct {name}<ATy = NoAlias> {{")?;
+
+        for UnionProp {
+            name,
+            select_ty,
+            variant_ty: _,
+        } in props
+        {
             use SelectionTy::*;
             match select_ty {
                 Scalar | ScalarArgs { .. } => {
@@ -68,22 +127,32 @@ impl RsNodeSelectionsRenderer {
                     // gets selected
                     unreachable!()
                 }
-                Composite { select_ty } => writeln!(
-                    dest,
-                    r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, NoAlias>,"#
-                )?,
-                CompositeArgs { arg_ty, select_ty } => writeln!(
-                    dest,
-                    r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, NoAlias>,"#
-                )?,
+                Composite { select_ty } => {
+                    let select_ty = page.get_ref(select_ty).unwrap();
+                    writeln!(
+                        dest,
+                        r#"    pub {name}: CompositeSelect<{select_ty}<ATy>, NoAlias>,"#
+                    )?
+                }
+                CompositeArgs { arg_ty, select_ty } => {
+                    let arg_ty = page.extras.input_types.get(arg_ty).unwrap();
+                    let select_ty = page.get_ref(select_ty).unwrap();
+                    writeln!(
+                        dest,
+                        r#"    pub {name}: CompositeSelectArgs<{arg_ty}, {select_ty}<ATy>, NoAlias>,"#
+                    )?
+                }
             };
         }
         if props.is_empty() {
-            writeln!(dest, r#"    pub phantom: std::marker::PhantomData<ATy>,"#)?
+            writeln!(dest, r#"    pub phantom: std::marker::PhantomData<ATy>,"#)?;
         }
         writeln!(dest, "}}")?;
-        write!(dest, "impl_union_selection_traits!({ty_name}")?;
-        for (name, (variant_ty, _)) in props.iter() {
+        write!(dest, "impl_union_selection_traits!({name}")?;
+        for UnionProp {
+            name, variant_ty, ..
+        } in props.iter()
+        {
             write!(dest, r#", ("{variant_ty}", {name})"#)?;
         }
         writeln!(dest, r#");"#)?;
@@ -91,92 +160,73 @@ impl RsNodeSelectionsRenderer {
     }
 }
 
-impl RenderType for RsNodeSelectionsRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        use heck::ToPascalCase;
-
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => unreachable!("scalars don't get to have selections"),
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            }
-            | TypeNode::Function {
-                data: FunctionTypeData { output: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
-                .0
-                .unwrap()
-                .to_string(),
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        eyre::Ok((
-                            normalize_struct_prop_name(name),
-                            selection_for_field(dep_id, &self.arg_ty_names, renderer, cursor)?,
-                        ))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name);
-                let ty_name = format!("{ty_name}Selections").to_pascal_case();
-                self.render_for_struct(renderer, &ty_name, props)?;
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let variants = variants
-                    .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
-                            return None;
-                        }
-                        let ty_name = renderer.nodes[inner as usize].deref().base().title.clone();
-                        let struct_prop_name =
-                            normalize_struct_prop_name(&normalize_type_title(&ty_name[..]));
-
-                        let selection = match selection_for_field(
-                            inner,
-                            &self.arg_ty_names,
-                            renderer,
-                            cursor,
-                        ) {
-                            Ok(selection) => selection,
-                            Err(err) => return Some(Err(err)),
-                        };
-
-                        Some(eyre::Ok((struct_prop_name, (ty_name, selection))))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let ty_name = normalize_type_title(&base.title);
-                let ty_name = format!("{ty_name}Selections").to_pascal_case();
-                self.render_for_union(renderer, &ty_name, variants)?;
-                ty_name
-            }
-        };
-        Ok(name)
-    }
+pub struct Extras {
+    input_types: IndexMap<TypeKey, String>,
 }
+
+pub fn manifest_page(
+    tg: &typegraph::Typegraph,
+    input_types: IndexMap<TypeKey, String>,
+) -> ManifestPage<RustSelection, Extras> {
+    let mut map = IndexMap::new();
+
+    for (key, ty) in tg.output_types.iter() {
+        if !ty.is_composite() {
+            continue;
+        }
+        match ty {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => unreachable!("scalars don't get to have selections"),
+            Type::Optional(_) | Type::List(_) | Type::Function(_) => {}
+            Type::Object(ty) => {
+                let props = ty
+                    .properties()
+                    .iter()
+                    .map(|(prop_name, prop)| {
+                        (
+                            normalize_struct_prop_name(prop_name),
+                            selection_for_field(&prop.ty),
+                        )
+                        //
+                    })
+                    .collect();
+                map.insert(
+                    *key,
+                    RustSelection::Struct {
+                        props,
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
+                    },
+                );
+            }
+            Type::Union(ty) => {
+                let mut variants = vec![];
+                for variant in ty.variants() {
+                    if !variant.is_composite() {
+                        continue;
+                    }
+                    let struct_prop_name = normalize_struct_prop_name(variant.title());
+                    let selection = selection_for_field(variant);
+                    variants.push(UnionProp {
+                        name: struct_prop_name,
+                        variant_ty: variant.name().to_string(),
+                        select_ty: selection,
+                    });
+                }
+                map.insert(
+                    *key,
+                    RustSelection::Union {
+                        variants,
+                        name: format!("{}Selections", normalize_type_title(&ty.name())),
+                    },
+                );
+            }
+        }
+    }
+
+    ManifestPage::with_extras(map, Extras { input_types })
+}
+
+pub type RustSelectionManifestPage = ManifestPage<RustSelection, Extras>;

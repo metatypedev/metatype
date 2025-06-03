@@ -12,7 +12,7 @@ use super::{Action, ConfigArgs};
 enum Template {
     Rust,
     Python,
-    Typescript,
+    // Typescript,
 }
 
 #[derive(Parser, Debug)]
@@ -28,7 +28,7 @@ pub struct CreateFdkTemplate {
 
 #[async_trait]
 impl Action for CreateFdkTemplate {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = args.dir()?.join(&self.dir);
         tracing::info!("creating fdk template at {:?}", dir);
@@ -40,7 +40,7 @@ impl Action for CreateFdkTemplate {
         let template = match self.template {
             Template::Rust => metagen::FDK_RS_DEFAULT_TEMPLATE,
             Template::Python => metagen::FDK_PY_DEFAULT_TEMPLATE,
-            Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
+            // Template::Typescript => metagen::FDK_TS_DEFAULT_TEMPLATE,
         };
 
         for (file_name, content) in template.iter() {

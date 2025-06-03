@@ -31,7 +31,7 @@ fn shell(cmds: Vec<&str>) -> Result<String> {
 
 #[async_trait]
 impl Action for Doctor {
-    #[tracing::instrument]
+    #[cfg_attr(feature = "tracing-instrument", tracing::instrument)]
     async fn run(&self, args: ConfigArgs) -> Result<()> {
         let dir = &args.dir()?;
 

@@ -22,21 +22,22 @@ function val(x: unknown) {
 
 export function testData() {
   const samples = [
-    { "COMPLETED_WITH_ERROR": "Fatal: error" },
-    { "COMPLETED": true },
-    { "ONGOING": undefined },
-    { "COMPLETED": [1, 2, ["three"]] },
-    { "ONGOING": undefined },
-    { "COMPLETED_WITH_ERROR": { nested: { object: 1234 }, b: 4 } },
-    { "COMPLETED": null },
-    { "COMPLETED": 1 },
-    { "COMPLETED_WITH_ERROR": 2 },
-    { "COMPLETED": 3 },
+    { COMPLETED_WITH_ERROR: "Fatal: error" },
+    { COMPLETED: true },
+    { ONGOING: undefined },
+    { COMPLETED: [1, 2, ["three"]] },
+    { ONGOING: undefined },
+    { COMPLETED_WITH_ERROR: { nested: { object: 1234 }, b: 4 } },
+    { COMPLETED: null },
+    { COMPLETED: 1 },
+    { COMPLETED_WITH_ERROR: 2 },
+    { COMPLETED: 3 },
   ] satisfies Array<{ [K in ExecutionStatus]?: unknown }>;
 
   const dataset = [];
 
-  let start = new Date("2024-01-01"), end = null;
+  let start = new Date("2024-01-01"),
+    end = null;
   for (let i = 0; i < samples.length; i += 1) {
     end = addDays(start, 1);
     const [status, value] = Object.entries(samples[i])[0] as [
@@ -80,6 +81,19 @@ Meta.test("base filter logic", async (t) => {
   };
 
   // ------------------
+  await testShould("be able to filter by run id", {
+    filter: { run_id: { eq: '"fakeUUID#0"' } },
+    expected: [
+      {
+        run_id: "fakeUUID#0",
+        started_at: "2024-01-01T00:00:00.000Z",
+        ended_at: "2024-01-02T00:00:00.000Z",
+        status: "COMPLETED_WITH_ERROR",
+        value: '"Fatal: error"',
+      },
+    ],
+  });
+
   await testShould("be able to discriminate truthy values and 1", {
     filter: { eq: val(1) },
     expected: [
@@ -95,10 +109,7 @@ Meta.test("base filter logic", async (t) => {
 
   await testShould('work with null and special values (e.g. "status")', {
     filter: {
-      or: [
-        { status: { eq: val("ONGOING") } },
-        { eq: val(null) },
-      ],
+      or: [{ status: { eq: val("ONGOING") } }, { eq: val(null) }],
     },
     expected: [
       {
@@ -129,10 +140,7 @@ Meta.test("base filter logic", async (t) => {
     filter: {
       or: [
         {
-          and: [
-            { contains: val(1) },
-            { contains: val(["three"]) },
-          ],
+          and: [{ contains: val(1) }, { contains: val(["three"]) }],
         },
         { contains: val({ nested: { object: 1234 } }) },
         { in: val("Fatal: error+ some other string") },

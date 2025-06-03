@@ -679,7 +679,8 @@ class GraphQLTransportBase(ABC):
     def handle_response(self, res: GraphQLResponse):
         if res.status != 200:
             raise Exception(f"graphql request failed with status {res.status}", res)
-        if res.headers.get("content-type") != "application/json":
+        content_type = res.headers.get("content-type")
+        if content_type is None or not content_type.startswith("application/json"):
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
         if parsed.get("errors"):
@@ -1028,6 +1029,17 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
+    def RsProxyPrimitives():
+        return_node = NodeDescs.Primitives()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "primitives",
+            },
+        )
+
+    @staticmethod
     def Primitives():
         return NodeMeta(
             sub_nodes={
@@ -1047,30 +1059,108 @@ class NodeDescs:
         )
 
     @staticmethod
-    def PyPrimitives():
-        return_node = NodeDescs.Primitives()
+    def RsSimpleCycles():
+        return_node = NodeDescs.SimpleCycles1()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "data": "Primitives",
+                "data": "simple_cycles_1",
             },
         )
 
     @staticmethod
-    def Branch2():
+    def SimpleCycles1():
         return NodeMeta(
             sub_nodes={
-                "branch2": NodeDescs.scalar,
+                "phantom1": NodeDescs.scalar,
+                "to2": NodeDescs.SimpleCycles2,
             },
         )
 
     @staticmethod
-    def CompositesEitherEither():
+    def SimpleCycles2():
+        return NodeMeta(
+            sub_nodes={
+                "phantom2": NodeDescs.scalar,
+                "to3": NodeDescs.SimpleCycles3,
+            },
+        )
+
+    @staticmethod
+    def SimpleCycles3():
+        return NodeMeta(
+            sub_nodes={
+                "phantom3": NodeDescs.scalar,
+                "to1": NodeDescs.SimpleCycles1,
+            },
+        )
+
+    @staticmethod
+    def RsCycles():
+        return_node = NodeDescs.Cycles1()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "cycles1",
+            },
+        )
+
+    @staticmethod
+    def Cycles1():
+        return NodeMeta(
+            sub_nodes={
+                "phantom1": NodeDescs.scalar,
+                "to2": NodeDescs.Cycles2,
+                "list3": NodeDescs.Cycles3,
+            },
+        )
+
+    @staticmethod
+    def Cycles3():
         return NodeMeta(
             variants={
-                "primitives": NodeDescs.Primitives,
-                "branch2": NodeDescs.Branch2,
+                "branch33A": NodeDescs.Branch33A,
+                "branch33B": NodeDescs.Branch33B,
+            },
+        )
+
+    @staticmethod
+    def Branch33B():
+        return NodeMeta(
+            sub_nodes={
+                "phantom3b": NodeDescs.scalar,
+                "to2": NodeDescs.Cycles2,
+            },
+        )
+
+    @staticmethod
+    def Cycles2():
+        return NodeMeta(
+            variants={
+                "cycles3": NodeDescs.Cycles3,
+                "cycles1": NodeDescs.Cycles1,
+            },
+        )
+
+    @staticmethod
+    def Branch33A():
+        return NodeMeta(
+            sub_nodes={
+                "phantom3a": NodeDescs.scalar,
+                "to1": NodeDescs.Cycles1,
+            },
+        )
+
+    @staticmethod
+    def RsComposites():
+        return_node = NodeDescs.Composites()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "composites",
             },
         )
 
@@ -1086,174 +1176,19 @@ class NodeDescs:
         )
 
     @staticmethod
-    def PyComposites():
-        return_node = NodeDescs.Composites()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Composites",
-            },
-        )
-
-    @staticmethod
-    def Branch33A():
-        return NodeMeta(
-            sub_nodes={
-                "phantom3a": NodeDescs.scalar,
-                "to1": NodeDescs.Cycles1,
-            },
-        )
-
-    @staticmethod
-    def Branch33B():
-        return NodeMeta(
-            sub_nodes={
-                "phantom3b": NodeDescs.scalar,
-                "to2": NodeDescs.Cycles2,
-            },
-        )
-
-    @staticmethod
-    def Cycles3():
+    def CompositesEitherEither():
         return NodeMeta(
             variants={
-                "branch33A": NodeDescs.Branch33A,
-                "branch33B": NodeDescs.Branch33B,
+                "primitives": NodeDescs.Primitives,
+                "branch2": NodeDescs.Branch2,
             },
         )
 
     @staticmethod
-    def Cycles2():
-        return NodeMeta(
-            variants={
-                "cycles3": NodeDescs.Cycles3,
-                "cycles1": NodeDescs.Cycles1,
-            },
-        )
-
-    @staticmethod
-    def Cycles1():
+    def Branch2():
         return NodeMeta(
             sub_nodes={
-                "phantom1": NodeDescs.scalar,
-                "to2": NodeDescs.Cycles2,
-                "list3": NodeDescs.Cycles3,
-            },
-        )
-
-    @staticmethod
-    def PyCycles():
-        return_node = NodeDescs.Cycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Cycles1",
-            },
-        )
-
-    @staticmethod
-    def SimpleCycles3():
-        return NodeMeta(
-            sub_nodes={
-                "phantom3": NodeDescs.scalar,
-                "to1": NodeDescs.SimpleCycles1,
-            },
-        )
-
-    @staticmethod
-    def SimpleCycles2():
-        return NodeMeta(
-            sub_nodes={
-                "phantom2": NodeDescs.scalar,
-                "to3": NodeDescs.SimpleCycles3,
-            },
-        )
-
-    @staticmethod
-    def SimpleCycles1():
-        return NodeMeta(
-            sub_nodes={
-                "phantom1": NodeDescs.scalar,
-                "to2": NodeDescs.SimpleCycles2,
-            },
-        )
-
-    @staticmethod
-    def PySimpleCycles():
-        return_node = NodeDescs.SimpleCycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "SimpleCycles1",
-            },
-        )
-
-    @staticmethod
-    def PyProxyPrimitives():
-        return_node = NodeDescs.Primitives()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Primitives",
-            },
-        )
-
-    @staticmethod
-    def TsPrimitives():
-        return_node = NodeDescs.Primitives()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Primitives",
-            },
-        )
-
-    @staticmethod
-    def TsComposites():
-        return_node = NodeDescs.Composites()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Composites",
-            },
-        )
-
-    @staticmethod
-    def TsCycles():
-        return_node = NodeDescs.Cycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Cycles1",
-            },
-        )
-
-    @staticmethod
-    def TsSimpleCycles():
-        return_node = NodeDescs.SimpleCycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "SimpleCycles1",
-            },
-        )
-
-    @staticmethod
-    def TsProxyPrimitives():
-        return_node = NodeDescs.Primitives()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Primitives",
+                "branch2": NodeDescs.scalar,
             },
         )
 
@@ -1264,54 +1199,147 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "data": "Primitives",
+                "data": "primitives",
             },
         )
 
     @staticmethod
-    def RsComposites():
-        return_node = NodeDescs.Composites()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Composites",
-            },
-        )
-
-    @staticmethod
-    def RsCycles():
-        return_node = NodeDescs.Cycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "Cycles1",
-            },
-        )
-
-    @staticmethod
-    def RsSimpleCycles():
-        return_node = NodeDescs.SimpleCycles1()
-        return NodeMeta(
-            sub_nodes=return_node.sub_nodes,
-            variants=return_node.variants,
-            arg_types={
-                "data": "SimpleCycles1",
-            },
-        )
-
-    @staticmethod
-    def RsProxyPrimitives():
+    def TsProxyPrimitives():
         return_node = NodeDescs.Primitives()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "data": "Primitives",
+                "data": "primitives",
             },
         )
 
+    @staticmethod
+    def TsSimpleCycles():
+        return_node = NodeDescs.SimpleCycles1()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "simple_cycles_1",
+            },
+        )
+
+    @staticmethod
+    def TsCycles():
+        return_node = NodeDescs.Cycles1()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "cycles1",
+            },
+        )
+
+    @staticmethod
+    def TsComposites():
+        return_node = NodeDescs.Composites()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "composites",
+            },
+        )
+
+    @staticmethod
+    def TsPrimitives():
+        return_node = NodeDescs.Primitives()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "primitives",
+            },
+        )
+
+    @staticmethod
+    def PyProxyPrimitives():
+        return_node = NodeDescs.Primitives()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "primitives",
+            },
+        )
+
+    @staticmethod
+    def PySimpleCycles():
+        return_node = NodeDescs.SimpleCycles1()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "simple_cycles_1",
+            },
+        )
+
+    @staticmethod
+    def PyCycles():
+        return_node = NodeDescs.Cycles1()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "cycles1",
+            },
+        )
+
+    @staticmethod
+    def PyComposites():
+        return_node = NodeDescs.Composites()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "composites",
+            },
+        )
+
+    @staticmethod
+    def PyPrimitives():
+        return_node = NodeDescs.Primitives()
+        return NodeMeta(
+            sub_nodes=return_node.sub_nodes,
+            variants=return_node.variants,
+            arg_types={
+                "data": "primitives",
+            },
+        )
+
+
+PrimitivesArgs = typing.TypedDict(
+    "PrimitivesArgs",
+    {
+        "data": "Primitives",
+    },
+    total=False,
+)
+
+Primitives = typing.TypedDict(
+    "Primitives",
+    {
+        "str": "PrimitivesStrString",
+        "r#enum": "PrimitivesEnumStringEnum",
+        "uuid": "PrimitivesUuidStringUuid",
+        "email": "PrimitivesEmailStringEmail",
+        "ean": "PrimitivesEanStringEan",
+        "json": "PrimitivesJsonStringJson",
+        "uri": "PrimitivesUriStringUri",
+        "date": "PrimitivesDateStringDate",
+        "datetime": "PrimitivesDatetimeStringDatetime",
+        "int": "PrimitivesIntInteger",
+        "float": "PrimitivesFloatFloat",
+        "boolean": "PrimitivesBooleanBoolean",
+    },
+    total=False,
+)
 
 PrimitivesStrString = str
 
@@ -1320,7 +1348,6 @@ PrimitivesEnumStringEnum = typing.Union[
     typing.Literal["tew"],
     typing.Literal["tree"],
 ]
-
 
 PrimitivesUuidStringUuid = str
 
@@ -1342,34 +1369,31 @@ PrimitivesFloatFloat = float
 
 PrimitivesBooleanBoolean = bool
 
-Primitives = typing.TypedDict(
-    "Primitives",
+CompositesArgs = typing.TypedDict(
+    "CompositesArgs",
     {
-        "str": PrimitivesStrString,
-        "enum": PrimitivesEnumStringEnum,
-        "uuid": PrimitivesUuidStringUuid,
-        "email": PrimitivesEmailStringEmail,
-        "ean": PrimitivesEanStringEan,
-        "json": PrimitivesJsonStringJson,
-        "uri": PrimitivesUriStringUri,
-        "date": PrimitivesDateStringDate,
-        "datetime": PrimitivesDatetimeStringDatetime,
-        "int": PrimitivesIntInteger,
-        "float": PrimitivesFloatFloat,
-        "boolean": PrimitivesBooleanBoolean,
+        "data": "Composites",
     },
     total=False,
 )
 
-PrimitivesArgs = typing.TypedDict(
-    "PrimitivesArgs",
+Composites = typing.TypedDict(
+    "Composites",
     {
-        "data": Primitives,
+        "opt": "CompositesOptPrimitivesStrStringOptional",
+        "either": "CompositesEitherEither",
+        "union": "CompositesUnionUnion",
+        "list": "CompositesListPrimitivesStrStringList",
     },
     total=False,
 )
 
-CompositesOptPrimitivesStrStringOptional = typing.Union[PrimitivesStrString, None]
+CompositesOptPrimitivesStrStringOptional = typing.Optional["PrimitivesStrString"]
+
+CompositesEitherEither = typing.Union[
+    Primitives,
+    "Branch2",
+]
 
 Branch2 = typing.TypedDict(
     "Branch2",
@@ -1379,150 +1403,118 @@ Branch2 = typing.TypedDict(
     total=False,
 )
 
-CompositesEitherEither = typing.Union[
-    Primitives,
-    Branch2,
+CompositesUnionUnion = typing.Union[
+    "Branch4",
+    PrimitivesIntInteger,
+    PrimitivesStrString,
+    "Branch4again",
 ]
 
+Branch4 = typing.List["CompositesUnionUnionT0StringEnum"]
 
 CompositesUnionUnionT0StringEnum = typing.Union[
     typing.Literal["grey"],
     typing.Literal["beige"],
 ]
 
-
-Branch4 = typing.List[CompositesUnionUnionT0StringEnum]
-
 Branch4again = str
 
-CompositesUnionUnion = typing.Union[
-    Branch4,
-    PrimitivesIntInteger,
-    PrimitivesStrString,
-    Branch4again,
-]
-
-
-CompositesListPrimitivesStrStringList = typing.List[PrimitivesStrString]
-
-Composites = typing.TypedDict(
-    "Composites",
-    {
-        "opt": CompositesOptPrimitivesStrStringOptional,
-        "either": CompositesEitherEither,
-        "union": CompositesUnionUnion,
-        "list": CompositesListPrimitivesStrStringList,
-    },
-    total=False,
-)
-
-CompositesArgs = typing.TypedDict(
-    "CompositesArgs",
-    {
-        "data": Composites,
-    },
-    total=False,
-)
-
-Branch33ATo1Cycles1Optional = typing.Union["Cycles1", None]
-
-Branch33A = typing.TypedDict(
-    "Branch33A",
-    {
-        "phantom3a": CompositesOptPrimitivesStrStringOptional,
-        "to1": Branch33ATo1Cycles1Optional,
-    },
-    total=False,
-)
-
-Branch33B = typing.TypedDict(
-    "Branch33B",
-    {
-        "phantom3b": CompositesOptPrimitivesStrStringOptional,
-        "to2": "Cycles1To2Cycles2Optional",
-    },
-    total=False,
-)
-
-Cycles3 = typing.Union[
-    Branch33A,
-    Branch33B,
-]
-
-
-Cycles2 = typing.Union[
-    Cycles3,
-    "Cycles1",
-]
-
-
-Cycles1To2Cycles2Optional = typing.Union["Cycles2", None]
-
-Cycles1List3Cycles3List = typing.List[Cycles3]
-
-Cycles1List3Cycles1List3Cycles3ListOptional = typing.Union[
-    Cycles1List3Cycles3List, None
-]
-
-Cycles1 = typing.TypedDict(
-    "Cycles1",
-    {
-        "phantom1": CompositesOptPrimitivesStrStringOptional,
-        "to2": "Cycles1To2Cycles2Optional",
-        "list3": Cycles1List3Cycles1List3Cycles3ListOptional,
-    },
-    total=False,
-)
+CompositesListPrimitivesStrStringList = typing.List["PrimitivesStrString"]
 
 Cycles1Args = typing.TypedDict(
     "Cycles1Args",
     {
-        "data": Cycles1,
+        "data": "Cycles1",
     },
     total=False,
 )
 
-SimpleCycles3To1SimpleCycles1Optional = typing.Union["SimpleCycles1", None]
-
-SimpleCycles3 = typing.TypedDict(
-    "SimpleCycles3",
+Cycles1 = typing.TypedDict(
+    "Cycles1",
     {
-        "phantom3": CompositesOptPrimitivesStrStringOptional,
-        "to1": SimpleCycles3To1SimpleCycles1Optional,
+        "phantom1": "CompositesOptPrimitivesStrStringOptional",
+        "to2": "Cycles1To2Cycles2Optional",
+        "list3": "Cycles1List3Cycles1List3Cycles3ListOptional",
     },
     total=False,
 )
 
-SimpleCycles2To3SimpleCycles3Optional = typing.Union[SimpleCycles3, None]
+Cycles1To2Cycles2Optional = typing.Optional["Cycles2"]
 
-SimpleCycles2 = typing.TypedDict(
-    "SimpleCycles2",
+Cycles2 = typing.Union[
+    "Cycles3",
+    Cycles1,
+]
+
+Cycles3 = typing.Union[
+    "Branch33A",
+    "Branch33B",
+]
+
+Branch33A = typing.TypedDict(
+    "Branch33A",
     {
-        "phantom2": CompositesOptPrimitivesStrStringOptional,
-        "to3": SimpleCycles2To3SimpleCycles3Optional,
+        "phantom3a": "CompositesOptPrimitivesStrStringOptional",
+        "to1": "Branch33ATo1Cycles1Optional",
     },
     total=False,
 )
 
-SimpleCycles1To2SimpleCycles2Optional = typing.Union[SimpleCycles2, None]
+Branch33ATo1Cycles1Optional = typing.Optional["Cycles1"]
+
+Branch33B = typing.TypedDict(
+    "Branch33B",
+    {
+        "phantom3b": "CompositesOptPrimitivesStrStringOptional",
+        "to2": "Cycles1To2Cycles2Optional",
+    },
+    total=False,
+)
+
+Cycles1List3Cycles1List3Cycles3ListOptional = typing.Optional["Cycles1List3Cycles3List"]
+
+Cycles1List3Cycles3List = typing.List["Cycles3"]
+
+SimpleCycles1Args = typing.TypedDict(
+    "SimpleCycles1Args",
+    {
+        "data": "SimpleCycles1",
+    },
+    total=False,
+)
 
 SimpleCycles1 = typing.TypedDict(
     "SimpleCycles1",
     {
-        "phantom1": CompositesOptPrimitivesStrStringOptional,
+        "phantom1": "CompositesOptPrimitivesStrStringOptional",
         "to2": "SimpleCycles1To2SimpleCycles2Optional",
     },
     total=False,
 )
 
-SimpleCycles1Args = typing.TypedDict(
-    "SimpleCycles1Args",
+SimpleCycles1To2SimpleCycles2Optional = typing.Optional["SimpleCycles2"]
+
+SimpleCycles2 = typing.TypedDict(
+    "SimpleCycles2",
     {
-        "data": SimpleCycles1,
+        "phantom2": "CompositesOptPrimitivesStrStringOptional",
+        "to3": "SimpleCycles2To3SimpleCycles3Optional",
     },
     total=False,
 )
 
+SimpleCycles2To3SimpleCycles3Optional = typing.Optional["SimpleCycles3"]
+
+SimpleCycles3 = typing.TypedDict(
+    "SimpleCycles3",
+    {
+        "phantom3": "CompositesOptPrimitivesStrStringOptional",
+        "to1": "SimpleCycles3To1SimpleCycles1Optional",
+    },
+    total=False,
+)
+
+SimpleCycles3To1SimpleCycles1Optional = typing.Optional["SimpleCycles1"]
 
 PrimitivesSelections = typing.TypedDict(
     "PrimitivesSelections",
@@ -1544,11 +1536,14 @@ PrimitivesSelections = typing.TypedDict(
     total=False,
 )
 
-Branch2Selections = typing.TypedDict(
-    "Branch2Selections",
+CompositesSelections = typing.TypedDict(
+    "CompositesSelections",
     {
         "_": SelectionFlags,
-        "branch2": ScalarSelectNoArgs,
+        "opt": ScalarSelectNoArgs,
+        "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
+        "union": ScalarSelectNoArgs,
+        "list": ScalarSelectNoArgs,
     },
     total=False,
 )
@@ -1563,22 +1558,42 @@ CompositesEitherEitherSelections = typing.TypedDict(
     total=False,
 )
 
-CompositesUnionUnionSelections = typing.TypedDict(
-    "CompositesUnionUnionSelections",
+Branch2Selections = typing.TypedDict(
+    "Branch2Selections",
     {
         "_": SelectionFlags,
+        "branch2": ScalarSelectNoArgs,
     },
     total=False,
 )
 
-CompositesSelections = typing.TypedDict(
-    "CompositesSelections",
+Cycles1Selections = typing.TypedDict(
+    "Cycles1Selections",
     {
         "_": SelectionFlags,
-        "opt": ScalarSelectNoArgs,
-        "either": CompositeSelectNoArgs["CompositesEitherEitherSelections"],
-        "union": ScalarSelectNoArgs,
-        "list": ScalarSelectNoArgs,
+        "phantom1": ScalarSelectNoArgs,
+        "to2": CompositeSelectNoArgs["Cycles2Selections"],
+        "list3": CompositeSelectNoArgs["Cycles3Selections"],
+    },
+    total=False,
+)
+
+Cycles2Selections = typing.TypedDict(
+    "Cycles2Selections",
+    {
+        "_": SelectionFlags,
+        "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
+        "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
+    },
+    total=False,
+)
+
+Cycles3Selections = typing.TypedDict(
+    "Cycles3Selections",
+    {
+        "_": SelectionFlags,
+        "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
+        "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
     },
     total=False,
 )
@@ -1603,43 +1618,12 @@ Branch33BSelections = typing.TypedDict(
     total=False,
 )
 
-Cycles3Selections = typing.TypedDict(
-    "Cycles3Selections",
-    {
-        "_": SelectionFlags,
-        "branch33A": CompositeSelectNoArgs["Branch33ASelections"],
-        "branch33B": CompositeSelectNoArgs["Branch33BSelections"],
-    },
-    total=False,
-)
-
-Cycles2Selections = typing.TypedDict(
-    "Cycles2Selections",
-    {
-        "_": SelectionFlags,
-        "cycles3": CompositeSelectNoArgs["Cycles3Selections"],
-        "cycles1": CompositeSelectNoArgs["Cycles1Selections"],
-    },
-    total=False,
-)
-
-Cycles1Selections = typing.TypedDict(
-    "Cycles1Selections",
+SimpleCycles1Selections = typing.TypedDict(
+    "SimpleCycles1Selections",
     {
         "_": SelectionFlags,
         "phantom1": ScalarSelectNoArgs,
-        "to2": CompositeSelectNoArgs["Cycles2Selections"],
-        "list3": CompositeSelectNoArgs["Cycles3Selections"],
-    },
-    total=False,
-)
-
-SimpleCycles3Selections = typing.TypedDict(
-    "SimpleCycles3Selections",
-    {
-        "_": SelectionFlags,
-        "phantom3": ScalarSelectNoArgs,
-        "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
+        "to2": CompositeSelectNoArgs["SimpleCycles2Selections"],
     },
     total=False,
 )
@@ -1654,12 +1638,12 @@ SimpleCycles2Selections = typing.TypedDict(
     total=False,
 )
 
-SimpleCycles1Selections = typing.TypedDict(
-    "SimpleCycles1Selections",
+SimpleCycles3Selections = typing.TypedDict(
+    "SimpleCycles3Selections",
     {
         "_": SelectionFlags,
-        "phantom1": ScalarSelectNoArgs,
-        "to2": CompositeSelectNoArgs["SimpleCycles2Selections"],
+        "phantom3": ScalarSelectNoArgs,
+        "to1": CompositeSelectNoArgs["SimpleCycles1Selections"],
     },
     total=False,
 )
@@ -1669,16 +1653,14 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "Primitives": "primitives!",
-                "Composites": "composites!",
-                "Cycles1": "cycles1!",
-                "SimpleCycles1": "simple_cycles_1!",
                 "primitives": "primitives!",
+                "composites": "composites!",
+                "cycles1": "cycles1!",
+                "simple_cycles_1": "simple_cycles_1!",
                 "branch2": "branch2!",
+                "cycles3": "cycles3!",
                 "branch33A": "branch33A!",
                 "branch33B": "branch33B!",
-                "cycles3": "cycles3!",
-                "cycles1": "cycles1!",
             }
         )
 

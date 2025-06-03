@@ -1,31 +1,83 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{collections::HashMap, fmt::Write};
+use std::fmt::Write;
 
-use tg_schema::*;
+use typegraph::{FunctionType, ObjectType};
 
+use super::shared::files::{get_path_to_files, TypePath};
+use super::shared::manifest::{ManifestEntry, ManifestPage};
+use super::shared::node_metas::{MetaFactory, MetasPageBuilder};
 use super::utils::normalize_type_title;
-use crate::{
-    interlude::*,
-    shared::{files::TypePath, types::*},
-};
+use crate::interlude::*;
 
-pub struct RsNodeMetasRenderer {
-    pub name_mapper: Rc<super::NameMapper>,
-    pub named_types: Rc<std::sync::Mutex<IndexSet<u32>>>,
-    /// path to file types in the input type
-    pub input_files: Rc<HashMap<u32, Vec<TypePath>>>,
+#[derive(Debug)]
+pub enum RsNodeMeta {
+    Scalar,
+    Alias { target: TypeKey },
+    Object(Object),
+    Union(Union),
+    Function(Function),
 }
 
-impl RsNodeMetasRenderer {
-    /// `props` is a map of prop_name -> (TypeName, subNodeName)
-    fn render_for_object(
+#[derive(Debug)]
+pub struct Object {
+    props: IndexMap<Arc<str>, TypeKey>,
+    name: String,
+}
+
+#[derive(Debug)]
+pub struct Union {
+    variants: IndexMap<Arc<str>, TypeKey>,
+    name: String,
+}
+
+#[derive(Debug)]
+pub struct Function {
+    name: String,
+    return_ty: TypeKey,
+    argument_fields: Option<BTreeMap<Arc<str>, Arc<str>>>,
+    input_files: Option<String>,
+}
+
+impl ManifestEntry for RsNodeMeta {
+    type Extras = ();
+
+    fn render(&self, out: &mut impl Write, page: &ManifestPage<Self>) -> std::fmt::Result {
+        match self {
+            Self::Alias { .. } | Self::Scalar => {}
+            Self::Object(obj) => {
+                obj.render(page, out)?;
+            }
+            Self::Union(union) => {
+                union.render(page, out)?;
+            }
+            Self::Function(func) => {
+                func.render(page, out)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn get_reference_expr(&self, page: &ManifestPage<Self>) -> Option<String> {
+        match self {
+            Self::Alias { target } => page.get_ref(target),
+            Self::Scalar => Some("scalar".to_string()),
+            Self::Object(obj) => Some(obj.name.clone()),
+            Self::Union(union) => Some(union.name.clone()),
+            Self::Function(func) => Some(func.name.clone()),
+        }
+    }
+}
+
+impl Object {
+    pub fn render(
         &self,
+        page: &ManifestPage<RsNodeMeta>,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
@@ -36,7 +88,8 @@ pub fn {ty_name}() -> NodeMeta {{
         sub_nodes: Some(
             ["#
         )?;
-        for (key, node_ref) in props {
+        for (key, prop) in self.props.iter() {
+            let node_ref = page.get_ref(prop).unwrap();
             write!(
                 dest,
                 r#"
@@ -54,13 +107,15 @@ pub fn {ty_name}() -> NodeMeta {{
         )?;
         Ok(())
     }
+}
 
-    fn render_for_union(
+impl Union {
+    pub fn render(
         &self,
+        page: &ManifestPage<RsNodeMeta>,
         dest: &mut impl Write,
-        ty_name: &str,
-        props: IndexMap<String, Rc<str>>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
@@ -71,7 +126,8 @@ pub fn {ty_name}() -> NodeMeta {{
         variants: Some(
             ["#
         )?;
-        for (key, node_ref) in props {
+        for (key, prop) in &self.variants {
+            let node_ref = page.get_ref(prop).unwrap();
             write!(
                 dest,
                 r#"
@@ -89,22 +145,22 @@ pub fn {ty_name}() -> NodeMeta {{
         )?;
         Ok(())
     }
+}
 
-    fn render_for_func(
+impl Function {
+    pub fn render(
         &self,
+        page: &ManifestPage<RsNodeMeta>,
         dest: &mut impl Write,
-        ty_name: &str,
-        return_node: &str,
-        argument_fields: Option<IndexMap<String, Rc<str>>>,
-        input_files: Option<String>,
     ) -> std::fmt::Result {
+        let ty_name = &self.name;
         write!(
             dest,
             r#"
 pub fn {ty_name}() -> NodeMeta {{
     NodeMeta {{"#
         )?;
-        if let Some(fields) = argument_fields {
+        if let Some(fields) = &self.argument_fields {
             write!(
                 dest,
                 r#"
@@ -127,13 +183,14 @@ pub fn {ty_name}() -> NodeMeta {{
         ),"#
             )?;
         }
-        if let Some(input_files) = input_files {
+        if let Some(input_files) = &self.input_files {
             write!(
                 dest,
                 r#"
         input_files: Some(PathToInputFiles(&{input_files})),"#
             )?;
         }
+        let return_node = page.get_ref(&self.return_ty).unwrap();
         write!(
             dest,
             r#"
@@ -145,131 +202,105 @@ pub fn {ty_name}() -> NodeMeta {{
     }
 }
 
-impl RenderType for RsNodeMetasRenderer {
-    fn render(
-        &self,
-        renderer: &mut TypeRenderer,
-        cursor: &mut VisitCursor,
-    ) -> anyhow::Result<String> {
-        use heck::ToPascalCase;
-
-        let name = match cursor.node.clone().deref() {
-            TypeNode::Any { .. } => unimplemented!("Any type support not implemented"),
-            TypeNode::Boolean { .. }
-            | TypeNode::Float { .. }
-            | TypeNode::Integer { .. }
-            | TypeNode::String { .. }
-            | TypeNode::File { .. } => "scalar".into(),
-            // list and optional node just return the meta of the wrapped type
-            TypeNode::Optional {
-                data: OptionalTypeData { item, .. },
-                ..
-            }
-            | TypeNode::List {
-                data: ListTypeData { items: item, .. },
-                ..
-            } => renderer
-                .render_subgraph(*item, cursor)?
-                .0
-                .unwrap()
-                .to_string(),
-            TypeNode::Function { data, base } => {
-                let (return_ty_name, _cyclic) = renderer.render_subgraph(data.output, cursor)?;
-                let return_ty_name = return_ty_name.unwrap();
-                let props = match renderer.nodes[data.input as usize].deref() {
-                    TypeNode::Object { data, .. } if !data.properties.is_empty() => {
-                        let props = data
-                            .properties
-                            .iter()
-                            // generate property types first
-                            .map(|(name, &dep_id)| {
-                                eyre::Ok((name.clone(), self.name_mapper.name_for(dep_id)))
-                            })
-                            .collect::<Result<IndexMap<_, _>, _>>()?;
-                        Some(props)
-                    }
-                    _ => None,
-                };
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                let input_files = self
-                    .input_files
-                    .get(&cursor.id)
-                    .map(|files| {
-                        files
-                            .iter()
-                            // .map(|path| {
-                            //     path.0
-                            //         .iter()
-                            //         .map(|s| serde_json::to_string(&s).unwrap())
-                            //         .collect::<Vec<_>>()
-                            // })
-                            .map(|path| path.serialize_rs())
-                            .collect::<Vec<_>>()
-                    })
-                    .map(|files| {
-                        (!files.is_empty()).then(|| format!("[TypePath({})]", files.join(", ")))
-                    })
-                    .unwrap_or_default();
-                self.render_for_func(renderer, &ty_name, &return_ty_name, props, input_files)?;
-                ty_name
-            }
-            TypeNode::Object { data, base } => {
-                let props = data
-                    .properties
-                    .iter()
-                    // generate property types first
-                    .map(|(name, &dep_id)| {
-                        let (ty_name, _cyclic) = renderer.render_subgraph(dep_id, cursor)?;
-                        let ty_name = ty_name.unwrap();
-                        eyre::Ok((name.clone(), ty_name))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                let node_name = &base.title;
-                let ty_name = normalize_type_title(node_name).to_pascal_case();
-                self.render_for_object(renderer, &ty_name, props)?;
-                ty_name
-            }
-            TypeNode::Either {
-                data: EitherTypeData { one_of: variants },
-                base,
-            }
-            | TypeNode::Union {
-                data: UnionTypeData { any_of: variants },
-                base,
-            } => {
-                let mut named_set = vec![];
-                let variants = variants
-                    .iter()
-                    .filter_map(|&inner| {
-                        if !renderer.is_composite(inner) {
-                            return None;
-                        }
-                        named_set.push(inner);
-                        let (ty_name, _cyclic) = match renderer.render_subgraph(inner, cursor) {
-                            Ok(val) => val,
-                            Err(err) => return Some(Err(err)),
-                        };
-                        let ty_name = ty_name.unwrap();
-                        Some(eyre::Ok((
-                            renderer.nodes[inner as usize].deref().base().title.clone(),
-                            ty_name,
-                        )))
-                    })
-                    .collect::<Result<IndexMap<_, _>, _>>()?;
-                if !variants.is_empty() {
-                    {
-                        let mut named_types = self.named_types.lock().unwrap();
-                        named_types.extend(named_set)
-                    }
-                    let ty_name = normalize_type_title(&base.title);
-                    self.render_for_union(renderer, &ty_name, variants)?;
-                    ty_name
-                } else {
-                    "scalar".into()
-                }
-            }
-        };
-        Ok(name)
+impl MetaFactory<RsNodeMeta> for MetasPageBuilder {
+    fn build_meta(&self, ty: Type) -> RsNodeMeta {
+        match ty {
+            Type::Boolean(_)
+            | Type::Float(_)
+            | Type::Integer(_)
+            | Type::String(_)
+            | Type::File(_) => RsNodeMeta::Scalar,
+            Type::Optional(ty) => self.alias(ty.item().clone()),
+            Type::List(ty) => self.alias(ty.item().clone()),
+            Type::Union(ty) => self.build_union(ty.clone()),
+            Type::Function(ty) => self.build_func(ty.clone()),
+            Type::Object(ty) => self.build_object(ty.clone()),
+        }
     }
+}
+
+trait RsMetasExt {
+    fn alias(&self, ty: Type) -> RsNodeMeta;
+    fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta;
+    fn build_object(&self, ty: Arc<ObjectType>) -> RsNodeMeta;
+    fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta;
+}
+
+impl RsMetasExt for MetasPageBuilder {
+    fn alias(&self, ty: Type) -> RsNodeMeta {
+        let key = ty.key();
+        self.push(ty);
+        RsNodeMeta::Alias { target: key }
+    }
+
+    fn build_object(&self, ty: Arc<ObjectType>) -> RsNodeMeta {
+        let props = ty.properties();
+        let props = props
+            .iter()
+            .map(|(name, prop)| {
+                self.push(prop.ty.clone());
+                (name.clone(), prop.ty.key())
+            })
+            .collect::<IndexMap<_, _>>();
+
+        RsNodeMeta::Object(Object {
+            props,
+            name: normalize_type_title(&ty.name()),
+        })
+    }
+
+    fn build_union(&self, ty: Arc<UnionType>) -> RsNodeMeta {
+        let mut variants = IndexMap::new();
+        for variant in ty.variants().iter() {
+            if variant.is_composite() {
+                let key = variant.key();
+                variants.insert(variant.name(), key);
+            }
+            self.push(variant.clone());
+        }
+        if variants.is_empty() {
+            RsNodeMeta::Scalar
+        } else {
+            let name = normalize_type_title(&ty.name());
+            RsNodeMeta::Union(Union { variants, name })
+        }
+    }
+
+    fn build_func(&self, ty: Arc<FunctionType>) -> RsNodeMeta {
+        let out = ty.output();
+        let out_key = out.key();
+        self.push(out.clone());
+
+        let props = ty.input().properties();
+        let props = if !props.is_empty() {
+            let mut res = BTreeMap::new();
+            for (name, prop) in props.iter() {
+                res.insert(name.clone(), prop.ty.name());
+            }
+            Some(res)
+        } else {
+            None
+        };
+
+        let input_files = get_path_to_files(ty.clone());
+
+        RsNodeMeta::Function(Function {
+            return_ty: out_key,
+            argument_fields: props,
+            input_files: serialize_files(&input_files),
+            name: normalize_type_title(&ty.name()),
+        })
+    }
+}
+
+fn serialize_files(paths: &[TypePath]) -> Option<String> {
+    (!paths.is_empty())
+        .then_some(paths)
+        .map(|files| {
+            files
+                .iter()
+                .map(|path| path.serialize_rs())
+                .collect::<Vec<_>>()
+        })
+        .and_then(|files| (!files.is_empty()).then(|| format!("[TypePath({})]", files.join(", "))))
 }

@@ -679,7 +679,8 @@ class GraphQLTransportBase(ABC):
     def handle_response(self, res: GraphQLResponse):
         if res.status != 200:
             raise Exception(f"graphql request failed with status {res.status}", res)
-        if res.headers.get("content-type") != "application/json":
+        content_type = res.headers.get("content-type")
+        if content_type is None or not content_type.startswith("application/json"):
             raise Exception("unexpected content-type in graphql response", res)
         parsed = json.loads(res.body)
         if parsed.get("errors"):
@@ -1028,14 +1029,14 @@ class NodeDescs:
         return NodeMeta()
 
     @staticmethod
-    def RootSumFn():
+    def RootRemoteSumPyFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
@@ -1046,20 +1047,20 @@ class NodeDescs:
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
     @staticmethod
-    def RootRemoteSumPyFn():
+    def RootSumFn():
         return_node = NodeDescs.scalar()
         return NodeMeta(
             sub_nodes=return_node.sub_nodes,
             variants=return_node.variants,
             arg_types={
-                "first": "FloatD0c49",
-                "second": "FloatD0c49",
+                "first": "float_d0c49",
+                "second": "float_d0c49",
             },
         )
 
@@ -1067,8 +1068,8 @@ class NodeDescs:
 RootSumFnInput = typing.TypedDict(
     "RootSumFnInput",
     {
-        "first": float,
-        "second": float,
+        "first": "float",
+        "second": "float",
     },
     total=False,
 )
@@ -1078,7 +1079,7 @@ class QueryGraph(QueryGraphBase):
     def __init__(self):
         super().__init__(
             {
-                "FloatD0c49": "Float!",
+                "float_d0c49": "Float!",
             }
         )
 

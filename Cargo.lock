@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "archive_utils"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1624,6 +1624,15 @@ checksum = "cbf2150cce219b664a8a70df7a1f933836724b503f8a413af9365b4dcc4d90b8"
 dependencies = [
  "lazy_static 1.5.0",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "colored"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
+dependencies = [
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -3925,7 +3934,7 @@ name = "diagnostics"
 version = "0.1.0"
 source = "git+https://github.com/metatypedev/prisma-engines?branch=fix/version-compat#a320025a443294499435bde84045b8d20e37f649"
 dependencies = [
- "colored",
+ "colored 2.1.0",
  "indoc",
  "pest",
 ]
@@ -5614,7 +5623,7 @@ dependencies = [
 
 [[package]]
 name = "grpc_utils"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "proto-parser",
@@ -6345,7 +6354,7 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "identities_fdk"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "metagen-client",
@@ -7479,7 +7488,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "actix",
  "archive_utils",
@@ -7549,7 +7558,7 @@ dependencies = [
 
 [[package]]
 name = "metagen"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "color-eyre",
  "dashmap 6.1.0",
@@ -7570,11 +7579,12 @@ dependencies = [
  "tg_schema",
  "tokio",
  "typegate_api",
+ "typegraph",
 ]
 
 [[package]]
 name = "metagen-client"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "derive_more 1.0.0",
  "futures",
@@ -7957,7 +7967,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "deno",
@@ -11003,7 +11013,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "metagen-client",
  "serde",
@@ -11013,7 +11023,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client_upload"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "metagen-client",
  "serde",
@@ -11852,9 +11862,9 @@ dependencies = [
 
 [[package]]
 name = "spdx"
-version = "0.10.6"
+version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47317bbaf63785b53861e1ae2d11b80d6b624211d42cb20efcd210ee6f8a14bc"
+checksum = "58b69356da67e2fc1f542c71ea7e654a361a79c938e4424392ecf4fa065d2193"
 dependencies = [
  "smallvec",
 ]
@@ -12187,7 +12197,7 @@ dependencies = [
 
 [[package]]
 name = "substantial"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "chrono",
@@ -12958,7 +12968,7 @@ dependencies = [
 
 [[package]]
 name = "tg_schema"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "indexmap 2.6.0",
@@ -13517,9 +13527,9 @@ checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
 
 [[package]]
 name = "tracing"
-version = "0.1.40"
+version = "0.1.41"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3523ab5a71916ccf420eebdf5521fcef02141234bbc0b8a49f2fdc4544364ef"
+checksum = "784e0ac535deb450455cbfa28a6f0df145ea1bb7ae51b821cf5e7927fdcfbdd0"
 dependencies = [
  "log",
  "pin-project-lite",
@@ -13529,9 +13539,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-attributes"
-version = "0.1.27"
+version = "0.1.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34704c8d6ebcbc939824180af020566b01a7c01f80641264eba0999f6c2b6be7"
+checksum = "395ae124c09f9e6918a2310af6038fba074bcf474ac352496d5910dd59a2226d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -13540,9 +13550,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-core"
-version = "0.1.32"
+version = "0.1.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
+checksum = "e672c95779cf947c5311f83787af4fa8fffd12fb27e4993211a84bdfd9610f9c"
 dependencies = [
  "once_cell",
  "valuable",
@@ -13606,9 +13616,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.18"
+version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad0f048c97dbd9faa9b7df56362b8ebcaa52adb06b498c050d2f4e32f90a7a8b"
+checksum = "e8189decb5ac0fa7bc8b96b7cb9b2701d60d48805aca84a238004d665fcc4008"
 dependencies = [
  "matchers",
  "nu-ansi-term",
@@ -13684,9 +13694,9 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
- "colored",
+ "colored 2.1.0",
  "env_logger 0.11.0",
  "envconfig",
  "location-macros",
@@ -13697,11 +13707,11 @@ dependencies = [
 
 [[package]]
 name = "typegate_api"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "async-trait",
- "colored",
+ "colored 3.0.0",
  "indoc",
  "itertools 0.13.0",
  "reqwest",
@@ -13714,7 +13724,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "archive_utils",
@@ -13762,8 +13772,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "typegraph"
+version = "0.5.1-rc.4"
+dependencies = [
+ "color-eyre",
+ "derive_more 1.0.0",
+ "enum_dispatch",
+ "indexmap 2.6.0",
+ "insta",
+ "paste",
+ "serde",
+ "serde_json",
+ "tg_schema",
+ "tracing",
+]
+
+[[package]]
 name = "typegraph_core"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "archive_utils",
@@ -13786,6 +13812,7 @@ dependencies = [
  "serde_json",
  "sha2 0.10.8",
  "tg_schema",
+ "tracing",
  "unindent",
 ]
 
@@ -14453,12 +14480,12 @@ dependencies = [
 
 [[package]]
 name = "wasm-encoder"
-version = "0.219.0"
+version = "0.219.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2b1b95711b3ad655656a341e301cc64e33cbee94de9a99a1c5a2ab88efab79d"
+checksum = "8aa79bcd666a043b58f5fa62b221b0b914dd901e6f620e8ab7371057a797f3e1"
 dependencies = [
  "leb128",
- "wasmparser 0.219.0",
+ "wasmparser 0.219.2",
 ]
 
 [[package]]
@@ -14489,8 +14516,8 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "spdx",
- "wasm-encoder 0.219.0",
- "wasmparser 0.219.0",
+ "wasm-encoder 0.219.2",
+ "wasmparser 0.219.2",
 ]
 
 [[package]]
@@ -14518,14 +14545,14 @@ dependencies = [
 
 [[package]]
 name = "wasm_reflected_rust"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "wit-bindgen 0.34.0",
 ]
 
 [[package]]
 name = "wasm_wire_rust"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "metagen-client",
@@ -14561,9 +14588,9 @@ dependencies = [
 
 [[package]]
 name = "wasmparser"
-version = "0.219.0"
+version = "0.219.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "324b4e56d24439495b88cd81439dad5e97f3c7b1eedc3c7e10455ed1e045e9a2"
+checksum = "5220ee4c6ffcc0cb9d7c47398052203bc902c8ef3985b0c8134118440c0b2921"
 dependencies = [
  "ahash 0.8.11",
  "bitflags 2.6.0",
@@ -14890,7 +14917,7 @@ dependencies = [
  "leb128",
  "memchr",
  "unicode-width",
- "wasm-encoder 0.219.0",
+ "wasm-encoder 0.219.2",
 ]
 
 [[package]]
@@ -15570,7 +15597,7 @@ checksum = "163cee59d3d5ceec0b256735f3ab0dccac434afb0ec38c406276de9c5a11e906"
 dependencies = [
  "anyhow",
  "heck 0.5.0",
- "wit-parser 0.219.0",
+ "wit-parser 0.219.2",
 ]
 
 [[package]]
@@ -15688,10 +15715,10 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "wasm-encoder 0.219.0",
+ "wasm-encoder 0.219.2",
  "wasm-metadata 0.219.0",
- "wasmparser 0.219.0",
- "wit-parser 0.219.0",
+ "wasmparser 0.219.2",
+ "wit-parser 0.219.2",
 ]
 
 [[package]]
@@ -15732,9 +15759,9 @@ dependencies = [
 
 [[package]]
 name = "wit-parser"
-version = "0.219.0"
+version = "0.219.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23102e180c0c464f36e293d31a27b524e3ece930d7b5527d2f33f9d2c963de64"
+checksum = "ca004bb251010fe956f4a5b9d4bf86b4e415064160dd6669569939e8cbf2504f"
 dependencies = [
  "anyhow",
  "id-arena",
@@ -15745,7 +15772,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "unicode-xid",
- "wasmparser 0.219.0",
+ "wasmparser 0.219.2",
 ]
 
 [[package]]
@@ -15835,7 +15862,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "xtask"
-version = "0.5.1-rc.1"
+version = "0.5.1-rc.4"
 dependencies = [
  "anyhow",
  "clap",

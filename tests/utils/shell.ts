@@ -79,6 +79,9 @@ export async function shell(
 
   const { code, success } = await p.status;
 
+  console.log("____STDOUT________\n", res.stdout, "\n____END_STDOUT____");
+  console.log("____STDERR________\n", res.stderr, "\n____END_STDERR____");
+
   if (!success) {
     throw new ShellError(code, cmd, res.stdout, res.stderr);
   }
