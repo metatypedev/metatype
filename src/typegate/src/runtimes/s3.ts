@@ -12,6 +12,7 @@ import {
   type PutObjectCommandInput,
   S3Client,
 } from "aws-sdk/client-s3";
+import { createS3ClientWithMD5 } from "../../../utils/mod.ts";
 import { getSignedUrl } from "aws-sdk/s3-request-presigner";
 import type {
   Materializer,
@@ -57,7 +58,9 @@ export class S3Runtime extends Runtime {
       credentials,
       forcePathStyle: secretManager.secretOrNull(path_style_secret) === "true",
     };
-    const client = new S3Client(clientInit);
+    const client = createS3ClientWithMD5({
+      ...clientInit,
+    });
     return new S3Runtime(typegraphName, client);
   }
 

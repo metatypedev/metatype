@@ -3,15 +3,12 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { execute, gql, Meta } from "../../utils/mod.ts";
-console.log({
-  Meta
-})
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,
   ListObjectsCommand,
-  S3Client,
 } from "aws-sdk/client-s3";
+import { createS3ClientWithMD5 } from "../../../src/utils/mod.ts";
 
 const HOST = "http://localhost:9000";
 const REGION = "local";
@@ -20,7 +17,7 @@ const SECRET_KEY = "password";
 const PATH_STYLE = "true";
 
 async function initBucket() {
-  const client = new S3Client({
+  const client = createS3ClientWithMD5({
     endpoint: "http://localhost:9000",
     region: "local",
     credentials: {
@@ -40,14 +37,19 @@ async function initBucket() {
     const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
     const res = await client.send(listCommand);
 
-    if (res.Contents != null) {
-      const deleteCommand = new DeleteObjectsCommand({
-        Bucket: "bucket",
-        Delete: {
-          Objects: res.Contents.map(({ Key }) => ({ Key })),
-        },
-      });
-      await client.send(deleteCommand);
+    try {
+      if (res.Contents != null) {
+        const deleteCommand = new DeleteObjectsCommand({
+          Bucket: "bucket",
+          Delete: {
+            Objects: res.Contents.map(({ Key }) => ({ Key })),
+          },
+        });
+        await client.send(deleteCommand);
+      }
+    } catch (err) {
+      console.log({ err }, "XXXXX del err");
+      throw err;
     }
   }
 }
@@ -67,7 +69,12 @@ Meta.test("s3", async (t) => {
     },
   });
 
-  await initBucket();
+  try {
+    await initBucket();
+  } catch (err) {
+    console.log({ err }, "XXXX");
+    throw err;
+  }
 
   const fileContent = "Hello, World!";
 

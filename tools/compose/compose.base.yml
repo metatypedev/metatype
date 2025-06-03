@@ -15,6 +15,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   redis:
+    user: root
     image: docker.io/bitnami/redis:7.0
     restart: unless-stopped
     ports:
@@ -23,7 +24,7 @@ services:
       REDIS_PASSWORD: password
 
   minio:
-    image: docker.io/bitnami/minio:2024
+    image: docker.io/bitnami/minio:2022.2.7-debian-10-r0
     platform: linux/amd64
     restart: unless-stopped
     ports:

@@ -141,8 +141,8 @@ wasmtime-wasi = "25.0.2"
 wit-bindgen = "0.34"
 
 # deno
-deno = { path =  "../deno/cli" }
-# deno = { git = "https://github.com/metatypedev/deno", branch = "v2.1.10-embeddable" }
+# deno = { path =  "../deno/cli" }
+deno = { git = "https://github.com/metatypedev/deno", branch = "v2.1.10-embeddable" }
 deno_core = "=0.336.0"
 deno_error = "=0.5.5"
 

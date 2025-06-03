@@ -105,7 +105,7 @@ members = ["fdk/"]
 
   assertEquals(
     (
-      await t.shell("cargo build --target wasm32-wasi".split(" "), {
+      await t.shell("cargo build --target wasm32-wasip1".split(" "), {
         currentDir: genCratePath,
       })
     ).code,
