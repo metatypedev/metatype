@@ -788,7 +788,7 @@ export class HostcallTransport extends GraphQLTransport {
     );
   }
 
-  protected async request(
+  protected override async request(
     doc: string,
     variables: Record<string, unknown>,
     _options: GraphQlTransportOptions,
