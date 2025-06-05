@@ -1,20 +1,33 @@
-// Modified from https://github.com/aws/aws-sdk-js-v3/blob/a1d8ad3ef4c5c9846a7ea80cde914e93721f32ca/supplemental-docs/MD5_FALLBACK.md
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
+// Modified from
+// https://github.com/aws/aws-sdk-js-v3/blob/d1501040077b937ef23e591238cda4bbe729c721/supplemental-docs/MD5_FALLBACK.mdkk
 import { S3Client, S3ClientConfig } from "aws-sdk/client-s3";
+// import {
+//   S3Client,
+//   S3ClientConfig,
+// } from "npm:@aws-sdk/client-s3@3.821.0";
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 
 /**
  * Creates an S3 client that uses MD5 checksums for DeleteObjects operations
  */
 export function createS3ClientWithMD5(config?: S3ClientConfig) {
+  return new S3Client({
+    ...config,
+    requestStreamBufferSize: 32 * 1024,
+  });
   const client = new S3Client({
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
     ...config,
   });
-  const md5Hash = createHash("md5");
 
-  client.middlewareStack.add(
-    (next, context) => async (args) => {
+  const cb =
+    // deno-lint-ignore no-explicit-any
+    (next: any, context: any) => async (args: any) => {
       // Check if this is a DeleteObjects command
       const isDeleteObjects = context.commandName === "DeleteObjectsCommand";
 
@@ -22,37 +35,45 @@ export function createS3ClientWithMD5(config?: S3ClientConfig) {
         return next(args);
       }
 
-      const result = await next(args);
-      // deno-lint-ignore no-explicit-any
-      const headers = (args.request as any).headers;
+      console.log({ args });
+      const headers = args.request.headers;
 
-      // Remove any checksum headers
+      // Remove any checksum headers added by default middleware
+      // This ensures our Content-MD5 is the primary integrity check
       Object.keys(headers).forEach((header) => {
+        const lowerHeader = header.toLowerCase();
         if (
-          header.toLowerCase().startsWith("x-amz-checksum-") ||
-          header.toLowerCase().startsWith("x-amz-sdk-checksum-")
+          lowerHeader.startsWith("x-amz-checksum-") ||
+          lowerHeader.startsWith("x-amz-sdk-checksum-")
         ) {
           delete headers[header];
         }
       });
 
-      // Add MD5
-      // deno-lint-ignore no-explicit-any
-      if ((args.request as any).body) {
-        const bodyContent = new TextEncoder().encode(
-          // deno-lint-ignore no-explicit-any
-          (args.request as any).body,
+      // Add Content-MD5 header
+      if (args.request.body) {
+        const bodyContent = Buffer.from(args.request.body);
+        headers["Content-MD5"] = createHash("md5").update(bodyContent).digest(
+          "base64",
         );
-        headers["Content-MD5"] = md5Hash.update(bodyContent).digest("base64");
       }
 
-      return result;
-    },
-    {
-      step: "finalizeRequest",
-      name: "addMD5Checksum",
-    },
-  );
+      return await next(args);
+    };
+
+  client.middlewareStack.add(cb);
+
+  // // Add the middleware relative to the flexible checksums middleware
+  // // This ensures it runs after default checksums might be added, but before signing
+  // client.middlewareStack.addRelativeTo(
+  //   cb,
+  //   {
+  //     relation: "after",
+  //     toMiddleware: "flexibleChecksumsMiddleware",
+  //     name: "addMD5ChecksumForDeleteObjects", // Optional: Name it whatever you'd like
+  //     tags: ["MD5_FALLBACK"],
+  //   },
+  // );
 
   return client;
 }

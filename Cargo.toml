@@ -48,8 +48,8 @@ archive_utils = { path = "src/utils/archive" }
 typegraph = { path = "src/typegraph/graph" }
 
 # cli
-clap = "=4.5.16"
-clap_complete = "=4.5.24"
+clap = "=4.5.30"
+clap_complete = "=4.5.45"
 clap-verbosity-flag = "2.2.2"
 colored = "3"
 dialoguer = "0.11.0"
@@ -142,9 +142,9 @@ wit-bindgen = "0.34"
 
 # deno
 # deno = { path =  "../deno/cli" }
-deno = { git = "https://github.com/metatypedev/deno", branch = "v2.1.10-embeddable" }
-deno_core = "=0.336.0"
-deno_error = "=0.5.5"
+deno = { git = "https://github.com/metatypedev/deno", branch = "v2.2.4-embeddable" }
+deno_core = "=0.340.0"
+deno_error = "=0.5.6"
 
 # logging
 env_logger = "=0.11.0"

@@ -367,7 +367,7 @@ impl From<InitError> for WitWireInitError {
 
 #[deno_core::op2(async)]
 #[serde]
-pub async fn op_wit_wire_init<'scope>(
+pub async fn op_wit_wire_init(
     state: Rc<RefCell<OpState>>,
     // scope: &mut v8::HandleScope<'scope>,
     #[string] component_path: String,

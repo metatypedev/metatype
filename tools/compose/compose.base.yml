@@ -24,7 +24,8 @@ services:
       REDIS_PASSWORD: password
 
   minio:
-    image: docker.io/bitnami/minio:2022.2.7-debian-10-r0
+    user: "1000:1000"
+    image: docker.io/bitnami/minio:2025.5.24
     platform: linux/amd64
     restart: unless-stopped
     ports:
@@ -35,3 +36,8 @@ services:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: password
       MINIO_DEFAULT_BUCKETS: "gate2"
+    volumes:
+      - minio_data:/bitnami/minio/data
+
+volumes:
+  minio_data:

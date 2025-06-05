@@ -247,7 +247,11 @@ pub async fn test(
     main_graph_container
         .check_specifiers(
             &specifiers_for_typecheck_and_test,
-            options.ext_flag().as_ref(),
+            // options.ext_flag().as_ref(),
+            deno::graph_container::CheckSpecifiersOptions {
+                ext_overwrite: options.ext_flag().as_ref(),
+                ..Default::default()
+            },
         )
         .await?;
 
