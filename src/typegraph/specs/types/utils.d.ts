@@ -35,6 +35,17 @@ type FdkOutput = {
   overwrite: boolean;
 };
 
+type Oauth2Client = {
+  id: string;
+  redirect_uri: string;
+};
+
+type BaseOauth2Params = {
+  provider: string;
+  scopes: string;
+  clients: Oauth2Client[];
+};
+
 type reduceb = (super_type_id: TypeId, entries: ReduceEntry[]) => TypeId;
 
 type add_graphql_endpoint = (graphql: string) => UInt;
@@ -43,19 +54,17 @@ type add_auth = (data: Auth) => UInt;
 
 type add_raw_auth = (data: string) => UInt;
 
-type oauth2 = (service_name: string, scopes: string) => string;
+type oauth2 = (params: BaseOauth2Params) => string;
 
-type oauth2_without_profiler = (service_name: string, scopes: string) => string;
+type oauth2_without_profiler = (params: BaseOauth2Params) => string;
 
 type oauth2_with_extended_profiler = (
-  service_name: string,
-  scopes: string,
+  params: BaseOauth2Params,
   extension: string,
 ) => string;
 
 type oauth2_with_custom_profiler = (
-  service_name: string,
-  scopes: string,
+  params: BaseOauth2Params,
   profiler: TypeId,
 ) => string;
 

@@ -25,21 +25,17 @@ pub enum RpcCall {
         data: String,
     },
     Oauth2 {
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
     },
     Oauth2WithoutProfiler {
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
     },
     Oauth2WithExtendedProfiler {
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         extension: String,
     },
     Oauth2WithCustomProfiler {
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         profiler: TypeId,
     },
     GqlDeployQuery {
@@ -74,27 +70,20 @@ impl super::RpcDispatch for RpcCall {
             Self::AddRawAuth { data } => {
                 Lib::add_raw_auth(data).map(|res| serde_json::to_value(res).unwrap())
             }
-            Self::Oauth2 {
-                service_name,
-                scopes,
-            } => Lib::oauth2(service_name, scopes).map(|res| serde_json::to_value(res).unwrap()),
-            Self::Oauth2WithoutProfiler {
-                service_name,
-                scopes,
-            } => Lib::oauth2_without_profiler(service_name, scopes)
-                .map(|res| serde_json::to_value(res).unwrap()),
-            Self::Oauth2WithExtendedProfiler {
-                service_name,
-                scopes,
-                extension,
-            } => Lib::oauth2_with_extended_profiler(service_name, scopes, extension)
-                .map(|res| serde_json::to_value(res).unwrap()),
-            Self::Oauth2WithCustomProfiler {
-                service_name,
-                scopes,
-                profiler,
-            } => Lib::oauth2_with_custom_profiler(service_name, scopes, profiler)
-                .map(|res| serde_json::to_value(res).unwrap()),
+            Self::Oauth2 { params } => {
+                Lib::oauth2(params).map(|res| serde_json::to_value(res).unwrap())
+            }
+            Self::Oauth2WithoutProfiler { params } => {
+                Lib::oauth2_without_profiler(params).map(|res| serde_json::to_value(res).unwrap())
+            }
+            Self::Oauth2WithExtendedProfiler { params, extension } => {
+                Lib::oauth2_with_extended_profiler(params, extension)
+                    .map(|res| serde_json::to_value(res).unwrap())
+            }
+            Self::Oauth2WithCustomProfiler { params, profiler } => {
+                Lib::oauth2_with_custom_profiler(params, profiler)
+                    .map(|res| serde_json::to_value(res).unwrap())
+            }
             Self::GqlDeployQuery { params } => {
                 Lib::gql_deploy_query(params).map(|res| serde_json::to_value(res).unwrap())
             }

@@ -19,6 +19,13 @@ class NoProfiler(StdOauth2Profiler):
     pass
 
 
+class PartialOauth2Params:
+    scopes: List[str]
+    type: Optional[str]
+    profiler: StdOauth2Profiler
+    clients: List[sdk_utils.Oauth2Client]
+
+
 @dataclass
 class ExtendedProfiler(StdOauth2Profiler):
     extension: Any
@@ -79,6 +86,7 @@ class Cors:
 
 
 class Auth:
+    @staticmethod
     def jwt(name: str, format: str, algorithm: None) -> "utils.Auth":
         """
         [Documentation](http://localhost:3000/docs/guides/authentication#jwt-authentication)
@@ -93,9 +101,11 @@ class Auth:
 
         return utils.Auth(name, "jwt", auth_data)
 
+    @staticmethod
     def hmac256(name: str) -> "utils.Auth":
         return Auth.jwt(name, "raw", {"name": "HMAC", "hash": {"name": "SHA-256"}})
 
+    @staticmethod
     def basic(users: List[str]) -> "utils.Auth":
         auth_data = [("users", json.dumps(users))]
         return utils.Auth("basic", "basic", auth_data)
@@ -122,47 +132,61 @@ class Auth:
             ],
         )
 
-    def oauth2_digitalocean(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("digitalocean", scopes, profiler)
+    @staticmethod
+    def oauth2_digitalocean(params: PartialOauth2Params):
+        return RawAuth.from_std("digitalocean", params)
 
-    def oauth2_discord(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("discord", scopes, profiler)
+    @staticmethod
+    def oauth2_discord(params: PartialOauth2Params):
+        return RawAuth.from_std("discord", params)
 
-    def oauth2_dropbox(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("dropbox", scopes, profiler)
+    @staticmethod
+    def oauth2_dropbox(params: PartialOauth2Params):
+        return RawAuth.from_std("dropbox", params)
 
-    def oauth2_facebook(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("facebook", scopes, profiler)
+    @staticmethod
+    def oauth2_facebook(params: PartialOauth2Params):
+        return RawAuth.from_std("facebook", params)
 
-    def oauth2_github(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("github", scopes, profiler)
+    @staticmethod
+    def oauth2_github(params: PartialOauth2Params):
+        return RawAuth.from_std("github", params)
 
-    def oauth2_gitlab(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("gitlab", scopes, profiler)
+    @staticmethod
+    def oauth2_gitlab(params: PartialOauth2Params):
+        return RawAuth.from_std("gitlab", params)
 
-    def oauth2_google(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("google", scopes, profiler)
+    @staticmethod
+    def oauth2_google(params: PartialOauth2Params):
+        return RawAuth.from_std("google", params)
 
-    def oauth2_instagram(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("instagram", scopes, profiler)
+    @staticmethod
+    def oauth2_instagram(params: PartialOauth2Params):
+        return RawAuth.from_std("instagram", params)
 
-    def oauth2_linkedin(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("linkedin", scopes, profiler)
+    @staticmethod
+    def oauth2_linkedin(params: PartialOauth2Params):
+        return RawAuth.from_std("linkedin", params)
 
-    def oauth2_microsoft(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("microsoft", scopes, profiler)
+    @staticmethod
+    def oauth2_microsoft(params: PartialOauth2Params):
+        return RawAuth.from_std("microsoft", params)
 
-    def oauth2_reddit(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("reddit", scopes, profiler)
+    @staticmethod
+    def oauth2_reddit(params: PartialOauth2Params):
+        return RawAuth.from_std("reddit", params)
 
-    def oauth2_slack(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("slack", scopes, profiler)
+    @staticmethod
+    def oauth2_slack(params: PartialOauth2Params):
+        return RawAuth.from_std("slack", params)
 
-    def oauth2_stackexchange(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("stackexchange", scopes, profiler)
+    @staticmethod
+    def oauth2_stackexchange(params: PartialOauth2Params):
+        return RawAuth.from_std("stackexchange", params)
 
-    def oauth2_twitter(scopes: str, profiler: Optional[StdOauth2Profiler] = None):
-        return RawAuth.from_std("twitter", scopes, profiler)
+    @staticmethod
+    def oauth2_twitter(params: PartialOauth2Params):
+        return RawAuth.from_std("twitter", params)
 
 
 @dataclass
@@ -171,20 +195,27 @@ class RawAuth:
 
     @classmethod
     def from_std(
-        cls, service: str, scopes: str, profiler: Optional[StdOauth2Profiler] = None
+        cls,
+        provider: str,
+        params: PartialOauth2Params,
     ):
-        if isinstance(profiler, NoProfiler):
-            res = sdk_utils.oauth2_without_profiler(service, scopes)
-        elif isinstance(profiler, ExtendedProfiler):
+        scopes = " ".join(params.scopes)
+        base_params = sdk_utils.BaseOauth2Params(
+            provider=provider, scopes=scopes, clients=params.clients
+        )
+
+        if isinstance(params.profiler, NoProfiler):
+            res = sdk_utils.oauth2_without_profiler(base_params)
+        elif isinstance(params.profiler, ExtendedProfiler):
             res = sdk_utils.oauth2_with_extended_profiler(
-                service, scopes, json.dumps(profiler.extension)
+                base_params, json.dumps(params.profiler.extension)
             )
-        elif isinstance(profiler, CustomProfiler):
+        elif isinstance(params.profiler, CustomProfiler):
             res = sdk_utils.oauth2_with_custom_profiler(
-                service, scopes, profiler.func._id
+                base_params, params.profiler.func._id
             )
         else:  # default profiler
-            res = sdk_utils.oauth2(service, scopes)
+            res = sdk_utils.oauth2(base_params)
 
         return cls(res)
 
