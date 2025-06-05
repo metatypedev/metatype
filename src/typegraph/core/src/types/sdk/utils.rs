@@ -46,24 +46,32 @@ pub struct FdkOutput {
     pub overwrite: bool,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Oauth2Client {
+    pub id: String,
+    pub redirect_uri: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BaseOauth2Params {
+    pub provider: String,
+    pub scopes: String,
+    pub clients: Vec<Oauth2Client>,
+}
+
 pub trait Handler {
     fn reduceb(super_type_id: TypeId, entries: Vec<ReduceEntry>) -> Result<TypeId, super::Error>;
     fn add_graphql_endpoint(graphql: String) -> Result<u32, super::Error>;
     fn add_auth(data: Auth) -> Result<u32, super::Error>;
     fn add_raw_auth(data: String) -> Result<u32, super::Error>;
-    fn oauth2(service_name: String, scopes: String) -> Result<String, super::Error>;
-    fn oauth2_without_profiler(
-        service_name: String,
-        scopes: String,
-    ) -> Result<String, super::Error>;
+    fn oauth2(params: BaseOauth2Params) -> Result<String, super::Error>;
+    fn oauth2_without_profiler(params: BaseOauth2Params) -> Result<String, super::Error>;
     fn oauth2_with_extended_profiler(
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         extension: String,
     ) -> Result<String, super::Error>;
     fn oauth2_with_custom_profiler(
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         profiler: TypeId,
     ) -> Result<String, super::Error>;
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String, super::Error>;

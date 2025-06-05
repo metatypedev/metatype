@@ -60,10 +60,7 @@ class AuthProfiler {
     });
   }
 
-  async transform(
-    profile: any,
-    request: Request,
-  ) {
+  async transform(profile: any, request: Request) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -83,11 +80,7 @@ class AuthProfiler {
     validatorInputWeak(input);
 
     // Note: this assumes func is a simple t.func(inp, out, mat)
-    const stages = await runtime.materialize(
-      this.getComputeStage(),
-      [],
-      true,
-    );
+    const stages = await runtime.materialize(this.getComputeStage(), [], true);
     const resolver = stages.pop()?.props.resolver;
     if (typeof resolver != "function") {
       throw Error(
@@ -107,6 +100,11 @@ export type Oauth2AuthConfig = Pick<
   "jwt_max_duration_sec" | "jwt_refresh_duration_sec"
 >;
 
+export type Oauth2Client = {
+  id: string;
+  redirect_uri: string;
+};
+
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
@@ -119,8 +117,14 @@ export class OAuth2Auth extends Protocol {
     const clientSecret = secretManager.secretOrFail(
       `${authName}_CLIENT_SECRET`,
     );
-    const { authorize_url, access_url, scopes, profile_url, profiler } =
-      auth.auth_data;
+    const {
+      authorize_url,
+      access_url,
+      scopes,
+      profile_url,
+      profiler,
+      clients,
+    } = auth.auth_data;
     const clientData = {
       clientId,
       clientSecret,
@@ -142,12 +146,10 @@ export class OAuth2Auth extends Protocol {
         clientData,
         profile_url as string | null,
         profiler !== undefined
-          ? new AuthProfiler(
-            authParameters,
-            profiler as number,
-          )
+          ? new AuthProfiler(authParameters, profiler as number)
           : null,
         authParameters.tg.typegate.cryptoKeys,
+        clients as Oauth2Client[],
         config,
       ),
     );
@@ -160,6 +162,7 @@ export class OAuth2Auth extends Protocol {
     private profileUrl: string | null,
     private authProfiler: AuthProfiler | null,
     private cryptoKeys: TypegateCryptoKeys,
+    private clients: Oauth2Client[],
     private config: Oauth2AuthConfig,
   ) {
     super(typegraphName);
@@ -253,8 +256,7 @@ export class OAuth2Auth extends Protocol {
     const typegraphPath = `/${this.typegraphName}`;
     const client = new OAuth2Client({
       ...this.clientData,
-      redirectUri:
-        `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
+      redirectUri: `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
     });
 
     if (!token) {
@@ -320,8 +322,8 @@ export class OAuth2Auth extends Protocol {
       const url = this.profileUrl.replace(`${verb}@`, "");
       const res = await fetch(url, {
         headers: {
-          "Accept": "application/json",
-          "authorization": `${token.tokenType} ${token.accessToken}`,
+          Accept: "application/json",
+          authorization: `${token.tokenType} ${token.accessToken}`,
         },
       });
       let profile = await res.json();
@@ -336,10 +338,7 @@ export class OAuth2Auth extends Protocol {
     }
   }
 
-  private async createJWT(
-    token: Tokens,
-    request: Request,
-  ): Promise<string> {
+  private async createJWT(token: Tokens, request: Request): Promise<string> {
     const profile = await this.getProfile(token, request);
     const payload: JWTClaims = {
       provider: this.authName,
