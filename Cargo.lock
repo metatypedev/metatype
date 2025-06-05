@@ -343,7 +343,7 @@ dependencies = [
 
 [[package]]
 name = "archive_utils"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -5299,7 +5299,7 @@ dependencies = [
 
 [[package]]
 name = "grpc_utils"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "proto-parser",
@@ -5862,7 +5862,7 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "identities_fdk"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "metagen-client",
@@ -6985,7 +6985,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "actix",
  "archive_utils",
@@ -7055,7 +7055,7 @@ dependencies = [
 
 [[package]]
 name = "metagen"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "color-eyre",
  "dashmap 6.1.0",
@@ -7081,7 +7081,7 @@ dependencies = [
 
 [[package]]
 name = "metagen-client"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "derive_more 1.0.0",
  "futures",
@@ -7445,7 +7445,7 @@ dependencies = [
 
 [[package]]
 name = "mt_deno"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "deno",
@@ -10336,7 +10336,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "metagen-client",
  "serde",
@@ -10346,7 +10346,7 @@ dependencies = [
 
 [[package]]
 name = "sample_client_upload"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "metagen-client",
  "serde",
@@ -11498,7 +11498,7 @@ dependencies = [
 
 [[package]]
 name = "substantial"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "chrono",
@@ -12281,7 +12281,7 @@ dependencies = [
 
 [[package]]
 name = "tg_schema"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "indexmap 2.6.0",
@@ -13000,7 +13000,7 @@ dependencies = [
 
 [[package]]
 name = "typegate"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "colored 2.1.0",
  "env_logger 0.11.0",
@@ -13013,7 +13013,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_api"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -13030,7 +13030,7 @@ dependencies = [
 
 [[package]]
 name = "typegate_engine"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "archive_utils",
@@ -13078,7 +13078,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "color-eyre",
  "derive_more 1.0.0",
@@ -13094,7 +13094,7 @@ dependencies = [
 
 [[package]]
 name = "typegraph_core"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "archive_utils",
@@ -13819,14 +13819,14 @@ dependencies = [
 
 [[package]]
 name = "wasm_reflected_rust"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "wit-bindgen 0.34.0",
 ]
 
 [[package]]
 name = "wasm_wire_rust"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "metagen-client",
@@ -15061,7 +15061,7 @@ checksum = "791978798f0597cfc70478424c2b4fdc2b7a8024aaff78497ef00f24ef674193"
 
 [[package]]
 name = "xtask"
-version = "0.5.1-rc.4"
+version = "0.5.1-rc.5"
 dependencies = [
  "anyhow",
  "clap",
