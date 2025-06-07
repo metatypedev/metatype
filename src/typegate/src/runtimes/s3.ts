@@ -157,19 +157,33 @@ export class S3Runtime extends Runtime {
 
           return stage.withResolver(async ({ path, file: f }) => {
             const file = f as File;
-            const commandInput: PutObjectCommandInput = {
-              Bucket: bucket as string,
+            // Get presigned URL using the presign_put materializer
+            const input: PutObjectCommandInput = {
+              Bucket: bucket,
               Key: path as string ?? file.name,
-              ContentType: file.type,
               ContentLength: file.size,
-              Body: file,
+              ContentType: file.type,
             };
-            this.logger.info(`s3 upload: ${JSON.stringify(commandInput)}`);
-            const command = new PutObjectCommand(commandInput);
-
-            await this.client.send(command);
+            this.logger.info(`s3 upload: getting presigned URL for ${JSON.stringify(input)}`);
+            const command = new PutObjectCommand(input);
+            const presignedUrl = await getSignedUrl(this.client, command, { expiresIn: 60 });
+            
+            // Upload using fetch
+            this.logger.info(`s3 upload: uploading to presigned URL`);
+            const response = await fetch(presignedUrl, {
+              method: 'PUT',
+              body: file,
+              headers: {
+                'Content-Type': file.type,
+                'Content-Length': file.size.toString(),
+              },
+            });
+            const body = await response.text();
+            if (!response.ok) {
+              throw new Error(`Failed to upload file: ${response.statusText}: ${body}`);
+            }
+            
             this.logger.info("s3 upload: successful");
-
             return true;
           });
         }
@@ -182,20 +196,35 @@ export class S3Runtime extends Runtime {
             const files = args.files as File[];
             const prefix = args.prefix as string;
 
-            // TODO: collect errors
+            // Upload all files in parallel
             await Promise.all(files.map(async (file, i) => {
-              const commandInput: PutObjectCommandInput = {
-                Bucket: bucket as string,
-                Key: `${prefix}${file.name}`,
-                ContentType: file.type,
+              const filePath = `${prefix}${file.name}`;
+              // Get presigned URL for each file
+              const input: PutObjectCommandInput = {
+                Bucket: bucket,
+                Key: filePath,
                 ContentLength: file.size,
-                Body: file,
+                ContentType: file.type,
               };
-              this.logger.info(
-                `s3 upload ${i}: ${JSON.stringify(commandInput)}`,
-              );
-              const command = new PutObjectCommand(commandInput);
-              await this.client.send(command);
+              this.logger.info(`s3 upload ${i}: getting presigned URL for ${JSON.stringify(input)}`);
+              const command = new PutObjectCommand(input);
+              const presignedUrl = await getSignedUrl(this.client, command, { expiresIn: 60 });
+              
+              // Upload using fetch
+              this.logger.info(`s3 upload ${i}: uploading to presigned URL`);
+              const response = await fetch(presignedUrl, {
+                method: 'PUT',
+                body: file,
+                headers: {
+                  'Content-Type': file.type,
+                  'Content-Length': file.size.toString(),
+                },
+              });
+              const body = await response.text();
+              if (!response.ok) {
+                throw new Error(`Failed to upload file ${file.name}: ${response.statusText}: ${body}`);
+              }
+              
               this.logger.info(`s3 upload ${i}: successful`);
             }));
 

@@ -66,6 +66,7 @@
     "npm:graphql@16.8.1": "16.8.1",
     "npm:json-schema-faker@0.5.3": "0.5.3",
     "npm:lodash@4.17.21": "4.17.21",
+    "npm:marked@*": "15.0.12",
     "npm:mathjs@11.11.1": "11.11.1",
     "npm:multiformats@13.1.0": "13.1.0",
     "npm:pg@8.12.0": "8.12.0",
@@ -7320,6 +7321,9 @@
     "lru_map@0.3.3": {
       "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ=="
     },
+    "marked@15.0.12": {
+      "integrity": "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA=="
+    },
     "mathjs@11.11.1": {
       "integrity": "sha512-uWrwMrhU31TCqHKmm1yFz0C352njGUVr/I1UnpMOxI/VBTTbCktx/mREUXx5Vyg11xrFdg/F3wnMM7Ql/csVsQ==",
       "dependencies": [
@@ -7519,6 +7523,7 @@
     }
   },
   "redirects": {
+    "https://deno.land/x/marked/mod.ts": "https://deno.land/x/marked@1.0.2/mod.ts",
     "https://esm.sh/@types/core-util-is@~1.0.1/index.d.ts": "https://esm.sh/@types/core-util-is@1.0.1/index.d.ts",
     "https://esm.sh/@types/immediate@~3.2.2/index.d.ts": "https://esm.sh/@types/immediate@3.2.2/index.d.ts",
     "https://esm.sh/@types/pako@~1.0.7/index.d.ts": "https://esm.sh/@types/pako@1.0.7/index.d.ts",

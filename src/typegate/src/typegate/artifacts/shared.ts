@@ -6,7 +6,7 @@ import { getLogger } from "../../log.ts";
 // deno-lint-ignore no-external-import
 import { createHash } from "node:crypto";
 import type { TypegateCryptoKeys } from "../../crypto.ts";
-import { S3, S3Client } from "aws-sdk/client-s3";
+import { S3, S3Client, GetObjectCommand } from "aws-sdk/client-s3";
 import type {
   ArtifactPersistence,
   RefCounter,
@@ -21,6 +21,7 @@ import { dirname } from "@std/path";
 import { chunk } from "@std/collections/chunk";
 import { ArtifactError } from "./mod.ts";
 import { Upload } from "aws-sdk/lib-storage";
+import { getSignedUrl } from "aws-sdk/s3-request-presigner";
 
 const logger = getLogger(import.meta);
 
@@ -146,29 +147,34 @@ class SharedArtifactPersistence implements ArtifactPersistence {
       return targetFile;
     }
 
-    const response = await this.s3.getObject({
+    // Get presigned URL for the object
+    const command = new GetObjectCommand({
       Bucket: this.s3Bucket,
       Key: resolveS3Key(this.s3Bucket, hash),
     });
+    const presignedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
 
-    if (response.$metadata.httpStatusCode === 404) {
+    // Fetch using presigned URL
+    const response = await fetch(presignedUrl);
+    if (response.status === 404) {
       throw new ArtifactError(
         `Artifact '${hash}' not found in S3`,
         import.meta,
       );
     }
 
-    if (response.Body) {
-      await Deno.mkdir(dirname(targetFile), { recursive: true });
-      const file = (await Deno.open(targetFile, { write: true, create: true }))
-        .writable;
-      await response.Body.transformToWebStream().pipeTo(file);
-    } else {
+    if (!response.ok) {
+      const body = await response.text();
       throw new ArtifactError(
-        `Failed to download artifact with hash ${hash}`,
+        `Failed to download artifact with hash ${hash}: ${response.statusText}: ${body}`,
         import.meta,
       );
     }
+
+    await Deno.mkdir(dirname(targetFile), { recursive: true });
+    const file = (await Deno.open(targetFile, { write: true, create: true }))
+      .writable;
+    await response.body!.pipeTo(file);
 
     return this.localShadow.fetch(hash);
   }
