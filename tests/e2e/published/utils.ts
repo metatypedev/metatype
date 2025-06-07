@@ -7,7 +7,6 @@ import { projectDir } from "@local/tools/utils.ts";
 import { download } from "download";
 import { Untar } from "@std/archive/untar";
 import { copy } from "@std/io/copy";
-import { encodeBase64 } from "@std/encoding/base64";
 import { readerFromStreamReader } from "@std/io/reader-from-stream-reader";
 
 const tempDir = $.path(projectDir).join("tmp");

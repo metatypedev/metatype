@@ -3,6 +3,7 @@
 
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import type { ResolverArgs } from "../../types.ts";
+import { Meta } from "../../../engine/runtime.js";
 // import { getLogger } from "../../log.ts";
 //
 // const logger = getLogger(import.meta);

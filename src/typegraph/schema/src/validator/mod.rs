@@ -109,7 +109,7 @@ impl VisitorResult for Vec<ValidatorError> {
     }
 }
 
-impl<'a> TypeVisitorContext for ValidatorContext<'a> {
+impl TypeVisitorContext for ValidatorContext<'_> {
     fn get_typegraph(&self) -> &Typegraph {
         self.typegraph
     }

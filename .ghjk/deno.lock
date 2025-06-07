@@ -148,8 +148,7 @@
     "https://esm.sh/safe-buffer@~5.1.1?target=denonext": "https://esm.sh/safe-buffer@5.1.2?target=denonext",
     "https://esm.sh/set-immediate-shim@~1.0.1?target=denonext": "https://esm.sh/set-immediate-shim@1.0.1?target=denonext",
     "https://esm.sh/string_decoder@~1.1.1?target=denonext": "https://esm.sh/string_decoder@1.1.1?target=denonext",
-    "https://esm.sh/util-deprecate@~1.0.1?target=denonext": "https://esm.sh/util-deprecate@1.0.2?target=denonext",
-    "https://github.com/levibostian/deno-udd/raw/ignore-prerelease/mod.ts": "https://raw.githubusercontent.com/levibostian/deno-udd/ignore-prerelease/mod.ts"
+    "https://esm.sh/util-deprecate@~1.0.1?target=denonext": "https://esm.sh/util-deprecate@1.0.2?target=denonext"
   },
   "remote": {
     "https://deno.land/std@0.116.0/_util/assert.ts": "2f868145a042a11d5ad0a3c748dcf580add8a0dbc0e876eaa0026303a5488f58",

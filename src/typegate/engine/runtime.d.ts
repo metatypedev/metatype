@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-declare global {
-  const Meta: MetaNS;
-}
-
+export const Meta : MetaNS;
 export type MetaNS = {
   version: () => string;
   typescriptFormatCode: (source: string) => string;

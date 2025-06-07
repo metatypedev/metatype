@@ -19,7 +19,7 @@ pub struct NearestFn {
     pub is_input: bool,
 }
 
-impl<'a> CurrentNode<'a> {
+impl CurrentNode<'_> {
     pub fn nearest_function(&self) -> Option<NearestFn> {
         for (i, segment) in self.path.borrow().iter().enumerate().rev() {
             match segment.edge {

@@ -378,7 +378,7 @@ impl Display for PathSegment {
 
 pub struct Path<'a>(pub &'a [PathSegment]);
 
-impl<'a> Display for Path<'a> {
+impl Display for Path<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for segment in self.0.iter() {
             write!(f, "/{segment}")?;

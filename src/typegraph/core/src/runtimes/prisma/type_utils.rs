@@ -8,7 +8,7 @@ type JsonValue = serde_json::Value;
 #[derive(Debug)]
 pub struct RuntimeConfig<'a>(pub Vec<&'a JsonValue>);
 
-impl<'a> RuntimeConfig<'a> {
+impl RuntimeConfig<'_> {
     pub fn get<T>(&self, key: &str) -> Result<Option<T>>
     where
         T: serde::de::DeserializeOwned,
