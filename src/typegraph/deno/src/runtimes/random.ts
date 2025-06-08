@@ -3,7 +3,7 @@
 
 import * as t from "../types.ts";
 import { runtimes } from "../sdk.ts";
-import { RandomRuntimeData } from "../gen/runtimes.ts";
+import type { RandomRuntimeData } from "../gen/runtimes.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
 

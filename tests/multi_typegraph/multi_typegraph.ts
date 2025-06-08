@@ -5,7 +5,6 @@ import { Policy, t, typegraph } from "@typegraph/sdk";
 import { RandomRuntime } from "@typegraph/sdk/runtimes/random";
 import { PythonRuntime } from "@typegraph/sdk/runtimes/python";
 import outdent from "outdent";
-import { TemporalRuntime } from "@typegraph/sdk/providers/temporal";
 
 function randomFunc() {
   return { data: null };

@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { gql, Meta, sleep } from "test-utils/mod.ts";
-import { join, resolve } from "@std/path";
-import { assert, assertEquals, assertRejects } from "@std/assert";
-import { randomSchema, reset } from "test-utils/database.ts";
+import { Meta, sleep } from "test-utils/mod.ts";
+import { gql as _gql } from "test-utils/mod.ts";
+import { join as _join, resolve as _resolve } from "@std/path";
+import { assert, assertEquals, assertRejects as _assertRejects } from "@std/assert";
+import { randomSchema as _randomSchema, reset as _reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "@david/dax";
 import {
@@ -12,8 +13,8 @@ import {
   enumerateAllChildUNIX,
   isPIDAliveUNIX,
   Lines,
-  LineWriter,
-  termProcess,
+  LineWriter as _LineWriter,
+  termProcess as _termProcess,
 } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 
@@ -23,13 +24,13 @@ const m = new TestModule(import.meta);
 // we need to do different versions of the typegraph to avoid
 // races during testing
 const testCode = "dev";
-const tgName = `migration-failure-test-${testCode}`;
+const _tgName = `migration-failure-test-${testCode}`;
 /**
  * These tests use different ports for the virtual typegate instance to avoid
  * conflicts with one another when running in parallel.
  */
 
-async function writeTypegraph(
+async function _writeTypegraph(
   version: number | null,
   target = `migration_${testCode}.py`,
 ) {
@@ -156,7 +157,7 @@ async function writeTypegraph(
 //  },
 //);
 
-async function listSubdirs(path: string): Promise<string[]> {
+async function _listSubdirs(path: string): Promise<string[]> {
   const subdirs: string[] = [];
   for await (const entry of Deno.readDir(path)) {
     if (entry.isDirectory) {

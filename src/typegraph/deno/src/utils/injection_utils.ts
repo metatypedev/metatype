@@ -11,7 +11,7 @@ export function serializeInjection(
   source: InjectionSource,
   value: InjectionValue<unknown>,
   valueMapper = (value: InjectionValue<unknown>) => value,
-) {
+): string {
   if (typeof value === "object" && !Array.isArray(value) && value !== null) {
     // Note:
     // Symbol changes the behavior of keys, values, entries => props are skipped
@@ -55,7 +55,7 @@ export function serializeGenericInjection(
   throw new Error(`source must be one of ${allowed.join(", ")}`);
 }
 
-export function serializeStaticInjection(value: InjectionValue<unknown>) {
+export function serializeStaticInjection(value: InjectionValue<unknown>): string {
   return serializeInjection("static", value, (x: unknown) => JSON.stringify(x));
 }
 

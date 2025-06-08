@@ -36,7 +36,7 @@ jobs:
       - uses: kenji-miyake/setup-git-cliff@v2
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
@@ -103,7 +103,7 @@ jobs:
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
-      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
@@ -184,7 +184,7 @@ jobs:
       - uses: mozilla-actions/sccache-action@v0.0.7
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook
@@ -323,7 +323,7 @@ jobs:
       - uses: kenji-miyake/setup-git-cliff@v2
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.github.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
       - run: ghjk envs cook

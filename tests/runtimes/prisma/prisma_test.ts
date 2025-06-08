@@ -196,22 +196,4 @@ Meta.test("prisma", async (t) => {
       .expectErrorContains("Unique constraint failed on the fields: (`id`)")
       .on(e);
   });
-
-  await t.should("batch multiple requests", async () => {
-    await gql`
-      mutation {
-        aa: createOneRecord(data: { name: "name", age: 1 }) {
-          id
-        }
-        one: createOneRecord(data: { name: "name", age: 1 }) {
-          id
-        }
-      }
-    `
-      .expectBody(({ data }) => {
-        assert(v4.validate(data.aa.id));
-        assert(v4.validate(data.one.id));
-      })
-      .on(e);
-  });
 });

@@ -43,51 +43,32 @@ Meta.test("prisma query builder", async (t) => {
   });
 
   assertEquals(query, {
-    batch: [
-      // FIXME: this test uses the stages from the initial plan
-      // which wilil include the polymorphic batch stage (which is then included
-      // in a concrete batch stage when we genereate again)
-      {
-          action: "batch",
-          modelName: undefined,
-          query: {
-            arguments: {
-             context: {},
-             parent: {},
-             variables: {},
-           },
-           selection: {},
-         },
-       },
-    {
-      modelName: "users",
-      action: "findUnique",
-      query: {
-        selection: {
-          id: true,
-          identities: {
-            selection: {
-              identifier: true,
-              provider: true,
-            },
-          },
-          email: true,
-          name: true,
-          messages: {
-            selection: {
-              id: true,
-              time: true,
-              message: true,
-            },
+    modelName: "users",
+    action: "findUnique",
+    query: {
+      selection: {
+        id: true,
+        identities: {
+          selection: {
+            identifier: true,
+            provider: true,
           },
         },
-        arguments: {
-          where: {
-            id: 12,
+        email: true,
+        name: true,
+        messages: {
+          selection: {
+            id: true,
+            time: true,
+            message: true,
           },
         },
       },
-    }
-  ]
+      arguments: {
+        where: {
+          id: 12,
+        },
+      },
+    },
   });
 });

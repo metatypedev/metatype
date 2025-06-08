@@ -10,7 +10,6 @@ import type { Materializer } from "../typegraph/types.ts";
 import * as ast from "graphql/ast";
 import type { WitWireMatInfo } from "../../engine/runtime.js";
 import { sha256 } from "../crypto.ts";
-import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
 import { WorkerManager } from "./wasm/worker_manager.ts";
 

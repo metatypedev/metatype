@@ -8,8 +8,8 @@ import { S3Client, S3ClientConfig } from "aws-sdk/client-s3";
 //   S3Client,
 //   S3ClientConfig,
 // } from "npm:@aws-sdk/client-s3@3.821.0";
-import { createHash } from "node:crypto";
-import { Buffer } from "node:buffer";
+// import { createHash } from "node:crypto";
+// import { Buffer } from "node:buffer";
 
 /**
  * Creates an S3 client that uses MD5 checksums for DeleteObjects operations
@@ -19,6 +19,7 @@ export function createS3ClientWithMD5(config?: S3ClientConfig) {
     ...config,
     requestStreamBufferSize: 32 * 1024,
   });
+  /*
   const client = new S3Client({
     requestChecksumCalculation: "WHEN_REQUIRED",
     responseChecksumValidation: "WHEN_REQUIRED",
@@ -61,19 +62,18 @@ export function createS3ClientWithMD5(config?: S3ClientConfig) {
       return await next(args);
     };
 
-  client.middlewareStack.add(cb);
-
-  // // Add the middleware relative to the flexible checksums middleware
-  // // This ensures it runs after default checksums might be added, but before signing
-  // client.middlewareStack.addRelativeTo(
-  //   cb,
-  //   {
-  //     relation: "after",
-  //     toMiddleware: "flexibleChecksumsMiddleware",
-  //     name: "addMD5ChecksumForDeleteObjects", // Optional: Name it whatever you'd like
-  //     tags: ["MD5_FALLBACK"],
-  //   },
-  // );
+  // Add the middleware relative to the flexible checksums middleware
+  // This ensures it runs after default checksums might be added, but before signing
+  client.middlewareStack.addRelativeTo(
+    cb,
+    {
+      relation: "after",
+      toMiddleware: "flexibleChecksumsMiddleware",
+      name: "addMD5ChecksumForDeleteObjects", // Optional: Name it whatever you'd like
+      tags: ["MD5_FALLBACK"],
+    },
+  );
 
   return client;
+  */
 }

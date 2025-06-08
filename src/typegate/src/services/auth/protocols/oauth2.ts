@@ -281,6 +281,10 @@ export class OAuth2Auth extends Protocol {
       try {
         newClaims = await client.refreshToken.refresh(refreshToken);
       } catch (e) {
+        logger.error("XXX error refreshing oauth token {}", {
+          err: e,
+          clientData: this.clientData,
+        });
         return {
           claims: {},
           nextToken: "", // clear

@@ -10,8 +10,6 @@ import { JSONValue } from "@metatype/typegate/utils.ts";
 import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
-import { workspaceDir } from "test-utils/dir.ts";
-import { FdkOutput } from "@typegraph/sdk/gen/utils.ts";
 import { createBucket } from "test-utils/s3.ts";
 import { S3Client } from "aws-sdk/client-s3";
 

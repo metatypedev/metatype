@@ -8,7 +8,6 @@ import type { ComputeStage } from "../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import { getLogger, type Logger } from "../log.ts";
-import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import { TypeGraphDS } from "../typegraph/mod.ts";
 import { WitWireMatInfo } from "../../engine/runtime.js";
 import { WorkerManager } from "./wasm/worker_manager.ts";

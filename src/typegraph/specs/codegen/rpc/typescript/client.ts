@@ -61,10 +61,12 @@ function toSnakeCase(str: string) {
   return str.replace(/([A-Z])/g, "_$1").toLowerCase();
 }
 
+// deno-lint-ignore no-explicit-any
 function transformKeys(obj: any, convertKey: (key: string) => string): any {
   if (Array.isArray(obj)) {
     return obj.map((item) => transformKeys(item, convertKey));
   } else if (obj && typeof obj === "object") {
+    // deno-lint-ignore no-explicit-any
     const result: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
@@ -101,7 +103,7 @@ function readResponse() {
   return decoder.decode(content);
 }
 
-function rpcRequest<R, P>(method: string, params?: P, transform = true) {
+function rpcRequest<R, P>(method: string, params?: P, transform = true): R {
   const request = {
     jsonrpc: "2.0",
     method,
@@ -129,7 +131,7 @@ function rpcRequest<R, P>(method: string, params?: P, transform = true) {
   }
 }
 
-function rpcNotify<P>(method: string, params?: P) {
+function rpcNotify<P>(method: string, params?: P): void {
   const request = {
     jsonrpc: "2.0",
     method,
@@ -142,4 +144,4 @@ function rpcNotify<P>(method: string, params?: P) {
   Deno.stdout.writeSync(message);
 }
 
-export { rpcRequest, rpcNotify };
+export { rpcNotify, rpcRequest };

@@ -4,11 +4,11 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { execute, gql, Meta } from "../../utils/mod.ts";
 import {
+  S3Client,
   CreateBucketCommand,
   DeleteObjectsCommand,
   ListObjectsCommand,
 } from "aws-sdk/client-s3";
-import { createS3ClientWithMD5 } from "../../../src/utils/mod.ts";
 
 const HOST = "http://localhost:9000";
 const REGION = "local";
@@ -17,7 +17,7 @@ const SECRET_KEY = "password";
 const PATH_STYLE = "true";
 
 async function initBucket() {
-  const client = createS3ClientWithMD5({
+  const client = new S3Client({
     endpoint: "http://localhost:9000",
     region: "local",
     credentials: {
@@ -37,7 +37,6 @@ async function initBucket() {
     const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
     const res = await client.send(listCommand);
 
-    try {
       if (res.Contents != null) {
         const deleteCommand = new DeleteObjectsCommand({
           Bucket: "bucket",
@@ -47,11 +46,7 @@ async function initBucket() {
         });
         await client.send(deleteCommand);
       }
-    } catch (err) {
-      console.log({ err }, "XXXXX del err");
-      throw err;
-    }
-  }
+    }   
 }
 
 Meta.test("s3 typegraphs", async (t) => {
@@ -69,12 +64,7 @@ Meta.test("s3", async (t) => {
     },
   });
 
-  try {
-    await initBucket();
-  } catch (err) {
-    console.log({ err }, "XXXX");
-    throw err;
-  }
+  await initBucket();
 
   const fileContent = "Hello, World!";
 

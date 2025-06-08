@@ -23,7 +23,6 @@ import * as DenoHooks from "../runtimes/deno/hooks/mod.ts";
 import * as PythonHooks from "../runtimes/python/hooks/mod.ts";
 import {
   prepareRuntimeReferences,
-  RuntimeRefData,
   type RuntimeResolver,
   SecretManager,
   TypeGraph,

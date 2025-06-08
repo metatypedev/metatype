@@ -12,7 +12,7 @@
  *                  Default: 0
  */
 
-import { green, objectHash, parseArgs, red } from "./deps.ts";
+import { green, objectHash, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
