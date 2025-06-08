@@ -1,6 +1,6 @@
 services:
   envoy:
-    user: "1000:1000"
+    # user: "1000:1000"
     image: docker.io/envoyproxy/envoy:v1.33-latest
     restart: unless-stopped
     ports:
@@ -15,7 +15,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   redis:
-    user: root
+    # user: root
     image: docker.io/bitnami/redis:7.0
     restart: unless-stopped
     ports:
@@ -24,7 +24,7 @@ services:
       REDIS_PASSWORD: password
 
   minio:
-    user: "1000:1000"
+    # user: "1000:1000"
     image: docker.io/bitnami/minio:2025.5.24
     platform: linux/amd64
     restart: unless-stopped
