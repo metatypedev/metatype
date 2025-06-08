@@ -6,11 +6,11 @@ import { gql, Meta } from "test-utils/mod.ts";
 import { WitWireHandle } from "@metatype/typegate/runtimes/wit_wire/mod.ts";
 import {
   hostcall,
-  HostCallCtx,
+  type HostCallCtx,
 } from "@metatype/typegate/runtimes/wit_wire/hostcall.ts";
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import type { ResolverArgs } from "@metatype/typegate/types.ts";
-import { WitWireMatInfo } from "../../../src/typegate/engine/runtime.js";
+import type { WitWireMatInfo } from "../../../src/typegate/engine/runtime.js";
 
 function initInlineWitWire(
   componentPath: string,

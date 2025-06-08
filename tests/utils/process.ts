@@ -19,7 +19,8 @@ export class Lines {
     this.#reader = this.#stream.getReader();
   }
 
-  // return true if the stream is exhausted
+  /// returns false if the stream is exhausted
+  // before condition is met
   async readWhile(
     check: Consumer,
     timeoutMs: number | null = 30_000,
@@ -30,10 +31,10 @@ export class Lines {
     let shouldContinue = true;
     while (shouldContinue) {
       const { value: line, done } = await next();
-      if (done) return true;
+      if (done) return false;
       shouldContinue = await check(line);
     }
-    return false;
+    return true;
   }
 
   async close() {

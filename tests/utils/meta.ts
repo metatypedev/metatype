@@ -3,8 +3,8 @@
 
 import { $ } from "@david/dax";
 import { killProcess, Lines } from "./process.ts";
-import { MetaTest } from "./test.ts";
-import { shell, ShellOptions, ShellOutput } from "./shell.ts";
+import type { MetaTest } from "./test.ts";
+import { shell, type ShellOptions, type ShellOutput } from "./shell.ts";
 
 // added to path in dev/test.ts
 const metaCliExe = "meta";

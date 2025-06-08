@@ -1,0 +1,41 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+import { BasicAuth, tgDeploy } from "@typegraph/sdk/tg_deploy";
+
+import { Meta } from "test-utils/mod.ts";
+import { tg } from "./self_deploy.ts";
+import { testDir } from "test-utils/dir.ts";
+import { join } from "@std/path/join";
+import { unreachable } from "@std/assert";
+import * as path from "@std/path";
+import { assertStringIncludes } from "@std/assert/string-includes";
+
+Meta.test(
+  {
+    name: "typegate should fail after ping on bad credential",
+  },
+  async (t) => {
+    // FIXME: Can't self deploy
+    const gate = `http://localhost:${t.port}`;
+    const auth = new BasicAuth("admin", "wrong password");
+    const cwdDir = join(testDir, "e2e", "self_deploy");
+    
+    try {
+     const _ = await tgDeploy(tg, {
+       typegate: { url: gate, auth },
+       secrets: {},
+       typegraphPath: path.join(cwdDir, "self_deploy.ts"),
+       migrationsDir: `${cwdDir}/prisma-migrations`,
+       defaultMigrationAction: {
+         apply: true,
+         create: true,
+         reset: false,
+       },
+     });
+    
+     unreachable();
+    } catch(err) {
+     assertStringIncludes(JSON.stringify(err instanceof Error ? err.message : err), "Failed to access typegate: request failed with status 401 (Unauthorized)");
+    }
+  },
+);

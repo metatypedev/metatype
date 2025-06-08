@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { SerializeParams } from "./gen/core.ts";
-import { TypegraphOutput } from "./typegraph.ts";
+import type { TypegraphOutput } from "./typegraph.ts";
 import { sdkUtils } from "./sdk.ts";
 import { freezeTgOutput } from "./utils/func_utils.ts";
 import type { FdkConfig, FdkOutput } from "./gen/utils.ts";
@@ -47,10 +47,10 @@ export class Metagen {
     overwrite?: false,
   ): Array<FdkOutput> {
     const fdkConfig = this.getFdkConfig(tgOutput, targetName);
-    return sdkUtils.metagenExec(fdkConfig).map((value: any) => ({
+    return sdkUtils.metagenExec(fdkConfig).map((value: FdkOutput) => ({
       ...value,
       overwrite: overwrite ?? value.overwrite,
-    })) as Array<FdkOutput>;
+    }));
   }
 
   /** run metagen */

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
-import { WorkerPool } from "./pooling.ts";
-import { BaseMessage, EventHandler, TaskId } from "./types.ts";
+import type { WorkerPool } from "./pooling.ts";
+import type { BaseMessage, EventHandler, TaskId } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 

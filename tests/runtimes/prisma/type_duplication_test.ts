@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { TypeGraphDS } from "@metatype/typegate/typegraph/mod.ts";
+import type { TypeGraphDS } from "@metatype/typegate/typegraph/mod.ts";
 import { Meta } from "../../utils/mod.ts";
 import { assert } from "@std/assert/";
 

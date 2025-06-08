@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { toFileUrl } from "@std/path/to-file-url";
-import { DenoEvent, DenoMessage } from "./types.ts";
+import type { DenoEvent, DenoMessage } from "./types.ts";
 import { errorToString, HostcallPump } from "../../worker_utils.ts";
 
 const hostcallPump = new HostcallPump();

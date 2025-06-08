@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { Typegraph } from "@metatype/typegate/typegraph/types.ts";
+import type { Typegraph } from "@metatype/typegate/typegraph/types.ts";
 import { assert, assertEquals } from "@std/assert";
-import { FunctionNode } from "@metatype/typegate/typegraph/type_node.ts";
+import type { FunctionNode } from "@metatype/typegate/typegraph/type_node.ts";
 
 Meta.test("dedup test", async ({ t }) => {
   const { stdout } = await Meta.cli(

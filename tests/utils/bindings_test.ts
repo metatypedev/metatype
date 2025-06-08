@@ -6,6 +6,7 @@ import {
   typegraph_validate,
   validate_prisma_runtime_data,
 } from "native";
+import { Meta } from "../../src/typegate/engine/runtime.js"
 import { assert, assertEquals } from "@std/assert";
 
 // deno-lint-ignore no-unused-vars

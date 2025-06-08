@@ -3,7 +3,7 @@
 
 import * as t from "./types.ts";
 import { core } from "./sdk.ts";
-import { caller, dirname, fromFileUrl } from "./deps/mod.ts";
+import { caller, fromFileUrl } from "./deps/mod.ts";
 import type { InjectionValue } from "./utils/type_utils.ts";
 import {
   serializeFromParentInjection,

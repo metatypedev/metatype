@@ -45,40 +45,58 @@ pub struct Test {
 
 impl Test {
     fn run(self) -> Result<()> {
+        mt_deno::deno::util::v8::init_v8_flags(
+            &[],
+            &[],
+            mt_deno::deno::util::v8::get_v8_flags_from_env(),
+        );
         let permissions = mt_deno::deno::deno_runtime::deno_permissions::PermissionsOptions {
+            // we need to allow-run for all to avoid
+            // https://github.com/denoland/deno/issues/26839
             allow_run: Some(
-                [
-                    "cargo",
-                    "hostname",
-                    "meta",
-                    "meta-full",
-                    "meta-old",
-                    "git",
-                    "python3",
-                    "rm",
-                    "mkdir",
-                    "bash",
-                    "npm",
-                    "pnpm",
-                    "setsid",
-                    "temporal",
-                    "deno",
-                    "poetry",
-                    "xtask",
-                    "env",
-                    "ls",
-                ]
-                .into_iter()
-                .map(str::to_owned)
-                .collect(),
+                vec![
+                    //"cargo",
+                    //"hostname",
+                    //"meta",
+                    //"meta-full",
+                    //"meta-old",
+                    //"git",
+                    //"python3",
+                    //"rm",
+                    //"mkdir",
+                    //"bash",
+                    //"npm",
+                    //"pnpm",
+                    //"setsid",
+                    //"temporal",
+                    //"deno",
+                    //"poetry",
+                    //"xtask",
+                    //"env",
+                    //"ls",
+                ], //.into_iter()
+                   //.map(str::to_owned)
+                   //.collect(),
             ),
             allow_sys: Some(vec![]),
             allow_env: Some(vec![]),
-            allow_hrtime: true,
             allow_write: Some(vec![]),
             allow_ffi: Some(vec![]),
             allow_read: Some(vec![]),
             allow_net: Some(vec![]),
+            allow_import: Some(
+                vec![
+                    //// based on deno cli defaults
+                    //"deno.land:443",
+                    //"jsr.io:443",
+                    //"esm.sh:443",
+                    //"cdn.jsdelivr.net:443",
+                    //"raw.githubusercontent.com:443",
+                    //"user.githubusercontent.com:443",
+                ], //.into_iter()
+                   //.map(str::to_owned)
+                   //.collect(),
+            ),
             ..Default::default()
         };
         let inj = typegate_engine::OpDepInjector::from_env();

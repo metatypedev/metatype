@@ -10,7 +10,7 @@ import {
   type UnionNode,
 } from "./type_node.ts";
 import type { TypeIdx } from "../types.ts";
-import { Injection, InjectionNode } from "./types.ts";
+import type { Injection, InjectionNode } from "./types.ts";
 
 /**
  * @param path - the path to `t` in the input type of the nearest ascendant function

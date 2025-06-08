@@ -4,7 +4,7 @@
 import * as path from "@std/path";
 import { assert } from "@std/assert";
 import { Meta } from "test-utils/mod.ts";
-import { MetaTest } from "test-utils/test.ts";
+import type { MetaTest } from "test-utils/test.ts";
 import { makeMetaCliTest } from "test-utils/meta.ts";
 
 const typegraphConfig = `

@@ -1,6 +1,7 @@
 {
   // Deno doesn't suport remote workspaces so we must
   // use import maps for meta-cli to work from github sources
+  // but this prevents us from using imports in workspace configs
   "importMap": "./import_map.json",
   "workspace": {
     "members": [
@@ -13,6 +14,7 @@
   },
   "fmt": {
     "exclude": [
+      "deno-dir",
       "target",
       "src/typegraph/deno/src/gen",
       "src/typegraph/node",
@@ -29,7 +31,6 @@
     ]
   },
   "compilerOptions": {
-    "allowJs": false,
     "strict": true,
     "types": [
       "./src/typegate/engine/runtime.d.ts"
@@ -40,10 +41,11 @@
       "deno.worker"
     ]
   },
-  "nodeModulesDir": false,
+  "nodeModulesDir": "none",
   "lock": "deno.lock",
   "lint": {
     "exclude": [
+      "deno-dir",
       ".git",
       "node_modules",
       "./src/typegraph/deno/src/gen",
@@ -56,9 +58,9 @@
         "no-sync-fn-in-async-fn",
         "no-inferrable-types",
         "no-self-compare",
-        "no-throw-literal"
+        "no-throw-literal",
+        "verbatim-module-syntax"
         // "no-external-import",
-        // "verbatim-module-syntax"
         // "no-await-in-loop"
         // "ban-untagged-todo"
       ],

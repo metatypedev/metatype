@@ -4,7 +4,7 @@
 import { errorToString, HostcallPump } from "../../worker_utils.ts";
 import { Context } from "./deno_context.ts";
 import { toFileUrl } from "@std/path/to-file-url";
-import { Interrupt, WorkflowEvent, WorkflowMessage } from "./types.ts";
+import { Interrupt, type WorkflowEvent, type WorkflowMessage } from "./types.ts";
 
 let runCtx: Context | undefined;
 const hostcallPump = new HostcallPump();

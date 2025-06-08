@@ -3,11 +3,11 @@
 
 import {
   decrPosCmd,
-  RateLimit,
+  type RateLimit,
   RedisRateLimiter,
 } from "@metatype/typegate/typegate/rate_limiter.ts";
 import { assertEquals, assertThrows } from "@std/assert";
-import { connect, Raw } from "redis";
+import { connect, type Raw } from "redis";
 import { sleep } from "test-utils/mod.ts";
 
 const assertRateLimited = (l: RateLimit, n: number) =>

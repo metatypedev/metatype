@@ -335,7 +335,7 @@ export class TypeGateRuntime extends Runtime {
     const resultValues = result
       .map((r, i) => {
         const q = queries[i];
-        const key = q.action + q.modelName ?? "";
+        const key = q.action + (q.modelName ?? "");
         console.debug("DEBUG", { q, r, key });
         return r[key];
       });

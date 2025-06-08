@@ -8,7 +8,7 @@ MIT License
 Copyright (c) 2021 SeparateRecords
 */
 
-import { MatchHandler, router, Routes } from "./router@0.0.5.ts";
+import { type MatchHandler, router, type Routes } from "./router@0.0.5.ts";
 
 export type { MatchHandler };
 

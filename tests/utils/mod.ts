@@ -3,7 +3,7 @@
 
 // import { SingleRegister } from "test-utils/single_register.ts";
 // import { Typegate } from "@metatype/typegate/typegate/mod.ts";
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { dirname, join } from "@std/path";
 import { copy } from "@std/fs/copy";
 import { init_native } from "native";

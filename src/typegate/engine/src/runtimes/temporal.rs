@@ -33,14 +33,18 @@ pub async fn op_temporal_register(
     state: Rc<RefCell<OpState>>,
     // #[state] ctx: &mut Ctx,
     #[serde] input: TemporalRegisterInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let opts = ClientOptionsBuilder::default()
         .identity("integ_tester".to_string())
         .target_url(Url::from_str(&input.url).unwrap())
         .client_name("temporal-core".to_string())
         .client_version("0.1.0".to_string())
-        .build()?;
-    let client = opts.connect(input.namespace, None, None).await?;
+        .build()
+        .map_err(OpErr::map())?;
+    let client = opts
+        .connect(input.namespace, None, None)
+        .await
+        .map_err(OpErr::map())?;
 
     let state = state.borrow();
     let ctx = state.borrow::<Ctx>();
@@ -49,11 +53,17 @@ pub async fn op_temporal_register(
 }
 
 #[deno_core::op2(fast)]
-pub fn op_temporal_unregister(#[state] ctx: &mut Ctx, #[string] client_id: &str) -> Result<()> {
+pub fn op_temporal_unregister(
+    #[state] ctx: &mut Ctx,
+    #[string] client_id: &str,
+) -> Result<(), OpErr> {
     let Some((_, _client)) = ctx.clients.remove(client_id) else {
-        anyhow::bail!("Could not remove engine {:?}: entry not found.", {
-            client_id
-        });
+        return Err(
+            anyhow::anyhow!("Could not remove engine {:?}: entry not found.", {
+                client_id
+            })
+            .into(),
+        );
     };
     Ok(())
 }
@@ -74,7 +84,7 @@ pub struct TemporalWorkflowStartInput {
 pub async fn op_temporal_workflow_start(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowStartInput,
-) -> Result<String> {
+) -> Result<String, OpErr> {
     let clients = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -83,7 +93,8 @@ pub async fn op_temporal_workflow_start(
     let client_id = input.client_id;
     let client = clients
         .get(&client_id)
-        .with_context(|| format!("Could not find engine '{client_id}"))?;
+        .with_context(|| format!("Could not find engine '{client_id}"))
+        .map_err(OpErr::map())?;
 
     let run = client
         .start_workflow(
@@ -98,7 +109,8 @@ pub async fn op_temporal_workflow_start(
             input.request_id,
             WorkflowOptions::default(),
         )
-        .await?;
+        .await
+        .map_err(OpErr::map())?;
 
     Ok(run.run_id)
 }
@@ -124,10 +136,11 @@ pub struct TemporalWorkflowSignalInput {
 }
 
 #[deno_core::op2(async)]
+#[serde]
 pub async fn op_temporal_workflow_signal(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowSignalInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let clients = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -136,7 +149,8 @@ pub async fn op_temporal_workflow_signal(
     let client_id = input.client_id;
     let client = clients
         .get(&client_id)
-        .with_context(|| format!("Could not find engine '{client_id}"))?;
+        .with_context(|| format!("Could not find engine '{client_id}"))
+        .map_err(OpErr::map())?;
 
     // empty response
     client
@@ -149,7 +163,8 @@ pub async fn op_temporal_workflow_signal(
             }),
             input.request_id,
         )
-        .await?;
+        .await
+        .map_err(OpErr::map())?;
 
     Ok(())
 }
@@ -169,7 +184,7 @@ pub struct TemporalWorkflowQueryInput {
 pub async fn op_temporal_workflow_query(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowQueryInput,
-) -> Result<Vec<String>> {
+) -> Result<Vec<String>, OpErr> {
     use temporal_sdk_core_protos::temporal::api::query::v1::WorkflowQuery;
     let clients = {
         let state = state.borrow();
@@ -180,7 +195,8 @@ pub async fn op_temporal_workflow_query(
     let client_id = input.client_id;
     let client = clients
         .get(&client_id)
-        .with_context(|| format!("Could not find engine '{client_id}"))?;
+        .with_context(|| format!("Could not find engine '{client_id}"))
+        .map_err(OpErr::map())?;
 
     let query = client
         .query_workflow_execution(
@@ -194,7 +210,8 @@ pub async fn op_temporal_workflow_query(
                 header: None,
             },
         )
-        .await?;
+        .await
+        .map_err(OpErr::map())?;
 
     if let Some(query_results) = query.query_result {
         Ok(query_results
@@ -203,7 +220,7 @@ pub async fn op_temporal_workflow_query(
             .map(|payload| String::from_utf8(payload.data).unwrap())
             .collect())
     } else {
-        anyhow::bail!("Query failed: {:?}", query);
+        Err(anyhow::anyhow!("Query failed: {:?}", query).into())
     }
 }
 
@@ -228,7 +245,7 @@ pub struct TemporalWorkflowDescribeOutput {
 pub async fn op_temporal_workflow_describe(
     state: Rc<RefCell<OpState>>,
     #[serde] input: TemporalWorkflowDescribeInput,
-) -> Result<TemporalWorkflowDescribeOutput> {
+) -> Result<TemporalWorkflowDescribeOutput, OpErr> {
     let clients = {
         let state = state.borrow();
         let ctx = state.borrow::<Ctx>();
@@ -242,7 +259,8 @@ pub async fn op_temporal_workflow_describe(
     // empty response
     let mut query = client
         .describe_workflow_execution(input.workflow_id, Some(input.run_id))
-        .await?;
+        .await
+        .map_err(OpErr::map())?;
 
     Ok(TemporalWorkflowDescribeOutput {
         start_time: query

@@ -4,11 +4,11 @@
 import { Meta } from "test-utils/mod.ts";
 import { serialize } from "test-utils/meta.ts";
 import { SchemaGenerator } from "@metatype/typegate/runtimes/prisma/hooks/generate_schema.ts";
-import * as PrismaRT from "@metatype/typegate/runtimes/prisma/types.ts";
+import type * as PrismaRT from "@metatype/typegate/runtimes/prisma/types.ts";
 import { assertEquals } from "@std/assert";
 import outdent from "outdent";
 import { SecretManager, TypeGraph } from "@metatype/typegate/typegraph/mod.ts";
-import { Model } from "@metatype/typegate/typegraph/types.ts";
+import type { Model } from "@metatype/typegate/typegraph/types.ts";
 
 interface Permutation<T> {
   (arr: T[]): T[];

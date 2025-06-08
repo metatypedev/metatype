@@ -10,8 +10,10 @@ import {
   GetObjectCommand,
   PutObjectCommand,
   type PutObjectCommandInput,
-  S3Client,
+  type S3Client,
 } from "aws-sdk/client-s3";
+
+import { createS3ClientWithMD5 } from "../utils/mod.ts";
 import type { SyncConfig } from "../config.ts";
 import type { TypegateCryptoKeys } from "../crypto.ts";
 
@@ -30,7 +32,9 @@ export class TypegraphStore {
   static init(syncConfig: SyncConfig, cryptoKeys: TypegateCryptoKeys) {
     const clientInit = syncConfig.s3;
     const bucket = syncConfig.s3Bucket;
-    const client = new S3Client(clientInit);
+    const client = createS3ClientWithMD5({
+      ...clientInit,
+    });
     return new TypegraphStore(client, bucket, cryptoKeys);
   }
 

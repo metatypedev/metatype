@@ -8,11 +8,11 @@ import {
 } from "../typegraph/mod.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { type ObjectNode } from "../typegraph/type_node.ts";
+import type { ObjectNode } from "../typegraph/type_node.ts";
 import type { Resolver } from "../types.ts";
 import { TypeVisibility } from "./typegraph/visibility.ts";
-import { TypegateConfigBase } from "../config.ts";
-import { DenoRuntime } from "./deno/deno.ts";
+import type { TypegateConfigBase } from "../config.ts";
+import type { DenoRuntime } from "./deno/deno.ts";
 import { IntrospectionTypeEmitter } from "./typegraph/type_emitter.ts";
 
 export type DeprecatedArg = { includeDeprecated?: boolean };
