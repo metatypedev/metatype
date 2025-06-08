@@ -169,7 +169,7 @@ jobs:
       #   with:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
-      
+
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
       - run: echo "~/.local/bin" >> $GITHUB_PATH
@@ -280,7 +280,7 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-      
+
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       #   with:
       #     cache-disable: true
@@ -337,7 +337,7 @@ jobs:
             src/typegraph/deno/src/*.ts \
             tools/*.ts
 
-          deno --unstable-worker-options --unstable-net coverage ./coverage --lcov > coverage.lcov
+          deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
 
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example

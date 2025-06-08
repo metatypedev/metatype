@@ -16,7 +16,7 @@ import { green, objectHash, red } from "./deps.ts";
 // FIXME: import from @metatype/typegate
 import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { visitType } from "../src/typegate/src/typegraph/visitor.ts";
-import { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
+import type { TypeNode } from "../src/typegate/src/typegraph/type_node.ts";
 
 // Tries to detect structurally equivalent duplicates by iteratively
 // updating composite types to refer to deduped types.

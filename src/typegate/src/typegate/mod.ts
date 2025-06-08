@@ -50,7 +50,7 @@ import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
 import { globalConfig, type TypegateConfig } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
-import { DenoRuntime } from "../runtimes/deno/deno.ts";
+import type { DenoRuntime } from "../runtimes/deno/deno.ts";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 

@@ -6,7 +6,7 @@ import { join } from "@std/path/join";
 import { resolve } from "@std/path/resolve";
 import { assertEquals } from "@std/assert";
 import { GraphQLQuery } from "test-utils/query/graphql_query.ts";
-import { JSONValue } from "@metatype/typegate/utils.ts";
+import type { JSONValue } from "@metatype/typegate/utils.ts";
 import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";

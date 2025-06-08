@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { getLogger } from "../../../log.ts";
-import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
+import type { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
 import { createArtifactMeta } from "../../utils/deno.ts";
 import * as path from "@std/path";
 

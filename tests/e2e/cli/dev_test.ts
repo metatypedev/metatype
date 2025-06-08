@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Meta, sleep } from "test-utils/mod.ts";
-import { gql as _gql } from "test-utils/mod.ts";
-import { join as _join, resolve as _resolve } from "@std/path";
-import { assert, assertEquals, assertRejects as _assertRejects } from "@std/assert";
-import { randomSchema as _randomSchema, reset as _reset } from "test-utils/database.ts";
+import type { gql as _gql } from "test-utils/mod.ts";
+import type { join as _join, resolve as _resolve } from "@std/path";
+import { assert, assertEquals, type assertRejects as _assertRejects } from "@std/assert";
+import type { randomSchema as _randomSchema, reset as _reset } from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "@david/dax";
 import {
@@ -13,8 +13,8 @@ import {
   enumerateAllChildUNIX,
   isPIDAliveUNIX,
   Lines,
-  LineWriter as _LineWriter,
-  termProcess as _termProcess,
+  type LineWriter as _LineWriter,
+  type termProcess as _termProcess,
 } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
 

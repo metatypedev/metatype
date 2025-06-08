@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MetaTest } from "../../utils/test.ts";
+import type { MetaTest } from "../../utils/test.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 async function testSerialize(t: MetaTest, file: string) {

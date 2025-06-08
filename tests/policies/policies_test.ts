@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { TypegateConfig } from "@metatype/typegate/config.ts";
+import type { TypegateConfig } from "@metatype/typegate/config.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 async function genSecretKey(

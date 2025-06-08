@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { JSONValue } from "@metatype/typegate/utils.ts";
+import type { JSONValue } from "@metatype/typegate/utils.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test(

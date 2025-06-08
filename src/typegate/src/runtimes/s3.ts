@@ -10,9 +10,9 @@ import {
   ListObjectsCommand,
   PutObjectCommand,
   type PutObjectCommandInput,
-  S3Client,
+  type S3Client,
 } from "aws-sdk/client-s3";
-import { createS3ClientWithMD5 } from "../../../utils/mod.ts";
+import { createS3ClientWithMD5 } from "../utils/mod.ts";
 import { getSignedUrl } from "aws-sdk/s3-request-presigner";
 import type {
   Materializer,

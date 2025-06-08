@@ -3,7 +3,7 @@
 
 // Modified from
 // https://github.com/aws/aws-sdk-js-v3/blob/d1501040077b937ef23e591238cda4bbe729c721/supplemental-docs/MD5_FALLBACK.mdkk
-import { S3Client, S3ClientConfig } from "aws-sdk/client-s3";
+import { S3Client, type S3ClientConfig } from "aws-sdk/client-s3";
 // import {
 //   S3Client,
 //   S3ClientConfig,

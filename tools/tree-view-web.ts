@@ -8,7 +8,7 @@
  *   deno run -A tools/tree-view-web.ts [<options>] <file.py>
  */
 
-import { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
+import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { projectDir } from "./utils.ts";
 import { join, parseArgs } from "./deps.ts";
 

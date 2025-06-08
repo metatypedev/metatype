@@ -43,7 +43,7 @@ import {
 } from "./parameter_transformer.ts";
 import { QueryFunction as JsonPathQuery } from "../../libs/jsonpath.ts";
 import { getInjection } from "../../typegraph/utils.ts";
-import { GeneratorNode } from "../../runtimes/random.ts";
+import type { GeneratorNode } from "../../runtimes/random.ts";
 import DynamicInjection from "../injection/dynamic.ts";
 
 class MandatoryArgumentError extends Error {

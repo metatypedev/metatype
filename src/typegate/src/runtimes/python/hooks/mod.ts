@@ -3,7 +3,7 @@
 
 import { getLogger } from "../../../log.ts";
 import { Meta } from "../../../../engine/runtime.js";
-import { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
+import type { PushFailure, PushHandler } from "../../../typegate/hooks.ts";
 import { createArtifactMeta } from "../../utils/deno.ts";
 
 const logger = getLogger("typegate");

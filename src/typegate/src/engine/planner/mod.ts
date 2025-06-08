@@ -18,14 +18,14 @@ import {
 } from "../../typegraph/type_node.ts";
 import { closestWord, unparse } from "../../utils.ts";
 import { collectArgs, type ComputeArg } from "./args.ts";
-import { OperationPolicies, StageMetadata } from "./policies.ts";
+import { OperationPolicies, type StageMetadata } from "./policies.ts";
 import { getLogger } from "../../log.ts";
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "@std/collections/map-values";
 import { DependencyResolver } from "./dependency_resolver.ts";
-import { Runtime } from "../../runtimes/Runtime.ts";
+import type { Runtime } from "../../runtimes/Runtime.ts";
 import { getInjection } from "../../typegraph/utils.ts";
-import { Injection } from "../../typegraph/types.ts";
+import type { Injection } from "../../typegraph/types.ts";
 
 const logger = getLogger(import.meta);
 

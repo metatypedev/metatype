@@ -11,7 +11,7 @@ import { Typegate } from "@metatype/typegate/typegate/mod.ts";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
-  SyncConfig,
+  type SyncConfig,
 } from "@metatype/typegate/config.ts";
 
 const redisKey = "typegraph";

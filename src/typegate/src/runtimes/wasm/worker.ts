@@ -3,7 +3,7 @@
 
 import { errorToString } from "../../worker_utils.ts";
 import { WitWireHandle } from "../wit_wire/mod.ts";
-import { WasmMessage } from "./types.ts";
+import type { WasmMessage } from "./types.ts";
 
 const witWireInstances = new Map<string, WitWireHandle>();
 

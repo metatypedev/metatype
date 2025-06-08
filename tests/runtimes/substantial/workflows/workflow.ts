@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  Context,
+  type Context,
   queryThatTakesAWhile,
   sendSubscriptionEmail,
   sleep,
-  Workflow,
+  type Workflow,
 } from "../imports/common_types.ts";
 
 export const eventsAndExceptionExample: Workflow<string> = async (

@@ -2,21 +2,21 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
+import { TypeGraph, type TypeGraphDS, type TypeMaterializer } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger, getLoggerByAddress, Logger } from "../log.ts";
+import { getLogger, getLoggerByAddress, type Logger } from "../log.ts";
 import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
-import { Artifact } from "../typegraph/types.ts";
-import { Typegate } from "../typegate/mod.ts";
+import type { Artifact } from "../typegraph/types.ts";
+import type { Typegate } from "../typegate/mod.ts";
 import { type Backend, Meta } from "../../engine/runtime.js";
 import {
   Agent,
-  AgentConfig,
+  type AgentConfig,
   type StdKwargs,
-  WorkflowDescription,
+  type WorkflowDescription,
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";

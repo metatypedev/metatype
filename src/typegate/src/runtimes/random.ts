@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine/query_engine.ts";
+import type { ComputeStage } from "../engine/query_engine.ts";
 import type { FunctionNode, TypeNode } from "../typegraph/type_node.ts";
 import Chance from "chance";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { RandomRuntimeData } from "../typegraph/types.ts";
 import { registerRuntime } from "./mod.ts";
-import { TypeGraphDS } from "../typegraph/mod.ts";
+import type { TypeGraphDS } from "../typegraph/mod.ts";
 
 @registerRuntime("random")
 export class RandomRuntime extends Runtime {

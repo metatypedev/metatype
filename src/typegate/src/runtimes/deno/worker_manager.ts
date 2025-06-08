@@ -9,10 +9,10 @@ import {
   createTaskId,
 } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
-import { TaskId } from "../patterns/worker_manager/types.ts";
-import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
-import { TaskContext } from "./shared_types.ts";
-import { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
+import type { TaskId } from "../patterns/worker_manager/types.ts";
+import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
+import type { TaskContext } from "./shared_types.ts";
+import type { DenoEvent, DenoMessage, TaskSpec } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 

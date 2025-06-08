@@ -3,7 +3,7 @@
 
 import type { TypeGraphDS } from "../../typegraph/mod.ts";
 import type { ObjectNode } from "../../typegraph/type_node.ts";
-import { PolicyIndices } from "../../typegraph/types.ts";
+import type { PolicyIndices } from "../../typegraph/types.ts";
 import { addNode } from "./utils.ts";
 
 type PropertiesTable = Record<string, number>;

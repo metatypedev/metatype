@@ -9,16 +9,16 @@ import type {
   ReadOrCloseScheduleInput,
   Run,
 } from "../../../engine/runtime.js";
-import { getLoggerByAddress, Logger } from "../../log.ts";
-import { TaskContext } from "../deno/shared_types.ts";
+import { getLoggerByAddress, type Logger } from "../../log.ts";
+import type { TaskContext } from "../deno/shared_types.ts";
 import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
-import { EventHandler } from "../patterns/worker_manager/types.ts";
-import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
+import type { EventHandler } from "../patterns/worker_manager/types.ts";
+import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
   appendIfOngoing,
-  InterruptEvent,
-  WorkflowCompletionEvent,
-  WorkflowEvent,
+  type InterruptEvent,
+  type WorkflowCompletionEvent,
+  type WorkflowEvent,
 } from "./types.ts";
 import { WorkerManager } from "./workflow_worker_manager.ts";
 

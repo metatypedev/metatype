@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { SyncConfig } from "@metatype/typegate/config.ts";
+import type { SyncConfig } from "@metatype/typegate/config.ts";
 import { createBucket, tryDeleteBucket } from "test-utils/s3.ts";
 import { connect } from "redis";
-import { S3Client, S3ClientConfig } from "aws-sdk/client-s3";
+import { S3Client, type S3ClientConfig } from "aws-sdk/client-s3";
 
 // TODO single source of truth
 const redisKey = "typegraph";

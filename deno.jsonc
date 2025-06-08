@@ -14,6 +14,7 @@
   },
   "fmt": {
     "exclude": [
+      "deno-dir",
       "target",
       "src/typegraph/deno/src/gen",
       "src/typegraph/node",
@@ -44,6 +45,7 @@
   "lock": "deno.lock",
   "lint": {
     "exclude": [
+      "deno-dir",
       ".git",
       "node_modules",
       "./src/typegraph/deno/src/gen",
@@ -56,9 +58,9 @@
         "no-sync-fn-in-async-fn",
         "no-inferrable-types",
         "no-self-compare",
-        "no-throw-literal"
+        "no-throw-literal",
+        "verbatim-module-syntax"
         // "no-external-import",
-        // "verbatim-module-syntax"
         // "no-await-in-loop"
         // "ban-untagged-todo"
       ],

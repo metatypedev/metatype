@@ -7,14 +7,14 @@ import {
   AssertionError,
   assertStringIncludes,
 } from "@std/assert";
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
-import { JSONValue } from "@metatype/typegate/utils.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { JSONValue } from "@metatype/typegate/utils.ts";
 import { deepMerge } from "@std/collections/deep-merge";
-import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
+import type { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 
 import { execute } from "../mod.ts";
 
-import { MetaTest } from "../test.ts";
+import type { MetaTest } from "../test.ts";
 
 export type Expect = (res: Response) => Promise<void> | void;
 export type Variables = Record<string, unknown>;

@@ -17,7 +17,7 @@ import {
   REDIS_REF_COUNTER,
   resolveS3Key,
 } from "@metatype/typegate/typegate/artifacts/shared.ts";
-import { MetaTest } from "../utils/test.ts";
+import type { MetaTest } from "../utils/test.ts";
 
 const syncConfig = {
   redis: {

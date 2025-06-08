@@ -5,8 +5,8 @@ import { assertEquals } from "@std/assert";
 import { Meta } from "../../utils/mod.ts";
 import {
   evalExpr,
-  ExecutionStatus,
-  Expr,
+  type ExecutionStatus,
+  type Expr,
   SearchItem,
 } from "@metatype/typegate/runtimes/substantial/filter_utils.ts";
 

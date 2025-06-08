@@ -3,7 +3,7 @@
 
 import { envSharedWithWorkers } from "../../../config/shared.ts";
 import { BaseWorker } from "./mod.ts";
-import { BaseMessage, EventHandler } from "./types.ts";
+import type { BaseMessage, EventHandler } from "./types.ts";
 
 export interface DenoWorkerError extends BaseMessage {
   type: "WORKER_ERROR";

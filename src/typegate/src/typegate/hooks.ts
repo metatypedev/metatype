@@ -3,7 +3,7 @@
 
 import type { MessageEntry, Migrations } from "../typegate/register.ts";
 import type { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
-import { ArtifactStore } from "./artifacts/mod.ts";
+import type { ArtifactStore } from "./artifacts/mod.ts";
 import type { Typegate } from "./mod.ts";
 
 const Message = {
