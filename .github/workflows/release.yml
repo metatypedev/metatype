@@ -34,15 +34,10 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: kenji-miyake/setup-git-cliff@v2
-      
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
-      - shell: bash
-        run: |
           VERSION=$(ghjk x version-print)
           if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
             echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
@@ -103,11 +98,7 @@ jobs:
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
@@ -119,11 +110,11 @@ jobs:
           rustup target add ${{ matrix.target }}
       # we use cross for building on this platform
       - if: ${{ matrix.cross }}
-        shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
           cargo install cross
 
@@ -135,8 +126,8 @@ jobs:
           tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
       - if: ${{ matrix.cross != true }}
-        shell: bash
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate --verbose
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
@@ -182,19 +173,14 @@ jobs:
         id: latest-tag
       - uses: mozilla-actions/sccache-action@v0.0.7
       
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
-      - shell: bash
-        env:
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           WASM_FILE: target/release/typegraph_core.wasm
           OVERWRITE: ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }}
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x install-ts
           ghjk x install-py
           source .venv/bin/activate
@@ -320,14 +306,10 @@ jobs:
           fetch-depth: 0
       - uses: kenji-miyake/setup-git-cliff@v2
       
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - id: bump
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x version-bump prerelease
           echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md

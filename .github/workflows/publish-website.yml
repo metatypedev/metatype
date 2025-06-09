@@ -30,20 +30,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
       - uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - shell: bash
-        env:
+      - env:
           TG_URL: https://demo.metatype.dev
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           python3 -m venv .venv
           source .venv/bin/activate
           poetry install --no-root

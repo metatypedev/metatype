@@ -40,7 +40,7 @@ env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
   ports.pipi({ packageName: "cmake" })[0],
-  // installs.rust_stable,
+  installs.rust_stable,
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
