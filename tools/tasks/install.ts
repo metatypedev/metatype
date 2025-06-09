@@ -1,8 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { type DenoTaskDefArgs, std_url } from "../deps.ts";
+import type { DenoTaskDefArgs } from "@ghjk/ts";
 import { WASMTIME_VERSION } from "../consts.ts";
+import { basename } from "@std/path/posix"
 
 export default {
   "install-sys": {
@@ -97,7 +98,7 @@ export default {
               return $.request(url)
                 .header(headers)
                 .showProgress()
-                .pipeToPath(dir.join(std_url.basename(url)), {
+                .pipeToPath(dir.join(basename(url)), {
                   create: true,
                 });
             }),

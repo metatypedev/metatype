@@ -1,5 +1,10 @@
 {
  "imports": {
+  "@ghjk/ts/": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/src/ghjk_ts/",
+  "@ghjk/ts": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/src/ghjk_ts/mod.ts",
+  "@ghjk/ports_wip": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/ports/mod.ts",
+  "@ghjk/ports_wip/": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/ports/",
+  "@ghjk/utils": "https://raw.githubusercontent.com/metatypedev/ghjk/33d82dece752d4e3fbcf955a1f48e54d7eefbbf8/src/deno_utils/mod.ts",
   "@david/dax": "jsr:@david/dax@0.41.0",
   "@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.5",
   "@std/archive/": "jsr:/@std/archive@^0.225.0/",
@@ -16,8 +21,8 @@
   "@std/io/": "jsr:/@std/io@^0.224.5/",
   "@std/log": "jsr:@std/log@^0.224.5",
   "@std/log/": "jsr:/@std/log@^0.224.5/",
-  "@std/path": "jsr:@std/path@^1.0.2",
-  "@std/path/": "jsr:/@std/path@^1.0.2/",
+  "@std/path": "jsr:@std/path@^1.1.0",
+  "@std/path/": "jsr:/@std/path@^1.1.0/",
   "@std/semver": "jsr:@std/semver@^1.0.1",
   "@std/url": "jsr:@std/url@^0.225.0",
   "@std/text": "jsr:@std/text@^1.0.7",

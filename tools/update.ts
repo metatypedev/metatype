@@ -3,7 +3,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { $, expandGlobSync, parseArgs, resolve, udd } from "./deps.ts";
+import {  expandGlobSync, parseArgs, resolve, udd } from "./deps.ts";
+import { $ } from "@ghjk/ts";
 import { projectDir, runOrExit } from "./utils.ts";
 
 const denoConfigPath = resolve(projectDir, "src/typegate/deno.jsonc");

@@ -28,7 +28,7 @@ concurrency:
 
 env:
   # GHJK_LOG: "debug"
-  GHJK_VERSION: "v0.2.2"
+  GHJK_VERSION: "v0.3.0"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -81,21 +81,16 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         uses: mozilla-actions/sccache-action@v0.0.7
 
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
-      - shell: bash
-        run: |
           sudo apt update && sudo apt install -y --no-install-recommends libclang-dev clang
 
           ghjk x install-ts
@@ -130,32 +125,26 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v4
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         uses: mozilla-actions/sccache-action@v0.0.7
 
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      #   with:
-      #     # temporary fix
-      #     cache-key-prefix: ${{ matrix.os }}
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+        with:
+          # temporary fix
+          cache-key-prefix: ${{ matrix.os }}
       - if: ${{ matrix.cross }}
-        shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
-        shell: bash
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
@@ -170,19 +159,14 @@ jobs:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
 
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
-      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - shell: bash
-        run: |
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x install-py
           source .venv/bin/activate
 
@@ -258,7 +242,6 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         with:
           detached: true
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
@@ -280,24 +263,11 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      #   with:
-      #     cache-disable: true
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
-      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
-      - run: ghjk envs cook
-
-      - shell: bash
-        run: |
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - run: |
           # the big run
           set -x
-
-          # we don't want bash sub shells to do ghjk_reload
-          # TODO: consider disabling ghjk_reload on non-interactive shells
-          # by default
-          unset BASH_ENV
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
           ghjk x install-sys | bash
           ghjk x install-py

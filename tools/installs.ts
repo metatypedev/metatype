@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { DENO_VERSION, PYTHON_VERSION, RUST_VERSION } from "./consts.ts";
-import { ports } from "./deps.ts";
+import * as ports from "@ghjk/ports_wip"
 
 export default {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240814" }),
@@ -13,7 +13,7 @@ export default {
     version: RUST_VERSION,
     profile: "default",
     components: ["rust-src"],
-    // targets: ["wasm32-unknown-unknown", "wasm32-wasip1"],
+    targets: ["wasm32-unknown-unknown", "wasm32-wasip1"],
   }),
   rust_nightly: ports.rust({ version: "nightly-2024-05-26" }),
   deno: ports.deno_ghrel({ version: DENO_VERSION }),

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Meta } from "test-utils/mod.ts";
-import { $ } from "@local/tools/deps.ts";
+import { $ } from "@ghjk/ts";
 import {
   LATEST_PRE_RELEASE_VERSION,
   LATEST_RELEASE_VERSION,
