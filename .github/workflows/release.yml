@@ -34,7 +34,7 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: kenji-miyake/setup-git-cliff@v2
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - run: |
           . .ghjk/envs/$GHJK_ENV/activate.sh
 
@@ -98,7 +98,7 @@ jobs:
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
@@ -173,7 +173,7 @@ jobs:
         id: latest-tag
       - uses: mozilla-actions/sccache-action@v0.0.7
       
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -306,7 +306,7 @@ jobs:
           fetch-depth: 0
       - uses: kenji-miyake/setup-git-cliff@v2
       
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - id: bump
         run: |
           . .ghjk/envs/$GHJK_ENV/activate.sh

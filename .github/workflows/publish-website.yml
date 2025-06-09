@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - uses: actions/cache@v4
         with:
           path: .venv
