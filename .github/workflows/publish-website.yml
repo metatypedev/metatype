@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  GHJK_VERSION: "v0.2.2"
+  GHJK_VERSION: "v0.3.0"
 
 jobs:
   changes:

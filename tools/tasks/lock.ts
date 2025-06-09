@@ -3,13 +3,13 @@
 
 import {
   assert,
-  copyLock,
-  type DenoTaskDefArgs,
   parseArgs,
-  sedLock,
   semver,
 } from "../deps.ts";
 import * as consts from "../consts.ts";
+import type { DenoTaskDefArgs } from "@ghjk/ts";
+import { copyLock } from "@ghjk/ts/std/copyLock.ts"
+import { sedLock } from "@ghjk/ts/std/sedLock.ts"
 
 export default {
   "lock-sed": {

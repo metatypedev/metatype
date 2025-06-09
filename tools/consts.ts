@@ -4,7 +4,7 @@
 export const CURRENT_VERSION = "0.5.1-rc.4";
 export const LATEST_RELEASE_VERSION = "0.5.0";
 export const LATEST_PRE_RELEASE_VERSION = "0.5.1-rc.2";
-export const GHJK_VERSION = "v0.2.2";
+export const GHJK_VERSION = "v0.3.0";
 export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
 export const RUST_VERSION = "1.85.0";
 export const DENO_VERSION = "2.2.4";
@@ -18,7 +18,7 @@ export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.` as string;
 
 export const sedLockLines: Record<string, [string | RegExp, string][]> = {
-  "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
+  // "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
   ".github/**/*.yml": [
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
@@ -50,7 +50,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "src/typegraph/deno/deno.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, CURRENT_VERSION],
   ],
-  "tools/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
   "tools/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
   "tools/Dockerfile": [
     ["(ARG DENO_VERSION=).*()", DENO_VERSION],

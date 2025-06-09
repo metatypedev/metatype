@@ -18,7 +18,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "v0.2.2"
+  GHJK_VERSION: "v0.3.0"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   DOCKER_BUILD_NO_SUMMARY: true
@@ -180,7 +180,6 @@ jobs:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.7
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
@@ -319,7 +318,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: dsherret/rust-toolchain-file@v1
       - uses: kenji-miyake/setup-git-cliff@v2
       
       # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc

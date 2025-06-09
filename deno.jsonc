@@ -5,6 +5,7 @@
   "importMap": "./import_map.json",
   "workspace": {
     "members": [
+      "./.ghjk",
       "./src/typegate/", // need special lint rules
       "./tests", // needs special lint rules
       "./src/typegraph/deno", // needed for publishing

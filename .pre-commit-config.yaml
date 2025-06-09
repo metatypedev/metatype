@@ -23,7 +23,7 @@ repos:
         name: "Lock versions"
         always_run: true
         language: system
-        entry: bash -c 'ghjk x lock-sed --check'
+        entry: bash -c 'ghjk x lock-sed'
         pass_filenames: false
       - id: deno-fmt
         name: Deno format

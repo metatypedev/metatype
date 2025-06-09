@@ -28,7 +28,7 @@ concurrency:
 
 env:
   # GHJK_LOG: "debug"
-  GHJK_VERSION: "v0.2.2"
+  GHJK_VERSION: "v0.3.0"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -81,7 +81,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
@@ -130,7 +129,6 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v4
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
@@ -258,7 +256,6 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         with:
           detached: true
-      - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
