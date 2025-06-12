@@ -27,6 +27,7 @@ import {
 } from "../../../engine/typecheck/input.ts";
 import type { TokenMiddlewareOutput } from "./protocol.ts";
 import { jsonError } from "../../responses.ts";
+import * as z from "zod";
 
 const logger = getLogger(import.meta);
 
@@ -105,6 +106,14 @@ export type Oauth2Client = {
   redirect_uri: string;
 };
 
+const oauthQuerySchema = z.object({
+  client_id: z.string(),
+  redirect_uri: z.string(),
+  state: z.string(),
+  code_challenge: z.string(),
+  code_challenge_method: z.string(),
+});
+
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
@@ -125,7 +134,7 @@ export class OAuth2Auth extends Protocol {
       profiler,
       clients,
     } = auth.auth_data;
-    const clientData = {
+    const providerData = {
       clientId,
       clientSecret,
       authorizationEndpointUri: authorize_url as string,
@@ -135,6 +144,12 @@ export class OAuth2Auth extends Protocol {
       },
     };
 
+    const clientsMap = new Map(
+      (clients as Oauth2Client[]).map(({ id, redirect_uri }) => [
+        secretManager.secretOrFail(id),
+        secretManager.secretOrFail(redirect_uri),
+      ]),
+    );
     const { jwt_max_duration_sec, jwt_refresh_duration_sec } =
       authParameters.tg.typegate.config.base;
     const config = { jwt_max_duration_sec, jwt_refresh_duration_sec };
@@ -143,13 +158,13 @@ export class OAuth2Auth extends Protocol {
       new OAuth2Auth(
         typegraphName,
         auth.name,
-        clientData,
+        providerData,
         profile_url as string | null,
         profiler !== undefined
           ? new AuthProfiler(authParameters, profiler as number)
           : null,
         authParameters.tg.typegate.cryptoKeys,
-        clients as Oauth2Client[],
+        clientsMap,
         config,
       ),
     );
@@ -162,7 +177,7 @@ export class OAuth2Auth extends Protocol {
     private profileUrl: string | null,
     private authProfiler: AuthProfiler | null,
     private cryptoKeys: TypegateCryptoKeys,
-    private clients: Oauth2Client[],
+    private clientsMap: Map<string, string>,
     private config: Oauth2AuthConfig,
   ) {
     super(typegraphName);
@@ -179,24 +194,28 @@ export class OAuth2Auth extends Protocol {
     });
     const query = Object.fromEntries(url.searchParams.entries());
 
-    // callback
+    // callback;
     if (query.code && query.state) {
       try {
-        const { state, codeVerifier, userRedirectUri } =
-          await getEncryptedCookie(
-            request.headers,
-            this.typegraphName,
-            this.cryptoKeys,
-          );
-        const tokens = await client.code.getToken(url, { state, codeVerifier });
+        const state = await getEncryptedCookie(
+          request.headers,
+          this.typegraphName,
+          this.cryptoKeys,
+        );
+        const tokens = await client.code.getToken(url, {
+          state: state.provider.state,
+          codeVerifier: state.provider.codeVerifier,
+        });
         const token = await this.createJWT(tokens, request);
         const headers = await setEncryptedSessionCookie(
           url.hostname,
           this.typegraphName,
-          { token, redirectUri: userRedirectUri },
+          { token, state: state.client },
           this.cryptoKeys,
         );
-        headers.set("location", userRedirectUri as string);
+
+        headers.set("location", state.client.redirectUri);
+
         return new Response(null, {
           status: 302,
           headers,
@@ -218,46 +237,67 @@ export class OAuth2Auth extends Protocol {
     }
 
     // initiate
-    const userRedirectUri = query.redirect_uri ?? request.headers.get("origin");
-    if (userRedirectUri) {
-      const state = randomUUID();
-      const { codeVerifier, uri } = await client.code.getAuthorizationUri({
-        state,
-      });
-      const loginState = {
-        state,
-        codeVerifier,
-        userRedirectUri,
-      };
-      const headers = await setEncryptedSessionCookie(
-        url.hostname,
-        this.typegraphName,
-        loginState,
-        this.cryptoKeys,
-      );
-      headers.set("location", uri.toString());
-      return new Response(null, {
-        status: 302,
-        headers,
+    try {
+      oauthQuerySchema.parse(query);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const messages = err.errors.map(
+          (e) => `${e.path.join(".")}: ${e.message}`,
+        );
+        return jsonError({ message: messages.join(", "), status: 400 });
+      }
+    }
+
+    const userRedirectUri = this.clientsMap.get(query.client_id);
+
+    if (query.redirect_uri !== userRedirectUri) {
+      return jsonError({
+        message: "Invalid redirect_uri parameter",
+        status: 400,
       });
     }
 
-    return jsonError({
-      message: "missing origin or redirect_uri query parameter",
-      status: 400,
+    const state = randomUUID();
+    const { codeVerifier, uri } = await client.code.getAuthorizationUri({
+      state,
+    });
+    const loginState = {
+      provider: {
+        state,
+        codeVerifier,
+      },
+      client: {
+        state: query.state,
+        redirectUri: query.redirect_uri,
+        codeChallenge: query.code_challenge,
+        method: query.code_challenge_method,
+      },
+    };
+    const headers = await setEncryptedSessionCookie(
+      url.hostname,
+      this.typegraphName,
+      loginState,
+      this.cryptoKeys,
+    );
+
+    headers.set("location", uri.toString());
+
+    return new Response(null, {
+      status: 302,
+      headers,
     });
   }
 
   async tokenMiddleware(
     token: string,
-    request: Request,
+    _request: Request,
   ): Promise<TokenMiddlewareOutput> {
-    const url = new URL(request.url);
-    const typegraphPath = `/${this.typegraphName}`;
-    const client = new OAuth2Client({
-      ...this.clientData,
-      redirectUri: `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
-    });
+    // const url = new URL(request.url);
+    // const typegraphPath = `/${this.typegraphName}`;
+    // const client = new OAuth2Client({
+    //   ...this.clientData,
+    //   redirectUri: `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
+    // });
 
     if (!token) {
       return {
@@ -277,27 +317,12 @@ export class OAuth2Auth extends Protocol {
       };
     }
 
-    const { refreshToken, ...claims } = jwt;
+    const { ...claims } = jwt;
     if (isJwtExpired(jwt)) {
-      let newClaims: Tokens;
-      try {
-        newClaims = await client.refreshToken.refresh(refreshToken);
-      } catch (e) {
-        logger.error("XXX error refreshing oauth token {}", {
-          err: e,
-          clientData: this.clientData,
-        });
-        return {
-          claims: {},
-          nextToken: "", // clear
-          error: `could not refresh expired token: ${e}`,
-        };
-      }
-      const token = await this.createJWT(newClaims, request);
       return {
         claims,
-        nextToken: token, // update
-        error: null,
+        nextToken: "",
+        error: "access token expired",
       };
     }
 
@@ -338,23 +363,31 @@ export class OAuth2Auth extends Protocol {
     }
   }
 
-  private async createJWT(token: Tokens, request: Request): Promise<string> {
+  private async createJWT(token: Tokens, request: Request) {
     const profile = await this.getProfile(token, request);
-    const payload: JWTClaims = {
+    const payload = {
       provider: this.authName,
-      accessToken: token.accessToken,
-      refreshToken: await this.cryptoKeys.encrypt(token.refreshToken as string),
       refreshAt: Math.floor(
         new Date().valueOf() / 1000 +
           (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
       ),
-      scope: token.scope,
       profile,
     };
-    return await this.cryptoKeys.signJWT(
+    const access_token = await this.cryptoKeys.signJWT(
       payload,
       this.config.jwt_max_duration_sec,
     );
+    const refresh_token = await this.cryptoKeys.signJWT(
+      {},
+      this.config.jwt_max_duration_sec,
+    );
+
+    return {
+      access_token,
+      refresh_token,
+      expires_in: this.config.jwt_max_duration_sec,
+      token_type: "Bearer",
+    };
   }
 }
 

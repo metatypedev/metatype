@@ -55,8 +55,6 @@ export function initAuth(
 
 export type JWTClaims = {
   provider: string;
-  accessToken: string;
-  refreshToken: string;
   refreshAt: number;
   profile: null | Record<string, unknown>;
   scope?: string[];
@@ -112,31 +110,26 @@ export async function handleAuth(
   engine: QueryEngine,
   headers: Headers,
 ): Promise<Response> {
+  const url = new URL(request.url);
+  const [pathName] = url.pathname.split("/").slice(3, 4);
+
+  if (request.method === "POST" && pathName === "token") {
+    return await routes.token({ request, engine, headers });
+  }
+
   if (request.method !== "GET") {
     return methodNotAllowed();
   }
 
-  const url = new URL(request.url);
-  const [providerName] = url.pathname.split("/").slice(3, 4);
-
-  if (providerName === "take") {
-    return await routes.take({ request, engine, headers });
-  }
-
-  if (providerName === "validate") {
-    return await routes.validate({ request, engine, headers });
-  }
-
   const origin = request.headers.get("origin") ?? "";
 
-  const provider = engine.tg.auths.get(providerName);
+  const provider = engine.tg.auths.get(pathName);
   if (!provider) {
     const providers = Array.from(engine.tg.auths.entries())
       .filter(([name]) => name !== internalAuthName)
       .map(([name, _auth]) => ({
         name,
-        uri:
-          `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
+        uri: `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
       }));
     return jsonOk({ data: providers });
   }
