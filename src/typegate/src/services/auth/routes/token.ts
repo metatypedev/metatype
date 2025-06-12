@@ -32,7 +32,7 @@ export async function token(params: RouteParams) {
   }
 
   try {
-    const { token, state } = await getEncryptedCookie(
+    const { token, state, code } = await getEncryptedCookie(
       request.headers,
       engine.name,
       engine.tg.typegate.cryptoKeys,
@@ -44,10 +44,10 @@ export async function token(params: RouteParams) {
     logger.info(`Expected challenge: ${expectedChallenge}`);
     logger.info(`Actual challenge: ${state.codeChallenge}`);
 
-    if (state.codeChallenge !== expectedChallenge) {
+    if (state.codeChallenge !== expectedChallenge || code !== body.code) {
       return jsonError({
         status: 400,
-        message: "invalid code verifier",
+        message: "invalid parameters",
         headers: resHeaders,
       });
     }

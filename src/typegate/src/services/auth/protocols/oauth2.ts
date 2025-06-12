@@ -7,6 +7,8 @@ import {
   type OAuth2ClientConfig,
   type Tokens,
 } from "oauth2_client";
+// deno-lint-ignore no-external-import
+import { randomBytes } from "node:crypto";
 import { randomUUID, type TypegateCryptoKeys } from "../../../crypto.ts";
 import type { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
@@ -207,14 +209,19 @@ export class OAuth2Auth extends Protocol {
           codeVerifier: state.provider.codeVerifier,
         });
         const token = await this.createJWT(tokens, request);
+        const code = randomBytes(32).toString("base64url");
         const headers = await setEncryptedSessionCookie(
           url.hostname,
           this.typegraphName,
-          { token, state: state.client },
+          { token, state: state.client, code },
           this.cryptoKeys,
         );
+        const redirectUri = new URL(state.client.redirectUri);
 
-        headers.set("location", state.client.redirectUri);
+        redirectUri.searchParams.append("code", code);
+        redirectUri.searchParams.append("state", state.client.state);
+
+        headers.set("location", redirectUri.toString());
 
         return new Response(null, {
           status: 302,
