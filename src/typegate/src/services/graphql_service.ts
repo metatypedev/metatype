@@ -20,7 +20,13 @@ import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
 
+interface MemoizedResponse {
+  response: Response;
+  expiryMillis: number;
+}
+
 const logger = getLogger(import.meta);
+const requestMemo = new Map<string, MemoizedResponse>();
 
 class InvalidQuery extends BaseError {
   constructor(message: string) {
@@ -41,7 +47,7 @@ export function isIntrospectionQuery(
   return operation.name?.value === "IntrospectionQuery";
 }
 
-export async function handleGraphQL(
+export async function handleGraphQLHelper(
   request: Request,
   engine: QueryEngine,
   context: Context,
@@ -144,4 +150,42 @@ export async function handleGraphQL(
       return jsonError({ status: 400, message: err.message, headers });
     }
   }
+}
+
+export async function handleGraphQL(
+  request: Request,
+  engine: QueryEngine,
+  context: Context,
+  info: Info,
+  limit: RateLimit | null,
+  headers: Headers,
+): Promise<Response> {
+  const key = request.headers.get("Idempotency-Key");
+  if (key) {  
+    const now = Date.now();
+    const memoized = requestMemo.get(key);
+    if (memoized) {
+      const { response, expiryMillis } = memoized;
+      if (now < expiryMillis) {
+        logger.debug(`Idempotent request id ${key} replayed`);
+        return response;
+      } else {
+        requestMemo.delete(key);
+      }
+    }
+
+    const response = await handleGraphQLHelper(request, engine, context, info, limit, headers);
+
+    const oneDay = 24 * 3600 * 1000;
+    const expiryMillis = now + oneDay;
+    requestMemo.set(key, {
+      response,
+      expiryMillis
+    });
+
+    logger.warn(`Idempotent request id ${key} renewed`);
+    return response;
+  }
+
+  return await handleGraphQLHelper(request, engine, context, info, limit, headers);
 }
