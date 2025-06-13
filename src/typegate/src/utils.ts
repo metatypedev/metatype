@@ -214,7 +214,47 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
   return { title: typ?.title, fields: [] };
 }
 
+export async function computeRequestSignature(
+  request: Request,
+  excludeHeaders?: Array<string>,
+) {
+  const skip = (excludeHeaders ?? [])
+    .map((key) => key.toLowerCase());
+
+  let newHeaders = [];
+  for (const [key, value] of request.headers.entries()) {
+    if (!skip.includes(key.toLowerCase())) {
+      newHeaders.push([key, value]);
+    }
+  }
+  newHeaders = newHeaders
+    .sort(([ka, _va], [kb, _vb]) => ka.localeCompare(kb));
+
+  let bodyBytes = new Uint8Array();
+  const method = request.method;
+  const url = new URL(request.url).toString();
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    const cloned = request.clone();
+    bodyBytes = new Uint8Array(await cloned.arrayBuffer());
+  }
+
+  const text = new TextEncoder().encode([
+    method,
+    url,
+    JSON.stringify(newHeaders),
+  ].join("\n"));
+  const fullData = new Uint8Array(text.length + bodyBytes.length);
+  fullData.set(text, 0);
+  fullData.set(bodyBytes, text.length);
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", fullData);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-export const deepClone = <T>(clonable: T): T => JSON.parse(JSON.stringify(clonable)) as T;
+export const deepClone = <T>(clonable: T): T =>
+  JSON.parse(JSON.stringify(clonable)) as T;

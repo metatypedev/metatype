@@ -1,0 +1,29 @@
+# Requests
+
+## Idempotency
+
+An idempotent request is a request that always returns the same result when retried with the same input.
+This is useful to prevent duplicate operations, such as charging a customer twice if a network timeout or retry occurs.
+
+You can enforce idempotency on any request to a typegraph, you just have to set the `Idempotency-Key` header with a unique value (such as a UUID).
+
+```curl
+curl https://localhost:7890/awesome_typegraph \
+  -X POST \
+  -H "Authorization: Bearer ...." \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: 123abc" \
+  -d '{
+    "query": "mutation CreatePost($title: String!) { createPost(title: $title) { id title } }",
+    "variables": { "title": "My First Post" }
+  }'
+```
+
+:::info Notes
+
+- Keys expire happens after 24 hours.
+- A key must match the original request exactly during its lifetime.
+  - Reusing the same key for different requests will result in error status 422.
+- An empty string explicitly disables idempotency, it is a no-op.
+- The maximum key length is 255 characters.
+  :::
