@@ -218,33 +218,36 @@ export async function computeRequestSignature(
   request: Request,
   excludeHeaders?: Array<string>,
 ) {
-  const skipHeaders = (excludeHeaders ?? [])
+  const skip = (excludeHeaders ?? [])
     .map((key) => key.toLowerCase());
-  let newHeaders = [];
 
+  let newHeaders = [];
   for (const [key, value] of request.headers.entries()) {
-    if (skipHeaders.includes(key.toLowerCase())) {
+    if (!skip.includes(key.toLowerCase())) {
       newHeaders.push([key, value]);
     }
   }
   newHeaders = newHeaders
     .sort(([ka, _va], [kb, _vb]) => ka.localeCompare(kb));
 
-  let body = "";
+  let bodyBytes = new Uint8Array();
   const method = request.method;
   const url = new URL(request.url).toString();
   if (request.method !== "GET" && request.method !== "HEAD") {
     const cloned = request.clone();
-    body = await cloned.text();
+    bodyBytes = new Uint8Array(await cloned.arrayBuffer());
   }
 
-  const data = new TextEncoder().encode([
+  const text = new TextEncoder().encode([
     method,
     url,
     JSON.stringify(newHeaders),
-    body,
   ].join("\n"));
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const fullData = new Uint8Array(text.length + bodyBytes.length);
+  fullData.set(text, 0);
+  fullData.set(bodyBytes, text.length);
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", fullData);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
 
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");

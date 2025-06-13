@@ -182,15 +182,16 @@ export async function handleGraphQL(
     if (memoized) {
       const { response, expiryMillis, requestShapeSignature: memoSignature } =
         memoized;
-      if (requestShapeSignature != memoSignature) {
-        return jsonError({
-          status: 422,
-          message:
-            `"${key}" request shape has changed, you must use a new key or make sure to revert to the actual request corresponding to the key`,
-        });
-      }
 
       if (now < expiryMillis) {
+        if (requestShapeSignature != memoSignature) {
+          return jsonError({
+            status: 422,
+            message:
+              `The request associated with key "${key}" has changed. Please use a new key or ensure the request matches the original.`,
+          });
+        }
+
         logger.debug(`Idempotent request id ${key} replayed`);
         return response.clone();
       } else {
