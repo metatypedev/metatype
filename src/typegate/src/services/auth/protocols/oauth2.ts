@@ -274,6 +274,7 @@ export class OAuth2Auth extends Protocol {
         codeVerifier,
       },
       client: {
+        id: query.client_id,
         state: query.state,
         redirectUri: query.redirect_uri,
         codeChallenge: query.code_challenge,
@@ -372,12 +373,13 @@ export class OAuth2Auth extends Protocol {
 
   private async createJWT(token: Tokens, request: Request) {
     const profile = await this.getProfile(token, request);
+    const refreshAt = Math.floor(
+      new Date().valueOf() / 1000 +
+        (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
+    );
     const payload = {
       provider: this.authName,
-      refreshAt: Math.floor(
-        new Date().valueOf() / 1000 +
-          (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
-      ),
+      refreshAt,
       profile,
     };
     const access_token = await this.cryptoKeys.signJWT(
