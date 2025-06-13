@@ -13,7 +13,7 @@ import {
   findOperation,
   type FragmentDefs,
 } from "../transports/graphql/graphql.ts";
-import { forceAnyToOption } from "../utils.ts";
+import { computeRequestSignature, forceAnyToOption } from "../utils.ts";
 import type { QueryEngine } from "../engine/query_engine.ts";
 import type * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
@@ -23,10 +23,12 @@ import { BaseError, ErrorKind } from "../errors.ts";
 interface MemoizedResponse {
   response: Response;
   expiryMillis: number;
+  requestShapeSignature: string;
 }
 
 const logger = getLogger(import.meta);
 const requestMemo = new Map<string, MemoizedResponse>();
+const IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 class InvalidQuery extends BaseError {
   constructor(message: string) {
@@ -48,22 +50,13 @@ export function isIntrospectionQuery(
 }
 
 export async function handleGraphQLHelper(
-  request: Request,
+  content: Operations,
   engine: QueryEngine,
   context: Context,
   info: Info,
   limit: RateLimit | null,
   headers: Headers,
 ): Promise<Response> {
-  let content: Operations | null = null;
-  try {
-    content = await parseRequest(request);
-  } catch (err: any) {
-    if (err instanceof BaseError) {
-      return err.toResponse(headers);
-    }
-    return badRequest(err.message);
-  }
   const { query, operationName: operationNameRaw, variables } = content;
   const operationName = forceAnyToOption(operationNameRaw);
 
@@ -160,32 +153,78 @@ export async function handleGraphQL(
   limit: RateLimit | null,
   headers: Headers,
 ): Promise<Response> {
-  const key = request.headers.get("Idempotency-Key");
-  if (key) {  
+  const key = request.headers.get(IDEMPOTENCY_HEADER);
+  let content: Operations | null = null;
+  try {
+    content = await parseRequest(key ? request.clone() : request);
+  } catch (err: any) {
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
+    }
+    return badRequest(err.message);
+  }
+
+  if (key) {
+    if (key.length > 255) {
+      return jsonError({
+        status: 422,
+        message:
+          `'${IDEMPOTENCY_HEADER}' value should not exceed 1 - 255 characters`,
+      });
+    }
+
+    const requestShapeSignature = await computeRequestSignature(request, [
+      IDEMPOTENCY_HEADER,
+    ]);
     const now = Date.now();
     const memoized = requestMemo.get(key);
+
     if (memoized) {
-      const { response, expiryMillis } = memoized;
+      const { response, expiryMillis, requestShapeSignature: memoSignature } =
+        memoized;
+      if (requestShapeSignature != memoSignature) {
+        return jsonError({
+          status: 422,
+          message:
+            `"${key}" request shape has changed, you must use a new key or make sure to revert to the actual request corresponding to the key`,
+        });
+      }
+
       if (now < expiryMillis) {
         logger.debug(`Idempotent request id ${key} replayed`);
-        return response;
+        return response.clone();
       } else {
         requestMemo.delete(key);
       }
     }
 
-    const response = await handleGraphQLHelper(request, engine, context, info, limit, headers);
+    const response = await handleGraphQLHelper(
+      content,
+      engine,
+      context,
+      info,
+      limit,
+      headers,
+    );
 
     const oneDay = 24 * 3600 * 1000;
     const expiryMillis = now + oneDay;
     requestMemo.set(key, {
-      response,
-      expiryMillis
+      response: response.clone(),
+      expiryMillis,
+      requestShapeSignature,
     });
 
     logger.warn(`Idempotent request id ${key} renewed`);
     return response;
   }
 
-  return await handleGraphQLHelper(request, engine, context, info, limit, headers);
+  return await handleGraphQLHelper(
+    content,
+    engine,
+    context,
+    info,
+    limit,
+    headers,
+  );
 }

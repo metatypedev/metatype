@@ -214,7 +214,44 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
   return { title: typ?.title, fields: [] };
 }
 
+export async function computeRequestSignature(
+  request: Request,
+  excludeHeaders?: Array<string>,
+) {
+  const skipHeaders = (excludeHeaders ?? [])
+    .map((key) => key.toLowerCase());
+  let newHeaders = [];
+
+  for (const [key, value] of request.headers.entries()) {
+    if (skipHeaders.includes(key.toLowerCase())) {
+      newHeaders.push([key, value]);
+    }
+  }
+  newHeaders = newHeaders
+    .sort(([ka, _va], [kb, _vb]) => ka.localeCompare(kb));
+
+  let body = "";
+  const method = request.method;
+  const url = new URL(request.url).toString();
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    const cloned = request.clone();
+    body = await cloned.text();
+  }
+
+  const data = new TextEncoder().encode([
+    method,
+    url,
+    JSON.stringify(newHeaders),
+    body,
+  ].join("\n"));
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-export const deepClone = <T>(clonable: T): T => JSON.parse(JSON.stringify(clonable)) as T;
+export const deepClone = <T>(clonable: T): T =>
+  JSON.parse(JSON.stringify(clonable)) as T;

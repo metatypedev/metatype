@@ -7,6 +7,7 @@ import { buildSchema, graphql } from "graphql";
 import { withInlinedVars } from "@metatype/typegate/runtimes/utils/graphql_inline_vars.ts";
 import { assertEquals } from "@std/assert";
 import outdent from "outdent";
+import { assertNotEquals } from "@std/assert/not-equals";
 
 const schema = buildSchema(`
   type User {
@@ -21,6 +22,7 @@ const schema = buildSchema(`
 
   type Query {
     user(id: Int!): User
+    randInt: Int
   }
   type Mutation {
     updateUser(id: Int!, patch: UserUpdate!): User
@@ -47,6 +49,9 @@ const rootValue = {
     patch: { name?: string; email?: string };
   }) => {
     return { ...generateUser(id), ...patch };
+  },
+  randInt: () => {
+    return Math.floor(Math.random() * 10000);
   },
 };
 
@@ -164,4 +169,60 @@ Meta.test("GraphQL: variable inlining", async (t) => {
         }`,
     );
   });
+});
+
+Meta.test("GraphQL request idempotency", async (t) => {
+  const e = await t.engine("graphql/graphql.py");
+  const requestKeys = ["one", "one", "two", "", " ", "   ", "one", "two"];
+  const seen = new Map<string, number>();
+
+  await t.should("work", async () => {
+    for (const key of requestKeys) {
+      await gql`query GetRandInt { randInt }`
+        .withHeaders({
+          "Idempotency-Key": key,
+        })
+        .expectBody((body) => {
+          const value = body?.data?.randInt as number;
+          // Note:
+          // JS automatically trims the headers
+
+          if (seen.has(key)) {
+            const cached = seen.get(key);
+            if (key.trim() !== "") {
+              assertEquals(cached, value);
+            } else {
+              // empty string should be equal to no header
+              assertNotEquals(cached, value);
+            }
+          } else {
+            seen.set(key, value);
+          }
+        })
+        .on(e);
+    }
+  });
+
+  await t.should(
+    "fail when reusing a known key on a different request",
+    async () => {
+      for (const key of requestKeys) {
+        const query = gql`query GetRandIntHasChanged1234 { randInt }`;
+
+        if (key.trim() !== "") {
+          await query.withHeaders({
+            "Idempotency-Key": key,
+          })
+            .expectStatus(422)
+            .on(e);
+        } else {
+          await query.withHeaders({
+            "Idempotency-Key": key,
+          })
+            .expectStatus(200)
+            .on(e);
+        }
+      }
+    },
+  );
 });
