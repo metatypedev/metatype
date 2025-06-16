@@ -94,7 +94,7 @@ export class ReplicatedRegister extends Register {
     );
 
     const replicatedResponseMap = await RedisReplicatedMap.init<CachedResponse>(
-      "typegraph",
+      "typegraph_responses",
       redisConfig,
       {
         serialize(data: CachedResponse) {
