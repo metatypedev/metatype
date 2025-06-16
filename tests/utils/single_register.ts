@@ -3,6 +3,7 @@
 
 import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { Register } from "@metatype/typegate/typegate/register.ts";
+import type { CachedResponse } from "@metatype/typegate/utils.ts";
 
 export class SingleRegister extends Register {
   constructor(private name: string, private engine: QueryEngine) {
@@ -32,5 +33,17 @@ export class SingleRegister extends Register {
 
   has(name: string): boolean {
     return name === this.name;
+  }
+
+  addResponse(_key: string, _response: CachedResponse): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  deleteResponse(_key: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  getResponse(_key: string): CachedResponse | undefined {
+    throw new Error("Method not implemented.");
   }
 }

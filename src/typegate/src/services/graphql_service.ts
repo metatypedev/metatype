@@ -13,21 +13,21 @@ import {
   findOperation,
   type FragmentDefs,
 } from "../transports/graphql/graphql.ts";
-import { computeRequestSignature, forceAnyToOption } from "../utils.ts";
+import {
+  type CachedResponse,
+  computeRequestSignature,
+  forceAnyToOption,
+  toResponse,
+  toSerializableResponse,
+} from "../utils.ts";
 import type { QueryEngine } from "../engine/query_engine.ts";
 import type * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
-
-interface MemoizedResponse {
-  response: Response;
-  expiryMillis: number;
-  requestShapeSignature: string;
-}
+import type { Register } from "@metatype/typegate/typegate/register.ts";
 
 const logger = getLogger(import.meta);
-const requestMemo = new Map<string, MemoizedResponse>();
 const IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 class InvalidQuery extends BaseError {
@@ -146,6 +146,7 @@ export async function handleGraphQLHelper(
 }
 
 export async function handleGraphQL(
+  register: Register,
   request: Request,
   engine: QueryEngine,
   context: Context,
@@ -169,22 +170,21 @@ export async function handleGraphQL(
       return jsonError({
         status: 422,
         message:
-          `'${IDEMPOTENCY_HEADER}' value should not exceed 1 - 255 characters`,
+          `'${IDEMPOTENCY_HEADER}' value should not exceed 255 characters`,
       });
     }
 
-    const requestShapeSignature = await computeRequestSignature(request, [
+    const userRequestHash = await computeRequestSignature(request, [
       IDEMPOTENCY_HEADER,
     ]);
     const now = Date.now();
-    const memoized = requestMemo.get(key);
+    const memoized = await register.getResponse(key);
 
     if (memoized) {
-      const { response, expiryMillis, requestShapeSignature: memoSignature } =
-        memoized;
+      const { response, expiryMillis, requestHash: savedHash } = memoized;
 
       if (now < expiryMillis) {
-        if (requestShapeSignature != memoSignature) {
+        if (userRequestHash != savedHash) {
           return jsonError({
             status: 422,
             message:
@@ -192,10 +192,10 @@ export async function handleGraphQL(
           });
         }
 
-        logger.debug(`Idempotent request id ${key} replayed`);
-        return response.clone();
+        logger.debug(`Idempotent request key "${key}" replayed`);
+        return toResponse(response);
       } else {
-        requestMemo.delete(key);
+        await register.deleteResponse(key);
       }
     }
 
@@ -210,13 +210,16 @@ export async function handleGraphQL(
 
     const oneDay = 24 * 3600 * 1000;
     const expiryMillis = now + oneDay;
-    requestMemo.set(key, {
-      response: response.clone(),
-      expiryMillis,
-      requestShapeSignature,
-    });
+    await register.addResponse(
+      key,
+      {
+        response: await toSerializableResponse(response.clone()),
+        expiryMillis,
+        requestHash: userRequestHash,
+      } satisfies CachedResponse,
+    );
 
-    logger.warn(`Idempotent request id ${key} renewed`);
+    logger.warn(`Idempotent request key "${key}" renewed`);
     return response;
   }
 
