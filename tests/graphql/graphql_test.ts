@@ -8,6 +8,26 @@ import { withInlinedVars } from "@metatype/typegate/runtimes/utils/graphql_inlin
 import { assertEquals } from "@std/assert";
 import outdent from "outdent";
 import { assertNotEquals } from "@std/assert/not-equals";
+import { clearSyncData, setupSync } from "test-utils/hooks.ts";
+
+const syncConfig = {
+  redis: {
+    hostname: "localhost",
+    port: 6379,
+    password: "password",
+    db: 1,
+  },
+  s3: {
+    endpoint: "http://localhost:9000",
+    region: "local",
+    credentials: {
+      accessKeyId: "minio",
+      secretAccessKey: "password",
+    },
+    forcePathStyle: true,
+  },
+  s3Bucket: "metatype-graphql-key-sync-test",
+};
 
 const schema = buildSchema(`
   type User {
@@ -226,3 +246,43 @@ Meta.test("GraphQL request idempotency", async (t) => {
     },
   );
 });
+
+Meta.test(
+  {
+    name: "Idempotency Key logic in sync mode",
+    syncConfig,
+    async setup() {
+      await clearSyncData(syncConfig);
+      await setupSync(syncConfig);
+    },
+    async teardown() {
+      await clearSyncData(syncConfig);
+    },
+  },
+  async (t) => {
+    const e = await t.engine("graphql/graphql.py");
+    await t.should("work in sync mode", async () => {
+      await gql`query GetRandInt { randInt }`
+        .withHeaders({
+          "Idempotency-Key": "one",
+        })
+        .expectStatus(200)
+        .on(e);
+
+      await gql`query GetRandInt { randInt }`
+        .withHeaders({
+          "hasChanged": "123",
+          "Idempotency-Key": "one",
+        })
+        .expectStatus(422)
+        .on(e);
+
+      await gql`query HasChanged { randInt }`
+        .withHeaders({
+          "Idempotency-Key": "one",
+        })
+        .expectStatus(422)
+        .on(e);
+    });
+  },
+);

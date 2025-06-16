@@ -171,6 +171,7 @@ export async function handleGraphQL(
         status: 422,
         message:
           `'${IDEMPOTENCY_HEADER}' value should not exceed 255 characters`,
+        headers,
       });
     }
 

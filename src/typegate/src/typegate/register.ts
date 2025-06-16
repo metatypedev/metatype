@@ -121,6 +121,7 @@ export class ReplicatedRegister extends Register {
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.replicatedMap[Symbol.asyncDispose]();
+    await this.replicatedResponseMap[Symbol.asyncDispose]();
     await Promise.all(this.list().map((e) => e[Symbol.asyncDispose]()));
   }
 

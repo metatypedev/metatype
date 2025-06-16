@@ -6,7 +6,11 @@ import { Register } from "@metatype/typegate/typegate/register.ts";
 import type { CachedResponse } from "@metatype/typegate/utils.ts";
 
 export class SingleRegister extends Register {
-  constructor(private name: string, private engine: QueryEngine) {
+  constructor(
+    private name: string,
+    private engine: QueryEngine,
+    private responseMap: Map<string, CachedResponse>,
+  ) {
     super();
   }
 
@@ -35,15 +39,17 @@ export class SingleRegister extends Register {
     return name === this.name;
   }
 
-  addResponse(_key: string, _response: CachedResponse): Promise<void> {
-    throw new Error("Method not implemented.");
+  addResponse(key: string, response: CachedResponse): Promise<void> {
+    this.responseMap.set(key, response);
+    return Promise.resolve();
   }
 
-  deleteResponse(_key: string): Promise<void> {
-    throw new Error("Method not implemented.");
+  deleteResponse(key: string): Promise<void> {
+    this.responseMap.delete(key);
+    return Promise.resolve();
   }
 
-  getResponse(_key: string): CachedResponse | undefined {
-    throw new Error("Method not implemented.");
+  getResponse(key: string): CachedResponse | undefined {
+    return this.responseMap.get(key);
   }
 }
