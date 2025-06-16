@@ -42,7 +42,7 @@ const schema = buildSchema(`
 
   type Query {
     user(id: Int!): User
-    randInt: Int
+    nextInt: Int
   }
   type Mutation {
     updateUser(id: Int!, patch: UserUpdate!): User
@@ -57,6 +57,8 @@ function generateUser(id: number) {
   };
 }
 
+let nextCounter = 0;
+
 const rootValue = {
   user: ({ id }: { id: number }) => {
     return generateUser(id);
@@ -70,8 +72,8 @@ const rootValue = {
   }) => {
     return { ...generateUser(id), ...patch };
   },
-  randInt: () => {
-    return Math.floor(Math.random() * 10000);
+  nextInt: () => {
+    return ++nextCounter;
   },
 };
 
@@ -198,12 +200,12 @@ Meta.test("GraphQL request idempotency", async (t) => {
 
   await t.should("work", async () => {
     for (const key of requestKeys) {
-      await gql`query GetRandInt { randInt }`
+      await gql`query GetnextInt { nextInt }`
         .withHeaders({
           "Idempotency-Key": key,
         })
         .expectBody((body) => {
-          const value = body?.data?.randInt as number;
+          const value = body?.data?.nextInt as number;
           // Note:
           // JS automatically trims the headers
 
@@ -227,7 +229,7 @@ Meta.test("GraphQL request idempotency", async (t) => {
     "fail when reusing a known key on a different request",
     async () => {
       for (const key of requestKeys) {
-        const query = gql`query GetRandIntHasChanged1234 { randInt }`;
+        const query = gql`query GetnextIntHasChanged1234 { nextInt }`;
 
         if (key.trim() !== "") {
           await query.withHeaders({
@@ -261,25 +263,27 @@ Meta.test(
   },
   async (t) => {
     const e = await t.engine("graphql/graphql.py");
+    const key = Math.random().toString();
+
     await t.should("work in sync mode", async () => {
-      await gql`query GetRandInt { randInt }`
+      await gql`query GetnextInt { nextInt }`
         .withHeaders({
-          "Idempotency-Key": "one",
+          "Idempotency-Key": key,
         })
         .expectStatus(200)
         .on(e);
 
-      await gql`query GetRandInt { randInt }`
+      await gql`query GetnextInt { nextInt }`
         .withHeaders({
           "hasChanged": "123",
-          "Idempotency-Key": "one",
+          "Idempotency-Key": key,
         })
         .expectStatus(422)
         .on(e);
 
-      await gql`query HasChanged { randInt }`
+      await gql`query HasChanged { nextInt }`
         .withHeaders({
-          "Idempotency-Key": "one",
+          "Idempotency-Key": key,
         })
         .expectStatus(422)
         .on(e);

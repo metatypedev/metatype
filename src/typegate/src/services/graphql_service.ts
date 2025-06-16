@@ -190,6 +190,7 @@ export async function handleGraphQL(
             status: 422,
             message:
               `The request associated with key "${key}" has changed. Please use a new key or ensure the request matches the original.`,
+            headers,
           });
         }
 
