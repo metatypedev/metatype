@@ -134,5 +134,5 @@ export async function handleAuth(
     return jsonOk({ data: providers });
   }
 
-  return await provider.authMiddleware(request);
+  return await provider.authMiddleware(request, engine);
 }

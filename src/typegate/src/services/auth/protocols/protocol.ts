@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { QueryEngine } from "../../../engine/query_engine.ts";
 import { notFound } from "../../../services/responses.ts";
 
 export type TokenMiddlewareOutput = {
@@ -12,7 +13,7 @@ export type TokenMiddlewareOutput = {
 export abstract class Protocol {
   protected constructor(public typegraphName: string) {}
 
-  authMiddleware(_request: Request): Promise<Response> {
+  authMiddleware(_request: Request, engine: QueryEngine): Promise<Response> {
     return Promise.resolve(notFound());
   }
 

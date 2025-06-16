@@ -7,6 +7,8 @@ import { clearCookie, getEncryptedCookie } from "../cookies.ts";
 import type { RouteParams } from "./mod.ts";
 import * as z from "zod";
 import { sha256 } from "../../../crypto.ts";
+import { Tokens } from "oauth2_client";
+import { OAuth2Auth } from "../protocols/oauth2.ts";
 
 const logger = getLogger(import.meta);
 
@@ -69,25 +71,46 @@ export async function token(params: RouteParams) {
           headers: resHeaders,
         });
       }
+
+      await engine.tg.typegate.redis?.rename(code, token.refresh_token);
       resHeaders.set("content-type", "application/json");
+
       return jsonOk({ data: { ...token }, headers: resHeaders });
     }
 
     if (body.grant_type === "refresh_token") {
-      const token = (await engine.tg.typegate.cryptoKeys.verifyJWT(
-        body.refresh_token,
-      )) as Record<string, string>;
-      const isExpired = new Date().valueOf() / 1000 > parseInt(token.exp);
+      const data = await engine.tg.typegate.redis?.get(body.refresh_token);
 
-      if (isExpired) {
+      if (!data) {
         return jsonError({
           status: 401,
-          message: "token expired",
+          message: "invalid refresh_token",
           headers: resHeaders,
         });
-      } else {
-        throw new Error("TODO");
       }
+
+      const tokens = JSON.parse(data) as Tokens & { provider: string };
+      const auth = engine.tg.auths.get(tokens.provider) as OAuth2Auth;
+
+      if (!auth) {
+        throw new Error(`provider not found: ${tokens.provider}`);
+      }
+
+      const newTokens = await auth.createJWT(tokens, request);
+
+      await engine.tg.typegate.redis?.del(body.refresh_token);
+      await engine.tg.typegate.redis?.set(
+        newTokens.refresh_token,
+        JSON.stringify({
+          ...newTokens,
+          provider: tokens.provider,
+        }),
+      );
+
+      return jsonOk({
+        headers: resHeaders,
+        data: newTokens,
+      });
     }
   } catch (e) {
     logger.error(`take request failed ${e}`);

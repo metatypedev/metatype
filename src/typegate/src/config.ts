@@ -19,7 +19,7 @@ import type { TypegateConfig } from "./config/types.ts";
 export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
-  const envHostname = Deno.env.get("HOSTNAME")
+  const envHostname = Deno.env.get("HOSTNAME");
   if (envHostname) {
     return envHostname;
   }
@@ -29,9 +29,7 @@ async function getHostname() {
     }).output();
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
-    console.debug(
-      `Not hostname binary found, unable to resolve hostname`,
-    );
+    console.debug(`Not hostname binary found, unable to resolve hostname`);
     return "UNKNOWN_HOSTNAME";
   }
 }
@@ -83,26 +81,27 @@ function envsAsConfig() {
 }
 
 function argsAsConfig() {
-  return mapKeys(
-    parseArgs(Deno.args) as Record<string, unknown>,
-    (k) => k.toLocaleLowerCase().replace("-", "_"),
+  return mapKeys(parseArgs(Deno.args) as Record<string, unknown>, (k) =>
+    k.toLocaleLowerCase().replace("-", "_"),
   );
 }
 
-export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
-  const { hostname, port, password, pathname } = raw.redis_url;
+export function resolveRedisURL(redisUrl: URL) {
+  const { hostname, port, password, pathname } = redisUrl;
   const redisDb = parseInt(pathname.slice(1));
   if (isNaN(redisDb)) {
     console.error(`Invalid redis db: ${pathname}`);
     throw new Error(`Invalid redis db: ${pathname}`);
   }
-  const redis = {
+  return {
     hostname,
     port,
     ...(password.length > 0 ? { password } : {}),
     db: redisDb,
   };
+}
 
+export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   const s3 = {
     endpoint: raw.s3_host.href,
     region: raw.s3_region,
@@ -114,10 +113,10 @@ export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   };
 
   return {
-    redis,
+    redis: resolveRedisURL(raw.redis_url),
     s3,
     s3Bucket: raw.s3_bucket,
-    forceRemove: raw.force_remove
+    forceRemove: raw.force_remove,
   };
 }
 

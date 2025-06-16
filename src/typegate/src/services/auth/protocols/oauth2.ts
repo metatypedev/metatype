@@ -21,7 +21,7 @@ import {
 import { Protocol } from "./protocol.ts";
 import type { Auth } from "../../../typegraph/types.ts";
 import { Type } from "../../../typegraph/type_node.ts";
-import { ComputeStage } from "../../../engine/query_engine.ts";
+import { ComputeStage, QueryEngine } from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import {
   generateValidator,
@@ -185,7 +185,10 @@ export class OAuth2Auth extends Protocol {
     super(typegraphName);
   }
 
-  override async authMiddleware(request: Request): Promise<Response> {
+  override async authMiddleware(
+    request: Request,
+    engine: QueryEngine,
+  ): Promise<Response> {
     const url = new URL(request.url);
     const base = `${url.protocol}//${url.host}`;
     const typegraphPath = `/${this.typegraphName}`;
@@ -217,6 +220,11 @@ export class OAuth2Auth extends Protocol {
           this.cryptoKeys,
         );
         const redirectUri = new URL(state.client.redirectUri);
+
+        await engine.tg.typegate.redis?.set(
+          code,
+          JSON.stringify({ ...tokens, provider: this.authName }),
+        );
 
         redirectUri.searchParams.append("code", code);
         redirectUri.searchParams.append("state", state.client.state);
@@ -371,7 +379,7 @@ export class OAuth2Auth extends Protocol {
     }
   }
 
-  private async createJWT(token: Tokens, request: Request) {
+  async createJWT(token: Tokens, request: Request) {
     const profile = await this.getProfile(token, request);
     const refreshAt = Math.floor(
       new Date().valueOf() / 1000 +
@@ -386,10 +394,7 @@ export class OAuth2Auth extends Protocol {
       payload,
       this.config.jwt_max_duration_sec,
     );
-    const refresh_token = await this.cryptoKeys.signJWT(
-      {},
-      this.config.jwt_max_duration_sec,
-    );
+    const refresh_token = randomBytes(32).toString("base64url");
 
     return {
       access_token,
