@@ -40,18 +40,19 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct CreateOrGetInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct CreateOrGetOutput {
     pub run: Run,
 }
 
+#[tracing::instrument(/*ret, */level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_store_create_or_get_run(
@@ -75,12 +76,13 @@ pub async fn op_sub_store_create_or_get_run(
     Ok(CreateOrGetOutput { run })
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct PersistRunInput {
     pub run: Run,
     pub backend: SubstantialBackend,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[string]
 pub async fn op_sub_store_persist_run(
@@ -106,7 +108,7 @@ pub async fn op_sub_store_persist_run(
     Ok(input.run.run_id)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AddScheduleInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -115,6 +117,7 @@ pub struct AddScheduleInput {
     pub operation: Option<Operation>,
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_sub_store_add_schedule(
     state: Rc<RefCell<OpState>>,
@@ -141,7 +144,7 @@ pub async fn op_sub_store_add_schedule(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadOrCloseScheduleInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -149,6 +152,7 @@ pub struct ReadOrCloseScheduleInput {
     pub schedule: DateTime<Utc>,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_store_read_schedule(
@@ -177,6 +181,7 @@ pub async fn op_sub_store_read_schedule(
     }
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_sub_store_close_schedule(
     state: Rc<RefCell<OpState>>,
@@ -198,13 +203,14 @@ pub async fn op_sub_store_close_schedule(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct NextRunInput {
     pub backend: SubstantialBackend,
     pub queue: String,
     pub exclude: Vec<String>,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_next_run(
@@ -227,12 +233,13 @@ pub async fn op_sub_agent_next_run(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ActiveLeaseInput {
     pub backend: SubstantialBackend,
     pub lease_seconds: u32,
 }
 
+#[tracing::instrument(/*ret,*/ level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_active_leases(
@@ -255,13 +262,14 @@ pub async fn op_sub_agent_active_leases(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct LeaseInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
     pub lease_seconds: u32,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_sub_agent_acquire_lease(
     state: Rc<RefCell<OpState>>,
@@ -283,6 +291,7 @@ pub async fn op_sub_agent_acquire_lease(
         .map_err(OpErr::map())
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_sub_agent_renew_lease(
     state: Rc<RefCell<OpState>>,
@@ -304,6 +313,7 @@ pub async fn op_sub_agent_renew_lease(
         .map_err(OpErr::map())
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_remove_lease(
@@ -326,12 +336,13 @@ pub async fn op_sub_agent_remove_lease(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadAllMetadataInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_all(
@@ -359,7 +370,7 @@ pub async fn op_sub_metadata_read_all(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AppendMetadataInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -367,6 +378,7 @@ pub struct AppendMetadataInput {
     pub content: serde_json::Value,
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_append(
@@ -393,13 +405,14 @@ pub async fn op_sub_metadata_append(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct WriteLinkInput {
     pub backend: SubstantialBackend,
     pub workflow_name: String,
     pub run_id: String,
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_write_workflow_link(
@@ -422,12 +435,13 @@ pub async fn op_sub_metadata_write_workflow_link(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadWorkflowLinkInput {
     pub backend: SubstantialBackend,
     pub workflow_name: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_workflow_links(
@@ -450,13 +464,14 @@ pub async fn op_sub_metadata_read_workflow_links(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct WriteParentChildLinkInput {
     pub backend: SubstantialBackend,
     pub parent_run_id: String,
     pub child_run_id: String,
 }
 
+#[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_write_parent_child_link(
@@ -479,12 +494,13 @@ pub async fn op_sub_metadata_write_parent_child_link(
         .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct EnumerateAllChildrenInput {
     pub backend: SubstantialBackend,
     pub parent_run_id: String,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_enumerate_all_children(
