@@ -211,7 +211,8 @@ export class OAuth2Auth extends Protocol {
           state: state.provider.state,
           codeVerifier: state.provider.codeVerifier,
         });
-        const token = await this.createJWT(tokens, request);
+        const profile = await this.fetchProfile(tokens);
+        const token = await this.createJWT(request, profile);
         const code = randomBytes(32).toString("base64url");
         const headers = await setEncryptedSessionCookie(
           url.hostname,
@@ -223,7 +224,7 @@ export class OAuth2Auth extends Protocol {
 
         await engine.tg.typegate.redis?.set(
           code,
-          JSON.stringify({ ...tokens, provider: this.authName }),
+          JSON.stringify({ profile, provider: this.authName }),
         );
 
         redirectUri.searchParams.append("code", code);
@@ -349,10 +350,7 @@ export class OAuth2Auth extends Protocol {
     };
   }
 
-  private async getProfile(
-    token: Tokens,
-    request: Request,
-  ): Promise<null | Record<string, unknown>> {
+  private async fetchProfile(token: Tokens) {
     if (!this.profileUrl) {
       return null;
     }
@@ -367,23 +365,20 @@ export class OAuth2Auth extends Protocol {
           authorization: `${token.tokenType} ${token.accessToken}`,
         },
       });
-      let profile = await res.json();
 
-      if (this.authProfiler) {
-        profile = await this.authProfiler!.transform(profile, request);
-      }
-
-      return profile;
+      return res.json();
     } catch (e) {
       throw new Error(`failed to fetch profile: ${e}`);
     }
   }
 
-  async createJWT(token: Tokens, request: Request) {
-    const profile = await this.getProfile(token, request);
+  async createJWT(request: Request, profile: Record<string, unknown>) {
+    if (this.authProfiler) {
+      profile = await this.authProfiler!.transform(profile, request);
+    }
+
     const refreshAt = Math.floor(
-      new Date().valueOf() / 1000 +
-        (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
+      new Date().valueOf() / 1000 + this.config.jwt_refresh_duration_sec,
     );
     const payload = {
       provider: this.authName,

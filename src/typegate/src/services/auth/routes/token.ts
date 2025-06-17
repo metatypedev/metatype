@@ -7,7 +7,6 @@ import { clearCookie, getEncryptedCookie } from "../cookies.ts";
 import type { RouteParams } from "./mod.ts";
 import * as z from "zod";
 import { sha256 } from "../../../crypto.ts";
-import { Tokens } from "oauth2_client";
 import { OAuth2Auth } from "../protocols/oauth2.ts";
 
 const logger = getLogger(import.meta);
@@ -89,22 +88,21 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const tokens = JSON.parse(data) as Tokens & { provider: string };
-      const auth = engine.tg.auths.get(tokens.provider) as OAuth2Auth;
+      const cachedData = JSON.parse(data) as {
+        profile: Record<string, unknown>;
+        provider: string;
+      };
+      const auth = engine.tg.auths.get(cachedData.provider) as OAuth2Auth;
 
       if (!auth) {
-        throw new Error(`provider not found: ${tokens.provider}`);
+        throw new Error(`provider not found: ${cachedData.provider}`);
       }
 
-      const newTokens = await auth.createJWT(tokens, request);
+      const newTokens = await auth.createJWT(request, cachedData.profile);
 
-      await engine.tg.typegate.redis?.del(body.refresh_token);
-      await engine.tg.typegate.redis?.set(
+      await engine.tg.typegate.redis?.rename(
+        body.refresh_token,
         newTokens.refresh_token,
-        JSON.stringify({
-          ...newTokens,
-          provider: tokens.provider,
-        }),
       );
 
       return jsonOk({
