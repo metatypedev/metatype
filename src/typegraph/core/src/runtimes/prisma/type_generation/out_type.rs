@@ -70,7 +70,7 @@ impl TypeGen for OutType {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

@@ -8,6 +8,9 @@ export default {
   "test-e2e": {
     inherit: "ci",
     desc: "Shorthand for `tools/test.ts`",
+    vars: {
+      MCLI_NO_UPGRADE_CHECK: "1",
+    },
     fn: async ($) => {
       if ((await testE2eCli($.argv)) != 0) {
         throw new Error("tests failed");

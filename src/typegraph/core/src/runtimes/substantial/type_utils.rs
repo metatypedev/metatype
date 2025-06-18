@@ -94,16 +94,20 @@ fn filter_term_variants() -> Result<Vec<crate::types::TypeId>> {
         .into_iter()
         .map(|op| {
             save(op, |n| {
-                t::struct_().prop(op, value_to_comp_against).build_named(n)
+                t::struct_()
+                    .prop(op, value_to_comp_against)
+                    .build_named_subs(n)
             })
         })
         .collect::<Result<Vec<_>>>()?;
 
-    let op_value = save("op", |n| t::either(ops.clone().into_iter()).build_named(n))?;
+    let op_value = save("op", |n| {
+        t::either(ops.clone().into_iter()).build_named_subs(n)
+    })?;
 
     let special = ["run_id", "started_at", "ended_at", "status"]
         .into_iter()
-        .map(|sp| save(sp, |n| t::struct_().prop(sp, op_value).build_named(n)))
+        .map(|sp| save(sp, |n| t::struct_().prop(sp, op_value).build_named_subs(n)))
         .collect::<Result<Vec<_>>>()?;
 
     let mut variants = vec![];
@@ -124,19 +128,19 @@ pub fn filter_expr_ty() -> Result<crate::types::TypeId> {
         loc_ref("not_expr")?,
     ]);
 
-    let expr = save("expr", |n| t::either(op_expr_variants).build_named(n))?;
-    let expr_list = save("list_expr", |n| t::listx(expr).build_named(n))?;
+    let expr = save("expr", |n| t::either(op_expr_variants).build_named_subs(n))?;
+    let expr_list = save("list_expr", |n| t::listx(expr).build_named_subs(n))?;
 
     let _and = save("and_expr", |n| {
-        t::struct_().prop("and", expr_list).build_named(n)
+        t::struct_().prop("and", expr_list).build_named_subs(n)
     })?;
 
     let _or = save("or_expr", |n| {
-        t::struct_().prop("or", expr_list).build_named(n)
+        t::struct_().prop("or", expr_list).build_named_subs(n)
     })?;
 
     let _not = save("not_expr", |n| {
-        t::struct_().prop("not", expr).build_named(n)
+        t::struct_().prop("not", expr).build_named_subs(n)
     })?;
 
     t::struct_()

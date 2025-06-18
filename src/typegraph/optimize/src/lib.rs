@@ -15,7 +15,10 @@
 mod dedup;
 mod kosaraju;
 
-use std::{collections::BTreeMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashSet},
+    sync::Arc,
+};
 
 use kosaraju::Kosaraju;
 use tg_schema::{TypeNode, Typegraph};
@@ -40,18 +43,30 @@ impl TypeIdx {
     }
 }
 
-pub fn optimize(tg: Arc<Typegraph>) -> Typegraph {
-    let mut k = Kosaraju::new(tg);
-    k.run();
+#[derive(Default)]
+pub struct OptimizeOptions {
+    preserved_types: HashSet<u32>,
+}
 
-    let mut sizes = BTreeMap::new();
-    for c in &k.components {
-        sizes.entry(c.1.len()).and_modify(|l| *l += 1).or_insert(1);
+impl OptimizeOptions {
+    pub fn preserve(mut self, preserved_types: HashSet<u32>) -> Self {
+        self.preserved_types = preserved_types;
+        self
     }
 
-    let mut dedup = crate::dedup::DedupEngine::from(k);
-    dedup.hash_types();
-    dedup.get_converted_typegraph()
+    pub fn optimize(&self, tg: Arc<Typegraph>) -> Typegraph {
+        let mut k = Kosaraju::new(tg);
+        k.run();
+
+        let mut sizes = BTreeMap::new();
+        for c in &k.components {
+            sizes.entry(c.1.len()).and_modify(|l| *l += 1).or_insert(1);
+        }
+
+        let mut dedup = crate::dedup::DedupEngine::from(k);
+        dedup.hash_types();
+        dedup.get_converted_typegraph()
+    }
 }
 
 trait DirectedGraph {

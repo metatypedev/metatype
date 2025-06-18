@@ -91,7 +91,7 @@ impl TypeGen for OrderBy {
             }
         }
 
-        t::listx(builder)?.build_named(self.name(context)?)
+        t::listx(builder)?.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -117,7 +117,7 @@ impl TypeGen for SortOrder {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["asc".to_string(), "desc".to_string()])
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -131,7 +131,7 @@ impl TypeGen for NullsOrder {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
         t::string()
             .enum_(vec!["first".to_string(), "last".to_string()])
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -153,7 +153,7 @@ impl TypeGen for Sort {
             builder.prop("nulls", nulls_order);
         }
 
-        t::optionalx(t::unionx![builder, sort_order])?.build_named(self.name(context)?)
+        t::optionalx(t::unionx![builder, sort_order])?.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -174,7 +174,7 @@ impl TypeGen for SortByAggregates {
         builder.prop("_min", sort);
         builder.prop("_max", sort);
 
-        t::optionalx(builder)?.build_named(self.name(context)?)
+        t::optionalx(builder)?.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -244,7 +244,7 @@ impl TypeGen for AggregateSorting {
             .prop("_sum", others)
             .prop("_min", others)
             .prop("_max", others)
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

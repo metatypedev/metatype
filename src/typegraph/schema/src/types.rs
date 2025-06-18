@@ -62,6 +62,7 @@ pub enum Injection {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeNodeBase {
     pub title: String,
     #[serde(default)]

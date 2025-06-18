@@ -13134,6 +13134,7 @@ dependencies = [
  "sha2 0.10.8",
  "tg_optimize",
  "tg_schema",
+ "tracing",
  "unindent",
 ]
 

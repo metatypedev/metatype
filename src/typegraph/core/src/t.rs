@@ -7,6 +7,7 @@ use crate::sdk::core::{
     Handler, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
     TypeStruct, TypeUnion,
 };
+use crate::typegraph::NameSource;
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
@@ -22,8 +23,21 @@ pub trait TypeBuilder {
         Ok(optional(self.build()?))
     }
 
+    fn build_named_p(&self, name: impl Into<String>) -> Result<TypeId> {
+        Ok(self.build()?.named(name, NameSource::PrismaTypeGen)?.id())
+    }
+    fn build_named_subs(&self, name: impl Into<String>) -> Result<TypeId> {
+        Ok(self.build()?.named(name, NameSource::Substantial)?.id())
+    }
+
+    #[allow(unused)]
+    fn build_named_s(&self, name: impl Into<String>, name_source: NameSource) -> Result<TypeId> {
+        Ok(self.build()?.named(name, name_source)?.id())
+    }
+
+    #[allow(unused)]
     fn build_named(&self, name: impl Into<String>) -> Result<TypeId> {
-        Ok(self.build()?.named(name)?.id())
+        Ok(self.build()?.named(name, NameSource::User)?.id())
     }
 
     #[cfg(test)]

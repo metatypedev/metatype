@@ -4,6 +4,7 @@
 pub mod errors;
 use tg_schema::runtimes::deno::{ContextCheckX, PredefinedFunctionMatData};
 use tg_schema::Injection;
+use typegraph::NameSource;
 pub use types::sdk;
 
 mod conversion;
@@ -234,7 +235,9 @@ impl sdk::core::Handler for Lib {
     }
 
     fn rename_type(type_id: CoreTypeId, new_name: String) -> Result<CoreTypeId, sdk::core::Error> {
-        TypeId(type_id).named(new_name).map(|t| t.id().0)
+        TypeId(type_id)
+            .named(new_name, NameSource::User)
+            .map(|t| t.id().0)
     }
 
     fn get_type_repr(type_id: CoreTypeId) -> Result<String> {

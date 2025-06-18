@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 use tg_schema::{
-    runtimes::{KnownRuntime, TGRuntime},
+    runtimes::{prisma::Property, KnownRuntime, TGRuntime},
     TypeNode, Typegraph,
 };
 
@@ -197,7 +197,23 @@ impl DedupEngine {
         for rt in &mut runtimes {
             if let TGRuntime::Known(KnownRuntime::Prisma(d)) = rt {
                 for m in &mut d.models {
-                    map.update(&mut m.type_idx)
+                    map.update(&mut m.type_idx);
+
+                    for prop in &mut m.props {
+                        match prop {
+                            Property::Scalar(scalar_prop) => {
+                                map.update(&mut scalar_prop.type_idx);
+                            }
+                            Property::Relationship(rel_prop) => {
+                                map.update(&mut rel_prop.type_idx);
+                            }
+                        }
+                    }
+                }
+
+                for rel in &mut d.relationships {
+                    map.update(&mut rel.left.type_idx);
+                    map.update(&mut rel.right.type_idx);
                 }
             }
         }
