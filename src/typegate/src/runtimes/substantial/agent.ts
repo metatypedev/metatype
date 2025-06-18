@@ -227,8 +227,21 @@ export class Agent {
     // worker matching the runId.
     if (this.workerManager.isOngoing(next.run_id)) {
       this.logger.warn(
-        `skip triggering ${next.run_id} for the current tick as it is still ongoing`,
+        `skip triggering ${next.run_id} for the current tick as it is still ongoing, will renew the lease`,
       );
+
+      // REMOVE_ME: once an a better lock approach is devised
+      // Ideally, we want to renew the lease but this might hide other timing bugs
+      // Hypothesis:
+      //   lease timing is such that when 2+ agents fights for it, one holds onto it and runs,
+      //   but one amoung the others, there is one that is still in process of freeing up its ressource since deallocation != un-leased
+      // FIX: hearbeat lease, but even with that we need a strong guarantee that ressource-freeing up == un-leased
+      //      timing bugs can still occur but more rare
+      // await Meta.substantial.agentRenewLease({
+      //   backend: this.backend,
+      //   lease_seconds: this.config.leaseLifespanSec,
+      //   run_id: next.run_id,
+      // });
 
       return;
     }
@@ -419,7 +432,7 @@ export class Agent {
       schedule: newSchedule,
     });
 
-    // FIXME:
+    // FIXME(see REMOVE_ME above):
     // renew lease as a heartbeat side effect of the worker
     // this is fine most of the time though (assuming worker execution is within the lease lifespan)
     this.logger.info(`Renew lease ${runId}`);
@@ -501,7 +514,6 @@ function prettyRun(run: Run) {
 
 function validateRunIntegrity(run: Run) {
   const logger = getLoggerByAddress(import.meta, "substantial");
-  console.log("AAA", prettyRun(run));
 
   let life = 0;
 

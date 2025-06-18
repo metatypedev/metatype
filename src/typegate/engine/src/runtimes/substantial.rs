@@ -77,7 +77,7 @@ pub async fn op_sub_store_create_or_get_run(
     Ok(CreateOrGetOutput { run })
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PersistRunInput {
     pub run: Run,
     pub backend: SubstantialBackend,
@@ -94,6 +94,8 @@ pub async fn op_sub_store_persist_run(
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
     };
+
+    let mut input = input.clone();
 
     let backend = ctx
         .backends

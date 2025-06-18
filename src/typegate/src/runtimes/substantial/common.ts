@@ -109,12 +109,16 @@ export class Interrupt extends Error {
   }
 }
 
+export function runHasStarted(run: Run) {
+  return run.operations.some(({ event }) => event.type == "Start");
+}
+
 export function runHasStopped(run: Run) {
   return run.operations.some(({ event }) => event.type == "Stop");
 }
 
 export function checkOperationHasBeenScheduled(run: Run, operation: Operation) {
   return run.operations.some(({ at, event }) =>
-    at == operation.at && event == operation.event
+    at == operation.at && event.type == operation.event.type
   );
 }
