@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertStringIncludes, assert } from "@std/assert";
 import { execute, gql, Meta } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
@@ -10,6 +10,7 @@ import type { JWTClaims } from "@metatype/typegate/services/auth/mod.ts";
 import { getSetCookies } from "@std/http/cookie";
 import { b64decode } from "@metatype/typegate/utils.ts";
 import { base64url } from "https://deno.land/x/djwt@v3.0.1/deps.ts";
+import { connect } from "redis";
 
 async function generateCodeChallenge(verifier: string) {
   const encoder = new TextEncoder();
@@ -24,7 +25,7 @@ function generateCodeVerifier() {
   return base64url.encodeBase64Url(new Uint8Array(array));
 }
 
-Meta.test("Auth", async (t) => {
+Meta.test({ name: "Auth" }, async (t) => {
   const typegate = t.typegate;
   const crypto = typegate.cryptoKeys;
   const githubClientId = "client_id_1";
@@ -43,6 +44,14 @@ Meta.test("Auth", async (t) => {
       TEST_CLIENT_ID: appClientId,
       TEST_REDIRECT_URI: appRedirectUri,
     },
+  });
+
+  // NOTE: this has to be set manually for the tests
+  typegate.redis = await connect({
+    hostname: "127.0.0.1",
+    port: 6379,
+    password: "password",
+    db: 0,
   });
 
   function getCookie(hs: Headers): string | null {
@@ -104,6 +113,7 @@ Meta.test("Auth", async (t) => {
 
   let nextCookies: string;
   let nextCode: string;
+  let nextRefreshToken: string;
 
   await t.should("redirect to oauth2 flow", async () => {
     const url = new URL("http://typegate.local/test_auth/auth/github");
@@ -128,7 +138,7 @@ Meta.test("Auth", async (t) => {
     assertEquals(appRedirectUri, client.redirectUri);
     assertEquals(provider.state, redirect.searchParams.get("state")!);
 
-    nextCookies = loginState;
+    nextCookies = getCookie(res.headers)!;
   });
 
   await t.should("retrieve oauth2 access and refresh tokens", async () => {
@@ -176,10 +186,10 @@ Meta.test("Auth", async (t) => {
       });
     });
 
-    const cookie = await crypto.encrypt(nextCookies);
-    const { provider, client } = JSON.parse(nextCookies);
+    const decrypted = await crypto.decrypt(nextCookies);
+    const { provider, client } = JSON.parse(decrypted);
     const headers = new Headers();
-    headers.set("cookie", `test_auth=${cookie}`);
+    headers.set("cookie", `test_auth=${nextCookies}`);
     const req = new Request(
       `http://typegate.local/test_auth/auth/github?code=${code}&state=${provider.state}`,
       { headers },
@@ -196,21 +206,14 @@ Meta.test("Auth", async (t) => {
     const claims = (await crypto.verifyJWT(token.access_token)) as JWTClaims;
     assertEquals(claims.profile?.id, id);
 
+    nextCookies = cook!;
     nextCode = currentUrl.searchParams.get("code")!;
   });
 
   await t.should("take jwt after oauth2 flow only once", async () => {
     const headers = new Headers();
-    const token = { access_token: "access_token" };
-    const cookie = await crypto.encrypt(
-      JSON.stringify({
-        token,
-        state: JSON.parse(nextCookies).client,
-        code: nextCode,
-      }),
-    );
 
-    headers.set("cookie", `test_auth=${cookie}`);
+    headers.set("cookie", `test_auth=${nextCookies}`);
 
     const req = new Request("http://typegate.local/test_auth/auth/token", {
       headers,
@@ -227,9 +230,37 @@ Meta.test("Auth", async (t) => {
     const res = await execute(e, req);
     assertEquals(res.status, 200);
     const takenToken = await res.json();
-    assertEquals(takenToken, token);
+    assert(takenToken.access_token);
+    assert(takenToken.refresh_token);
+    assert(takenToken.expires_in);
+    assertEquals(takenToken.token_type, "Bearer");
     const cook = getCookie(res.headers);
     assertEquals(cook, "");
+
+    nextRefreshToken = takenToken.refresh_token;
+  });
+
+  await t.should("refresh token", async () => {
+    const body = JSON.stringify({
+      grant_type: "refresh_token",
+      refresh_token: nextRefreshToken,
+    });
+    const req = new Request("http://typegate.local/test_auth/auth/token", {
+      method: "post",
+      body,
+    });
+
+    const res = await execute(e, req);
+    assertEquals(res.status, 200);
+
+    const nextReq = new Request("http://typegate.local/test_auth/auth/token", {
+      method: "post",
+      body,
+    });
+
+    const nextRes = await execute(e, nextReq);
+    assertEquals(nextRes.status, 401);
+    assertStringIncludes(await nextRes.text(), "invalid refresh_token");
   });
 
   await t.should("retrieve oauth2 profile", async () => {
@@ -292,145 +323,5 @@ Meta.test("Auth", async (t) => {
       .on(e);
   });
 
-  // await t.should("not renew valid oauth2 access token", async () => {
-  //   const claims: JWTClaims = {
-  //     provider: "github",
-  //     refreshAt: new Date().valueOf() + 10,
-  //     profile: { id: 123 },
-  //   };
-  //   const jwt = await crypto.signJWT(claims, 10);
-  //   await gql`
-  //     query {
-  //       token(x: 1) {
-  //         x
-  //       }
-  //     }
-  //   `
-  //     .withHeaders({ authorization: `bearer ${jwt}` })
-  //     .expect((res) => {
-  //       const cook = getCookie(res.headers);
-  //       assertEquals(cook, null);
-  //     })
-  //     .expectData({
-  //       token: {
-  //         x: 1,
-  //       },
-  //     })
-  //     .on(e);
-  // });
-  //
-  // await t.should("renew expired oauth2 access token", async () => {
-  //   const refreshToken = await crypto.encrypt("r1");
-  //   const claims: JWTClaims = {
-  //     provider: "github",
-  //     accessToken: "a1",
-  //     refreshToken,
-  //     refreshAt: Math.floor(new Date().valueOf() / 1000),
-  //     profile: { id: 123 },
-  //   };
-  //   const jwt = await crypto.signJWT(claims, 10);
-  //   await sleep(1);
-  //   const id = 1;
-  //
-  //   mf.mock("POST@/login/oauth/access_token", async (req) => {
-  //     mf.reset();
-  //     const body = await req.formData();
-  //     const data = Object.fromEntries(body.entries());
-  //     assertEquals(await crypto.decrypt(data.refresh_token as string), "r1");
-  //     const res = {
-  //       access_token: "a2",
-  //       expires_in: 28800,
-  //       refresh_token: "r1",
-  //       refresh_token_expires_in: 15811200,
-  //       scope: "",
-  //       token_type: "bearer",
-  //     };
-  //
-  //     mf.mock("GET@/user", () => {
-  //       mf.reset();
-  //       const res = {
-  //         id: id,
-  //       };
-  //       return new Response(JSON.stringify(res), {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       });
-  //     });
-  //
-  //     return new Response(JSON.stringify(res), {
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-  //   });
-  //
-  //   await gql`
-  //     query {
-  //       token(x: 1) {
-  //         x
-  //       }
-  //       context {
-  //         provider
-  //         profile {
-  //           id
-  //         }
-  //       }
-  //     }
-  //   `
-  //     .withHeaders({ authorization: `bearer ${jwt}` })
-  //     .expect(async (res) => {
-  //       const header = res.headers.get(nextAuthorizationHeader);
-  //       const newClaims = await crypto.verifyJWT(header!);
-  //       assertEquals(newClaims.accessToken, "a2");
-  //       assertEquals(
-  //         await crypto.decrypt(newClaims.refreshToken as string),
-  //         "r1",
-  //       );
-  //     })
-  //     .expectData({
-  //       token: {
-  //         x: 1,
-  //       },
-  //       context: {
-  //         provider: "github",
-  //         profile: {
-  //           id: 123,
-  //         },
-  //       },
-  //     })
-  //     .on(e);
-  // });
-  //
-  // await t.should("remove invalid oauth2 access token", async () => {
-  //   const claims: JWTClaims = {
-  //     provider: "github",
-  //     refreshAt: Math.floor(new Date().valueOf() / 1000),
-  //     profile: { id: 123 },
-  //   };
-  //   const jwt = await crypto.signJWT(claims, 10);
-  //   await sleep(1);
-  //
-  //   mf.mock("POST@/login/oauth/access_token", () => {
-  //     mf.reset();
-  //     return new Response(null, {
-  //       status: 401,
-  //     });
-  //   });
-  //
-  //   await gql`
-  //     query {
-  //       token(x: 1) {
-  //         x
-  //       }
-  //     }
-  //   `
-  //     .withHeaders({ authorization: `bearer ${jwt}` })
-  //     .expect((res) => {
-  //       const header = res.headers.get(nextAuthorizationHeader);
-  //       assertEquals(header, "");
-  //     })
-  //     .expectErrorContains("Authorization failed")
-  //     .on(e);
-  // });
+  typegate.redis.close();
 });

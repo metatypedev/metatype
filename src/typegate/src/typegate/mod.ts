@@ -92,7 +92,6 @@ export class Typegate implements AsyncDisposable {
   ): Promise<Typegate> {
     const { sync: syncConfig } = config;
     const tmpDir = config.base.tmp_dir;
-
     const cryptoKeys = await TypegateCryptoKeys.init(config.base.tg_secret);
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
@@ -107,6 +106,12 @@ export class Typegate implements AsyncDisposable {
       const redisConfig =
         config.base.redis_url && resolveRedisURL(config.base.redis_url);
       const redis = redisConfig && (await connect(redisConfig));
+
+      if (redis) {
+        stack.defer(async () => {
+          await redis.quit();
+        });
+      }
 
       stack.use(register);
       stack.use(artifactStore);
@@ -128,10 +133,12 @@ export class Typegate implements AsyncDisposable {
 
       await using stack = new AsyncDisposableStack();
 
+      const redis = await connect(syncConfig.redis);
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
       // stack.use(limiter);
       stack.defer(async () => {
         await limiter.terminate();
+        await redis.quit();
       });
 
       const artifactStore = await createSharedArtifactStore(
@@ -148,6 +155,7 @@ export class Typegate implements AsyncDisposable {
         config,
         cryptoKeys,
         stack.move(),
+        redis,
       );
 
       const typegraphStore = TypegraphStore.init(syncConfig, cryptoKeys);

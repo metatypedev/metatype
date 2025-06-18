@@ -22,6 +22,6 @@ pub trait RpcDispatch {
 pub enum RpcCall {
     Aws(aws::RpcCall),
     Core(core::RpcCall),
-    Utils(utils::RpcCall),
     Runtimes(runtimes::RpcCall),
+    Utils(utils::RpcCall),
 }

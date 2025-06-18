@@ -8,6 +8,7 @@ import type { RouteParams } from "./mod.ts";
 import * as z from "zod";
 import { sha256 } from "../../../crypto.ts";
 import type { OAuth2Auth } from "../protocols/oauth2.ts";
+import type { JSONValue } from "@metatype/typegate/utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -40,6 +41,10 @@ export async function token(params: RouteParams) {
     });
   }
 
+  if (!engine.tg.typegate.redis) {
+    throw new Error("no redis connection");
+  }
+
   try {
     if (body.grant_type === "authorization_code") {
       const { token, state, code } = await getEncryptedCookie(
@@ -47,8 +52,15 @@ export async function token(params: RouteParams) {
         engine.name,
         engine.tg.typegate.cryptoKeys,
       );
-
       const expectedChallenge = await sha256(body.code_verifier);
+
+      if (!state.redirectUri.startsWith(origin)) {
+        return jsonError({
+          status: 400,
+          message: "token request must share domain with redirect uri",
+          headers: resHeaders,
+        });
+      }
 
       if (
         state.codeChallenge !== expectedChallenge ||
@@ -63,24 +75,35 @@ export async function token(params: RouteParams) {
         });
       }
 
-      if (!state.redirectUri.startsWith(origin)) {
+      const cachedData = await engine.tg.typegate.redis?.get(
+        `code:${body.code}`,
+      );
+
+      if (!cachedData) {
         return jsonError({
-          status: 400,
-          message: "take request must share domain with redirect uri",
+          status: 401,
+          message: "code expired",
           headers: resHeaders,
         });
       }
 
-      await engine.tg.typegate.redis?.rename(code, token.refresh_token);
+      await engine.tg.typegate.redis.set(
+        `refresh:${token.refresh_token}`,
+        cachedData,
+        { ex: engine.tg.typegate.config.base.jwt_max_duration_sec },
+      );
+      await engine.tg.typegate.redis.del(`code:${body.code}`);
       resHeaders.set("content-type", "application/json");
 
       return jsonOk({ data: { ...token }, headers: resHeaders });
     }
 
     if (body.grant_type === "refresh_token") {
-      const data = await engine.tg.typegate.redis?.get(body.refresh_token);
+      const rawData = await engine.tg.typegate.redis.get(
+        `refresh:${body.refresh_token}`,
+      );
 
-      if (!data) {
+      if (!rawData) {
         return jsonError({
           status: 401,
           message: "invalid refresh_token",
@@ -88,7 +111,7 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const cachedData = JSON.parse(data) as {
+      const cachedData = JSON.parse(rawData) as {
         profile: Record<string, unknown>;
         provider: string;
       };
@@ -100,14 +123,16 @@ export async function token(params: RouteParams) {
 
       const newTokens = await auth.createJWT(request, cachedData.profile);
 
-      await engine.tg.typegate.redis?.rename(
-        body.refresh_token,
-        newTokens.refresh_token,
+      await engine.tg.typegate.redis.set(
+        `refresh:${newTokens.refresh_token}`,
+        rawData,
+        { ex: engine.tg.typegate.config.base.jwt_max_duration_sec },
       );
+      await engine.tg.typegate.redis.del(`refresh:${body.refresh_token}`);
 
       return jsonOk({
         headers: resHeaders,
-        data: newTokens,
+        data: newTokens as JSONValue,
       });
     }
 
@@ -117,7 +142,7 @@ export async function token(params: RouteParams) {
       headers: resHeaders,
     });
   } catch (e) {
-    logger.error(`take request failed ${e}`);
+    logger.error(`token request failed ${e}`);
     return jsonError({
       status: 401,
       message: "not authorized",

@@ -1,6 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// CopyrightjMetatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import type { TypegateConfigBase } from "../../../config.ts";
 import {
   OAuth2Client,
@@ -155,6 +158,11 @@ export class OAuth2Auth extends Protocol {
         secretManager.secretOrFail(redirect_uri),
       ]),
     );
+
+    if (clientsMap.size === 0) {
+      throw new Error("At least one OAuth2 client must be configured");
+    }
+
     const { jwt_max_duration_sec, jwt_refresh_duration_sec } =
       authParameters.tg.typegate.config.base;
     const config = { jwt_max_duration_sec, jwt_refresh_duration_sec };
@@ -226,8 +234,9 @@ export class OAuth2Auth extends Protocol {
         const redirectUri = new URL(state.client.redirectUri);
 
         await engine.tg.typegate.redis?.set(
-          code,
+          `code:${code}`,
           JSON.stringify({ profile, provider: this.authName }),
+          { ex: 600 }, // 10 minutes
         );
 
         redirectUri.searchParams.append("code", code);
@@ -271,7 +280,7 @@ export class OAuth2Auth extends Protocol {
 
     if (query.redirect_uri !== userRedirectUri) {
       return jsonError({
-        message: "Invalid redirect_uri parameter",
+        message: "invalid redirect_uri parameter",
         status: 400,
       });
     }
