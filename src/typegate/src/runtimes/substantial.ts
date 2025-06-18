@@ -4,7 +4,11 @@
 import { Runtime } from "./Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph, type TypeGraphDS, type TypeMaterializer } from "../typegraph/mod.ts";
+import {
+  TypeGraph,
+  type TypeGraphDS,
+  type TypeMaterializer,
+} from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, getLoggerByAddress, type Logger } from "../log.ts";
 import * as ast from "graphql/ast";
@@ -20,12 +24,9 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import {
-  applyFilter,
-  type ExecutionStatus,
-  type Expr,
-} from "./substantial/filter_utils.ts";
+import { applyFilter, type Expr } from "./substantial/filter_utils.ts";
 import { createTaskId } from "./patterns/worker_manager/mod.ts";
+import type { ExecutionStatus } from "./substantial/common.ts";
 
 const logger = getLogger(import.meta);
 

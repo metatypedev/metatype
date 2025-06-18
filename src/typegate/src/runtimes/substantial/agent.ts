@@ -6,6 +6,7 @@ import type {
   AddScheduleInput,
   Backend,
   NextRun,
+  Operation,
   ReadOrCloseScheduleInput,
   Run,
 } from "../../../engine/runtime.js";
@@ -15,11 +16,12 @@ import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
 import type { EventHandler } from "../patterns/worker_manager/types.ts";
 import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
-  appendIfOngoing,
+  checkOperationHasBeenScheduled,
   type InterruptEvent,
+  runHasStopped,
   type WorkflowCompletionEvent,
   type WorkflowEvent,
-} from "./types.ts";
+} from "./common.ts";
 import { WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
@@ -101,9 +103,11 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${workflows
-        .map(({ name }) => name)
-        .join(", ")}`,
+      `Initializing agent to handle ${
+        workflows
+          .map(({ name }) => name)
+          .join(", ")
+      }`,
     );
 
     this.pollIntervalHandle = setInterval(async () => {
@@ -215,8 +219,12 @@ export class Agent {
       return;
     }
 
+    // FIXME: Find ways to test (or normalize) this scenario?
     // Leases are for abstracting ongoing runs, and at a given tick, does not
     // necessarily represent the state of what is actually running on the current typegate node
+    // no lease = nothing runs it, however workflow worker deallocation is done async
+    // if the current instance gets a lease = it should have (or is about to) free its previous
+    // worker matching the runId.
     if (this.workerManager.isOngoing(next.run_id)) {
       this.logger.warn(
         `skip triggering ${next.run_id} for the current tick as it is still ongoing`,
@@ -242,9 +250,12 @@ export class Agent {
     } satisfies ReadOrCloseScheduleInput;
     const newEventOp = await Meta.substantial.storeReadSchedule(schedDef);
 
-    if (checkIfRunHasStopped(run)) {
+    validateRunIntegrity(run);
+
+    if (runHasStopped(run)) {
       // This may occur if an event is sent but the underlying run already completed
       // Or does not exist.
+
       this.logger.warn(
         `Run ${next.run_id} has already stopped, closing schedule`,
       );
@@ -252,8 +263,17 @@ export class Agent {
       return;
     }
 
+    if (newEventOp && checkOperationHasBeenScheduled(run, newEventOp)) {
+      // Also if the scheduled event is already in the log but has not been closed (e.g. a crash before closing it)
+      this.logger.warn(
+        `Discarding already persisted schedule "${schedDef.schedule}" (${schedDef.run_id}), closing it might have been interrupted after a well-timed crash`,
+      );
+      await Meta.substantial.storeCloseSchedule(schedDef);
+      return;
+    }
+
     if (newEventOp) {
-      appendIfOngoing(run, newEventOp);
+      run.operations.push(newEventOp);
     }
 
     if (run.operations.length == 0) {
@@ -266,9 +286,11 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${JSON.stringify(
-          first,
-        )}" instead. Closing the underlying schedule.`,
+        `First item in the operation list is not a Start, got "${
+          JSON.stringify(
+            first,
+          )
+        }" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -397,6 +419,9 @@ export class Agent {
       schedule: newSchedule,
     });
 
+    // FIXME:
+    // renew lease as a heartbeat side effect of the worker
+    // this is fine most of the time though (assuming worker execution is within the lease lifespan)
     this.logger.info(`Renew lease ${runId}`);
     await Meta.substantial.agentRenewLease({
       backend: this.backend,
@@ -416,9 +441,11 @@ export class Agent {
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${event.type}): ${JSON.stringify(
-        result,
-      )} started at "${startedAt}"`,
+      `gracefull completion of "${runId}" (${event.type}): ${
+        JSON.stringify(
+          result,
+        )
+      } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
@@ -426,7 +453,7 @@ export class Agent {
 
     // Note: run is a one-time value, thus can be mutated
 
-    appendIfOngoing(event.run, {
+    const stopSched = {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
@@ -434,7 +461,13 @@ export class Agent {
           [rustResult]: result,
         } as unknown,
       },
-    });
+    } satisfies Operation;
+    const discardSchedule = runHasStopped(event.run) ||
+      checkOperationHasBeenScheduled(event.run, stopSched);
+
+    if (!discardSchedule) {
+      event.run.operations.push(stopSched);
+    }
 
     this.logger.info(
       `Persist finalized records for "${workflowName}": ${result}" and closing everything..`,
@@ -460,20 +493,22 @@ export class Agent {
   }
 }
 
-function checkIfRunHasStopped(run: Run) {
+function prettyRun(run: Run) {
+  return JSON.stringify(
+    run.operations.map(({ event, at }) => ({ type: event.type, at })),
+  );
+}
+
+function validateRunIntegrity(run: Run) {
   const logger = getLoggerByAddress(import.meta, "substantial");
+  console.log("AAA", prettyRun(run));
 
   let life = 0;
-  let hasStopped = false;
 
   for (const op of run.operations) {
     if (op.event.type == "Start") {
       if (life >= 1) {
-        logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
-        );
+        logger.error(`bad logs: ${prettyRun(run)}`);
 
         throw new Error(
           `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`,
@@ -481,14 +516,9 @@ function checkIfRunHasStopped(run: Run) {
       }
 
       life += 1;
-      hasStopped = false;
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
-        logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
-        );
+        logger.error(`bad logs: ${prettyRun(run)}`);
 
         throw new Error(
           `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`,
@@ -496,9 +526,6 @@ function checkIfRunHasStopped(run: Run) {
       }
 
       life -= 1;
-      hasStopped = true;
     }
   }
-
-  return hasStopped;
 }

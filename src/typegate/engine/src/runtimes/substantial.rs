@@ -29,6 +29,7 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
                 .map(|p| PathBuf::from(&p))
                 .expect("invalid TMP_DIR");
             let root = tmp_dir.join("substantial").join("fs_backend");
+            tracing::debug!("Fs Backend root directory {root:?}");
 
             Ok(Rc::new(FsBackend::new(root).get()))
         }
@@ -239,7 +240,7 @@ pub struct ActiveLeaseInput {
     pub lease_seconds: u32,
 }
 
-#[tracing::instrument(/*ret,*/ level = "debug", skip(state))]
+// #[tracing::instrument(/*ret,*/ level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_active_leases(
@@ -342,7 +343,7 @@ pub struct ReadAllMetadataInput {
     pub run_id: String,
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_all(
@@ -378,7 +379,7 @@ pub struct AppendMetadataInput {
     pub content: serde_json::Value,
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_append(
@@ -441,7 +442,7 @@ pub struct ReadWorkflowLinkInput {
     pub workflow_name: String,
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state))]
+// #[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_workflow_links(
@@ -471,7 +472,7 @@ pub struct WriteParentChildLinkInput {
     pub child_run_id: String,
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_write_parent_child_link(
@@ -500,7 +501,7 @@ pub struct EnumerateAllChildrenInput {
     pub parent_run_id: String,
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state))]
+// #[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_enumerate_all_children(
