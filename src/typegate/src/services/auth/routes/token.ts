@@ -110,6 +110,12 @@ export async function token(params: RouteParams) {
         data: newTokens,
       });
     }
+
+    return jsonError({
+      status: 401,
+      message: "invalid grant_type",
+      headers: resHeaders,
+    });
   } catch (e) {
     logger.error(`take request failed ${e}`);
     return jsonError({

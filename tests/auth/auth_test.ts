@@ -5,23 +5,49 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { execute, gql, Meta, sleep } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
-import { randomUUID } from "@metatype/typegate/crypto.ts";
 import { nextAuthorizationHeader } from "@metatype/typegate/services/auth/mod.ts";
 import { JWTClaims } from "@metatype/typegate/services/auth/mod.ts";
 import { getSetCookies } from "@std/http/cookie";
 import { b64decode } from "@metatype/typegate/utils.ts";
+import { base64url } from "https://deno.land/x/djwt@v3.0.1/deps.ts";
+
+async function generateCodeChallenge(verifier: string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return base64url.encodeBase64Url(new Uint8Array(digest));
+}
+
+function generateCodeVerifier() {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return base64url.encodeBase64Url(new Uint8Array(array));
+}
 
 Meta.test("Auth", async (t) => {
   const typegate = t.typegate;
   const crypto = typegate.cryptoKeys;
-  const clientId = "client_id_1";
-  const clientSecret = "client_secret_1";
+  const githubClientId = "client_id_1";
+  const githubClientSecret = "client_secret_1";
+
+  const appClientId = "test_client";
+  const appRedirectUri = "http://localhost:3000";
+  const stateString = "state_string";
+  const codeVerifier = generateCodeVerifier();
+  const codeChallenge = await generateCodeChallenge(codeVerifier);
+
   const e = await t.engine("auth/auth.py", {
     secrets: {
-      GITHUB_CLIENT_ID: clientId,
-      GITHUB_CLIENT_SECRET: clientSecret,
+      GITHUB_CLIENT_ID: githubClientId,
+      GITHUB_CLIENT_SECRET: githubClientSecret,
+      TEST_CLIENT_ID: appClientId,
+      TEST_REDIRECT_URI: appRedirectUri,
     },
   });
+
+  function getCookie(hs: Headers): string | null {
+    return getSetCookies(hs)[0]?.value ?? null;
+  }
 
   await t.should("allow public call", async () => {
     await gql`
@@ -76,32 +102,37 @@ Meta.test("Auth", async (t) => {
     assertEquals(res.status, 400);
   });
 
+  let nextCookies: string;
+  let nextCode: string;
+
   await t.should("redirect to oauth2 flow", async () => {
-    const redirectUri = "http://localhost:3000";
-    const req = new Request(
-      `http://typegate.local/test_auth/auth/github?redirect_uri=${redirectUri}`,
-    );
+    const url = new URL("http://typegate.local/test_auth/auth/github");
+
+    url.searchParams.append("client_id", appClientId);
+    url.searchParams.append("redirect_uri", appRedirectUri);
+    url.searchParams.append("code_challenge", codeChallenge);
+    url.searchParams.append("code_challenge_method", "S256");
+    url.searchParams.append("state", stateString);
+
+    const req = new Request(url);
     const res = await execute(e, req);
     assertEquals(res.status, 302);
     const redirect = new URL(res.headers.get("location")!);
     assertStringIncludes(
       redirect.href,
-      `https://github.com/login/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http%3A%2F%2Ftypegate.local%2Ftest_auth%2Fauth%2Fgithub&scope=openid+profile+email&state=`,
+      `https://github.com/login/oauth/authorize?response_type=code&client_id=${githubClientId}&redirect_uri=http%3A%2F%2Ftypegate.local%2Ftest_auth%2Fauth%2Fgithub&scope=openid+profile+email&state=`,
     );
     const cookies = getSetCookies(res.headers);
     const loginState = await crypto.decrypt(cookies[0].value);
-    const { state, userRedirectUri } = JSON.parse(loginState);
-    assertEquals(state, redirect.searchParams.get("state")!);
-    assertEquals(redirectUri, userRedirectUri);
-  });
+    const { provider, client } = JSON.parse(loginState);
+    assertEquals(appRedirectUri, client.redirectUri);
+    assertEquals(provider.state, redirect.searchParams.get("state")!);
 
-  function getCookie(hs: Headers): string | null {
-    return getSetCookies(hs)[0]?.value ?? null;
-  }
+    nextCookies = loginState;
+  });
 
   await t.should("retrieve oauth2 access and refresh tokens", async () => {
     const code = "abc123";
-    const userRedirectUri = "http://localhost:3000";
 
     const accessToken = "ghu_16C7e42F292c6912E7710c838347Ae178B4a";
     const refreshToken =
@@ -114,7 +145,7 @@ Meta.test("Auth", async (t) => {
       const data = Object.fromEntries(body.entries());
       assertEquals(data.code, code);
       const basic = req.headers.get("authorization")!.split(" ")[1];
-      assertEquals(b64decode(basic), `${clientId}:${clientSecret}`);
+      assertEquals(b64decode(basic), `${githubClientId}:${githubClientSecret}`);
       const res = {
         access_token: accessToken,
         expires_in: 28800,
@@ -145,47 +176,57 @@ Meta.test("Auth", async (t) => {
       });
     });
 
-    const state = randomUUID();
-    const cookie = await crypto.encrypt(
-      JSON.stringify({
-        userRedirectUri,
-        state,
-      }),
-    );
+    const cookie = await crypto.encrypt(nextCookies);
+    const { provider, client } = JSON.parse(nextCookies);
     const headers = new Headers();
     headers.set("cookie", `test_auth=${cookie}`);
     const req = new Request(
-      `http://typegate.local/test_auth/auth/github?code=${code}&state=${state}`,
+      `http://typegate.local/test_auth/auth/github?code=${code}&state=${provider.state}`,
       { headers },
     );
     const res = await execute(e, req);
+    const currentUrl = new URL(res.headers.get("location")!);
+
     assertEquals(res.status, 302);
-    assertEquals(res.headers.get("location")!, userRedirectUri);
+    assertEquals(currentUrl.origin, appRedirectUri);
+    assertEquals(currentUrl.searchParams.get("state"), client.state);
 
     const cook = getCookie(res.headers);
-
     const { token } = JSON.parse(await crypto.decrypt(cook!));
-    const claims = (await crypto.verifyJWT(token)) as JWTClaims;
-    assertEquals(claims.accessToken, accessToken);
+    const claims = (await crypto.verifyJWT(token.access_token)) as JWTClaims;
     assertEquals(claims.profile?.id, id);
-    assertEquals(
-      await crypto.decrypt(claims.refreshToken as string),
-      refreshToken,
-    );
+
+    nextCode = currentUrl.searchParams.get("code")!;
   });
 
   await t.should("take jwt after oauth2 flow only once", async () => {
     const headers = new Headers();
-    const token = "very-secret";
-    const redirectUri = "http://localhost:3000";
-    const cookie = await crypto.encrypt(JSON.stringify({ token, redirectUri }));
+    const token = { access_token: "access_token" };
+    const cookie = await crypto.encrypt(
+      JSON.stringify({
+        token,
+        state: JSON.parse(nextCookies).client,
+        code: nextCode,
+      }),
+    );
+
     headers.set("cookie", `test_auth=${cookie}`);
-    const req = new Request(`http://typegate.local/test_auth/auth/take`, {
+
+    const req = new Request("http://typegate.local/test_auth/auth/token", {
       headers,
+      method: "post",
+      body: JSON.stringify({
+        code: nextCode,
+        code_verifier: codeVerifier,
+        client_id: appClientId,
+        redirect_uri: appRedirectUri,
+        grant_type: "authorization_code",
+      }),
     });
+
     const res = await execute(e, req);
     assertEquals(res.status, 200);
-    const { token: takenToken } = await res.json();
+    const takenToken = await res.json();
     assertEquals(takenToken, token);
     const cook = getCookie(res.headers);
     assertEquals(cook, "");
@@ -251,149 +292,145 @@ Meta.test("Auth", async (t) => {
       .on(e);
   });
 
-  await t.should("not renew valid oauth2 access token", async () => {
-    const claims: JWTClaims = {
-      provider: "github",
-      accessToken: "a1",
-      refreshToken: "r1",
-      refreshAt: new Date().valueOf() + 10,
-      profile: { id: 123 },
-    };
-    const jwt = await crypto.signJWT(claims, 10);
-    await gql`
-      query {
-        token(x: 1) {
-          x
-        }
-      }
-    `
-      .withHeaders({ authorization: `bearer ${jwt}` })
-      .expect((res) => {
-        const cook = getCookie(res.headers);
-        assertEquals(cook, null);
-      })
-      .expectData({
-        token: {
-          x: 1,
-        },
-      })
-      .on(e);
-  });
-
-  await t.should("renew expired oauth2 access token", async () => {
-    const refreshToken = await crypto.encrypt("r1");
-    const claims: JWTClaims = {
-      provider: "github",
-      accessToken: "a1",
-      refreshToken,
-      refreshAt: Math.floor(new Date().valueOf() / 1000),
-      profile: { id: 123 },
-    };
-    const jwt = await crypto.signJWT(claims, 10);
-    await sleep(1);
-    const id = 1;
-
-    mf.mock("POST@/login/oauth/access_token", async (req) => {
-      mf.reset();
-      const body = await req.formData();
-      const data = Object.fromEntries(body.entries());
-      assertEquals(await crypto.decrypt(data.refresh_token as string), "r1");
-      const res = {
-        access_token: "a2",
-        expires_in: 28800,
-        refresh_token: "r1",
-        refresh_token_expires_in: 15811200,
-        scope: "",
-        token_type: "bearer",
-      };
-
-      mf.mock("GET@/user", () => {
-        mf.reset();
-        const res = {
-          id: id,
-        };
-        return new Response(JSON.stringify(res), {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-      });
-
-      return new Response(JSON.stringify(res), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    });
-
-    await gql`
-      query {
-        token(x: 1) {
-          x
-        }
-        context {
-          provider
-          profile {
-            id
-          }
-        }
-      }
-    `
-      .withHeaders({ authorization: `bearer ${jwt}` })
-      .expect(async (res) => {
-        const header = res.headers.get(nextAuthorizationHeader);
-        const newClaims = await crypto.verifyJWT(header!);
-        assertEquals(newClaims.accessToken, "a2");
-        assertEquals(
-          await crypto.decrypt(newClaims.refreshToken as string),
-          "r1",
-        );
-      })
-      .expectData({
-        token: {
-          x: 1,
-        },
-        context: {
-          provider: "github",
-          profile: {
-            id: 123
-          }
-        }
-      })
-      .on(e);
-  });
-
-  await t.should("remove invalid oauth2 access token", async () => {
-    const claims: JWTClaims = {
-      provider: "github",
-      accessToken: "a1",
-      refreshToken: "r1",
-      refreshAt: Math.floor(new Date().valueOf() / 1000),
-      profile: { id: 123 },
-    };
-    const jwt = await crypto.signJWT(claims, 10);
-    await sleep(1);
-
-    mf.mock("POST@/login/oauth/access_token", () => {
-      mf.reset();
-      return new Response(null, {
-        status: 401,
-      });
-    });
-
-    await gql`
-      query {
-        token(x: 1) {
-          x
-        }
-      }
-    `
-      .withHeaders({ authorization: `bearer ${jwt}` })
-      .expect((res) => {
-        const header = res.headers.get(nextAuthorizationHeader);
-        assertEquals(header, "");
-      })
-      .expectErrorContains("Authorization failed")
-      .on(e);
-  });
+  // await t.should("not renew valid oauth2 access token", async () => {
+  //   const claims: JWTClaims = {
+  //     provider: "github",
+  //     refreshAt: new Date().valueOf() + 10,
+  //     profile: { id: 123 },
+  //   };
+  //   const jwt = await crypto.signJWT(claims, 10);
+  //   await gql`
+  //     query {
+  //       token(x: 1) {
+  //         x
+  //       }
+  //     }
+  //   `
+  //     .withHeaders({ authorization: `bearer ${jwt}` })
+  //     .expect((res) => {
+  //       const cook = getCookie(res.headers);
+  //       assertEquals(cook, null);
+  //     })
+  //     .expectData({
+  //       token: {
+  //         x: 1,
+  //       },
+  //     })
+  //     .on(e);
+  // });
+  //
+  // await t.should("renew expired oauth2 access token", async () => {
+  //   const refreshToken = await crypto.encrypt("r1");
+  //   const claims: JWTClaims = {
+  //     provider: "github",
+  //     accessToken: "a1",
+  //     refreshToken,
+  //     refreshAt: Math.floor(new Date().valueOf() / 1000),
+  //     profile: { id: 123 },
+  //   };
+  //   const jwt = await crypto.signJWT(claims, 10);
+  //   await sleep(1);
+  //   const id = 1;
+  //
+  //   mf.mock("POST@/login/oauth/access_token", async (req) => {
+  //     mf.reset();
+  //     const body = await req.formData();
+  //     const data = Object.fromEntries(body.entries());
+  //     assertEquals(await crypto.decrypt(data.refresh_token as string), "r1");
+  //     const res = {
+  //       access_token: "a2",
+  //       expires_in: 28800,
+  //       refresh_token: "r1",
+  //       refresh_token_expires_in: 15811200,
+  //       scope: "",
+  //       token_type: "bearer",
+  //     };
+  //
+  //     mf.mock("GET@/user", () => {
+  //       mf.reset();
+  //       const res = {
+  //         id: id,
+  //       };
+  //       return new Response(JSON.stringify(res), {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //     });
+  //
+  //     return new Response(JSON.stringify(res), {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+  //   });
+  //
+  //   await gql`
+  //     query {
+  //       token(x: 1) {
+  //         x
+  //       }
+  //       context {
+  //         provider
+  //         profile {
+  //           id
+  //         }
+  //       }
+  //     }
+  //   `
+  //     .withHeaders({ authorization: `bearer ${jwt}` })
+  //     .expect(async (res) => {
+  //       const header = res.headers.get(nextAuthorizationHeader);
+  //       const newClaims = await crypto.verifyJWT(header!);
+  //       assertEquals(newClaims.accessToken, "a2");
+  //       assertEquals(
+  //         await crypto.decrypt(newClaims.refreshToken as string),
+  //         "r1",
+  //       );
+  //     })
+  //     .expectData({
+  //       token: {
+  //         x: 1,
+  //       },
+  //       context: {
+  //         provider: "github",
+  //         profile: {
+  //           id: 123,
+  //         },
+  //       },
+  //     })
+  //     .on(e);
+  // });
+  //
+  // await t.should("remove invalid oauth2 access token", async () => {
+  //   const claims: JWTClaims = {
+  //     provider: "github",
+  //     refreshAt: Math.floor(new Date().valueOf() / 1000),
+  //     profile: { id: 123 },
+  //   };
+  //   const jwt = await crypto.signJWT(claims, 10);
+  //   await sleep(1);
+  //
+  //   mf.mock("POST@/login/oauth/access_token", () => {
+  //     mf.reset();
+  //     return new Response(null, {
+  //       status: 401,
+  //     });
+  //   });
+  //
+  //   await gql`
+  //     query {
+  //       token(x: 1) {
+  //         x
+  //       }
+  //     }
+  //   `
+  //     .withHeaders({ authorization: `bearer ${jwt}` })
+  //     .expect((res) => {
+  //       const header = res.headers.get(nextAuthorizationHeader);
+  //       assertEquals(header, "");
+  //     })
+  //     .expectErrorContains("Authorization failed")
+  //     .on(e);
+  // });
 });

@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 import json
-from typing import List, Optional, TYPE_CHECKING, Any
+from typing import List, Optional, TYPE_CHECKING, Any, TypedDict
 from typegraph.gen import utils
 from typegraph.sdk import sdk_utils
 
@@ -19,6 +19,7 @@ class NoProfiler(StdOauth2Profiler):
     pass
 
 
+@dataclass
 class PartialOauth2Params:
     scopes: List[str]
     type: Optional[str]
@@ -85,6 +86,24 @@ class Cors:
         self.max_age_sec = max_age_sec
 
 
+class Oauth2Client(TypedDict):
+    id: str
+    redirect_uri: str
+
+
+def transform_clients_param(
+    clients: List[Oauth2Client],
+) -> List[sdk_utils.Oauth2Client]:
+    return list(
+        map(
+            lambda param: sdk_utils.Oauth2Client(
+                id=param["id"], redirect_uri=param["redirect_uri"]
+            ),
+            clients,
+        )
+    )
+
+
 class Auth:
     @staticmethod
     def jwt(name: str, format: str, algorithm: None) -> "utils.Auth":
@@ -117,6 +136,7 @@ class Auth:
         authorize_url: str,
         access_url: str,
         scopes: str,
+        clients: List[Oauth2Client],
         profile_url: Optional[str] = None,
         profiler: Optional["t.func"] = None,
     ):
@@ -127,66 +147,249 @@ class Auth:
                 ("authorize_url", json.dumps(authorize_url)),
                 ("access_url", json.dumps(access_url)),
                 ("scopes", json.dumps(scopes)),
+                ("clients", json.dumps(clients)),
                 ("profile_url", json.dumps(profile_url)),
                 ("profiler", json.dumps(None if profiler is None else profiler._id)),
             ],
         )
 
     @staticmethod
-    def oauth2_digitalocean(params: PartialOauth2Params):
-        return RawAuth.from_std("digitalocean", params)
+    def oauth2_digitalocean(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "digitalocean",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_discord(params: PartialOauth2Params):
-        return RawAuth.from_std("discord", params)
+    def oauth2_discord(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "discord",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_dropbox(params: PartialOauth2Params):
-        return RawAuth.from_std("dropbox", params)
+    def oauth2_dropbox(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "dropbox",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_facebook(params: PartialOauth2Params):
-        return RawAuth.from_std("facebook", params)
+    def oauth2_facebook(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "facebook",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_github(params: PartialOauth2Params):
-        return RawAuth.from_std("github", params)
+    def oauth2_github(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "github",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_gitlab(params: PartialOauth2Params):
-        return RawAuth.from_std("gitlab", params)
+    def oauth2_gitlab(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "gitlab",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_google(params: PartialOauth2Params):
-        return RawAuth.from_std("google", params)
+    def oauth2_google(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "google",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_instagram(params: PartialOauth2Params):
-        return RawAuth.from_std("instagram", params)
+    def oauth2_instagram(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "instagram",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_linkedin(params: PartialOauth2Params):
-        return RawAuth.from_std("linkedin", params)
+    def oauth2_linkedin(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "linkedin",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_microsoft(params: PartialOauth2Params):
-        return RawAuth.from_std("microsoft", params)
+    def oauth2_microsoft(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "microsoft",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_reddit(params: PartialOauth2Params):
-        return RawAuth.from_std("reddit", params)
+    def oauth2_reddit(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "reddit",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_slack(params: PartialOauth2Params):
-        return RawAuth.from_std("slack", params)
+    def oauth2_slack(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "slack",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_stackexchange(params: PartialOauth2Params):
-        return RawAuth.from_std("stackexchange", params)
+    def oauth2_stackexchange(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "stackexchange",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
     @staticmethod
-    def oauth2_twitter(params: PartialOauth2Params):
-        return RawAuth.from_std("twitter", params)
+    def oauth2_twitter(
+        scopes: List[str],
+        clients: List[Oauth2Client],
+        profiler: StdOauth2Profiler,
+        type: Optional[str] = None,
+    ):
+        return RawAuth.from_std(
+            "twitter",
+            PartialOauth2Params(
+                scopes=scopes,
+                clients=transform_clients_param(clients),
+                profiler=profiler,
+                type=type,
+            ),
+        )
 
 
 @dataclass

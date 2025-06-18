@@ -57,7 +57,6 @@ export type JWTClaims = {
   provider: string;
   refreshAt: number;
   profile: null | Record<string, unknown>;
-  scope?: string[];
 };
 
 export async function ensureJWT(

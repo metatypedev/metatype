@@ -22,7 +22,7 @@ def auth(g: Graph):
     )
     with_token = deno.policy(
         "with_token",
-        "(_args, { context }) => { return !!context.accessToken ? 'ALLOW' : 'DENY'; }",
+        "(_args, { context }) => { return !!context.profile.id ? 'ALLOW' : 'DENY'; }",
     )
 
     x = t.struct({"x": t.integer()})
@@ -39,6 +39,12 @@ def auth(g: Graph):
             # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
             profile_url="https://api.github.com/user",
             # profiler="(p) => ({id: p.id})",
+            clients=[
+                {
+                    "id": "TEST_CLIENT_ID",
+                    "redirect_uri": "TEST_REDIRECT_URI",
+                }
+            ],
             profiler=python.from_lambda(
                 t.struct({"id": t.integer()}),
                 t.struct({"id": t.integer()}),
