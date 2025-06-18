@@ -5,10 +5,10 @@ import { assertEquals } from "@std/assert";
 import { Meta } from "../../utils/mod.ts";
 import {
   evalExpr,
-  type ExecutionStatus,
   type Expr,
   SearchItem,
 } from "@metatype/typegate/runtimes/substantial/filter_utils.ts";
+import type { ExecutionStatus } from "@metatype/typegate/runtimes/substantial/common.ts";
 
 function addDays(date: Date, days: number) {
   const ret = new Date(date);

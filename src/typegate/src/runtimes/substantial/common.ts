@@ -63,6 +63,12 @@ export type Result<T> = {
 
 export type ExecutionResultKind = "SUCCESS" | "FAIL";
 
+export type ExecutionStatus =
+  | "COMPLETED"
+  | "COMPLETED_WITH_ERROR"
+  | "ONGOING"
+  | "UNKNOWN";
+
 // TODO: convert python exceptions into these
 // by using prefixes on the exception message for example
 
@@ -103,9 +109,12 @@ export class Interrupt extends Error {
   }
 }
 
-export function appendIfOngoing(run: Run, operation: Operation) {
-  const hasStopped = run.operations.some(({ event }) => event.type == "Stop");
-  if (!hasStopped) {
-    run.operations.push(operation);
-  }
+export function runHasStopped(run: Run) {
+  return run.operations.some(({ event }) => event.type == "Stop");
+}
+
+export function checkOperationHasBeenScheduled(run: Run, operation: Operation) {
+  return run.operations.some(({ at, event }) =>
+    at == operation.at && event == operation.event
+  );
 }

@@ -8,7 +8,7 @@ import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
 import type { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
-import type { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
+import type { Run, WorkflowEvent, WorkflowMessage } from "./common.ts";
 
 const logger = getLogger(import.meta, "WARN");
 
