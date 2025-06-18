@@ -5,7 +5,7 @@ import { assert, assertEquals } from "@std/assert";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
-  SyncConfig,
+  type SyncConfig,
 } from "@metatype/typegate/config.ts";
 import { ConfigError } from "@metatype/typegate/config/loader.ts";
 

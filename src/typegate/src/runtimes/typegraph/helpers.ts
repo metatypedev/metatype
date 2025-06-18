@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { TypeKind } from "graphql";
-import { TypeGraphDS } from "../../typegraph/mod.ts";
-import { ObjectNode, PolicyIndices } from "../../typegraph/types.ts";
+import type { TypeGraphDS } from "../../typegraph/mod.ts";
+import type { ObjectNode, PolicyIndices } from "../../typegraph/types.ts";
 import { isScalar, type TypeNode } from "../../typegraph/type_node.ts";
 
 // Note: graphql UNION output does not support scalars, only OBJECT

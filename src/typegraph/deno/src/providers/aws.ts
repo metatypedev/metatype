@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Materializer, Runtime } from "../runtimes/mod.ts";
+import { type Materializer, Runtime } from "../runtimes/mod.ts";
 import { aws } from "../sdk.ts";
 import type {
   S3PresignGetParams,

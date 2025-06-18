@@ -12,6 +12,7 @@
   ],
   "deno.config": "deno.jsonc",
   "deno.unstable": true,
+  "deno.path": "./.ghjk/envs/dev/shims/bin/deno",
   "deno.codeLens.implementations": true,
   "deno.codeLens.references": true,
   "deno.codeLens.referencesAllFunctions": true,
@@ -64,5 +65,6 @@
   "python.analysis.extraPaths": [
     "./src/typegraph/python"
   ],
-  "prettier.proseWrap": "never"
+  "prettier.proseWrap": "never",
+  "deno.enable": true
 }

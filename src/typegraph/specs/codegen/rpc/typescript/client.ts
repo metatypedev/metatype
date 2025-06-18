@@ -3,7 +3,6 @@
 
 import fs from "node:fs";
 import process from "node:process";
-import { Buffer } from "node:buffer";
 
 const BUFFER_SIZE = 1024;
 
@@ -62,10 +61,12 @@ function toSnakeCase(str: string) {
   return str.replace(/([A-Z])/g, "_$1").toLowerCase();
 }
 
+// deno-lint-ignore no-explicit-any
 function transformKeys(obj: any, convertKey: (key: string) => string): any {
   if (Array.isArray(obj)) {
     return obj.map((item) => transformKeys(item, convertKey));
   } else if (obj && typeof obj === "object") {
+    // deno-lint-ignore no-explicit-any
     const result: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(obj)) {
@@ -80,27 +81,29 @@ function transformKeys(obj: any, convertKey: (key: string) => string): any {
 }
 
 function readResponse() {
-  const buffer = Buffer.alloc(BUFFER_SIZE);
-
+  const buffer = new Uint8Array(BUFFER_SIZE);
   let bytesRead = null;
-  let content = Buffer.alloc(0);
+  let content = new Uint8Array(0);
 
-  if (isDeno) {
-    do {
+  do {
+    if (isDeno) {
       bytesRead = Deno.stdin.readSync(buffer) ?? 0;
-      content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
-    } while (content[content.length - 1] != 0x0a);
-  } else {
-    do {
+    } else {
       bytesRead = fs.readSync(process.stdin.fd, buffer) ?? 0;
-      content = Buffer.concat([content, buffer.subarray(0, bytesRead)]);
-    } while (content[content.length - 1] != 0x0a);
-  }
+    }
+    if (bytesRead === 0) {
+      continue;
+    }
+    const newContent = new Uint8Array(content.length + bytesRead);
+    newContent.set(content);
+    newContent.set(buffer.subarray(0, bytesRead), content.length);
+    content = newContent;
+  } while (content[content.length - 1] != 0x0a);
 
   return decoder.decode(content);
 }
 
-function rpcRequest<R, P>(method: string, params?: P, transform = true) {
+function rpcRequest<R, P>(method: string, params?: P, transform = true): R {
   const request = {
     jsonrpc: "2.0",
     method,
@@ -128,7 +131,7 @@ function rpcRequest<R, P>(method: string, params?: P, transform = true) {
   }
 }
 
-function rpcNotify<P>(method: string, params?: P) {
+function rpcNotify<P>(method: string, params?: P): void {
   const request = {
     jsonrpc: "2.0",
     method,
@@ -141,4 +144,4 @@ function rpcNotify<P>(method: string, params?: P) {
   Deno.stdout.writeSync(message);
 }
 
-export { rpcRequest, rpcNotify };
+export { rpcNotify, rpcRequest };

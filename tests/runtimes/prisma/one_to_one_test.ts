@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 import { gql, Meta } from "test-utils/mod.ts";
-import { MetaTest } from "test-utils/test.ts";
+import type { MetaTest } from "test-utils/test.ts";
 
 async function runCommonTestSteps(t: MetaTest, e: QueryEngine) {
   await t.should("create a record with a nested object", async () => {

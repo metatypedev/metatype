@@ -222,21 +222,27 @@ export class Typegate implements AsyncDisposable {
 
     for (const handler of this.#onPushHooks) {
       try {
-        res = await handler(res, secretManager, response, this.artifactStore);
-      } catch (e) {
-        logger.error(`Error in onPush hook: ${e}`);
+        res = await handler(
+          res,
+          secretManager,
+          response,
+          this.artifactStore,
+          this,
+        );
+      } catch (err: any) {
+        logger.error(`Error in onPush hook: ${err}`);
         // FIXME: MigrationFailur err message parser doesn't support all errors like
         // can't reach database errs
-        if (e instanceof MigrationFailure && e.errors[0]) {
-          response.setFailure(e.errors[0]);
-        } else if (e instanceof DenoFailure) {
-          response.setFailure(e.failure);
-        } else if (e instanceof ValidationFailure) {
-          response.setFailure(e.failure);
+        if (err instanceof MigrationFailure && err.errors[0]) {
+          response.setFailure(err.errors[0]);
+        } else if (err instanceof DenoFailure) {
+          response.setFailure(err.failure);
+        } else if (err instanceof ValidationFailure) {
+          response.setFailure(err.failure);
         } else {
           response.setFailure({
             reason: "Unknown",
-            message: e.toString(),
+            message: err.toString(),
           });
         }
       }

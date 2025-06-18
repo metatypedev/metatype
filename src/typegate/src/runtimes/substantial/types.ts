@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Operation, Run } from "../../../engine/runtime.js";
-import { TaskContext } from "../deno/shared_types.ts";
-import { DenoWorkerError } from "../patterns/worker_manager/deno.ts";
+import type { Operation, Run } from "../../../engine/runtime.js";
+import type { TaskContext } from "../deno/shared_types.ts";
+import type { DenoWorkerError } from "../patterns/worker_manager/deno.ts";
 export type {
   Backend,
   Operation,

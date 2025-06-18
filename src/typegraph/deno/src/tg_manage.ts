@@ -24,7 +24,7 @@ export class Manager {
     this.#env = getCliEnv();
   }
 
-  async run() {
+  run() {
     switch (this.#env.command) {
       case "serialize":
         this.#serialize();

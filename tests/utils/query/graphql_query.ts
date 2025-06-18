@@ -1,21 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { FileExtractor } from "./file_extractor.ts";
 import {
-  Context,
-  ContextEncoder,
+  type Context,
+  type ContextEncoder,
   defaultContextEncoder,
-  Expect,
+  type Expect,
   Query,
-  Variables,
+  type Variables,
 } from "./mod.ts";
 import { findOperation } from "@metatype/typegate/transports/graphql/graphql.ts";
-import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
+import type { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 import { parse } from "graphql";
 import { None } from "monads";
-import { MetaTest } from "../test.ts";
+import type { MetaTest } from "../test.ts";
 
 export class GraphQLQuery extends Query {
   constructor(

@@ -6,7 +6,7 @@ import { execute, gql, Meta, sleep } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
 import { nextAuthorizationHeader } from "@metatype/typegate/services/auth/mod.ts";
-import { JWTClaims } from "@metatype/typegate/services/auth/mod.ts";
+import type { JWTClaims } from "@metatype/typegate/services/auth/mod.ts";
 import { getSetCookies } from "@std/http/cookie";
 import { b64decode } from "@metatype/typegate/utils.ts";
 import { base64url } from "https://deno.land/x/djwt@v3.0.1/deps.ts";

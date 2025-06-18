@@ -6,12 +6,10 @@ import { join } from "@std/path/join";
 import { resolve } from "@std/path/resolve";
 import { assertEquals } from "@std/assert";
 import { GraphQLQuery } from "test-utils/query/graphql_query.ts";
-import { JSONValue } from "@metatype/typegate/utils.ts";
+import type { JSONValue } from "@metatype/typegate/utils.ts";
 import { testDir } from "test-utils/dir.ts";
 import $ from "@david/dax";
 import { z as zod } from "zod";
-import { workspaceDir } from "test-utils/dir.ts";
-import { FdkOutput } from "@typegraph/sdk/gen/utils.ts";
 import { createBucket } from "test-utils/s3.ts";
 import { S3Client } from "aws-sdk/client-s3";
 
@@ -34,12 +32,15 @@ async function prepareBucket() {
       secretAccessKey: s3Secrets.S3_SECRET_KEY,
     },
     forcePathStyle: Boolean(s3Secrets.S3_PATH_STYLE),
+    logger: console,
   });
 
   try {
     await createBucket(client, "metagen-test-bucket");
-  } catch (_e) {
-    //
+  } catch (err: any) {
+    if (err?.Code != "BucketAlreadyOwnedByYou") {
+      throw err;
+    }
   }
 }
 
@@ -102,7 +103,7 @@ members = ["fdk/"]
 
   assertEquals(
     (
-      await t.shell("cargo build --target wasm32-wasi".split(" "), {
+      await t.shell("cargo build --target wasm32-wasip1".split(" "), {
         currentDir: genCratePath,
       })
     ).code,

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { gql, Meta } from "../utils/mod.ts";
-import { mapValues } from "@std/collections/map-values";
 import { filterKeys } from "@std/collections/filter-keys";
 
 Meta.test("planner", async (t) => {
