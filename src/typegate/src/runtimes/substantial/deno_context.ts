@@ -34,7 +34,11 @@ export class Context {
 
   #appendOp(op: OperationEvent) {
     if (!runHasStopped(this.run)) {
-      console.log("Append context", op.type);
+      // console.log(
+      //   "Append context",
+      //   op.type,
+      //   this.run.operations.map((o) => o.event.type),
+      // );
       this.run.operations.push({ at: new Date().toJSON(), event: op });
     }
   }
