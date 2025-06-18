@@ -21,7 +21,10 @@ import {
 import { Protocol } from "./protocol.ts";
 import type { Auth } from "../../../typegraph/types.ts";
 import { Type } from "../../../typegraph/type_node.ts";
-import { ComputeStage, QueryEngine } from "../../../engine/query_engine.ts";
+import {
+  ComputeStage,
+  type QueryEngine,
+} from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import {
   generateValidator,
@@ -113,7 +116,7 @@ const oauthQuerySchema = z.object({
   redirect_uri: z.string(),
   state: z.string(),
   code_challenge: z.string(),
-  code_challenge_method: z.string(),
+  code_challenge_method: z.literal("S256"),
 });
 
 export class OAuth2Auth extends Protocol {

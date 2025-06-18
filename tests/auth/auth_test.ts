@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
-import { execute, gql, Meta, sleep } from "../utils/mod.ts";
+import { execute, gql, Meta } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
-import { nextAuthorizationHeader } from "@metatype/typegate/services/auth/mod.ts";
+// import { nextAuthorizationHeader } from "@metatype/typegate/services/auth/mod.ts";
 import type { JWTClaims } from "@metatype/typegate/services/auth/mod.ts";
 import { getSetCookies } from "@std/http/cookie";
 import { b64decode } from "@metatype/typegate/utils.ts";

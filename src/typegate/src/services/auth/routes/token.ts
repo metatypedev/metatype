@@ -7,7 +7,7 @@ import { clearCookie, getEncryptedCookie } from "../cookies.ts";
 import type { RouteParams } from "./mod.ts";
 import * as z from "zod";
 import { sha256 } from "../../../crypto.ts";
-import { OAuth2Auth } from "../protocols/oauth2.ts";
+import type { OAuth2Auth } from "../protocols/oauth2.ts";
 
 const logger = getLogger(import.meta);
 

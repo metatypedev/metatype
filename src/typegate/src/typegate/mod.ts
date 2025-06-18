@@ -52,8 +52,8 @@ import {
   type TypegateConfig,
 } from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
-import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { connect, Redis } from "redis";
+import type { DenoRuntime } from "../runtimes/deno/deno.ts";
+import { connect, type Redis } from "redis";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
