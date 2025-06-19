@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { globalConfig } from "../../config.ts";
-import { getLogger, type Logger } from "../../log.ts";
+import { getLogger } from "../../log.ts";
 import type { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
@@ -118,8 +118,7 @@ export class BlockingInterval {
   #killed = false;
   #running = false;
 
-  constructor(private logger?: Logger) {
-  }
+  #runningResolver?: () => void;
 
   async start(delayMs: number, handler: () => Promise<void> | void) {
     if (this.#running) {
@@ -130,11 +129,7 @@ export class BlockingInterval {
     this.#running = true;
 
     while (!this.#killed) {
-      try {
-        await handler();
-      } catch (err) {
-        this.logger?.error("BlockingInterval iteration error:", err);
-      }
+      await handler();
 
       if (this.#killed) {
         break;
@@ -144,22 +139,18 @@ export class BlockingInterval {
     }
 
     this.#running = false;
+    this.#runningResolver?.();
   }
 
   async kill() {
     this.#killed = true;
 
     if (this.#running) {
-      const ensureKillMs = 60;
-
-      await new Promise((res) => {
-        const interval = setInterval(() => {
-          if (!this.#running) {
-            clearInterval(interval);
-            res(true);
-          }
-        }, ensureKillMs);
+      await new Promise<void>((res) => {
+        this.#runningResolver = res;
       });
+
+      this.#runningResolver = undefined;
     }
   }
 }
