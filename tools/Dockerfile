@@ -52,7 +52,7 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=v0.3.0
+ARG GHJK_VERSION=v0.3.1-rc.1
 RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
     | GHJK_INSTALL_EXE_DIR=/usr/bin sh
 

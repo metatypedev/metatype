@@ -18,7 +18,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "v0.3.0"
+  GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   DOCKER_BUILD_NO_SUMMARY: true
@@ -104,7 +104,7 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
-      - uses: mozilla-actions/sccache-action@v0.0.7
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
@@ -164,15 +164,15 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
-      id-token: write # The OIDC ID token is used for authentication with JSR.    
+      id-token: write # The OIDC ID token is used for authentication with JSR.
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: mozilla-actions/sccache-action@v0.0.7
-      
+      - uses: mozilla-actions/sccache-action@v0.0.9
+
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -305,7 +305,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: kenji-miyake/setup-git-cliff@v2
-      
+
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - id: bump
         run: |
@@ -325,7 +325,7 @@ jobs:
           body: "Automatic suggested bump"
           base: main
           # since PRs created from workflows won't have actions run
-          # on them, we create it as a draft PR 
+          # on them, we create it as a draft PR
           # the actions will then run when it's readied for review
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
           draft: "always-true"

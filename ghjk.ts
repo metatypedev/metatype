@@ -40,6 +40,11 @@ env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
   ports.pipi({ packageName: "cmake" })[0],
+  // ports.cargobi({ 
+  //   crateName: "sccache", 
+  //   locked: true, 
+  //   version: "0.10.0" 
+  // }),
   installs.rust_stable,
 );
 

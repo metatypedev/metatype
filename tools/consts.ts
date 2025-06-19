@@ -4,7 +4,7 @@
 export const CURRENT_VERSION = "0.5.1-rc.4";
 export const LATEST_RELEASE_VERSION = "0.5.0";
 export const LATEST_PRE_RELEASE_VERSION = "0.5.1-rc.2";
-export const GHJK_VERSION = "v0.3.0";
+export const GHJK_VERSION = "v0.3.1-rc.1";
 export const GHJK_ACTION_VERSION = "b4ab7287a841fd5f8a4117f3efc14131c7ec62e1";
 export const RUST_VERSION = "1.85.0";
 export const DENO_VERSION = "2.2.4";

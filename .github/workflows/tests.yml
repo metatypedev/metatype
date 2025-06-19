@@ -1,3 +1,5 @@
+# TODO: cache rust crate downloads
+
 name: test suite
 run-name: test suite for ${{ github.event.pull_request.title || github.ref }}
 on:
@@ -28,7 +30,7 @@ concurrency:
 
 env:
   # GHJK_LOG: "debug"
-  GHJK_VERSION: "v0.3.0"
+  GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
   DENO_DIR: deno-dir
@@ -85,7 +87,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - run: |
@@ -96,6 +98,7 @@ jobs:
           ghjk x install-ts
           ghjk x install-website
           ghjk x fetch-deno
+          ghjk x build-tgraph
 
           # pre-resolve everything to disable resolutions
           # changing the lockfile which would fail the hooks
@@ -129,7 +132,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
         with:
@@ -246,7 +249,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
