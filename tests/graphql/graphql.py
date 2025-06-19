@@ -39,4 +39,9 @@ def graphql(g: Graph):
         effect=effects.update(idempotent=True),
     ).with_policy(Policy.public())
 
-    g.expose(user=user_by_id, updateUser=update_user)
+    next_int = gql.query(
+        t.struct({}),
+        t.integer(),
+    ).with_policy(Policy.public())
+
+    g.expose(user=user_by_id, updateUser=update_user, nextInt=next_int)

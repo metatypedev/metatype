@@ -11,6 +11,10 @@ import {
 } from "../typegraph/versions.ts";
 import { typegraphIdSchema, type TypegraphStore } from "../sync/typegraph.ts";
 import { RedisReplicatedMap } from "../sync/replicated_map.ts";
+import {
+  type CachedResponse,
+  CachedResponseSchema,
+} from "@metatype/typegate/utils.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -32,6 +36,12 @@ export abstract class Register implements AsyncDisposable {
   abstract get(name: string): QueryEngine | undefined;
 
   abstract has(name: string): boolean;
+
+  abstract addResponse(key: string, response: CachedResponse): Promise<void>;
+
+  abstract deleteResponse(key: string): Promise<void>;
+
+  abstract getResponse(key: string): CachedResponse | undefined;
 
   abstract [Symbol.asyncDispose](): Promise<void>;
 }
@@ -83,15 +93,35 @@ export class ReplicatedRegister extends Register {
       },
     );
 
-    return new ReplicatedRegister(replicatedMap);
+    const replicatedResponseMap = await RedisReplicatedMap.init<CachedResponse>(
+      "typegraph_responses",
+      redisConfig,
+      {
+        serialize(data: CachedResponse) {
+          return JSON.stringify(data);
+        },
+        deserialize(json: string, _: boolean) {
+          const raw = JSON.parse(json);
+          const cachedResponse = CachedResponseSchema.parse(raw);
+          return cachedResponse;
+        },
+        async terminate(_: CachedResponse) {},
+      },
+    );
+
+    return new ReplicatedRegister(replicatedMap, replicatedResponseMap);
   }
 
-  constructor(public replicatedMap: RedisReplicatedMap<QueryEngine>) {
+  constructor(
+    public replicatedMap: RedisReplicatedMap<QueryEngine>,
+    public replicatedResponseMap: RedisReplicatedMap<CachedResponse>,
+  ) {
     super();
   }
 
   async [Symbol.asyncDispose](): Promise<void> {
     await this.replicatedMap[Symbol.asyncDispose]();
+    await this.replicatedResponseMap[Symbol.asyncDispose]();
     await Promise.all(this.list().map((e) => e[Symbol.asyncDispose]()));
   }
 
@@ -133,7 +163,27 @@ export class ReplicatedRegister extends Register {
     return this.replicatedMap.historySync();
   }
 
+  historySyncResponses(): Promise<XIdInput> {
+    return this.replicatedResponseMap.historySync();
+  }
+
   startSync(xid: XIdInput): void {
     void this.replicatedMap.startSync(xid);
+  }
+
+  startSyncResponses(xid: XIdInput): void {
+    void this.replicatedResponseMap.startSync(xid);
+  }
+
+  addResponse(key: string, response: CachedResponse): Promise<void> {
+    return this.replicatedResponseMap.set(key, response);
+  }
+
+  deleteResponse(key: string): Promise<void> {
+    return this.replicatedResponseMap.delete(key);
+  }
+
+  getResponse(key: string): CachedResponse | undefined {
+    return this.replicatedResponseMap.get(key);
   }
 }
