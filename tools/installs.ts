@@ -9,11 +9,13 @@ export default {
   // for use by pipi based ports
   python_latest: ports.cpy_bs({ version: "3.12.5", releaseTag: "20240814" }),
   node: ports.node({ version: "20.8.0" }),
+  rustup: ports.rustup({ version: "1.28.2" }),
   rust_stable: ports.rust({
     version: RUST_VERSION,
     profile: "default",
     components: ["rust-src"],
-    targets: ["wasm32-unknown-unknown", "wasm32-wasip1"],
+    // FIXME: targets support is broken
+    // targets: ["wasm32-unknown-unknown", "wasm32-wasip1"],
   }),
   rust_nightly: ports.rust({ version: "nightly-2024-05-26" }),
   deno: ports.deno_ghrel({ version: DENO_VERSION }),

@@ -57,10 +57,15 @@ RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/
     | GHJK_INSTALL_EXE_DIR=/usr/bin VERSION=$GHJK_VERSION sh
 
 COPY tools/ tools/
-COPY ghjk.ts .
+COPY ghjk.ts import_map.json .
+RUN mkdir .ghjk && cat <<EOF > .ghjk/deno.jsonc
+{
+  "importMap": "../import_map.json",
+}
+EOF
 ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
-RUN ghjk envs cook
+RUN GHJK_LOG=debug ghjk envs cook
 
 SHELL ["/bin/sh", "-c", ". ${GHJK_ACTIVATE} && sh -c \"$*\"", "sh"]
 

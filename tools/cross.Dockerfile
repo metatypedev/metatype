@@ -43,7 +43,12 @@ RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/
 WORKDIR /app
 
 COPY tools/ tools/
-COPY ghjk.ts .
+COPY ghjk.ts import_map.json .
+RUN mkdir .ghjk && cat <<EOF > .ghjk/deno.jsonc
+{
+  "importMap": "../import_map.json",
+}
+EOF
 # we don't use the oci env since mold breaks builds for aarch64 linux
 ENV GHJK_ENV=_rust
 RUN ghjk envs cook
