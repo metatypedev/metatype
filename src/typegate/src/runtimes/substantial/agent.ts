@@ -58,8 +58,8 @@ export class Agent {
     this.logger = getLoggerByAddress(import.meta, "substantial");
     this.mustLockRunIds = new Map();
 
-    this.pollInterval = new BlockingInterval(this.logger);
-    this.hearbeatInterval = new BlockingInterval(this.logger);
+    this.pollInterval = new BlockingInterval();
+    this.hearbeatInterval = new BlockingInterval();
   }
 
   async schedule(input: AddScheduleInput) {
