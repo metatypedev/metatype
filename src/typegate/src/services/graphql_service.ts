@@ -13,14 +13,22 @@ import {
   findOperation,
   type FragmentDefs,
 } from "../transports/graphql/graphql.ts";
-import { forceAnyToOption } from "../utils.ts";
+import {
+  type CachedResponse,
+  computeRequestSignature,
+  forceAnyToOption,
+  toResponse,
+  toSerializableResponse,
+} from "../utils.ts";
 import type { QueryEngine } from "../engine/query_engine.ts";
 import type * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 import { badRequest, jsonError, jsonOk } from "./responses.ts";
 import { BaseError, ErrorKind } from "../errors.ts";
+import type { Register } from "@metatype/typegate/typegate/register.ts";
 
 const logger = getLogger(import.meta);
+const IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 class InvalidQuery extends BaseError {
   constructor(message: string) {
@@ -41,23 +49,14 @@ export function isIntrospectionQuery(
   return operation.name?.value === "IntrospectionQuery";
 }
 
-export async function handleGraphQL(
-  request: Request,
+export async function handleGraphQLHelper(
+  content: Operations,
   engine: QueryEngine,
   context: Context,
   info: Info,
   limit: RateLimit | null,
   headers: Headers,
 ): Promise<Response> {
-  let content: Operations | null = null;
-  try {
-    content = await parseRequest(request);
-  } catch (err: any) {
-    if (err instanceof BaseError) {
-      return err.toResponse(headers);
-    }
-    return badRequest(err.message);
-  }
   const { query, operationName: operationNameRaw, variables } = content;
   const operationName = forceAnyToOption(operationNameRaw);
 
@@ -144,4 +143,94 @@ export async function handleGraphQL(
       return jsonError({ status: 400, message: err.message, headers });
     }
   }
+}
+
+export async function handleGraphQL(
+  register: Register,
+  request: Request,
+  engine: QueryEngine,
+  context: Context,
+  info: Info,
+  limit: RateLimit | null,
+  headers: Headers,
+): Promise<Response> {
+  const key = request.headers.get(IDEMPOTENCY_HEADER);
+  let content: Operations | null = null;
+  try {
+    content = await parseRequest(key ? request.clone() : request);
+  } catch (err: any) {
+    if (err instanceof BaseError) {
+      return err.toResponse(headers);
+    }
+    return badRequest(err.message);
+  }
+
+  if (key) {
+    if (key.length > 255) {
+      return jsonError({
+        status: 422,
+        message:
+          `'${IDEMPOTENCY_HEADER}' value should not exceed 255 characters`,
+        headers,
+      });
+    }
+
+    const userRequestHash = await computeRequestSignature(request, [
+      IDEMPOTENCY_HEADER,
+    ]);
+    const now = Date.now();
+    const memoized = await register.getResponse(key);
+
+    if (memoized) {
+      const { response, expiryMillis, requestHash: savedHash } = memoized;
+
+      if (now < expiryMillis) {
+        if (userRequestHash != savedHash) {
+          return jsonError({
+            status: 422,
+            message:
+              `The request associated with key "${key}" has changed. Please use a new key or ensure the request matches the original.`,
+            headers,
+          });
+        }
+
+        logger.debug(`Idempotent request key "${key}" replayed`);
+        return toResponse(response);
+      } else {
+        await register.deleteResponse(key);
+      }
+    }
+
+    const response = await handleGraphQLHelper(
+      content,
+      engine,
+      context,
+      info,
+      limit,
+      headers,
+    );
+
+    const oneDay = 24 * 3600 * 1000;
+    const expiryMillis = now + oneDay;
+    await register.addResponse(
+      key,
+      {
+        response: await toSerializableResponse(response.clone()),
+        expiryMillis,
+        requestHash: userRequestHash,
+      } satisfies CachedResponse,
+    );
+
+    logger.warn(`Idempotent request key "${key}" renewed`);
+    return response;
+  }
+
+  return await handleGraphQLHelper(
+    content,
+    engine,
+    context,
+    info,
+    limit,
+    headers,
+  );
 }
