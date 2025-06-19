@@ -3,9 +3,14 @@
 
 import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { Register } from "@metatype/typegate/typegate/register.ts";
+import type { CachedResponse } from "@metatype/typegate/utils.ts";
 
 export class SingleRegister extends Register {
-  constructor(private name: string, private engine: QueryEngine) {
+  constructor(
+    private name: string,
+    private engine: QueryEngine,
+    private responseMap: Map<string, CachedResponse>,
+  ) {
     super();
   }
 
@@ -32,5 +37,19 @@ export class SingleRegister extends Register {
 
   has(name: string): boolean {
     return name === this.name;
+  }
+
+  addResponse(key: string, response: CachedResponse): Promise<void> {
+    this.responseMap.set(key, response);
+    return Promise.resolve();
+  }
+
+  deleteResponse(key: string): Promise<void> {
+    this.responseMap.delete(key);
+    return Promise.resolve();
+  }
+
+  getResponse(key: string): CachedResponse | undefined {
+    return this.responseMap.get(key);
   }
 }

@@ -11,6 +11,7 @@ import { Type } from "./typegraph/type_node.ts";
 import type { TypeGraph } from "./typegraph/mod.ts";
 
 import { BRANCH_NAME_SEPARATOR } from "./engine/computation_engine.ts";
+import { z } from "zod";
 
 export const maxi32 = 2_147_483_647;
 
@@ -22,14 +23,22 @@ export type JSONValue =
   | JSONValue[]
   | { [key: string]: JSONValue };
 
-type FolderRepr = {
-  entryPoint: string;
-  base64: string;
-  hashes: {
-    entryPoint: string; // root/tmp/{tgname}/{hash}
-    content: string;
-  };
-};
+export const SerializableResponseSchema = z.object({
+  status: z.number().int().nonnegative(),
+  statusText: z.string(),
+  headers: z.record(z.string(), z.string()),
+  body: z.array(z.number()),
+});
+
+export type SerializableResponse = z.infer<typeof SerializableResponseSchema>;
+
+export const CachedResponseSchema = z.object({
+  response: SerializableResponseSchema,
+  expiryMillis: z.number(),
+  requestHash: z.string(),
+});
+
+export type CachedResponse = z.infer<typeof CachedResponseSchema>;
 
 // Map undefined | null to None
 export const forceAnyToOption = (v: any): Option<any> => {
@@ -214,7 +223,75 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
   return { title: typ?.title, fields: [] };
 }
 
+export async function computeRequestSignature(
+  request: Request,
+  excludeHeaders?: Array<string>,
+) {
+  const skip = (excludeHeaders ?? [])
+    .map((key) => key.toLowerCase());
+
+  let newHeaders = [];
+  for (const [key, value] of request.headers.entries()) {
+    if (!skip.includes(key.toLowerCase())) {
+      newHeaders.push([key, value]);
+    }
+  }
+  newHeaders = newHeaders
+    .sort(([ka, _va], [kb, _vb]) => ka.localeCompare(kb));
+
+  let bodyBytes = new Uint8Array();
+  const method = request.method;
+  const url = new URL(request.url).toString();
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    const cloned = request.clone();
+    bodyBytes = new Uint8Array(await cloned.arrayBuffer());
+  }
+
+  const text = new TextEncoder().encode([
+    method,
+    url,
+    JSON.stringify(newHeaders),
+  ].join("\n"));
+  const fullData = new Uint8Array(text.length + bodyBytes.length);
+  fullData.set(text, 0);
+  fullData.set(bodyBytes, text.length);
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", fullData);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+export async function toSerializableResponse(
+  response: Response,
+): Promise<SerializableResponse> {
+  const headers = {} as Record<string, string>;
+  response.headers.forEach((value, key) => {
+    headers[key] = value;
+  });
+  const buffer = await response.arrayBuffer();
+  const body = Array.from(new Uint8Array(buffer));
+
+  return {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+    body,
+  } satisfies SerializableResponse;
+}
+
+export function toResponse(serResponse: SerializableResponse) {
+  const u8arr = new Uint8Array(serResponse.body);
+
+  return new Response(u8arr.buffer, {
+    status: serResponse.status,
+    statusText: serResponse.statusText,
+    headers: serResponse.headers,
+  });
+}
+
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-export const deepClone = <T>(clonable: T): T => JSON.parse(JSON.stringify(clonable)) as T;
+export const deepClone = <T>(clonable: T): T =>
+  JSON.parse(JSON.stringify(clonable)) as T;
