@@ -269,6 +269,7 @@ export class Agent {
 
       if (isRunning && isAboutToExpire) {
         this.logger.info(`Renew lease ${runId}, worker is still active`);
+
         await Meta.substantial.agentRenewLease({
           backend: this.backend,
           lease_seconds: this.config.leaseLifespanSec,
@@ -278,6 +279,12 @@ export class Agent {
 
       if (!isRunning) {
         this.mustLockRunIds.delete(runId);
+        this.logger.info(`Remove lease ${runId}`);
+        await Meta.substantial.agentRemoveLease({
+          backend: this.backend,
+          lease_seconds: this.config.leaseLifespanSec,
+          run_id: runId,
+        });
       }
     }
   }
@@ -527,6 +534,8 @@ export class Agent {
       run_id: runId,
       lease_seconds: this.config.leaseLifespanSec,
     });
+
+    this.mustLockRunIds.delete(runId);
   }
 }
 

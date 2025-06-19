@@ -213,7 +213,7 @@ pub struct NextRunInput {
     pub exclude: Vec<String>,
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state, input))]
+// #[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_next_run(
