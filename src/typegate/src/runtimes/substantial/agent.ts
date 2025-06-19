@@ -22,7 +22,7 @@ import {
   type WorkflowCompletionEvent,
   type WorkflowEvent,
 } from "./common.ts";
-import { WorkerManager } from "./workflow_worker_manager.ts";
+import { BlockingInterval, WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
   taskContext: TaskContext;
@@ -44,8 +44,10 @@ export interface AgentConfig {
 export class Agent {
   workerManager = new WorkerManager();
   workflows: Array<WorkflowDescription> = [];
-  pollIntervalHandle?: number;
+  pollInterval: BlockingInterval;
+  hearbeatInterval: BlockingInterval;
   logger: Logger;
+  mustLockRunIds: Map<string, Date>;
 
   constructor(
     public hostcallCtx: HostCallCtx,
@@ -54,6 +56,10 @@ export class Agent {
     private config: AgentConfig,
   ) {
     this.logger = getLoggerByAddress(import.meta, "substantial");
+    this.mustLockRunIds = new Map();
+
+    this.pollInterval = new BlockingInterval(this.logger);
+    this.hearbeatInterval = new BlockingInterval(this.logger);
   }
 
   async schedule(input: AddScheduleInput) {
@@ -110,20 +116,33 @@ export class Agent {
       }`,
     );
 
-    this.pollIntervalHandle = setInterval(async () => {
+    this.pollInterval.start(1000 * this.config.pollIntervalSec, async () => {
       try {
         await this.#nextIteration();
       } catch (err) {
         this.logger.error(err);
       }
-    }, 1000 * this.config.pollIntervalSec);
+    });
+
+    this.hearbeatInterval.start(
+      // Must be smaller than lease lifespan to mitigate
+      // expired lease in the middle of an iteration
+      1000 * this.config.leaseLifespanSec / 2,
+      async () => {
+        try {
+          await this.#renewLeases();
+        } catch (err) {
+          this.logger.error(err);
+        }
+      },
+    );
   }
 
   async stop() {
     await this.workerManager.deinit();
-    if (this.pollIntervalHandle !== undefined) {
-      clearInterval(this.pollIntervalHandle);
-    }
+    // TODO: how are we so sure that deinit == worker doing no more work
+    await this.pollInterval.kill();
+    await this.hearbeatInterval.kill();
   }
 
   async #nextIteration() {
@@ -219,34 +238,48 @@ export class Agent {
       return;
     }
 
-    // FIXME: Find ways to test (or normalize) this scenario?
     // Leases are for abstracting ongoing runs, and at a given tick, does not
     // necessarily represent the state of what is actually running on the current typegate node
-    // no lease = nothing runs it, however workflow worker deallocation is done async
-    // if the current instance gets a lease = it should have (or is about to) free its previous
-    // worker matching the runId.
     if (this.workerManager.isOngoing(next.run_id)) {
       this.logger.warn(
-        `skip triggering ${next.run_id} for the current tick as it is still ongoing, will renew the lease`,
+        `skip triggering ${next.run_id} for the current tick as it is still ongoing`,
       );
-
-      // REMOVE_ME: once an a better lock approach is devised
-      // Ideally, we want to renew the lease but this might hide other timing bugs
-      // Hypothesis:
-      //   lease timing is such that when 2+ agents fights for it, one holds onto it and runs,
-      //   but one amoung the others, there is one that is still in process of freeing up its ressource since deallocation != un-leased
-      // FIX: hearbeat lease, but even with that we need a strong guarantee that ressource-freeing up == un-leased
-      //      timing bugs can still occur but more rare
-      // await Meta.substantial.agentRenewLease({
-      //   backend: this.backend,
-      //   lease_seconds: this.config.leaseLifespanSec,
-      //   run_id: next.run_id,
-      // });
 
       return;
     }
 
     return next;
+  }
+
+  async #renewLeases() {
+    // WARN:
+    // There is a subtle race condition that might arise!
+    // The renewal interval tick time must be smaller than the lease lifetime so we need to ensure
+    // that in the middle of an iteration/a concrete run, the lease does not expire.
+    // FIXME: This hearbeat approach does not solve it but rather mitigate it from happening often
+    // In an ideal scenario tick time -> 0 is best
+
+    const durationMs = 1000 * this.config.leaseLifespanSec;
+    const boundaryMs = durationMs / 3;
+
+    for (const [runId, time] of this.mustLockRunIds) {
+      const isRunning = this.workerManager.isOngoing(runId);
+      const isAboutToExpire =
+        Date.now() >= time.getTime() + durationMs - boundaryMs;
+
+      if (isRunning && isAboutToExpire) {
+        this.logger.info(`Renew lease ${runId}, worker is still active`);
+        await Meta.substantial.agentRenewLease({
+          backend: this.backend,
+          lease_seconds: this.config.leaseLifespanSec,
+          run_id: runId,
+        });
+      }
+
+      if (!isRunning) {
+        this.mustLockRunIds.delete(runId);
+      }
+    }
   }
 
   async #replay(next: NextRun, workflow: WorkflowDescription) {
@@ -326,6 +359,7 @@ export class Agent {
             next.run_id,
             this.#eventResultHandlerFor(workflow.name, next.run_id),
           );
+          this.mustLockRunIds.set(next.run_id, new Date());
         });
     } catch (err) {
       throw err;
@@ -430,16 +464,6 @@ export class Agent {
       queue: this.queue,
       run_id: runId,
       schedule: newSchedule,
-    });
-
-    // FIXME(see REMOVE_ME above):
-    // renew lease as a heartbeat side effect of the worker
-    // this is fine most of the time though (assuming worker execution is within the lease lifespan)
-    this.logger.info(`Renew lease ${runId}`);
-    await Meta.substantial.agentRenewLease({
-      backend: this.backend,
-      lease_seconds: this.config.leaseLifespanSec,
-      run_id: runId,
     });
   }
 

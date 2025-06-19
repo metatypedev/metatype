@@ -134,7 +134,7 @@ impl Run {
 
     /// Try to recover from dups such as
     ///
-    /// ```
+    /// ```ignore
     ///  [Start Start ...] or
     ///  [... Stop Stop] or
     ///  [ .... Event X Event X ... ]
@@ -146,6 +146,7 @@ impl Run {
     /// we throw by default but realistically we can recover.
     ///
     /// WARN: undesirable side effects can still happen if we crash before saving the Saved results.
+    ///
     pub fn compact(&mut self) {
         let mut operations = Vec::new();
         let mut dup_schedules = HashSet::new();

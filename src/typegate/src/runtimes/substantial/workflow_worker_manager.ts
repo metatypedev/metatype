@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { globalConfig } from "../../config.ts";
-import { getLogger } from "../../log.ts";
+import { getLogger, type Logger } from "../../log.ts";
 import type { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
@@ -103,5 +103,63 @@ export class WorkerManager
         internal: internalTCtx,
       },
     });
+  }
+}
+
+/**
+ * This has the same purpose as setInterval.
+ *
+ * The issue with async handler in a setInterval is that it does not await on what's inside,
+ * we still have a risk of two functions running at the same time when the current iteration is not instant.
+ *
+ * This approach ensures that the current one finishes before next iteration starts.
+ */
+export class BlockingInterval {
+  #killed = false;
+  #running = false;
+
+  constructor(private logger?: Logger) {
+  }
+
+  async start(delayMs: number, handler: () => Promise<void> | void) {
+    if (this.#running) {
+      throw new Error("Interval already running");
+    }
+
+    this.#killed = false;
+    this.#running = true;
+
+    while (!this.#killed) {
+      try {
+        await handler();
+      } catch (err) {
+        this.logger?.error("BlockingInterval iteration error:", err);
+      }
+
+      if (this.#killed) {
+        break;
+      }
+
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+
+    this.#running = false;
+  }
+
+  async kill() {
+    this.#killed = true;
+
+    if (this.#running) {
+      const ensureKillMs = 60;
+
+      await new Promise((res) => {
+        const interval = setInterval(() => {
+          if (!this.#running) {
+            clearInterval(interval);
+            res(true);
+          }
+        }, ensureKillMs);
+      });
+    }
   }
 }
