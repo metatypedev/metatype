@@ -41,6 +41,8 @@ typegates:
         BASIC_USER: "user"
         POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=business_logic"
       iam-provider:
+        APP_CLIENT_ID: "fake"
+        APP_REDIRECT_URI: "fake"
         GITHUB_CLIENT_ID: "fake"
         GITHUB_CLIENT_SECRET: "fake"
       files-upload:

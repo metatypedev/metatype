@@ -19,10 +19,12 @@ const paramSchema = z.union([
     code_verifier: z.string(),
     client_id: z.string(),
     redirect_uri: z.string(),
+    // scope: z.string().optional(),
   }),
   z.object({
     grant_type: z.literal("refresh_token"),
     refresh_token: z.string(),
+    // scope: z.string().optional(),
   }),
 ]);
 
