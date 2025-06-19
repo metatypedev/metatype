@@ -45,7 +45,9 @@ env("_rust").install(
   //   locked: true, 
   //   version: "0.10.0" 
   // }),
-  installs.rust_stable,
+  // FIXME: sccache doesn't like ghjk installed
+  // rustc
+  // installs.rust_stable,
 );
 
 if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {

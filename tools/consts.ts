@@ -18,7 +18,7 @@ export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.` as string;
 
 export const sedLockLines: Record<string, [string | RegExp, string][]> = {
-  // "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
+  "rust-toolchain.toml": [[/(channel = ").+(")/, RUST_VERSION]],
   ".github/**/*.yml": [
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],

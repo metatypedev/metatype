@@ -5,7 +5,7 @@ ARG DISTROLESS_TAG=debug-nonroot
 
 #
 # must match distroless debian version
-FROM rust:${RUST_VERSION}-slim-bullseye AS base
+FROM rust:${RUST_VERSION}-slim-bookworm AS base
 
 WORKDIR /app
 
@@ -104,7 +104,7 @@ RUN chmod +x /tini \
     && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
 
 #
-FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} AS prd
+FROM gcr.io/distroless/cc-debian12:${DISTROLESS_TAG} AS prd
 
 SHELL ["/busybox/sh", "-c"]
 
