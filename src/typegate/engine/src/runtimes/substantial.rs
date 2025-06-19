@@ -120,7 +120,7 @@ pub struct AddScheduleInput {
     pub operation: Option<Operation>,
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 pub async fn op_sub_store_add_schedule(
     state: Rc<RefCell<OpState>>,
@@ -155,7 +155,7 @@ pub struct ReadOrCloseScheduleInput {
     pub schedule: DateTime<Utc>,
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state))]
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_store_read_schedule(
@@ -184,7 +184,7 @@ pub async fn op_sub_store_read_schedule(
     }
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 pub async fn op_sub_store_close_schedule(
     state: Rc<RefCell<OpState>>,
@@ -213,7 +213,7 @@ pub struct NextRunInput {
     pub exclude: Vec<String>,
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state))]
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_next_run(
@@ -294,7 +294,7 @@ pub async fn op_sub_agent_acquire_lease(
         .map_err(OpErr::map())
 }
 
-#[tracing::instrument(ret, level = "debug", skip(state))]
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 pub async fn op_sub_agent_renew_lease(
     state: Rc<RefCell<OpState>>,
@@ -316,7 +316,7 @@ pub async fn op_sub_agent_renew_lease(
         .map_err(OpErr::map())
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_remove_lease(
@@ -415,7 +415,7 @@ pub struct WriteLinkInput {
     pub run_id: String,
 }
 
-#[tracing::instrument(level = "debug", skip(state))]
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_write_workflow_link(
