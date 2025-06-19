@@ -21,17 +21,20 @@ typegraph(
     cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   },
   (g) => {
-    g.auth(Auth.oauth2Github("openid profile email"));
+    g.auth(
+      Auth.oauth2Github({
+        scopes: ["openid", "profile", "email"],
+        clients: [{ id: "APP_CLIENT_ID", redirectUri: "APP_REDIRECT_URI" }],
+      }),
+    );
 
     const pub = Policy.public();
 
     const deno = new DenoRuntime();
     const host = getEnvOrDefault("TG_URL", "http://localhost:7890");
-    const url = `${host}/iam-provider/auth/github?redirect_uri=${
-      encodeURIComponent(
-        host,
-      )
-    }`;
+    const url = `${host}/iam-provider/auth/github?redirect_uri=${encodeURIComponent(
+      host,
+    )}`;
 
     g.expose(
       {
@@ -41,8 +44,7 @@ typegraph(
           t.struct({}),
           t.struct({ username: t.string() }).optional(),
           {
-            code:
-              "(_, { context }) => Object.keys(context).length === 0 ? null : context",
+            code: "(_, { context }) => Object.keys(context).length === 0 ? null : context",
           },
         ),
       },
