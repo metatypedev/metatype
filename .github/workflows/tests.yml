@@ -139,20 +139,13 @@ jobs:
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
+          cache-disable: true
       - if: ${{ matrix.cross }}
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
           . .ghjk/envs/$GHJK_ENV/activate.sh
-          ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
-          echo $PATH && which componentize-py
-          which python3
-          cat $(which componentize-py)
-          python3 --help
-          componentize-py --help
-          which componentize-py | xargs dirname | xargs ls -lsa
-          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
         run: |
@@ -160,6 +153,7 @@ jobs:
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
           which python3
+          ls -lsa $(dirname $(realpath $(which componentize-py )))
           cat $(which componentize-py)
           python3 --help
           componentize-py --help
