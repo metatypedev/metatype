@@ -104,6 +104,11 @@ export const typegateConfigBaseSchema = z.object({
   tmp_dir: z.string(),
   jwt_max_duration_sec: z.coerce.number().positive(),
   jwt_refresh_duration_sec: z.coerce.number().positive(),
+  redis_url: z
+    .string()
+    .url()
+    .optional()
+    .transform<URL | undefined>((val) => (val ? new URL(val) : undefined)),
   /**
    * Time in seconds in which a URL expires after being pushed to Redis
    */
