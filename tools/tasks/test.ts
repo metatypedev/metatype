@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { testE2eCli } from "../test.ts";
-import type { DenoTaskDefArgs } from "../deps.ts";
+import type { DenoTaskDefArgs } from "@ghjk/ts";
 
 export default {
   "test-e2e": {

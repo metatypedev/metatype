@@ -216,7 +216,8 @@ Meta.test(`Missing artifact`, async (t) => {
       await t.engine("runtimes/deno/inexisting_dep.py");
       assert(false, "should have thrown");
     } catch (err) {
-      assertStringIncludes(err instanceof Error ? err.message : `${err}`,
+      assertStringIncludes(
+        err instanceof Error ? err.message : `${err}`,
         "no artifacts found for dependency",
       );
     }

@@ -6,7 +6,7 @@ import {
   typegraph_validate,
   validate_prisma_runtime_data,
 } from "native";
-import { Meta } from "../../src/typegate/engine/runtime.js"
+import { Meta } from "../../src/typegate/engine/runtime.js";
 import { assert, assertEquals } from "@std/assert";
 
 // deno-lint-ignore no-unused-vars
@@ -41,21 +41,21 @@ Deno.test("typegraphValidate", () => {
         "title": "introspection",
         "properties": {
           "__type": 1,
-          "__schema": 26
+          "__schema": 26,
         },
         "id": [],
         "required": [
           "__type",
-          "__schema"
+          "__schema",
         ],
         "policies": {
           "__type": [
-            0
+            0,
           ],
           "__schema": [
-            0
-          ]
-        }
+            0,
+          ],
+        },
       },
       {
         "type": "function",

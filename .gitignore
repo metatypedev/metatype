@@ -43,7 +43,6 @@ recipe.json
 tmp/
 coverage*
 
-src/typegraph/deno/src/gen
 src/typegraph/deno/README.md
 src/typegraph/node
 src/typegraph/python/typegraph/gen

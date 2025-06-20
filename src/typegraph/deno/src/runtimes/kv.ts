@@ -96,13 +96,13 @@ export class KvRuntime extends Runtime {
     t.Integer,
     KvOperationMat
   > {
-  const mat = this.#operation("rpush", fx.update());
-  return t.func(
-    t.struct({ key: t.string(), value: t.string() }),
-    t.integer(),
-    mat,
-  );
-}
+    const mat = this.#operation("rpush", fx.update());
+    return t.func(
+      t.struct({ key: t.string(), value: t.string() }),
+      t.integer(),
+      mat,
+    );
+  }
 
   lpop(): t.Func<t.Struct<{ key: t.String }>, t.Optional, KvOperationMat> {
     const mat = this.#operation("lpop", fx.update());

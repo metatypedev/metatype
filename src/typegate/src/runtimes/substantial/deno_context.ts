@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { HostcallPump } from "../../worker_utils.ts";
-import { appendIfOngoing, Interrupt, type OperationEvent, type Run } from "./types.ts";
+import {
+  appendIfOngoing,
+  Interrupt,
+  type OperationEvent,
+  type Run,
+} from "./types.ts";
 
 // const isTest = Deno.env.get("DENO_TESTING") === "true";
 // const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");

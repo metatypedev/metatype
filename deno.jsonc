@@ -5,6 +5,7 @@
   "importMap": "./import_map.json",
   "workspace": {
     "members": [
+      "./.ghjk",
       "./src/typegate/", // need special lint rules
       "./tests", // needs special lint rules
       "./src/typegraph/deno", // needed for publishing
@@ -24,10 +25,7 @@
       ".git",
       "vendor/**",
       "node_modules",
-      "docs/metatype.dev/docusaurus.config.js",
-      "docs/metatype.dev/**/*.js",
-      "docs/metatype.dev/**/*.ts",
-      "docs/metatype.dev/**/*.tsx"
+      "docs/metatype.dev/"
     ]
   },
   "compilerOptions": {

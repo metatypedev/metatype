@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-export const Meta : MetaNS;
+export const Meta: MetaNS;
 export type MetaNS = {
   version: () => string;
   typescriptFormatCode: (source: string) => string;
@@ -116,16 +116,16 @@ interface PrismaDevInp {
 }
 type PrismaApplyOut =
   | {
-      ResetRequired: {
-        reset_reason: string;
-      };
-    }
-  | {
-      Ok: {
-        applied_migrations: Array<string>;
-        reset_reason: string | undefined | null;
-      };
+    ResetRequired: {
+      reset_reason: string;
     };
+  }
+  | {
+    Ok: {
+      applied_migrations: Array<string>;
+      reset_reason: string | undefined | null;
+    };
+  };
 interface PrismaDeployOut {
   migration_count: number;
   applied_migrations: Array<string>;
@@ -237,14 +237,14 @@ export type WitWireReq = {
 
 export type WitWireHandleError =
   | {
-      InstanceNotFound: string;
-    }
+    InstanceNotFound: string;
+  }
   | {
-      ModuleErr: string;
-    }
+    ModuleErr: string;
+  }
   | {
-      MatErr: string;
-    };
+    MatErr: string;
+  };
 
 export type WitWireMatInfo = {
   op_name: string;
@@ -261,29 +261,29 @@ export type WitWireInitArgs = {
 export type WitWireInitResponse = object;
 export type WitWireInitError =
   | {
-      VersionMismatch: string;
-    }
+    VersionMismatch: string;
+  }
   | {
-      UnexpectedMat: string;
-    }
+    UnexpectedMat: string;
+  }
   | {
-      ModuleErr: string;
-    }
+    ModuleErr: string;
+  }
   | {
-      Other: string;
-    };
+    Other: string;
+  };
 
 export type WitWireHandleResponse =
   | {
-      Ok: string;
-    }
+    Ok: string;
+  }
   | "NoHandler"
   | {
-      InJsonErr: string;
-    }
+    InJsonErr: string;
+  }
   | {
-      HandlerErr: string;
-    };
+    HandlerErr: string;
+  };
 
 export type GrpcRegisterInput = {
   proto_file_content: string;
@@ -301,20 +301,20 @@ export type Backend =
   | { type: "fs" }
   | { type: "memory" }
   | {
-      type: "redis";
-      connection_string: string;
-    };
+    type: "redis";
+    connection_string: string;
+  };
 
 export type OperationEvent =
   | { type: "Sleep"; id: number; start: string; end: string }
   | {
-      type: "Save";
-      id: number;
-      value:
-        | { type: "Retry"; wait_until: string; counter: number }
-        | { type: "Resolved"; payload: unknown }
-        | { type: "Failed"; err: unknown };
-    }
+    type: "Save";
+    id: number;
+    value:
+      | { type: "Retry"; wait_until: string; counter: number }
+      | { type: "Resolved"; payload: unknown }
+      | { type: "Failed"; err: unknown };
+  }
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }
   | { type: "Start"; kwargs: Record<string, unknown> }

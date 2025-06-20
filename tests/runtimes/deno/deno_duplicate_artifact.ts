@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
-import { DenoRuntime, DenoModule } from "@typegraph/sdk/runtimes/deno";
+import { DenoModule, DenoRuntime } from "@typegraph/sdk/runtimes/deno";
 
 export const tg = await typegraph(
   {

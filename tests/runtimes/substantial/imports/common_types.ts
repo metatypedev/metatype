@@ -47,7 +47,7 @@ export interface Context {
     handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
 
-  logger: SubLogger
+  logger: SubLogger;
 }
 
 interface SubLogger {

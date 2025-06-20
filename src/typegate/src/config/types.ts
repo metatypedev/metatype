@@ -92,7 +92,8 @@ export const typegateConfigBaseSchema = z.object({
       if (bytes.length != 64) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+          message:
+            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
         });
       }
       return bytes;

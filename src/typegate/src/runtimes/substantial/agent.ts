@@ -101,9 +101,11 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${workflows
-        .map(({ name }) => name)
-        .join(", ")}`,
+      `Initializing agent to handle ${
+        workflows
+          .map(({ name }) => name)
+          .join(", ")
+      }`,
     );
 
     this.pollIntervalHandle = setInterval(async () => {
@@ -266,9 +268,11 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${JSON.stringify(
-          first,
-        )}" instead. Closing the underlying schedule.`,
+        `First item in the operation list is not a Start, got "${
+          JSON.stringify(
+            first,
+          )
+        }" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -416,9 +420,11 @@ export class Agent {
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${event.type}): ${JSON.stringify(
-        result,
-      )} started at "${startedAt}"`,
+      `gracefull completion of "${runId}" (${event.type}): ${
+        JSON.stringify(
+          result,
+        )
+      } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
@@ -470,9 +476,11 @@ function checkIfRunHasStopped(run: Run) {
     if (op.event.type == "Start") {
       if (life >= 1) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(
@@ -485,9 +493,11 @@ function checkIfRunHasStopped(run: Run) {
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
         logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
+          `bad logs: ${
+            JSON.stringify(
+              run.operations.map(({ event }) => event.type),
+            )
+          }`,
         );
 
         throw new Error(

@@ -18,9 +18,10 @@ export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {
-  const res = await (typeof first === "string"
-    ? shell([metaCliExe, first, ...input])
-    : shell([metaCliExe, ...input], first));
+  const res =
+    await (typeof first === "string"
+      ? shell([metaCliExe, first, ...input])
+      : shell([metaCliExe, ...input], first));
 
   return res;
 }
@@ -57,6 +58,10 @@ export async function serialize(
 }
 
 export function makeMetaCliTest(t: MetaTest, cwd: string, args: string[]) {
+  console.log({
+    cwd,
+    args,
+  });
   const meta = new Deno.Command("meta", {
     cwd,
     args,
