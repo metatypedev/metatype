@@ -148,7 +148,7 @@ jobs:
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
           which python3
-          cat (which componentize-py)
+          cat $(which componentize-py)
           python3 --help
           componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
@@ -160,7 +160,7 @@ jobs:
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
           which python3
-          cat (which componentize-py)
+          cat $(which componentize-py)
           python3 --help
           componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
