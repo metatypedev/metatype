@@ -147,6 +147,7 @@ jobs:
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
+          componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
@@ -155,6 +156,7 @@ jobs:
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
+          componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
