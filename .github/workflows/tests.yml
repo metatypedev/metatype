@@ -33,7 +33,8 @@ env:
   GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"
-  DENO_DIR: deno-dir
+  # FIXME: deno dir caching
+  # DENO_DIR: deno-dir
   # used by ghjk
   # TODO: add logic to setup-ghjk
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,7 +145,10 @@ jobs:
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
           . .ghjk/envs/$GHJK_ENV/activate.sh
-          ghjk x build-pyrt
+          ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
+          echo $PATH && which componentize-py
+          which componentize-py | xargs dirname | xargs ls -lsa
+          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
         run: |
