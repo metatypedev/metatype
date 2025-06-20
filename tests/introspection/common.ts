@@ -3,7 +3,8 @@
 
 import { gql } from "test-utils/mod.ts";
 
-export const fullIntrospection = () => gql`
+export const fullIntrospection = () =>
+  gql`
       query IntrospectionQuery {
         __schema {
           
@@ -100,8 +101,8 @@ export const fullIntrospection = () => gql`
       }
 `;
 
-
-export const enumerateTypes = () => gql`
+export const enumerateTypes = () =>
+  gql`
   query IntrospectionQuery {
     __schema {
         types {
@@ -112,8 +113,8 @@ export const enumerateTypes = () => gql`
   }
 `;
 
-
-export const enumerateTypesAndInspectFields = () => gql`
+export const enumerateTypesAndInspectFields = () =>
+  gql`
   query IntrospectionQuery {
     __schema {
       types {

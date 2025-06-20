@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { DENO_VERSION, PYTHON_VERSION, RUST_VERSION } from "./consts.ts";
-import * as ports from "@ghjk/ports_wip"
+import * as ports from "@ghjk/ports_wip";
 
 export default {
   python: ports.cpy_bs({ version: PYTHON_VERSION, releaseTag: "20240814" }),

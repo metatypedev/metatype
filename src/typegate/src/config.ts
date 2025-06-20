@@ -19,7 +19,7 @@ import type { TypegateConfig } from "./config/types.ts";
 export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
-  const envHostname = Deno.env.get("HOSTNAME")
+  const envHostname = Deno.env.get("HOSTNAME");
   if (envHostname) {
     return envHostname;
   }
@@ -117,7 +117,7 @@ export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
     redis,
     s3,
     s3Bucket: raw.s3_bucket,
-    forceRemove: raw.force_remove
+    forceRemove: raw.force_remove,
   };
 }
 

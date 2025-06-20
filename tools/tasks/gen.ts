@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { DenoTaskDefArgs } from "@ghjk/ts";
-import * as ports from "@ghjk/ports_wip"
+import * as ports from "@ghjk/ports_wip";
 
 export default {
   "gen-pyrt-bind": {

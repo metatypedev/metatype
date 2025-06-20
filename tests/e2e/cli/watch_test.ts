@@ -53,8 +53,9 @@ Meta.test({ name: "meta dev: watch typegraphs" }, async (t) => {
     await expectStderr('File modified: "api/example.py"');
   });
 
-  await t.should("re-deploy typegraph", () =>
-    expectStderr("successfully deployed typegraph example"),
+  await t.should(
+    "re-deploy typegraph",
+    () => expectStderr("successfully deployed typegraph example"),
   );
 
   await t.should("ignore excluded typegraph", async () => {
@@ -118,11 +119,13 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
     `--gate=http://localhost:${t.port}`,
   ]);
 
-  await t.should("upload artifact", () =>
-    expectStderr("artifact uploaded: ../deps/ops.ts"),
+  await t.should(
+    "upload artifact",
+    () => expectStderr("artifact uploaded: ../deps/ops.ts"),
   );
-  await t.should("deploy typegraph", () =>
-    expectStderr("successfully deployed typegraph deps"),
+  await t.should(
+    "deploy typegraph",
+    () => expectStderr("successfully deployed typegraph deps"),
   );
   await t.should("watch modified artifact", async () => {
     await t.shell(["bash", "-c", "echo '' >> deps/ops.ts"], {
@@ -133,12 +136,14 @@ Meta.test({ name: "meta dev: watch artifacts" }, async (t) => {
     await expectStderr("-> api/deps.ts");
   });
 
-  await t.should("re-upload artifact", () =>
-    expectStderr("artifact uploaded: ../deps/ops.ts"),
+  await t.should(
+    "re-upload artifact",
+    () => expectStderr("artifact uploaded: ../deps/ops.ts"),
   );
 
-  await t.should("re-deploy typegraph", () =>
-    expectStderr("successfully deployed typegraph deps"),
+  await t.should(
+    "re-deploy typegraph",
+    () => expectStderr("successfully deployed typegraph deps"),
   );
 
   await t.shell(["rm", "-rf", targetDir]);

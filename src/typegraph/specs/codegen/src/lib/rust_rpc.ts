@@ -22,7 +22,9 @@ class RustRpcCodeGenerator extends RustLibCodeGenerator {
     const imports = this.imports.map(
       ({ imports, source }) =>
         "#[allow(unused)]\n" +
-        `use typegraph_core::sdk::${source}::${imports.length > 1 ? `{${imports.join(", ")}}` : imports};`,
+        `use typegraph_core::sdk::${source}::${
+          imports.length > 1 ? `{${imports.join(", ")}}` : imports
+        };`,
     );
 
     return baseImports.concat(imports).join("\n");
@@ -30,7 +32,11 @@ class RustRpcCodeGenerator extends RustLibCodeGenerator {
 
   formatEnumVariantDef(def: FuncDef) {
     const data = def.params.length
-      ? ` { ${def.params.map((p) => `${p.name}: ${p.optional ? `Option<${p.type}>` : p.type}`).join(", ")} }`
+      ? ` { ${
+        def.params.map((p) =>
+          `${p.name}: ${p.optional ? `Option<${p.type}>` : p.type}`
+        ).join(", ")
+      } }`
       : "";
 
     return `${toPascalCase(def.ident)}${data}`;
@@ -52,7 +58,11 @@ class RustRpcCodeGenerator extends RustLibCodeGenerator {
     return `#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "method", content = "params", rename_all="snake_case")]
 pub enum RpcCall {
-${this.funcDefs.map((def) => `    ${this.formatEnumVariantDef(def)},`).join("\n")}
+${
+      this.funcDefs.map((def) => `    ${this.formatEnumVariantDef(def)},`).join(
+        "\n",
+      )
+    }
 }`;
   }
 
@@ -60,7 +70,11 @@ ${this.funcDefs.map((def) => `    ${this.formatEnumVariantDef(def)},`).join("\n"
     return `impl super::RpcDispatch for RpcCall {
     fn dispatch(self) -> Result<Value> {
         match self {
-${this.funcDefs.map((def) => `            Self::${this.formatEnumVariantBranching(def)},`).join("\n")}
+${
+      this.funcDefs.map((def) =>
+        `            Self::${this.formatEnumVariantBranching(def)},`
+      ).join("\n")
+    }
         }
     }
 }`;
@@ -96,7 +110,11 @@ pub trait RpcDispatch {
 #[enum_dispatch(RpcDispatch)]
 #[serde(untagged)]
 pub enum RpcCall {
-${sources.map(({ moduleName }) => `    ${toPascalCase(moduleName)}(${moduleName}::RpcCall),`).join("\n")}
+${
+      sources.map(({ moduleName }) =>
+        `    ${toPascalCase(moduleName)}(${moduleName}::RpcCall),`
+      ).join("\n")
+    }
 }`;
 
     const fileContent = [

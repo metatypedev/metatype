@@ -978,7 +978,7 @@ const nodeMetas = {
   scalar() {
     return {};
   },
-  
+
   Idv3(): NodeMeta {
     return {
       subNodes: [
@@ -1027,8 +1027,11 @@ export class QueryGraph extends _QueryGraphBase {
       "Idv3Mp3UrlStringUri": "String!",
     });
   }
-    
-  remix(args: Idv3 | PlaceholderArgs<Idv3>, select: Idv3Selections): QueryNode<Idv3> {
+
+  remix(
+    args: Idv3 | PlaceholderArgs<Idv3>,
+    select: Idv3Selections,
+  ): QueryNode<Idv3> {
     const inner = _selectionToNodeSet(
       { "remix": [args, select] },
       [["remix", nodeMetas.RemixTrack]],

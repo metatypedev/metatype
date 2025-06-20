@@ -3,7 +3,7 @@
 
 import type { DenoTaskDefArgs } from "@ghjk/ts";
 import { WASMTIME_VERSION } from "../consts.ts";
-import { basename } from "@std/path/posix"
+import { basename } from "@std/path/posix";
 
 export default {
   "install-sys": {

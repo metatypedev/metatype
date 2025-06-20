@@ -4,7 +4,11 @@
 import { Runtime } from "./Runtime.ts";
 import type { Resolver, RuntimeInitParams } from "../types.ts";
 import type { ComputeStage } from "../engine/query_engine.ts";
-import { TypeGraph, type TypeGraphDS, type TypeMaterializer } from "../typegraph/mod.ts";
+import {
+  TypeGraph,
+  type TypeGraphDS,
+  type TypeMaterializer,
+} from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
 import { getLogger, getLoggerByAddress, type Logger } from "../log.ts";
 import * as ast from "graphql/ast";

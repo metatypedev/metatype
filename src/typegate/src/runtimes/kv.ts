@@ -84,13 +84,18 @@ export class KvRuntime extends Runtime {
     } else if (name === "kv_lpop" || name == "kv_rpop") {
       resolver = async (args) => {
         const { key } = args;
-        const value = await this.redis[name == "kv_lpop" ? "lpop" : "rpop"](key);
+        const value = await this.redis[name == "kv_lpop" ? "lpop" : "rpop"](
+          key,
+        );
         return value;
       };
     } else if (name === "kv_lpush" || name == "kv_rpush") {
       resolver = async (args) => {
         const { key, value } = args;
-        return await this.redis[name == "kv_lpush" ? "lpush" : "rpush"](key, value);
+        return await this.redis[name == "kv_lpush" ? "lpush" : "rpush"](
+          key,
+          value,
+        );
       };
     } else {
       throw new Error(`unrecognized mat name: ${name}`);

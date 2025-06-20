@@ -18,9 +18,10 @@ export async function metaCli(
   first: string | ShellOptions,
   ...input: string[]
 ): Promise<ShellOutput> {
-  const res = await (typeof first === "string"
-    ? shell([metaCliExe, first, ...input])
-    : shell([metaCliExe, ...input], first));
+  const res =
+    await (typeof first === "string"
+      ? shell([metaCliExe, first, ...input])
+      : shell([metaCliExe, ...input], first));
 
   return res;
 }

@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-export { sophon } from "@ghjk/ts"
+export { sophon } from "@ghjk/ts";
 import { file, stdDeps } from "@ghjk/ts";
 import { sedLock } from "@ghjk/ts/std/sedLock.ts";
-import * as ports from "@ghjk/ports_wip"
+import * as ports from "@ghjk/ports_wip";
 import {
   CURRENT_VERSION,
   LATEST_PRE_RELEASE_VERSION,
@@ -40,10 +40,10 @@ env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
   ports.pipi({ packageName: "cmake" })[0],
-  // ports.cargobi({ 
-  //   crateName: "sccache", 
-  //   locked: true, 
-  //   version: "0.10.0" 
+  // ports.cargobi({
+  //   crateName: "sccache",
+  //   locked: true,
+  //   version: "0.10.0"
   // }),
   // FIXME: sccache doesn't like ghjk installed
   // rustc

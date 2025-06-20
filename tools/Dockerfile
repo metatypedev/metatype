@@ -134,6 +134,7 @@ COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
 COPY --from=builder /app/src/typegraph/specs/codegen/deno.jsonc ./src/typegraph/specs/codegen/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
+COPY --from=builder /app/.ghjk/deno.jsonc ./.ghjk/
 COPY tools/LICENSE-MPL-2.0.md LICENSE.md
 
 # writeable

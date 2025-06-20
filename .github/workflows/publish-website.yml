@@ -6,7 +6,6 @@ on:
       - main
 
 env:
-  GHJK_AUTO_HOOK: "1"
   GHJK_VERSION: "v0.3.1-rc.1"
 
 jobs:
@@ -30,7 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - uses: actions/cache@v4
         with:
