@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 import json
-from typing import List, Optional, TYPE_CHECKING, Any, TypedDict
+from typing import List, Literal, Optional, TYPE_CHECKING, Any, TypedDict
 from typegraph.gen import utils
 from typegraph.sdk import sdk_utils
 
@@ -17,6 +17,23 @@ class StdOauth2Profiler:
 
 class NoProfiler(StdOauth2Profiler):
     pass
+
+
+OauthProvider = Literal[
+    "digitalocean",
+    "discord",
+    "dropbox",
+    "facebook",
+    "github",
+    "gitlab",
+    "google",
+    "instagram",
+    "linkedin",
+    "microsoft" "reddit",
+    "slack",
+    "stackexchange",
+    "twitter",
+]
 
 
 @dataclass
@@ -129,238 +146,20 @@ class Auth:
         auth_data = [("users", json.dumps(users))]
         return utils.Auth("basic", "basic", auth_data)
 
-    @classmethod
+    @staticmethod
     def oauth2(
-        cls,
-        name: str,
-        authorize_url: str,
-        access_url: str,
-        scopes: str,
-        clients: List[Oauth2Client],
-        profile_url: Optional[str] = None,
-        profiler: Optional["t.func"] = None,
-    ):
-        return sdk_utils.Auth(
-            name,
-            "oauth2",
-            [
-                ("authorize_url", json.dumps(authorize_url)),
-                ("access_url", json.dumps(access_url)),
-                ("scopes", json.dumps(scopes)),
-                ("clients", json.dumps(clients)),
-                ("profile_url", json.dumps(profile_url)),
-                ("profiler", json.dumps(None if profiler is None else profiler._id)),
-            ],
-        )
-
-    @staticmethod
-    def oauth2_digitalocean(
+        provider: OauthProvider,
         scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
+        clients: List[sdk_utils.Oauth2Client],
         type: Optional[str] = None,
+        profiler: Optional[StdOauth2Profiler] = None,
     ):
         return RawAuth.from_std(
-            provider="digitalocean",
+            provider=provider,
             scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
+            clients=clients,
             type=type,
-        )
-
-    @staticmethod
-    def oauth2_discord(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="discord",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
             profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_dropbox(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="dropbox",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_facebook(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="facebook",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_github(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="github",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_gitlab(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="gitlab",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_google(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="google",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_instagram(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="instagram",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_linkedin(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="linkedin",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_microsoft(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="microsoft",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_reddit(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="reddit",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_slack(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="slack",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_stackexchange(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="stackexchange",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
-        )
-
-    @staticmethod
-    def oauth2_twitter(
-        scopes: List[str],
-        clients: List[Oauth2Client],
-        profiler: Optional[StdOauth2Profiler] = None,
-        type: Optional[str] = None,
-    ):
-        return RawAuth.from_std(
-            provider="twitter",
-            scopes=scopes,
-            clients=transform_clients_param(clients),
-            profiler=profiler,
-            type=type,
         )
 
 

@@ -49,7 +49,8 @@ typegraph(
     // skip:next-line
     // out of the box authenfication support
     g.auth(
-      Auth.oauth2Github({
+      Auth.oauth2({
+        provider: "github",
         scopes: ["openid", "email"],
         clients: [{ id: "APP_CLIENT_ID", redirectUri: "APP_REDIRECT_URI" }],
       }),

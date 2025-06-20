@@ -33,12 +33,7 @@ def auth(g: Graph):
     # python runtime
     g.auth(
         Auth.oauth2(
-            name="github",
-            authorize_url="https://github.com/login/oauth/authorize",
-            access_url="https://github.com/login/oauth/access_token",
-            # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
-            profile_url="https://api.github.com/user",
-            # profiler="(p) => ({id: p.id})",
+            provider="github",
             clients=[
                 {
                     "id": "TEST_CLIENT_ID",
@@ -50,7 +45,7 @@ def auth(g: Graph):
                 t.struct({"id": t.integer()}),
                 lambda p: {"id": p["id"]},
             ),
-            scopes="openid profile email",
+            scopes=["openid", "profile", "email"],
         )
     )
 

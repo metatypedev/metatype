@@ -15,7 +15,8 @@ from typegraph.runtimes import DenoRuntime
 )
 def iam_provider(g: Graph):
     g.auth(
-        Auth.oauth2_github(
+        Auth.oauth2(
+            provider="github",
             scopes=["openid", "profile", "email"],
             clients=[{"id": "APP_CLIENT_ID", "redirect_uri": "APP_REDIRECT_URI"}],
         )

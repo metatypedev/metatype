@@ -30,15 +30,29 @@ export function customProfiler(func: t.Typedef): StdOauth2Profiler {
   return { profiler: "custom", id: func._id };
 }
 
+type OAuthProvider =
+  | "digitalocean"
+  | "discord"
+  | "dropbox"
+  | "facebook"
+  | "github"
+  | "gitlab"
+  | "google"
+  | "instagram"
+  | "linkedin"
+  | "microsoft"
+  | "reddit"
+  | "slack"
+  | "stackexchange"
+  | "twitter";
+
 type OAuthParams = {
-  provider: string;
+  provider: OAuthProvider;
   scopes: string[];
   type?: "oidc";
   profiler?: StdOauth2Profiler;
   clients: Oauth2Client[];
 };
-
-type PartialOAuthParams = Omit<OAuthParams, "provider">;
 
 export class Auth {
   static jwt(name: string, format: string, algorithmParams?: object): Auth_ {
@@ -73,7 +87,7 @@ export class Auth {
     };
   }
 
-  private static stdOauth2(params: OAuthParams): RawAuth {
+  static oauth2(params: OAuthParams): RawAuth {
     const scopes = params.scopes.join(" ");
     const profiler = params.profiler ?? defaultProfiler();
     const baseParams = {
@@ -99,61 +113,5 @@ export class Auth {
       default:
         return new RawAuth(sdkUtils.oauth2(baseParams));
     }
-  }
-
-  static oauth2Digitalocean(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "digitalocean", ...params });
-  }
-
-  static oauth2Discord(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "discord", ...params });
-  }
-
-  static oauth2Dropbox(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "dropbox", ...params });
-  }
-
-  static oauth2Facebook(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "facebook", ...params });
-  }
-
-  static oauth2Github(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "github", ...params });
-  }
-
-  static oauth2Gitlab(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "gitlab", ...params });
-  }
-
-  static oauth2Google(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "google", ...params });
-  }
-
-  static oauth2Instagram(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "instagram", ...params });
-  }
-
-  static oauth2Linkedin(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "linkedin", ...params });
-  }
-
-  static oauth2Microsoft(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "microsoft", ...params });
-  }
-
-  static oauth2Reddit(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "reddit", ...params });
-  }
-
-  static oauth2Slack(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "slack", ...params });
-  }
-
-  static oauth2Stackexchange(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "stackexchange", ...params });
-  }
-
-  static oauth2Twitter(params: PartialOAuthParams): RawAuth {
-    return Auth.stdOauth2({ provider: "twitter", ...params });
   }
 }

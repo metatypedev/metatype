@@ -11,6 +11,8 @@ typegates:
       jwt-authentication:
         CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
       oauth2-authentication:
+        APP_CLIENT_ID: "fake"
+        APP_REDIRECT_URI: "fake"
         GITHUB_CLIENT_ID: fake
         GITHUB_CLIENT_SECRET: fake
       authentication:
@@ -18,6 +20,8 @@ typegates:
       docs:
         SENDINBLUE_KEY: "fake"
       homepage:
+        APP_CLIENT_ID: "fake"
+        APP_REDIRECT_URI: "fake"
         GITHUB_CLIENT_ID: "fake"
         GITHUB_CLIENT_SECRET: "fake"
         POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=homepage"
