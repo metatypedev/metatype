@@ -28,6 +28,22 @@ const paramSchema = z.union([
   }),
 ]);
 
+const authorizeCacheSchema = z.object({
+  profile: z.any(),
+  provider: z.string(),
+  state: z.object({
+    id: z.string(),
+    redirectUri: z.string(),
+    codeChallenge: z.string(),
+    scope: z.string().optional(),
+  }),
+});
+
+const refreshCacheSchema = z.object({
+  provider: z.string(),
+  profile: z.any(),
+});
+
 export async function token(params: RouteParams) {
   const { request, engine, headers } = params;
   const body = (await request.json()) as z.infer<typeof paramSchema>;
@@ -60,7 +76,9 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const { state, profile, provider } = JSON.parse(rawData);
+      const { state, profile, provider } = authorizeCacheSchema.parse(
+        JSON.parse(rawData),
+      );
       const auth = engine.tg.auths.get(provider) as OAuth2Auth;
       const expectedChallenge = await sha256(body.code_verifier);
 
@@ -88,11 +106,7 @@ export async function token(params: RouteParams) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const token = await auth.createJWT(
-        request,
-        profile,
-        state.scope?.split(" ") ?? [],
-      );
+      const token = await auth.createJWT(request, profile, state.scope);
 
       await redis.set(
         `refresh:${token.refresh_token}`,
@@ -116,21 +130,16 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const { provider, profile } = JSON.parse(rawData) as {
-        profile: Record<string, unknown>;
-        provider: string;
-      };
+      const { provider, profile } = refreshCacheSchema.parse(
+        JSON.parse(rawData),
+      );
       const auth = engine.tg.auths.get(provider) as OAuth2Auth;
 
       if (!auth) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const newTokens = await auth.createJWT(
-        request,
-        profile,
-        body.scope?.split(" ") ?? [],
-      );
+      const newTokens = await auth.createJWT(request, profile, body.scope);
 
       await redis.set(`refresh:${newTokens.refresh_token}`, rawData, {
         ex: engine.tg.typegate.config.base.jwt_max_duration_sec,
