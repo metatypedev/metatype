@@ -18,6 +18,7 @@ on:
       - v*
 
 env:
+  GHJK_AUTO_HOOK: "1"
   GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate

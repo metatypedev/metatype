@@ -30,6 +30,7 @@ concurrency:
 
 env:
   # GHJK_LOG: "debug"
+  GHJK_AUTO_HOOK: "1"
   GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   RUST_BACKTRACE: "full"

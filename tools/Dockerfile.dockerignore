@@ -33,6 +33,7 @@
 !src/typegraph/deno/deno.json
 !tests/deno.jsonc
 !src/typegraph/specs/codegen/deno.jsonc
+!.ghjk/deno.jsonc
 
 !deno.jsonc
 !deno.lock

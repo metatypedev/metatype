@@ -93,6 +93,9 @@ export default {
     inherit: "_wasm",
     dependsOn: "gen-pyrt-bind",
     async fn($) {
+      await $`echo $PATH && which componentize-py`;
+      await $`which componentize-py | xargs dirname | xargs ls -lsa`;
+      await $`which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa`;
       const wasmOut = $.env["PYRT_WASM_OUT"] ?? "./target/pyrt.wasm";
       // TODO: support for `world-module` is missing on the `componentize` subcmd
       await $`componentize-py -d ./src/wit/wit-wire.wit componentize -o ${wasmOut} src.pyrt_wit_wire.main`;
