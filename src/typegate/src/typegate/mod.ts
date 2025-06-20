@@ -189,6 +189,16 @@ export class Typegate implements AsyncDisposable {
       });
       register.startSync(lastSync);
 
+      const lastSyncResponses = await register.historySyncResponses().catch(
+        (err) => {
+          logger.error(err);
+          throw new Error(
+            `failed to load response history at boot, aborting: ${err.message}`,
+          );
+        },
+      );
+      register.startSyncResponses(lastSyncResponses);
+
       return typegate;
     }
   }
@@ -342,7 +352,15 @@ export class Typegate implements AsyncDisposable {
         return methodNotAllowed();
       }
 
-      return handleGraphQL(request, engine, context, info, limit, headers);
+      return handleGraphQL(
+        this.register,
+        request,
+        engine,
+        context,
+        info,
+        limit,
+        headers,
+      );
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
