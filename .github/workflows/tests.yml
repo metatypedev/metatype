@@ -32,7 +32,7 @@ env:
   # GHJK_LOG: "debug"
   GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
-  RUST_BACKTRACE: "full"
+  # RUST_BACKTRACE: "full"
   # FIXME: deno dir caching
   # DENO_DIR: deno-dir
   # used by ghjk
@@ -147,7 +147,9 @@ jobs:
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
+          which python3
           cat (which componentize-py)
+          python3 --help
           componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
@@ -157,6 +159,9 @@ jobs:
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
+          which python3
+          cat (which componentize-py)
+          python3 --help
           componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
@@ -285,7 +290,9 @@ jobs:
           set -x
           . .ghjk/envs/$GHJK_ENV/activate.sh
 
-          while true; do ps -eo pid,ppid,%mem,rss,cmd --sort=ppid --forest; echo "----"; sleep 10; done &
+          # log the process tree very 5 second
+          # super verbose as it will include shell args (cargo shell args are really long)
+          # while true; do ps -eo pid,ppid,%mem,rss,cmd --sort=ppid --forest; echo "----"; sleep 10; done &
 
           ghjk x install-sys | bash
           ghjk x install-py
