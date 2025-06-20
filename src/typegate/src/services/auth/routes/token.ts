@@ -88,7 +88,11 @@ export async function token(params: RouteParams) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const token = await auth.createJWT(request, profile);
+      const token = await auth.createJWT(
+        request,
+        profile,
+        state.scope?.split(" ") ?? [],
+      );
 
       await redis.set(
         `refresh:${token.refresh_token}`,
@@ -122,7 +126,11 @@ export async function token(params: RouteParams) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const newTokens = await auth.createJWT(request, profile);
+      const newTokens = await auth.createJWT(
+        request,
+        profile,
+        body.scope?.split(" ") ?? [],
+      );
 
       await redis.set(`refresh:${newTokens.refresh_token}`, rawData, {
         ex: engine.tg.typegate.config.base.jwt_max_duration_sec,

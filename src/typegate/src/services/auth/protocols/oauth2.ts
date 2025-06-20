@@ -69,7 +69,7 @@ class AuthProfiler {
     });
   }
 
-  async transform(profile: any, request: Request) {
+  async transform(profile: any, request: Request, scope: string[]) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -80,6 +80,7 @@ class AuthProfiler {
     const input = {
       ...profile,
       _: {
+        scope,
         info: {
           url: new URL(request.url),
           headers: Object.fromEntries(request.headers.entries()),
@@ -385,9 +386,13 @@ export class OAuth2Auth extends Protocol {
     }
   }
 
-  async createJWT(request: Request, profile: Record<string, unknown>) {
+  async createJWT(
+    request: Request,
+    profile: Record<string, unknown>,
+    scope: string[],
+  ) {
     if (this.authProfiler) {
-      profile = await this.authProfiler!.transform(profile, request);
+      profile = await this.authProfiler!.transform(profile, request, scope);
     }
 
     const refreshAt = Math.floor(
