@@ -223,24 +223,25 @@ export class OAuth2Auth extends Protocol {
           codeVerifier: state.provider.codeVerifier,
         });
         const profile = await this.fetchProfile(tokens);
-        const token = await this.createJWT(request, profile);
         const code = randomBytes(32).toString("base64url");
-        const headers = await setEncryptedSessionCookie(
-          url.hostname,
-          this.typegraphName,
-          { token, state: state.client, code },
-          this.cryptoKeys,
-        );
         const redirectUri = new URL(state.client.redirectUri);
+
+        const payload = {
+          profile,
+          provider: this.authName,
+          state: state.client,
+        };
 
         await engine.tg.typegate.redis?.set(
           `code:${code}`,
-          JSON.stringify({ profile, provider: this.authName }),
+          JSON.stringify(payload),
           { ex: 600 }, // 10 minutes
         );
 
         redirectUri.searchParams.append("code", code);
         redirectUri.searchParams.append("state", state.client.state);
+
+        const headers = new Headers();
 
         headers.set("location", redirectUri.toString());
 

@@ -3,7 +3,7 @@
 
 import { getLogger } from "../../../log.ts";
 import { jsonError, jsonOk } from "../../responses.ts";
-import { clearCookie, getEncryptedCookie } from "../cookies.ts";
+import { clearCookie } from "../cookies.ts";
 import type { RouteParams } from "./mod.ts";
 import * as z from "zod";
 import { sha256 } from "../../../crypto.ts";
@@ -19,12 +19,12 @@ const paramSchema = z.union([
     code_verifier: z.string(),
     client_id: z.string(),
     redirect_uri: z.string(),
-    // scope: z.string().optional(),
+    scope: z.string().optional(),
   }),
   z.object({
     grant_type: z.literal("refresh_token"),
     refresh_token: z.string(),
-    // scope: z.string().optional(),
+    scope: z.string().optional(),
   }),
 ]);
 
@@ -34,6 +34,7 @@ export async function token(params: RouteParams) {
   const url = new URL(request.url);
   const resHeaders = clearCookie(url.hostname, engine.name, headers);
   const origin = request.headers.get("origin") ?? "";
+  const redis = engine.tg.typegate.redis;
 
   if (!paramSchema.safeParse(body).success) {
     return jsonError({
@@ -43,17 +44,24 @@ export async function token(params: RouteParams) {
     });
   }
 
-  if (!engine.tg.typegate.redis) {
+  if (!redis) {
     throw new Error("no redis connection");
   }
 
   try {
     if (body.grant_type === "authorization_code") {
-      const { token, state, code } = await getEncryptedCookie(
-        request.headers,
-        engine.name,
-        engine.tg.typegate.cryptoKeys,
-      );
+      const rawData = await redis.get(`code:${body.code}`);
+
+      if (!rawData) {
+        return jsonError({
+          status: 400,
+          message: "invalid code",
+          headers: resHeaders,
+        });
+      }
+
+      const { state, profile, provider } = JSON.parse(rawData);
+      const auth = engine.tg.auths.get(provider) as OAuth2Auth;
       const expectedChallenge = await sha256(body.code_verifier);
 
       if (!state.redirectUri.startsWith(origin)) {
@@ -66,7 +74,6 @@ export async function token(params: RouteParams) {
 
       if (
         state.codeChallenge !== expectedChallenge ||
-        code !== body.code ||
         body.client_id !== state.id ||
         body.redirect_uri !== state.redirectUri
       ) {
@@ -77,33 +84,25 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const cachedData = await engine.tg.typegate.redis?.get(
-        `code:${body.code}`,
-      );
-
-      if (!cachedData) {
-        return jsonError({
-          status: 401,
-          message: "code expired",
-          headers: resHeaders,
-        });
+      if (!auth) {
+        throw new Error(`provider not found: ${provider}`);
       }
 
-      await engine.tg.typegate.redis.set(
+      const token = await auth.createJWT(request, profile);
+
+      await redis.set(
         `refresh:${token.refresh_token}`,
-        cachedData,
+        JSON.stringify({ profile, provider }),
         { ex: engine.tg.typegate.config.base.jwt_max_duration_sec },
       );
-      await engine.tg.typegate.redis.del(`code:${body.code}`);
+      await redis.del(`code:${body.code}`);
       resHeaders.set("content-type", "application/json");
 
       return jsonOk({ data: { ...token }, headers: resHeaders });
     }
 
     if (body.grant_type === "refresh_token") {
-      const rawData = await engine.tg.typegate.redis.get(
-        `refresh:${body.refresh_token}`,
-      );
+      const rawData = await redis.get(`refresh:${body.refresh_token}`);
 
       if (!rawData) {
         return jsonError({
@@ -113,24 +112,22 @@ export async function token(params: RouteParams) {
         });
       }
 
-      const cachedData = JSON.parse(rawData) as {
+      const { provider, profile } = JSON.parse(rawData) as {
         profile: Record<string, unknown>;
         provider: string;
       };
-      const auth = engine.tg.auths.get(cachedData.provider) as OAuth2Auth;
+      const auth = engine.tg.auths.get(provider) as OAuth2Auth;
 
       if (!auth) {
-        throw new Error(`provider not found: ${cachedData.provider}`);
+        throw new Error(`provider not found: ${provider}`);
       }
 
-      const newTokens = await auth.createJWT(request, cachedData.profile);
+      const newTokens = await auth.createJWT(request, profile);
 
-      await engine.tg.typegate.redis.set(
-        `refresh:${newTokens.refresh_token}`,
-        rawData,
-        { ex: engine.tg.typegate.config.base.jwt_max_duration_sec },
-      );
-      await engine.tg.typegate.redis.del(`refresh:${body.refresh_token}`);
+      await redis.set(`refresh:${newTokens.refresh_token}`, rawData, {
+        ex: engine.tg.typegate.config.base.jwt_max_duration_sec,
+      });
+      await redis.del(`refresh:${body.refresh_token}`);
 
       return jsonOk({
         headers: resHeaders,

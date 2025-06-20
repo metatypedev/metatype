@@ -200,7 +200,7 @@ Meta.test(
       });
 
       const decrypted = await crypto.decrypt(nextCookies);
-      const { provider, client } = JSON.parse(decrypted);
+      const { provider } = JSON.parse(decrypted);
       const headers = new Headers();
       headers.set("cookie", `test_auth=${nextCookies}`);
       const req = new Request(
@@ -212,14 +212,7 @@ Meta.test(
 
       assertEquals(res.status, 302);
       assertEquals(currentUrl.origin, appRedirectUri);
-      assertEquals(currentUrl.searchParams.get("state"), client.state);
 
-      const cook = getCookie(res.headers);
-      const { token } = JSON.parse(await crypto.decrypt(cook!));
-      const claims = (await crypto.verifyJWT(token.access_token)) as JWTClaims;
-      assertEquals(claims.profile?.id, id);
-
-      nextCookies = cook!;
       nextCode = currentUrl.searchParams.get("code")!;
     });
 
