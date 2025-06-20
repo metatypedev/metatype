@@ -147,6 +147,7 @@ jobs:
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
+          cat (which componentize-py)
           componentize-py --help
           which componentize-py | xargs dirname | xargs ls -lsa
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
