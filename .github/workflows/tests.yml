@@ -154,6 +154,9 @@ jobs:
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
           which python3
+          which componentize-py
+          which componentize-py | xargs realpath
+          which componentize-py | xargs realpath | xargs dirname
           which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           which componentize-py | xargs cat
           python3 --help
