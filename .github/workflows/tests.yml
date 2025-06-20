@@ -153,7 +153,10 @@ jobs:
       - if: ${{ matrix.cross != true }}
         run: |
           . .ghjk/envs/$GHJK_ENV/activate.sh
-          ghjk x build-pyrt
+          ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
+          echo $PATH && which componentize-py
+          which componentize-py | xargs dirname | xargs ls -lsa
+          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
