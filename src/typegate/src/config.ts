@@ -60,8 +60,8 @@ export const defaultTypegateConfigBase = {
   timer_max_timeout_ms: 3_000,
   timer_destroy_resources: true,
   timer_policy_eval_retries: 1,
-  jwt_max_duration_sec: 3600 * 24 * 30,
-  jwt_refresh_duration_sec: 60 * 5,
+  jwt_max_duration_sec: 60 * 5,
+  jwt_refresh_duration_sec: 3600 * 24 * 30,
   redis_url_queue_expire_sec: 60 * 5, // 5 minutes
   substantial_poll_interval_sec: 1,
   substantial_lease_lifespan_sec: 2,

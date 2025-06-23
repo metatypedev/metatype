@@ -111,8 +111,8 @@ export type Oauth2AuthConfig = Pick<
 >;
 
 export type Oauth2Client = {
-  id: string;
-  redirect_uri: string;
+  id_secret: string;
+  redirect_uri_secret: string;
 };
 
 const oauthQuerySchema = z.object({
@@ -154,10 +154,12 @@ export class OAuth2Auth extends Protocol {
     };
 
     const clientsMap = new Map(
-      (clients as Oauth2Client[]).map(({ id, redirect_uri }) => [
-        secretManager.secretOrFail(id),
-        secretManager.secretOrFail(redirect_uri),
-      ]),
+      (clients as Oauth2Client[]).map(
+        ({ id_secret: id, redirect_uri_secret: redirect_uri }) => [
+          secretManager.secretOrFail(id),
+          secretManager.secretOrFail(redirect_uri),
+        ],
+      ),
     );
 
     if (clientsMap.size === 0) {
@@ -395,12 +397,8 @@ export class OAuth2Auth extends Protocol {
       profile = await this.authProfiler!.transform(request, profile, scope);
     }
 
-    const refreshAt = Math.floor(
-      new Date().valueOf() / 1000 + this.config.jwt_refresh_duration_sec,
-    );
     const payload = {
       provider: this.authName,
-      refreshAt,
       profile,
     };
     const access_token = await this.cryptoKeys.signJWT(
@@ -410,14 +408,15 @@ export class OAuth2Auth extends Protocol {
     const refresh_token = randomBytes(32).toString("base64url");
 
     return {
+      token_type: "Bearer",
       access_token,
       refresh_token,
       expires_in: this.config.jwt_max_duration_sec,
-      token_type: "Bearer",
+      scope: scope ?? null,
     };
   }
 }
 
 function isJwtExpired(jwt: JWTClaims): boolean {
-  return new Date().valueOf() / 1000 > jwt.refreshAt;
+  return new Date().valueOf() / 1000 > jwt.exp;
 }

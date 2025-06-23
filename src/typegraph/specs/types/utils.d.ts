@@ -36,8 +36,8 @@ type FdkOutput = {
 };
 
 type Oauth2Client = {
-  id: string;
-  redirect_uri: string;
+  id_secret: string;
+  redirect_uri_secret: string;
 };
 
 type BaseOauth2Params = {

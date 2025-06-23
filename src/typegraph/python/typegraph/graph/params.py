@@ -105,8 +105,8 @@ class Cors:
 
 
 class Oauth2Client(TypedDict):
-    id: str
-    redirect_uri: str
+    id_secret: str
+    redirect_uri_secret: str
 
 
 def transform_clients_param(
@@ -115,7 +115,8 @@ def transform_clients_param(
     return list(
         map(
             lambda param: sdk_utils.Oauth2Client(
-                id=param["id"], redirect_uri=param["redirect_uri"]
+                id_secret=param["id_secret"],
+                redirect_uri_secret=param["redirect_uri_secret"],
             ),
             clients,
         )
@@ -151,14 +152,14 @@ class Auth:
     def oauth2(
         provider: OauthProvider,
         scopes: List[str],
-        clients: List[sdk_utils.Oauth2Client],
+        clients: List[Oauth2Client],
         type: Optional[str] = None,
         profiler: Optional[StdOauth2Profiler] = None,
     ):
         return RawAuth.from_std(
             provider=provider,
             scopes=scopes,
-            clients=clients,
+            clients=transform_clients_param(clients),
             type=type,
             profiler=profiler,
         )

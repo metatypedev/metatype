@@ -111,7 +111,7 @@ export async function token(params: RouteParams) {
       await redis.set(
         `refresh:${token.refresh_token}`,
         JSON.stringify({ profile, provider }),
-        { ex: engine.tg.typegate.config.base.jwt_max_duration_sec },
+        { ex: engine.tg.typegate.config.base.jwt_refresh_duration_sec },
       );
       await redis.del(`code:${body.code}`);
       resHeaders.set("content-type", "application/json");
@@ -142,7 +142,7 @@ export async function token(params: RouteParams) {
       const newTokens = await auth.createJWT(request, profile, body.scope);
 
       await redis.set(`refresh:${newTokens.refresh_token}`, rawData, {
-        ex: engine.tg.typegate.config.base.jwt_max_duration_sec,
+        ex: engine.tg.typegate.config.base.jwt_refresh_duration_sec,
       });
       await redis.del(`refresh:${body.refresh_token}`);
 

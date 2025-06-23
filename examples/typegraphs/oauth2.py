@@ -22,7 +22,12 @@ def oauth2_authentication(g: Graph):
         Auth.oauth2(
             provider="github",
             scopes=["openid", "profile", "email"],
-            clients=[{"id": "APP_CLIENT_ID", "redirect_uri": "APP_REDIRECT_URI"}],
+            clients=[
+                {
+                    "id_secret": "APP_CLIENT_ID",
+                    "redirect_uri_secret": "APP_REDIRECT_URI",
+                }
+            ],
         )
     )
     # highlight-end

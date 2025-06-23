@@ -55,8 +55,9 @@ export function initAuth(
 
 export type JWTClaims = {
   provider: string;
-  refreshAt: number;
   profile: null | Record<string, unknown>;
+  iat: number;
+  exp: number;
 };
 
 export async function ensureJWT(

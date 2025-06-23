@@ -22,7 +22,9 @@ typegraph(
       Auth.oauth2({
         provider: "github",
         scopes: ["openid", "profile", "email"],
-        clients: [{ id: "APP_CLIENT_ID", redirectUri: "APP_REDIRECT_URI" }],
+        clients: [
+          { idSecret: "APP_CLIENT_ID", redirectUriSecret: "APP_REDIRECT_URI" },
+        ],
       }),
     );
     // highlight-end

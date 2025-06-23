@@ -36,8 +36,8 @@ def auth(g: Graph):
             provider="github",
             clients=[
                 {
-                    "id": "TEST_CLIENT_ID",
-                    "redirect_uri": "TEST_REDIRECT_URI",
+                    "id_secret": "TEST_CLIENT_ID",
+                    "redirect_uri_secret": "TEST_REDIRECT_URI",
                 }
             ],
             profiler=python.from_lambda(
