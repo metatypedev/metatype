@@ -66,11 +66,20 @@ pub trait Handler {
     fn add_raw_auth(data: String) -> Result<u32, super::Error>;
     fn oauth2(params: BaseOauth2Params) -> Result<String, super::Error>;
     fn oauth2_without_profiler(params: BaseOauth2Params) -> Result<String, super::Error>;
-    fn oauth2_with_extended_profiler(params: BaseOauth2Params, extension: String) -> Result<String, super::Error>;
-    fn oauth2_with_custom_profiler(params: BaseOauth2Params, profiler: TypeId) -> Result<String, super::Error>;
+    fn oauth2_with_extended_profiler(
+        params: BaseOauth2Params,
+        extension: String,
+    ) -> Result<String, super::Error>;
+    fn oauth2_with_custom_profiler(
+        params: BaseOauth2Params,
+        profiler: TypeId,
+    ) -> Result<String, super::Error>;
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String, super::Error>;
     fn gql_remove_query(tg_name: Vec<String>) -> Result<String, super::Error>;
     fn gql_ping_query() -> Result<String, super::Error>;
     fn metagen_exec(config: FdkConfig) -> Result<Vec<FdkOutput>, super::Error>;
-    fn metagen_write_files(items: Vec<FdkOutput>, typegraph_dir: String) -> Result<(), super::Error>;
+    fn metagen_write_files(
+        items: Vec<FdkOutput>,
+        typegraph_dir: String,
+    ) -> Result<(), super::Error>;
 }

@@ -77,6 +77,8 @@ Most of the time, the OAuth2 is managed by your identity provider and relies on 
 | Header     | `Authorization: Bearer token`                                                          |
 | Context    | `{ content_from_your_idp }`                                                            |
 
+The OAuth2 authorization system requires you to have a redis instance configured for the typegate to store states. See [configuration](#typegate-configuration) for more details.
+
 ### Token flow
 
 The typegate uses [PKCE](https://www.oauth.com/oauth2-servers/pkce/authorization-request/) based authorization. The steps are the following:
@@ -95,7 +97,7 @@ The typegate uses [PKCE](https://www.oauth.com/oauth2-servers/pkce/authorization
 - `code`: The authorization code from the typegate
 - `code_verifer`: The inital code verifier
 - `grant_type`: Set to `authorization_code`
-- `client_id`: The previous  client id
+- `client_id`: The previous client id
 - `redirect_uri`: The previous redirect URI
 
 ```typescript
@@ -109,7 +111,7 @@ const claims = await fetch(
       grant_type: "authorization_code",
       client_id: "client_id",
       redirect_uri: "redirect_uri",
-    })
+    }),
   },
 );
 const { token } = await claims.json();
@@ -164,8 +166,11 @@ OpenID Connect is an authentication layer on top of OAuth2. It is used to verify
 Frequent OAuth2 providers are embedded and can be directly used in the typegraph.
 
 ```
+
 from typegraph.graph.auth import oauth2
 oauth2.github("openid profile email")
+
 ```
 
 The whole list is available [here](https://github.com/metatypedev/metatype/blob/main/typegraph/python/typegraph/graph/auth/oauth2.py).
+```
