@@ -2,35 +2,20 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct #150
-└─ [where]: optional #149
-   └─ item: struct 'Post_query_where_unique_input' #148
-      ├─ [AND]: optional #145
-      │  └─ item: list #144
-      │     └─ item: &Post_query_where_unique_input #143
-      ├─ [NOT]: optional #146
-      │  └─ item: &Post_query_where_unique_input #143
-      ├─ [OR]: optional #145
-      │  └─ item: list #144
-      │     └─ item: &Post_query_where_unique_input #143
-      ├─ [author]: optional #140
-      │  └─ item: struct 'User_where_excluding_Post' #139
-      │     ├─ [id]: optional #127
-      │     │  └─ item: &_prisma_integer_filter_ex #34
-      │     ├─ [name]: optional #128
-      │     │  └─ item: &_prisma_string_filter_ex #12
-      │     └─ [posts]: optional #137
-      │        └─ item: union #136
-      │           ├─ variant_0: struct #131
-      │           │  └─ [every]: optional #130
-      │           │     └─ item: &Post_where #129
-      │           ├─ variant_1: struct #133
-      │           │  └─ [some]: optional #132
-      │           │     └─ item: &Post_where #129
-      │           └─ variant_2: struct #135
-      │              └─ [none]: optional #134
-      │                 └─ item: &Post_where #129
-      ├─ [id]: optional #124
+root: struct #129
+└─ [where]: optional #128
+   └─ item: struct 'Post_query_where_unique_input' #127
+      ├─ [AND]: optional #124
+      │  └─ item: list #123
+      │     └─ item: &Post_query_where_unique_input #122
+      ├─ [NOT]: optional #125
+      │  └─ item: &Post_query_where_unique_input #122
+      ├─ [OR]: optional #124
+      │  └─ item: list #123
+      │     └─ item: &Post_query_where_unique_input #122
+      ├─ [author]: optional #87
+      │  └─ item: &User_where #81
+      ├─ [id]: optional #85
       │  └─ item: &_prisma_integer_filter_ex #34
-      └─ [title]: optional #125
+      └─ [title]: optional #86
          └─ item: &_prisma_string_filter_ex #12

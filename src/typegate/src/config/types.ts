@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { RefinementCtx, z } from "zod";
+import { type RefinementCtx, z } from "zod";
 import { decodeBase64 } from "@std/encoding/base64";
 import type { RedisConnectOptions } from "redis";
 import type { S3ClientConfig } from "aws-sdk/client-s3";

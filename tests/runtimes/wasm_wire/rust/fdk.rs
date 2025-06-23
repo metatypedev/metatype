@@ -116,7 +116,7 @@ impl Router {
     }
 
     pub fn init(&self, args: InitArgs) -> Result<InitResponse, InitError> {
-        static MT_VERSION: &str = "0.5.1-rc.2";
+        static MT_VERSION: &str = "0.5.1-rc.4";
         if args.metatype_version != MT_VERSION {
             return Err(InitError::VersionMismatch(MT_VERSION.into()));
         }
@@ -390,26 +390,13 @@ pub mod types {
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct RecordCreationInput {
     }
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    pub struct Entity {
+        pub name: EntityNameString,
+        pub age: RangeArgsAAddOutputOptional,
+        pub profile: Profile,
+    }
     pub type EntityNameString = String;
-    pub type ProfileLevelStringEnum = String;
-    pub type ProfileAttributesStringEnum = String;
-    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
-    pub type ProfileCategoryStructTagStringEnum = String;
-    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct ProfileCategoryStruct {
-        pub tag: ProfileCategoryStructTagStringEnum,
-        pub value: ProfileCategoryStructValueEntityNameStringOptional,
-    }
-    #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    #[allow(clippy::large_enum_variant)]
-    #[serde(untagged)]
-    pub enum ProfileMetadatasEither {
-        EntityNameString(EntityNameString),
-        AddArgsAFloat(AddArgsAFloat),
-    }
-    pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
-    pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
     pub struct Profile {
         pub level: ProfileLevelStringEnum,
@@ -417,11 +404,24 @@ pub mod types {
         pub category: ProfileCategoryStruct,
         pub metadatas: ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList,
     }
+    pub type ProfileLevelStringEnum = String;
+    pub type ProfileAttributesProfileAttributesStringEnumList = Vec<ProfileAttributesStringEnum>;
+    pub type ProfileAttributesStringEnum = String;
     #[derive(Debug, serde::Serialize, serde::Deserialize)]
-    pub struct Entity {
-        pub name: EntityNameString,
-        pub age: RangeArgsAAddOutputOptional,
-        pub profile: Profile,
+    pub struct ProfileCategoryStruct {
+        pub tag: ProfileCategoryStructTagStringEnum,
+        pub value: ProfileCategoryStructValueEntityNameStringOptional,
+    }
+    pub type ProfileCategoryStructTagStringEnum = String;
+    pub type ProfileCategoryStructValueEntityNameStringOptional = Option<EntityNameString>;
+    pub type ProfileMetadatasProfileMetadatasProfileMetadatasEitherListList = Vec<ProfileMetadatasProfileMetadatasEitherList>;
+    pub type ProfileMetadatasProfileMetadatasEitherList = Vec<ProfileMetadatasEither>;
+    #[derive(Debug, serde::Serialize, serde::Deserialize)]
+    #[allow(clippy::large_enum_variant)]
+    #[serde(untagged)]
+    pub enum ProfileMetadatasEither {
+        EntityNameString(EntityNameString),
+        AddArgsAFloat(AddArgsAFloat),
     }
     // partial output types
     pub type RecordCreationOutputPartial = Vec<EntityPartial>;

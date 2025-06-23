@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Variables } from "./mod.ts";
+import type { Variables } from "./mod.ts";
 
 export class FileExtractor {
   private map: Map<File, string[]> = new Map();

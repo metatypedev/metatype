@@ -18,7 +18,7 @@ use crate::{errors::TgError, typegraph::NameSource};
 pub struct NamingProcessor<'un> {
     pub named_types: &'un HashMap<u32, NameSource>,
 }
-impl<'un> super::PostProcessor for NamingProcessor<'un> {
+impl super::PostProcessor for NamingProcessor<'_> {
     fn postprocess(self, tg: &mut tg_schema::Typegraph) -> Result<(), crate::errors::TgError> {
         let cx = VisitContext {
             tg,

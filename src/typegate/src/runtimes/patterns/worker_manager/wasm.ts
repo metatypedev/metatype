@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { envSharedWithWorkers } from "../../../config/shared.ts";
-import { WasmEvent } from "../../wasm/types.ts";
-import { WasmMessage } from "../../wasm/types.ts";
+import type { WasmEvent } from "../../wasm/types.ts";
+import type { WasmMessage } from "../../wasm/types.ts";
 import { BaseWorker } from "./mod.ts";
-import { EventHandler } from "./types.ts";
+import type { EventHandler } from "./types.ts";
 
 export class WasmWorker extends BaseWorker<WasmMessage, WasmEvent> {
   #worker: Worker;

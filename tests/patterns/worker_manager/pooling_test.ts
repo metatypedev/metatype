@@ -8,7 +8,7 @@ import {
 import { assert, assertEquals, assertFalse, assertRejects } from "@std/assert";
 import { delay } from "@std/async/delay";
 
-Deno.test("simple wait queue", (t) => {
+Deno.test("simple wait queue", (_t) => {
   const queue = createSimpleWaitQueue<number>();
 
   const history: number[] = [];
@@ -32,7 +32,7 @@ Deno.test("simple wait queue", (t) => {
 
 Deno.test("wait queue with timeout", async (t) => {
   using queue = new WaitQueueWithTimeout<number>(100);
-  await t.step("succeed with sync execution", async () => {
+  await t.step("succeed with sync execution", () => {
     const history: number[] = [];
 
     assertFalse(queue.shift(() => 1));

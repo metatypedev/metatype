@@ -2,131 +2,113 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: tp.print(inp)
 ---
-root: struct 'User_group_by_query_input' #276
-├─ [by]: list 'User_group_by' #244
-│  └─ item: string #242 enum{ '"id"', '"name"' }
-├─ [cursor]: optional #240
-│  └─ item: union 'User_cursor' #239
-│     ├─ variant_0: struct #236
+root: struct 'User_group_by_query_input' #268
+├─ [by]: list 'User_group_by' #243
+│  └─ item: string #241 enum{ '"id"', '"name"' }
+├─ [cursor]: optional #239
+│  └─ item: union 'User_cursor' #238
+│     ├─ variant_0: struct #235
 │     │  └─ [id]: integer #175
-│     └─ variant_1: struct #237
+│     └─ variant_1: struct #236
 │        └─ [name]: string #176
-├─ [having]: optional #274
-│  └─ item: union 'User_having' #273
-│     ├─ variant_0: struct 'User_where_with_aggregates' #265
-│     │  ├─ [id]: optional #247
+├─ [having]: optional #266
+│  └─ item: union 'User_having' #265
+│     ├─ variant_0: struct 'User_where_with_aggregates' #257
+│     │  ├─ [id]: optional #246
 │     │  │  └─ item: &_prisma_integer_filter_with_aggregates_ex #114
-│     │  ├─ [name]: optional #248
+│     │  ├─ [name]: optional #247
 │     │  │  └─ item: &_prisma_string_filter_ex #13
-│     │  └─ [posts]: optional #263
-│     │     └─ item: union #262
-│     │        ├─ variant_0: struct #257
-│     │        │  └─ [every]: optional #256
-│     │        │     └─ item: struct 'Post_where_with_aggregates_excluding_User' #255
-│     │        │        ├─ [author]: optional #253
-│     │        │        │  └─ item: &User_where_with_aggregates #252
-│     │        │        ├─ [id]: optional #250
-│     │        │        │  └─ item: &_prisma_integer_filter_with_aggregates_ex #114
-│     │        │        └─ [title]: optional #251
-│     │        │           └─ item: &_prisma_string_filter_ex #13
-│     │        ├─ variant_1: struct #259
-│     │        │  └─ [some]: optional #258
-│     │        │     └─ item: struct 'Post_where_with_aggregates_excluding_User' #255
-│     │        │        ├─ [author]: optional #253
-│     │        │        │  └─ item: &User_where_with_aggregates #252
-│     │        │        ├─ [id]: optional #250
-│     │        │        │  └─ item: &_prisma_integer_filter_with_aggregates_ex #114
-│     │        │        └─ [title]: optional #251
-│     │        │           └─ item: &_prisma_string_filter_ex #13
-│     │        └─ variant_2: struct #261
-│     │           └─ [none]: optional #260
-│     │              └─ item: struct 'Post_where_with_aggregates_excluding_User' #255
-│     │                 ├─ [author]: optional #253
-│     │                 │  └─ item: &User_where_with_aggregates #252
-│     │                 ├─ [id]: optional #250
-│     │                 │  └─ item: &_prisma_integer_filter_with_aggregates_ex #114
-│     │                 └─ [title]: optional #251
-│     │                    └─ item: &_prisma_string_filter_ex #13
-│     ├─ variant_1: struct #268
-│     │  └─ [AND]: list #267
-│     │     └─ item: &User_having #266
-│     ├─ variant_2: struct #270
-│     │  └─ [OR]: list #269
-│     │     └─ item: &User_having #266
-│     └─ variant_3: struct #271
-│        └─ [NOT]: &User_having #266
-├─ [orderBy]: optional #232
-│  └─ item: list 'User_order_by_with_aggregates' #231
-│     └─ item: struct #229
-│        ├─ [_avg]: optional #222
-│        │  └─ item: struct #221
+│     │  └─ [posts]: optional #255
+│     │     └─ item: union #254
+│     │        ├─ variant_0: struct #249
+│     │        │  └─ [every]: optional #248
+│     │        │     └─ item: &Post_where #193
+│     │        ├─ variant_1: struct #251
+│     │        │  └─ [some]: optional #250
+│     │        │     └─ item: &Post_where #193
+│     │        └─ variant_2: struct #253
+│     │           └─ [none]: optional #252
+│     │              └─ item: &Post_where #193
+│     ├─ variant_1: struct #260
+│     │  └─ [AND]: list #259
+│     │     └─ item: &User_having #258
+│     ├─ variant_2: struct #262
+│     │  └─ [OR]: list #261
+│     │     └─ item: &User_having #258
+│     └─ variant_3: struct #263
+│        └─ [NOT]: &User_having #258
+├─ [orderBy]: optional #231
+│  └─ item: list 'User_order_by_with_aggregates' #230
+│     └─ item: struct #228
+│        ├─ [_avg]: optional #221
+│        │  └─ item: struct #220
 │        │     └─ [id]: &_prisma_sort #64
-│        ├─ [_count]: optional #220
-│        │  └─ item: struct #219
+│        ├─ [_count]: optional #219
+│        │  └─ item: struct #218
 │        │     ├─ [id]: &_prisma_sort #64
 │        │     ├─ [name]: &_prisma_sort #64
 │        │     └─ [posts]: &_prisma_sort #64
-│        ├─ [_max]: optional #222
-│        │  └─ item: struct #221
+│        ├─ [_max]: optional #221
+│        │  └─ item: struct #220
 │        │     └─ [id]: &_prisma_sort #64
-│        ├─ [_min]: optional #222
-│        │  └─ item: struct #221
+│        ├─ [_min]: optional #221
+│        │  └─ item: struct #220
 │        │     └─ [id]: &_prisma_sort #64
-│        ├─ [_sum]: optional #222
-│        │  └─ item: struct #221
+│        ├─ [_sum]: optional #221
+│        │  └─ item: struct #220
 │        │     └─ [id]: &_prisma_sort #64
 │        ├─ [id]: &_prisma_sort #64
 │        ├─ [name]: &_prisma_sort #64
-│        └─ [posts]: optional '_prisma_sort_by_aggregates' #228
-│           └─ item: struct #226
+│        └─ [posts]: optional '_prisma_sort_by_aggregates' #227
+│           └─ item: struct #225
 │              ├─ [_avg]: &_prisma_sort #64
 │              ├─ [_count]: &_prisma_sort #64
 │              ├─ [_max]: &_prisma_sort #64
 │              ├─ [_min]: &_prisma_sort #64
 │              └─ [_sum]: &_prisma_sort #64
-├─ [skip]: optional #234
+├─ [skip]: optional #233
 │  └─ item: &_skip #94
-├─ [take]: optional #233
+├─ [take]: optional #232
 │  └─ item: &_take #90
-└─ [where]: optional #216
-   └─ item: struct 'User_query_where_input' #215
-      ├─ [AND]: optional #212
-      │  └─ item: list #211
-      │     └─ item: &User_query_where_input #210
-      ├─ [NOT]: optional #213
-      │  └─ item: &User_query_where_input #210
-      ├─ [OR]: optional #212
-      │  └─ item: list #211
-      │     └─ item: &User_query_where_input #210
+└─ [where]: optional #215
+   └─ item: struct 'User_query_where_input' #214
+      ├─ [AND]: optional #211
+      │  └─ item: list #210
+      │     └─ item: &User_query_where_input #209
+      ├─ [NOT]: optional #212
+      │  └─ item: &User_query_where_input #209
+      ├─ [OR]: optional #211
+      │  └─ item: list #210
+      │     └─ item: &User_query_where_input #209
       ├─ [id]: optional #191
       │  └─ item: &_prisma_integer_filter_ex #35
       ├─ [name]: optional #192
       │  └─ item: &_prisma_string_filter_ex #13
-      └─ [posts]: optional #207
-         └─ item: union #206
-            ├─ variant_0: struct #201
-            │  └─ [every]: optional #200
-            │     └─ item: struct 'Post_where_excluding_User' #199
-            │        ├─ [author]: optional #197
-            │        │  └─ item: &User_where #196
+      └─ [posts]: optional #206
+         └─ item: union #205
+            ├─ variant_0: struct #200
+            │  └─ [every]: optional #199
+            │     └─ item: struct 'Post_where' #198
+            │        ├─ [author]: optional #196
+            │        │  └─ item: &User_where #190
             │        ├─ [id]: optional #194
             │        │  └─ item: &_prisma_integer_filter_ex #35
             │        └─ [title]: optional #195
             │           └─ item: &_prisma_string_filter_ex #13
-            ├─ variant_1: struct #203
-            │  └─ [some]: optional #202
-            │     └─ item: struct 'Post_where_excluding_User' #199
-            │        ├─ [author]: optional #197
-            │        │  └─ item: &User_where #196
+            ├─ variant_1: struct #202
+            │  └─ [some]: optional #201
+            │     └─ item: struct 'Post_where' #198
+            │        ├─ [author]: optional #196
+            │        │  └─ item: &User_where #190
             │        ├─ [id]: optional #194
             │        │  └─ item: &_prisma_integer_filter_ex #35
             │        └─ [title]: optional #195
             │           └─ item: &_prisma_string_filter_ex #13
-            └─ variant_2: struct #205
-               └─ [none]: optional #204
-                  └─ item: struct 'Post_where_excluding_User' #199
-                     ├─ [author]: optional #197
-                     │  └─ item: &User_where #196
+            └─ variant_2: struct #204
+               └─ [none]: optional #203
+                  └─ item: struct 'Post_where' #198
+                     ├─ [author]: optional #196
+                     │  └─ item: &User_where #190
                      ├─ [id]: optional #194
                      │  └─ item: &_prisma_integer_filter_ex #35
                      └─ [title]: optional #195

@@ -4,7 +4,7 @@
 import { expandGlob } from "@std/fs/expand-glob";
 import { dirname, fromFileUrl } from "@std/path";
 import { Meta } from "../../utils/mod.ts";
-import { MetaTest } from "../../utils/test.ts";
+import type { MetaTest } from "../../utils/test.ts";
 
 export const thisDir = dirname(fromFileUrl(import.meta.url));
 

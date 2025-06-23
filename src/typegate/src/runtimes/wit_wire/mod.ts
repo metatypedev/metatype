@@ -3,11 +3,12 @@
 
 import type { WitWireMatInfo } from "../../../engine/runtime.js";
 import type { ResolverArgs } from "../../types.ts";
+import { Meta } from "../../../engine/runtime.js";
 // import { getLogger } from "../../log.ts";
 //
 // const logger = getLogger(import.meta);
 
-const METATYPE_VERSION = "0.5.1-rc.3";
+const METATYPE_VERSION = "0.5.1-rc.4";
 
 export class WitWireHandle {
   static async init(params: {

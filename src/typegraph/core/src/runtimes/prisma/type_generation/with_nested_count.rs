@@ -13,14 +13,14 @@ use super::TypeGen;
 
 pub struct WithNestedCount {
     model_id: TypeId,
-    skip: Vec<String>,
+    // skip: Vec<String>,
 }
 
 impl WithNestedCount {
     pub fn new(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip: vec![],
+            // skip: vec![],
         }
     }
 }
@@ -35,24 +35,23 @@ impl TypeGen for WithNestedCount {
         for (key, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let rel_name = model.relationships.get(key).ok_or_else(|| {
-                        format!(
-                            "relationship not registered: {}::{}",
-                            model.model_type.name(),
-                            key
-                        )
-                    })?;
-                    let rel = context.relationships.get(rel_name).unwrap();
-
-                    if self.skip.contains(rel_name) || rel.left.model_type == rel.right.model_type {
-                        continue;
-                    }
+                    // let rel_name = model.relationships.get(key).ok_or_else(|| {
+                    //     format!(
+                    //         "relationship not registered: {}::{}",
+                    //         model.model_type.name(),
+                    //         key
+                    //     )
+                    // })?;
+                    // let rel = context.relationships.get(rel_name).unwrap();
+                    // if self.skip.contains(rel_name) || rel.left.model_type == rel.right.model_type {
+                    //     continue;
+                    // }
 
                     match prop.quantifier {
                         Cardinality::Optional => {
                             let inner = context.generate(&WithNestedCount {
                                 model_id: prop.model_type.type_id,
-                                skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
+                                // skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
                             })?;
                             builder.propx(key, t::optional(inner))?;
                             countable.push(key.to_string());
@@ -61,7 +60,7 @@ impl TypeGen for WithNestedCount {
                         Cardinality::Many => {
                             let inner = context.generate(&WithNestedCount {
                                 model_id: prop.model_type.type_id,
-                                skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
+                                // skip: [self.skip.as_slice(), &[rel_name.clone()]].concat(),
                             })?;
                             builder.propx(key, t::list(inner))?;
                             countable.push(key.to_string());
@@ -97,11 +96,12 @@ impl TypeGen for WithNestedCount {
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
         let model_name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.skip.is_empty() {
-            "".to_string()
-        } else {
-            format!("_excluding_{}", self.skip.join("_and_"))
-        };
+        // let suffix = if self.skip.is_empty() {
+        //     "".to_string()
+        // } else {
+        //     format!("_excluding_{}", self.skip.join("_and_"))
+        // };
+        let suffix = "";
         Ok(format!("{model_name}_with_nested_count{suffix}"))
     }
 }

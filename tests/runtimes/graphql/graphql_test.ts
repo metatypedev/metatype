@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { removeMigrations } from "test-utils/migrations.ts";
 import { gql, Meta } from "test-utils/mod.ts";
 import { dropSchema } from "test-utils/database.ts";

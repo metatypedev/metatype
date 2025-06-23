@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { dirname, fromFileUrl } from "@std/path";
-import { shell, ShellOptions, ShellOutput } from "./shell.ts";
+import { shell, type ShellOptions, type ShellOutput } from "./shell.ts";
 import { metaCli } from "./meta.ts";
 
 export class TestModule {

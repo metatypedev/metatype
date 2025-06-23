@@ -3,6 +3,12 @@ name = "metagen-client"
 version.workspace = true
 edition.workspace = true
 
+# this allows us to exclude the rust files
+# from the dockerfile while keeping the Cargo.toml
+# for cargo chef. Useful to improve cache hit in docker
+[lib]
+path = "src/lib.rs"
+
 [features]
 # TODO: features for sync/async support
 default = ["graphql"]
@@ -16,7 +22,7 @@ mime_guess = "2.0"
 futures = { version = "0.3" }
 derive_more = { version = "1.0", features = ["debug"] }
 lazy_static = "1.5"
-url = "=2.4.1"
+url = "2.5"
 
 [target.'cfg(not(target_family = "wasm"))'.dependencies]
 tokio-util = { version = "0.7", features = ["compat", "io"], optional = true }

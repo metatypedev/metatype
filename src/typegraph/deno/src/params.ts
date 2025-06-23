@@ -3,7 +3,7 @@
 
 import { RawAuth } from "./typegraph.ts";
 import { type Auth as Auth_, sdkUtils } from "./sdk.ts";
-import * as t from "./types.ts";
+import type * as t from "./types.ts";
 
 export type StdOauth2Profiler =
   | { profiler: "default" }

@@ -3,9 +3,11 @@
 
 import type { QueryEngine } from "../engine/query_engine.ts";
 import { Register } from "../typegate/register.ts";
+import type { CachedResponse } from "@metatype/typegate/utils.ts";
 
 export class MemoryRegister extends Register {
   private map = new Map<string, QueryEngine>();
+  private responseMap = new Map<string, CachedResponse>();
 
   constructor() {
     super();
@@ -18,6 +20,7 @@ export class MemoryRegister extends Register {
       ),
     );
     this.map.clear();
+    this.responseMap.clear();
   }
 
   async add(engine: QueryEngine): Promise<void> {
@@ -46,5 +49,19 @@ export class MemoryRegister extends Register {
 
   has(name: string): boolean {
     return this.map.has(name);
+  }
+
+  addResponse(key: string, response: CachedResponse): Promise<void> {
+    this.responseMap.set(key, response);
+    return Promise.resolve();
+  }
+
+  deleteResponse(key: string): Promise<void> {
+    this.responseMap.delete(key);
+    return Promise.resolve();
+  }
+
+  getResponse(key: string): CachedResponse | undefined {
+    return this.responseMap.get(key);
   }
 }

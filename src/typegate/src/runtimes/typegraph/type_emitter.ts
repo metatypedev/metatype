@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { TypeGraphDS } from "../../typegraph/mod.ts";
+import type { TypeGraphDS } from "../../typegraph/mod.ts";
 import {
-  EitherNode,
+  type EitherNode,
   isEither,
   isFunction,
   isList,
@@ -11,13 +11,13 @@ import {
   isOptional,
   isScalar,
   isUnion,
-  ObjectNode,
-  ScalarNode,
-  TypeNode,
-  UnionNode,
+  type ObjectNode,
+  type ScalarNode,
+  type TypeNode,
+  type UnionNode,
 } from "../../typegraph/type_node.ts";
-import { AllowOrPass, LocalFieldTuple } from "./visibility.ts";
-import { TypeVisibility } from "./visibility.ts";
+import type { AllowOrPass, LocalFieldTuple } from "./visibility.ts";
+import type { TypeVisibility } from "./visibility.ts";
 import {
   fieldCommon,
   policyDescription,
@@ -25,9 +25,9 @@ import {
   typeGenericCustomScalar,
 } from "./helpers.ts";
 import { TypeKind } from "graphql";
-import { Resolver, ResolverArgs } from "../../types.ts";
+import type { Resolver, ResolverArgs } from "../../types.ts";
 import { getLogger } from "../../log.ts";
-import { FunctionNode } from "../../typegraph/type_node.ts";
+import type { FunctionNode } from "../../typegraph/type_node.ts";
 import { ensure } from "../../utils.ts";
 
 const SCALAR_TYPE_MAP = {

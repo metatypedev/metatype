@@ -2,36 +2,36 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/where_.rs
 expression: "tree::print(context.generate(&Where::new(user))?)"
 ---
-root: struct 'User_where' #86
+root: struct 'User_where' #85
 ├── [id]: optional #68
 │   └── item: &_prisma_integer_filter_ex #33
 ├── [name]: optional #69
 │   └── item: &_prisma_string_filter_ex #11
-└── [posts]: optional #84
-    └── item: union #83
-        ├── variant_0: struct #78
-        │   └── [every]: optional #77
-        │       └── item: struct 'Post_where_excluding_User' #76
-        │           ├── [author]: optional #74
-        │           │   └── item: &User_where #73
+└── [posts]: optional #83
+    └── item: union #82
+        ├── variant_0: struct #77
+        │   └── [every]: optional #76
+        │       └── item: struct 'Post_where' #75
+        │           ├── [author]: optional #73
+        │           │   └── item: &User_where #67
         │           ├── [id]: optional #71
         │           │   └── item: &_prisma_integer_filter_ex #33
         │           └── [title]: optional #72
         │               └── item: &_prisma_string_filter_ex #11
-        ├── variant_1: struct #80
-        │   └── [some]: optional #79
-        │       └── item: struct 'Post_where_excluding_User' #76
-        │           ├── [author]: optional #74
-        │           │   └── item: &User_where #73
+        ├── variant_1: struct #79
+        │   └── [some]: optional #78
+        │       └── item: struct 'Post_where' #75
+        │           ├── [author]: optional #73
+        │           │   └── item: &User_where #67
         │           ├── [id]: optional #71
         │           │   └── item: &_prisma_integer_filter_ex #33
         │           └── [title]: optional #72
         │               └── item: &_prisma_string_filter_ex #11
-        └── variant_2: struct #82
-            └── [none]: optional #81
-                └── item: struct 'Post_where_excluding_User' #76
-                    ├── [author]: optional #74
-                    │   └── item: &User_where #73
+        └── variant_2: struct #81
+            └── [none]: optional #80
+                └── item: struct 'Post_where' #75
+                    ├── [author]: optional #73
+                    │   └── item: &User_where #67
                     ├── [id]: optional #71
                     │   └── item: &_prisma_integer_filter_ex #33
                     └── [title]: optional #72

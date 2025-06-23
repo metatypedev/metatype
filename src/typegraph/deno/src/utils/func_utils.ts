@@ -154,7 +154,7 @@ export async function execRequest(
   url: URL,
   reqInit: RequestInit,
   errMsg: string,
-) {
+): Promise<unknown> {
   try {
     const response = await fetch(url, reqInit);
     if (!response.ok) {

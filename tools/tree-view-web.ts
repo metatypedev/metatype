@@ -9,7 +9,7 @@
  */
 
 import { Application, Router, Status } from "jsr:@oak/oak";
-import { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
+import type { TypeGraphDS } from "../src/typegate/src/typegraph/mod.ts";
 import { projectDir } from "./utils.ts";
 import { parseArgs } from "./deps.ts";
 
@@ -63,9 +63,9 @@ if (args.json) {
     }).output();
     if (code !== 0) {
       console.log(
-        `[error] command ${
-          cmd.map((c) => JSON.stringify(c)).join(" ")
-        } failed with code ${code}`,
+        `[error] command ${cmd
+          .map((c) => JSON.stringify(c))
+          .join(" ")} failed with code ${code}`
       );
       continue;
     }
@@ -84,7 +84,7 @@ for (const tg of tgs) {
   const name = tg.types[0].title;
   if (byName.has(name)) {
     console.log(
-      `[warn] Duplicate typegraph name '${name}'. The older one will be dropped`,
+      `[warn] Duplicate typegraph name '${name}'. The older one will be dropped`
     );
   }
   byName.set(tg.types[0].title, tg);
@@ -99,9 +99,7 @@ async function getDistFile(path: string) {
   if (cached != null) {
     return cached;
   }
-  const value = await Deno.readFile(
-    `${projectDir}/tools/tree/dist/${path}`,
-  );
+  const value = await Deno.readFile(`${projectDir}/tools/tree/dist/${path}`);
   fsCache.set(path, value);
   return value;
 }
@@ -173,7 +171,7 @@ const app = new Application();
 app.use(async (ctx, next) => {
   await next();
   console.log(
-    `- ${ctx.request.method} ${ctx.response.status} - ${ctx.request.url.pathname}${ctx.request.url.search}`,
+    `- ${ctx.request.method} ${ctx.response.status} - ${ctx.request.url.pathname}${ctx.request.url.search}`
   );
 });
 

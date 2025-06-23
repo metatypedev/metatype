@@ -2,33 +2,18 @@
 source: src/typegraph/core/src/runtimes/prisma/type_generation/query_where_expr.rs
 expression: "tree::print(post_where_expr)"
 ---
-root: struct 'Post_query_where_input' #103
-├── [AND]: optional #100
-│   └── item: list #99
-│       └── item: &Post_query_where_input #98
-├── [NOT]: optional #101
-│   └── item: &Post_query_where_input #98
-├── [OR]: optional #100
-│   └── item: list #99
-│       └── item: &Post_query_where_input #98
-├── [author]: optional #95
-│   └── item: struct 'User_where_excluding_Post' #94
-│       ├── [id]: optional #82
-│       │   └── item: &_prisma_integer_filter_ex #16
-│       ├── [name]: optional #83
-│       │   └── item: &_prisma_string_filter_ex #33
-│       └── [posts]: optional #92
-│           └── item: union #91
-│               ├── variant_0: struct #86
-│               │   └── [every]: optional #85
-│               │       └── item: &Post_where #84
-│               ├── variant_1: struct #88
-│               │   └── [some]: optional #87
-│               │       └── item: &Post_where #84
-│               └── variant_2: struct #90
-│                   └── [none]: optional #89
-│                       └── item: &Post_where #84
-├── [id]: optional #79
+root: struct 'Post_query_where_input' #82
+├── [AND]: optional #79
+│   └── item: list #78
+│       └── item: &Post_query_where_input #77
+├── [NOT]: optional #80
+│   └── item: &Post_query_where_input #77
+├── [OR]: optional #79
+│   └── item: list #78
+│       └── item: &Post_query_where_input #77
+├── [author]: optional #57
+│   └── item: &User_where #15
+├── [id]: optional #55
 │   └── item: &_prisma_integer_filter_ex #16
-└── [title]: optional #80
+└── [title]: optional #56
     └── item: &_prisma_string_filter_ex #33

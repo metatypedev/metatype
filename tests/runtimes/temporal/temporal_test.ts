@@ -3,7 +3,7 @@
 
 import { assertExists } from "@std/assert";
 import { gql, Meta } from "test-utils/mod.ts";
-import { MetaTest } from "test-utils/test.ts";
+import type { MetaTest } from "test-utils/test.ts";
 import * as std_path from "@std/path";
 
 async function testSerialize(t: MetaTest, file: string) {

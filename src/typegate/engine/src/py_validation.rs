@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::interlude::*;
+
 use std::{fs::File, io::Read};
 
 use anyhow::Result;
@@ -17,8 +19,8 @@ fn read_file(path: &str) -> Result<String> {
 }
 
 #[deno_core::op2(fast)]
-pub fn op_validate(#[string] input: String) -> Result<()> {
+pub fn op_validate(#[string] input: String) -> Result<(), OpErr> {
     let python_source = read_file(&input)?;
-    ast::Suite::parse(&python_source, "<embedded>")?;
+    ast::Suite::parse(&python_source, "<embedded>").map_err(OpErr::map())?;
     Ok(())
 }

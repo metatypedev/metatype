@@ -39,23 +39,23 @@ repos:
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'deno lint && ghjk x lint-deno'
+        entry: bash -c 'ghjk x lint-deno'
         pass_filenames: false
-        types:
-          - javascript
-          - ts
-          - tsx
-          - json
-          - yaml
-        files: ^(src/typegate|tools)/
+        # types:
+        #   - javascript
+        #   - ts
+        #   - tsx
+        #   - json
+        #   - yaml
+        # files: ^(src/typegate|tools)/
       - id: es-lint
         name: Eslint website
         language: system
         entry: bash -c 'cd ./docs/metatype.dev/ && [ -f node_modules/.bin/eslint ] && pnpm lint && pnpm prettier'
         pass_filenames: false
-        types_or:
-          - ts
-          - tsx
+        # types_or:
+        #   - ts
+        #   - tsx
         files: ^docs/metatype.dev
       #- id: cargo-udeps
       #  name: Check for unused cargo dependencies

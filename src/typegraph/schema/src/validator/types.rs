@@ -327,7 +327,7 @@ struct AnyOf<'a>(&'a [u32]);
 struct OneOf<'a>(&'a [u32]);
 struct AllOf<'a>(&'a [u32]);
 
-impl<'a, 'b> EnsureSubtypeOf<AnyOf<'a>> for ExtendedTypeNode<'b> {
+impl<'a> EnsureSubtypeOf<AnyOf<'a>> for ExtendedTypeNode<'_> {
     fn ensure_subtype_of(
         &self,
         sup: &AnyOf<'a>,
@@ -350,7 +350,7 @@ impl<'a, 'b> EnsureSubtypeOf<AnyOf<'a>> for ExtendedTypeNode<'b> {
     }
 }
 
-impl<'a, 'b> EnsureSubtypeOf<OneOf<'a>> for ExtendedTypeNode<'b> {
+impl<'a> EnsureSubtypeOf<OneOf<'a>> for ExtendedTypeNode<'_> {
     fn ensure_subtype_of(
         &self,
         sup: &OneOf<'a>,
@@ -395,7 +395,7 @@ impl<'a, 'b> EnsureSubtypeOf<OneOf<'a>> for ExtendedTypeNode<'b> {
     }
 }
 
-impl<'b, S> EnsureSubtypeOf<S> for AllOf<'b>
+impl<S> EnsureSubtypeOf<S> for AllOf<'_>
 where
     for<'a> ExtendedTypeNode<'a>: EnsureSubtypeOf<S>,
 {
@@ -463,7 +463,7 @@ impl EnsureSubtypeOf<EitherTypeData> for UnionTypeData {
 
 struct Enum<'a>(Option<&'a [String]>);
 
-impl<'a, 'b> EnsureSubtypeOf<Enum<'a>> for Enum<'b> {
+impl<'a> EnsureSubtypeOf<Enum<'a>> for Enum<'_> {
     fn ensure_subtype_of(&self, sup: &Enum<'a>, _tg: &Typegraph, errors: &mut ErrorCollector) {
         let sub = self.0.unwrap_or(&[]);
         let sup = sup.0.unwrap_or(&[]);
@@ -510,13 +510,13 @@ fn value_equals(left: &serde_json::Value, right: &serde_json::Value) -> bool {
             left.len() == right.len()
                 && left
                     .iter()
-                    .all(|(k, v)| right.get(k).map_or(false, |r| value_equals(v, r)))
+                    .all(|(k, v)| right.get(k).is_some_and(|r| value_equals(v, r)))
         }
         _ => false,
     }
 }
 
-impl<'a, 'b> EnsureSubtypeOf<ExtendedTypeNode<'b>> for ExtendedTypeNode<'a> {
+impl<'b> EnsureSubtypeOf<ExtendedTypeNode<'b>> for ExtendedTypeNode<'_> {
     fn ensure_subtype_of(
         &self,
         sup: &ExtendedTypeNode<'b>,

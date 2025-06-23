@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
-  Context,
-  ContextEncoder,
+  type Context,
+  type ContextEncoder,
   defaultContextEncoder,
-  Expect,
+  type Expect,
   Query,
-  Variables,
+  type Variables,
 } from "./mod.ts";
-import { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
+import type { TypegateCryptoKeys } from "@metatype/typegate/crypto.ts";
 
 export class RestQuery extends Query {
   constructor(

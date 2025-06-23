@@ -89,7 +89,6 @@ deno_core::extension!(
 pub mod tests {
     #[rustfmt::skip]
     use deno_core as deno_core; // necessary for re-exported macros to work
-    use deno_runtime::deno_permissions::PermissionsContainer;
     use std::sync::Arc;
 
     use super::*;
@@ -115,7 +114,7 @@ pub mod tests {
     // FIXME: this is also broken for some reason
     #[deno_core::op2]
     #[serde]
-    pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out> {
+    pub fn op_obj_go_round(#[state] ctx: &TestCtx, #[serde] incoming: In) -> Result<Out, OpErr> {
         Ok(Out {
             a: incoming.a + ctx.val,
             b: incoming.b,
@@ -128,7 +127,7 @@ pub mod tests {
     async fn test_obj_go_round() -> Result<()> {
         let deno_factory = deno::factory::CliFactory::from_flags(
             deno::args::Flags {
-                unstable_config: deno::args::UnstableConfig {
+                unstable_config: deno::deno_lib::args::UnstableConfig {
                     legacy_flag_enabled: true,
                     ..Default::default()
                 },
@@ -139,13 +138,13 @@ pub mod tests {
         .with_custom_ext_cb(Arc::new(|| extensions(OpDepInjector::from_env())));
         let worker_factory = deno_factory.create_cli_main_worker_factory().await?;
         let main_module = "data:application/javascript;Meta.get_version()".parse()?;
-        let permissions = PermissionsContainer::allow_all();
+        // let desc_parser = deno_runtime::permissions::RuntimePermissionDescriptorParser::new(
+        //     std::sync::Arc::new(deno_runtime::deno_fs::RealFs),
+        // );
+        // let desc_parser = std::sync::Arc::new(desc_parser);
+        // let permissions = PermissionsContainer::allow_all(desc_parser.);
         let mut worker = worker_factory
-            .create_main_worker(
-                deno_runtime::WorkerExecutionMode::Run,
-                main_module,
-                permissions,
-            )
+            .create_main_worker(deno_runtime::WorkerExecutionMode::Run, main_module)
             .await?;
         worker.execute_script_static(
             deno_core::located_script_name!(),

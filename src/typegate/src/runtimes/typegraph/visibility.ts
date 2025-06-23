@@ -1,20 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { TypegateConfigBase } from "../../config.ts";
-import { TypeGraphDS } from "../../typegraph/mod.ts";
-import { ObjectNode, Type, TypeNode } from "../../typegraph/type_node.ts";
+import type { TypegateConfigBase } from "../../config.ts";
+import type { TypeGraphDS } from "../../typegraph/mod.ts";
+import { type ObjectNode, Type, type TypeNode } from "../../typegraph/type_node.ts";
 import {
   getChildTypes,
-  TypeVisitorMap,
-  VisitPath,
+  type TypeVisitorMap,
+  type VisitPath,
   visitTypes,
 } from "../../typegraph/visitor.ts";
-import { Resolver, ResolverArgs } from "../../types.ts";
-import { DenoRuntime } from "../deno/deno.ts";
-import { Policy, PolicyIndices } from "../../typegraph/types.ts";
+import type { Resolver, ResolverArgs } from "../../types.ts";
+import type { DenoRuntime } from "../deno/deno.ts";
+import type { Policy, PolicyIndices } from "../../typegraph/types.ts";
 import { getLogger } from "../../log.ts";
-import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
+import type { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 
 export interface FieldToPolicy {
   fieldName: string;

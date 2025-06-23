@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::runtimes::prisma::context::PrismaContext;
-use crate::runtimes::prisma::errors;
+// use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::model::{Property, ScalarType};
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::TypeBuilder;
@@ -13,7 +13,7 @@ use super::TypeGen;
 
 pub struct OrderBy {
     model_id: TypeId,
-    skip_rel: Vec<String>,
+    // skip_rel: Vec<String>,
     aggregates: bool,
 }
 
@@ -21,15 +21,15 @@ impl OrderBy {
     pub fn new(model_id: TypeId) -> Self {
         Self {
             model_id,
-            skip_rel: vec![],
+            // skip_rel: vec![],
             aggregates: false,
         }
     }
 
-    pub fn skip(mut self, rel_names: Vec<String>) -> Self {
-        self.skip_rel = rel_names;
-        self
-    }
+    // pub fn skip(mut self, rel_names: Vec<String>) -> Self {
+    //     self.skip_rel = rel_names;
+    //     self
+    // }
 
     pub fn with_aggregates(self) -> Self {
         Self {
@@ -53,13 +53,13 @@ impl TypeGen for OrderBy {
         for (k, prop) in model.iter_props() {
             match prop {
                 Property::Model(prop) => {
-                    let rel_name = model.relationships.get(k).ok_or_else(|| {
-                        errors::unregistered_relationship(&model.model_type.name(), k)
-                    })?;
+                    // let rel_name = model.relationships.get(k).ok_or_else(|| {
+                    //     errors::unregistered_relationship(&model.model_type.name(), k)
+                    // })?;
 
-                    if self.skip_rel.contains(rel_name) {
-                        continue;
-                    }
+                    // if self.skip_rel.contains(rel_name) {
+                    //     continue;
+                    // }
 
                     // TODO does this work for self relationship?
                     match prop.quantifier {
@@ -67,10 +67,10 @@ impl TypeGen for OrderBy {
                             builder.prop(k, context.generate(&SortByAggregates)?);
                         }
                         Cardinality::Optional | Cardinality::One => {
-                            let mut skip_rel = self.skip_rel.clone();
-                            skip_rel.push(rel_name.clone());
-                            let inner = context
-                                .generate(&OrderBy::new(prop.model_type.type_id).skip(skip_rel))?;
+                            // let mut skip_rel = self.skip_rel.clone();
+                            // skip_rel.push(rel_name.clone());
+                            let inner = context.generate(&OrderBy::new(prop.model_type.type_id))?;
+                            // .skip(skip_rel))?;
                             builder.propx(k, t::optional(inner))?;
                         }
                     }
@@ -96,12 +96,13 @@ impl TypeGen for OrderBy {
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
         let name = self.model_id.name().unwrap().unwrap();
-        let suffix = if self.skip_rel.is_empty() {
-            "".to_string()
-        } else {
-            // TODO what is the casing for `skip_rel`?
-            format!("_without{}", self.skip_rel.join("_"))
-        };
+        // let suffix = if self.skip_rel.is_empty() {
+        //     "".to_string()
+        // } else {
+        //     // TODO what is the casing for `skip_rel`?
+        //     format!("_without{}", self.skip_rel.join("_"))
+        // };
+        let suffix = "";
         let suffix2 = if self.aggregates {
             "_with_aggregates"
         } else {

@@ -4,9 +4,9 @@
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { ComputeStage } from "../engine/query_engine.ts";
-import { getLogger, Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 import { TypeGraph } from "../typegraph/mod.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult, nativeVoid } from "../utils.ts";
 import { registerRuntime } from "./mod.ts";
 

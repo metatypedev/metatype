@@ -14,7 +14,7 @@ import type { ComputeArg } from "./engine/planner/args.ts";
 import type { EffectType, PolicyIndices } from "./typegraph/types.ts";
 import type { VariantMatcher } from "./engine/typecheck/matching_variant.ts";
 import type { Typegate } from "./typegate/mod.ts";
-import { WitWireMatInfo } from "../engine/runtime.d.ts";
+import type { WitWireMatInfo } from "../engine/runtime.d.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { MetaTest } from "test-utils/test.ts";
+import type { MetaTest } from "test-utils/test.ts";
 import { $ } from "@local/tools/deps.ts";
 import { downloadAndExtractCli } from "./utils.ts";
 import { newTempDir } from "test-utils/dir.ts";

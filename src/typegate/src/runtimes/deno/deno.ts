@@ -21,7 +21,7 @@ import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import type { Task } from "./shared_types.ts";
 import { globalConfig as config } from "../../config.ts";
 import { createArtifactMeta } from "../utils/deno.ts";
-import { PolicyResolverOutput } from "../../engine/planner/policies.ts";
+import type { PolicyResolverOutput } from "../../engine/planner/policies.ts";
 import { getInjectionValues } from "../../engine/planner/injection_utils.ts";
 import DynamicInjection from "../../engine/injection/dynamic.ts";
 import { getLogger } from "../../log.ts";
