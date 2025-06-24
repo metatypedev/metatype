@@ -38,7 +38,7 @@ impl TypeGen for CountOutput {
         }
 
         // TODO union
-        builder.build_named(self.name(context)?)
+        builder.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -88,7 +88,7 @@ impl TypeGen for NumberAggregateOutput {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

@@ -79,19 +79,19 @@ impl Typegraph {
             bail!("Float value {value:?} cannot be stored in f64");
         };
         if let Some(min) = data.minimum {
-            number_validator::expect_min(min, value)?;
+            number_validator::expect_min(min.into_inner(), value)?;
         }
         if let Some(max) = data.maximum {
-            number_validator::expect_max(max, value)?;
+            number_validator::expect_max(max.into_inner(), value)?;
         }
         if let Some(xmin) = data.exclusive_minimum {
-            number_validator::expect_xmin(xmin, value)?;
+            number_validator::expect_xmin(xmin.into_inner(), value)?;
         }
         if let Some(xmax) = data.exclusive_maximum {
-            number_validator::expect_xmax(xmax, value)?;
+            number_validator::expect_xmax(xmax.into_inner(), value)?;
         }
         if let Some(divisor) = data.multiple_of.as_ref() {
-            let quot = value / divisor;
+            let quot = value / divisor.into_inner();
             if quot.round() != quot {
                 bail!("Expected a multiple of {divisor}, got {value}");
             }

@@ -1,0 +1,10 @@
+[package]
+name = "tg_optimize"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+color-eyre.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tg_schema.workspace = true

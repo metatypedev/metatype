@@ -1115,7 +1115,7 @@
               "ty": "denoFile@v1",
               "key": "test-e2e",
               "desc": "Shorthand for `tools/test.ts`",
-              "envKey": "bciqgfkhptprs54tg3wl45acxctzc2lu4v2xlh3slk6w4m5g5ctysv4a"
+              "envKey": "bciqmgoa4swy4qcnmwuku3qhhsg4mjh3jkw7k5by6s6ytp3hyrhkqr3i"
             },
             "lock-sed": {
               "ty": "denoFile@v1",
@@ -2094,6 +2094,44 @@
                   "ty": "posix.envVar",
                   "key": "GIT_CLIFF_CONFIG",
                   "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "ghjk.ports.InstallSetRef",
+                  "setId": "ghjkEnvProvInstSet___ci"
+                }
+              ]
+            },
+            "bciqmgoa4swy4qcnmwuku3qhhsg4mjh3jkw7k5by6s6ytp3hyrhkqr3i": {
+              "provides": [
+                {
+                  "ty": "posix.envVar",
+                  "key": "RUST_LOG",
+                  "val": "info,typegate=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,quaint=off"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "TYPEGRAPH_VERSION",
+                  "val": "0.0.4"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CLICOLOR_FORCE",
+                  "val": "1"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "CROSS_CONFIG",
+                  "val": "tools/Cross.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "GIT_CLIFF_CONFIG",
+                  "val": "tools/cliff.toml"
+                },
+                {
+                  "ty": "posix.envVar",
+                  "key": "MCLI_NO_UPGRADE_CHECK",
+                  "val": "1"
                 },
                 {
                   "ty": "ghjk.ports.InstallSetRef",

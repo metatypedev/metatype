@@ -33,7 +33,7 @@ impl TypeGen for GroupingFields {
             })
             .collect();
 
-        t::listx(t::string().enum_(fields))?.build_named(self.name(context)?)
+        t::listx(t::string().enum_(fields))?.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -66,7 +66,7 @@ impl TypeGen for Having {
             t::struct_().propx("OR", t::list(self_ref))?,
             t::struct_().prop("NOT", self_ref)
         ]
-        .build_named(name)
+        .build_named_p(name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -112,7 +112,7 @@ impl TypeGen for GroupByResult {
                 )
                 .build()?,
         )
-        .build_named(self.name(context)?)
+        .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -164,7 +164,7 @@ impl TypeGen for SelectNumbers {
             }
         }
 
-        builder.build_named(self.name(context)?)
+        builder.build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

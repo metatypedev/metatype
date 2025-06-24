@@ -55,7 +55,7 @@ impl TypeGen for QueryWhereExpr {
         builder.prop("OR", and);
         builder.propx("NOT", t::optional(self_ref))?;
 
-        builder.build_named(name)
+        builder.build_named_p(name)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

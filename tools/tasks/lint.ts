@@ -20,8 +20,8 @@ export default {
   },
   "lint-deno": {
     async fn($) {
-      const files = (await $.co(
-        [
+      const files = (
+        await $.co([
           Array.fromAsync(
             $.workingDir.join("src/typegraph/deno").expandGlob("**/*.ts", {
               exclude: [],
@@ -39,15 +39,15 @@ export default {
           ),
           Array.fromAsync(
             $.workingDir.join("tools").expandGlob("**/*.ts", {
-              exclude: [],
+              exclude: ["tree"],
             }),
           ),
-        ],
-      ))
+        ])
+      )
         .flat()
         .map((ref) => ref.path.toString());
       await $`bash -c "xargs deno check"`.stdinText(files.join(" "));
-      await $`bash -c "deno lint"`;
+      await $`bash -c "deno lint --ignore=tools/tree --ignore=docs --ignore=tests/runtimes/temporal/worker"`;
     },
   },
 } satisfies Record<string, DenoTaskDefArgs>;

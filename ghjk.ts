@@ -3,6 +3,8 @@
 
 // @ts-nocheck: Deno file
 
+//
+
 import {
   CURRENT_VERSION,
   LATEST_PRE_RELEASE_VERSION,
@@ -34,13 +36,13 @@ env("main")
     ...stdDeps(),
     installs.python_latest,
     installs.node,
-    installs.rust_stable,
+    installs.rust_stable
   );
 
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
-  ports.cmake()[0],
+  ports.cmake()[0]
   // installs.rust_stable,
 );
 
@@ -57,7 +59,7 @@ if (Deno.build.os == "linux" && !Deno.env.has("NO_MOLD")) {
 env("_ecma").install(
   installs.node,
   ports.pnpm({ version: "v10.6.4" }),
-  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0],
+  ports.npmi({ packageName: "node-gyp", version: "10.0.1" })[0]
 );
 
 env("_python").install(
@@ -69,7 +71,7 @@ env("_python").install(
   ports.pipi({
     packageName: "poetry",
     version: "1.8.3",
-  })[0],
+  })[0]
 );
 
 env("_wasm").install(
@@ -88,7 +90,7 @@ env("_wasm").install(
   ports.npmi({
     packageName: "@bytecodealliance/jco",
     version: "1.3.0",
-  })[0],
+  })[0]
 );
 
 env("oci").inherit(["_rust", "_wasm"]);
@@ -107,7 +109,7 @@ env("ci")
       crateName: "cross",
       version: "0.2.5",
       locked: true,
-    }),
+    })
   );
 
 env("dev")
@@ -121,7 +123,7 @@ env("dev")
     ports.act(),
     ports.cargobi({ crateName: "whiz", locked: true }),
     ports.cargobi({ crateName: "wit-deps-cli", locked: true }),
-    ports.cargobi({ crateName: "git-cliff", locked: true }),
+    ports.cargobi({ crateName: "git-cliff", locked: true })
   );
 
 task("version-print", () => console.log(CURRENT_VERSION), {
@@ -143,7 +145,7 @@ task("version-bump", async ($) => {
 
   if (!bumps.includes(bump)) {
     throw new Error(
-      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`,
+      `invalid argument "${bump}", valid are: ${bumps.join(", ")}`
     );
   }
 
@@ -153,8 +155,8 @@ task("version-bump", async ($) => {
       bump as semver.ReleaseType,
       {
         prerelease: "rc",
-      },
-    ),
+      }
+    )
   );
 
   $.logStep(`Bumping ${CURRENT_VERSION} → ${newVersion}`);
@@ -163,7 +165,7 @@ task("version-bump", async ($) => {
     $.logStep(
       `Bumping published version ${
         LATEST_PRE_RELEASE_VERSION || LATEST_RELEASE_VERSION
-      } → ${CURRENT_VERSION}`,
+      } → ${CURRENT_VERSION}`
     );
     // lines.push([
     //   /^(export const LATEST_RELEASE_VERSION = ").*(";)$/,
@@ -191,7 +193,7 @@ task(
       $`cargo clean`.cwd("tests/metagen/typegraphs/identities/rs"),
       $`cargo clean`.cwd("./examples/typegraphs/metagen/"),
     ]),
-  { inherit: "_rust", desc: "Clean cache of all cargo workspaces in repo." },
+  { inherit: "_rust", desc: "Clean cache of all cargo workspaces in repo." }
 );
 
 task(
@@ -207,10 +209,10 @@ task(
         if (await path.exists()) {
           await path.remove({ recursive: true });
         }
-      }),
+      })
     ),
   {
     inherit: "_ecma",
     desc: "Remove all node_modules directories in tree and other js artifacts.",
-  },
+  }
 );

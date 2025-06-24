@@ -4,22 +4,9 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-# patterns
 anyhow.workspace = true
-# itertools.workspace = true
-# indoc.workspace = true
-# thiserror.workspace = true
-
-
-# encoding
-# base64.workspace = true
-# flate2.workspace = true
-# tar.workspace = true
-
 serde.workspace = true
 serde_json = { workspace = true, features = ["preserve_order"] }
 serde_with.workspace = true
-
-
-# ds
 indexmap.workspace = true
+ordered-float.workspace = true

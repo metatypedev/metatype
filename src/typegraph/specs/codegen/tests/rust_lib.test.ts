@@ -27,7 +27,7 @@ pub struct RecordLike {
     pub num: u32,
     pub key: String,
     pub str_arr: Vec<String>,
-    pub tup: (f64, f64),
+    pub tup: (NotNan<f64>, NotNan<f64>),
     pub opt: Option<bool>,
     pub comp: Option<Vec<(u32, Something)>>,
 }`;
@@ -72,7 +72,8 @@ Deno.test("Rust import codegen", () => {
 
   const result = rustcg.formatHeaders();
   const expected = `use super::foobar::{Foo, Bar};
-use serde::{Deserialize, Serialize};`;
+use serde::{Deserialize, Serialize};
+#[allow(unused)] use ordered_float::NotNan;`;
 
   assertEquals(result, expected);
 });

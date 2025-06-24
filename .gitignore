@@ -6,6 +6,7 @@
 __pycache__/
 *.py[cod]
 dist/
+!tools/tree/dist/
 .ruff_cache
 
 **/.terraform/*
@@ -55,3 +56,4 @@ examples/typegraphs/**/*.wasm
 src/pyrt_wit_wire/wit_wire
 
 /.metatype/
+/vivavox/

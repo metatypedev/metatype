@@ -5,5 +5,5 @@ expression: "tg.functions.iter().map(|(idx, func)|\n            { (idx, func.nam
 {
     1: "root_one_fn",
     8: "root_two_fn",
-    10: "root_three_fn",
+    9: "root_three_fn",
 }

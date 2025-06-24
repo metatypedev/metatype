@@ -4,7 +4,6 @@
 use std::hash::Hash as _;
 
 use errors::Result;
-use ordered_float::OrderedFloat;
 use tg_schema::types::{FloatTypeData, TypeNode};
 
 use crate::{
@@ -71,16 +70,16 @@ impl Hashable for TypeFloat {
         _tg: &mut TypegraphContext,
     ) -> Result<()> {
         "float".hash(hasher);
-        self.min.map(OrderedFloat).hash(hasher);
-        self.max.map(OrderedFloat).hash(hasher);
-        self.exclusive_minimum.map(OrderedFloat).hash(hasher);
-        self.exclusive_maximum.map(OrderedFloat).hash(hasher);
-        self.multiple_of.map(OrderedFloat).hash(hasher);
+        self.min.hash(hasher);
+        self.max.hash(hasher);
+        self.exclusive_minimum.hash(hasher);
+        self.exclusive_maximum.hash(hasher);
+        self.multiple_of.hash(hasher);
 
         if let Some(enumeration) = &self.enumeration {
             "enum".hash(hasher);
             for value in enumeration {
-                OrderedFloat(*value).hash(hasher);
+                (*value).hash(hasher);
             }
         }
 
