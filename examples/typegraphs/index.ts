@@ -48,7 +48,15 @@ typegraph(
 
     // skip:next-line
     // out of the box authenfication support
-    g.auth(Auth.oauth2Github("openid email"));
+    g.auth(
+      Auth.oauth2({
+        provider: "github",
+        scopes: ["openid", "email"],
+        clients: [
+          { idSecret: "APP_CLIENT_ID", redirectUriSecret: "APP_REDIRECT_URI" },
+        ],
+      }),
+    );
 
     // expose part of the graph for queries
     g.expose(

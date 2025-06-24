@@ -18,7 +18,15 @@ typegraph(
     const ctx = t.struct({ exp: t.integer().optional() });
 
     // highlight-start
-    g.auth(Auth.oauth2Github("openid profile email"));
+    g.auth(
+      Auth.oauth2({
+        provider: "github",
+        scopes: ["openid", "profile", "email"],
+        clients: [
+          { idSecret: "APP_CLIENT_ID", redirectUriSecret: "APP_REDIRECT_URI" },
+        ],
+      }),
+    );
     // highlight-end
 
     g.expose(
