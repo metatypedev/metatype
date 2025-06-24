@@ -1,5 +1,4 @@
 import TGExample from "@site/src/components/TGExample";
-import OAuth2 from "./oauth2";
 
 # Authentication
 
@@ -95,7 +94,7 @@ The typegate uses [PKCE](https://www.oauth.com/oauth2-servers/pkce/authorization
 2. When the user has completed the flow, the typegate will redirect the user to `https://your-website.com/login` with an authorization `code` that you can exchange for a token from the typegate as follows. It is done by making a `POST` request to `https://[typegate].metatype.cloud/[typegraph]/auth/token` with the following body:
 
 - `code`: The authorization code from the typegate
-- `code_verifer`: The inital code verifier
+- `code_verifier`: The inital code verifier
 - `grant_type`: Set to `authorization_code`
 - `client_id`: The previous client id
 - `redirect_uri`: The previous redirect URI
@@ -105,6 +104,7 @@ const claims = await fetch(
   "https://[typegate].metatype.cloud/[typegraph]/auth/token",
   {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       code: "code",
       code_verifier: "code_verifier",
@@ -127,8 +127,6 @@ The returned token will have the following fields:
 
 3. The `access_token` can then be used as JWT in the `Authorization` header of your requests to make authentified calls.
 
-<OAuth2 name="github" typegraph="oauth2-authentication" />
-
 <TGExample
   typegraph="oauth2_authentication"
   python={require("!!code-loader!../../../../../../examples/typegraphs/oauth2.py")}
@@ -149,13 +147,15 @@ const claims = await fetch(
   "https://[typegate].metatype.cloud/[typegraph]/auth/token",
   {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       grant_type: "refresh_token",
       refresh_token: "refresh_token",
-    })
+    }),
   },
 );
 const { token } = await claims.json();
+```
 
 ### OpenID Connect
 
@@ -165,12 +165,35 @@ OpenID Connect is an authentication layer on top of OAuth2. It is used to verify
 
 Frequent OAuth2 providers are embedded and can be directly used in the typegraph.
 
+```python
+from typegraph.graph.params import Auth
+
+Auth.oauth2(
+    provider="github",
+    scopes=["openid", "profile", "email"],
+    clients=[
+        {
+            "id_secret": "APP_CLIENT_ID",
+            "redirect_uri_secret": "APP_REDIRECT_URI",
+        }
+    ],
+)
+
 ```
 
-from typegraph.graph.auth import oauth2
-oauth2.github("openid profile email")
+The available providers are:
 
-```
-
-The whole list is available [here](https://github.com/metatypedev/metatype/blob/main/typegraph/python/typegraph/graph/auth/oauth2.py).
-```
+- `digitalocean`
+- `discord`
+- `dropbox`
+- `facebook`
+- `github`
+- `gitlab`
+- `google`
+- `instagram`
+- `linkedin`
+- `microsoft`
+- `reddit`
+- `slack`
+- `stackexchange`
+- `twitter`

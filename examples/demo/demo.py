@@ -8,7 +8,18 @@ from typegraph.runtimes import DenoRuntime, HttpRuntime, PythonRuntime
     rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
 )
 def public_api(g: Graph):
-    g.auth(Auth.oauth2_github("openid profile email"))
+    g.auth(
+        Auth.oauth2(
+            provider="github",
+            scopes=["openid", "profile", "email"],
+            clients=[
+                {
+                    "id_secret": "APP_CLIENT_ID",
+                    "redirect_uri_secret": "APP_REDIRECT_URI",
+                }
+            ],
+        )
+    )
 
     deno = DenoRuntime()
 
