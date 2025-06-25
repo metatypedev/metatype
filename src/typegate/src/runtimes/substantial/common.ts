@@ -6,6 +6,7 @@ import type { TaskContext } from "../deno/shared_types.ts";
 import type { DenoWorkerError } from "../patterns/worker_manager/deno.ts";
 export type {
   Backend,
+  LogLevel,
   Operation,
   OperationEvent,
   Run,
