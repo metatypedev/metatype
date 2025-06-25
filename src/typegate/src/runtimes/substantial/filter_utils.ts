@@ -2,12 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { Agent } from "./agent.ts";
-
-export type ExecutionStatus =
-  | "COMPLETED"
-  | "COMPLETED_WITH_ERROR"
-  | "ONGOING"
-  | "UNKNOWN";
+import type { ExecutionStatus } from "./common.ts";
 
 type KVHelper<T extends string[], V> = {
   // should be a union type but it is not very helpful with autocomplete
