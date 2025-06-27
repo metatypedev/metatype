@@ -15,7 +15,7 @@ import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
 import type { Artifact } from "../typegraph/types.ts";
 import type { Typegate } from "../typegate/mod.ts";
-import { type Backend, Meta } from "../../engine/runtime.js";
+import { type Backend, type LogLevel, Meta } from "../../engine/runtime.js";
 import {
   Agent,
   type AgentConfig,
@@ -30,10 +30,18 @@ import type { ExecutionStatus } from "./substantial/common.ts";
 
 const logger = getLogger(import.meta);
 
+interface WorkflowLog {
+  timestamp: string;
+  level: LogLevel["type"];
+  /** TODO: json string, waiting for native t.json() */
+  value: string;
+}
+
 interface QueryCompletedWorkflowResult {
   run_id: string;
   started_at: string;
   ended_at: string;
+  logs: Array<WorkflowLog>;
   result: {
     status: ExecutionStatus;
     value: unknown; // hinted by the user
@@ -111,7 +119,7 @@ export class SubstantialRuntime extends Runtime {
       );
     }
 
-    const queue = "default";
+    const queue = `queue_${params.typegraphName}`;
 
     const agentConfig = {
       pollIntervalSec: typegate.config.base.substantial_poll_interval_sec!,
@@ -312,6 +320,7 @@ export class SubstantialRuntime extends Runtime {
         if (!startedAt) continue;
 
         let endedAt: string, result: any;
+        const logs = [] as Array<WorkflowLog>;
 
         let hasStoppedAtLeastOnce = false;
         for (const op of run.operations) {
@@ -319,8 +328,16 @@ export class SubstantialRuntime extends Runtime {
             endedAt = op.at;
             result = op.event.result;
             hasStoppedAtLeastOnce = true;
+          } else if (op.event.type == "Log") {
+            logs.push({
+              timestamp: op.at,
+              level: op.event.level.type,
+              value: JSON.stringify(op.event.payload),
+            });
           }
         }
+
+        logs.sort((la, lb) => la.timestamp.localeCompare(lb.timestamp));
 
         if (hasStoppedAtLeastOnce) {
           const kind = "Ok" in result ? "Ok" : "Err";
@@ -328,6 +345,7 @@ export class SubstantialRuntime extends Runtime {
             run_id: runId,
             started_at: startedAt,
             ended_at: endedAt!,
+            logs,
             result: {
               status: kind == "Ok" ? "COMPLETED" : "COMPLETED_WITH_ERROR",
               value: enableGenerics
@@ -339,6 +357,7 @@ export class SubstantialRuntime extends Runtime {
           ongoing.push({
             run_id: runId,
             started_at: startedAt,
+            logs,
           });
         }
       }
