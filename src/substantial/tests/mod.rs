@@ -211,6 +211,7 @@ mod tests {
             let active_after_renew = backend.active_leases(lifetime).unwrap();
 
             assert_eq!(active_before_exp.len(), 2);
+            assert_eq!(active_after_exp.len(), 1);
             assert_eq!(active_after_exp, vec!["infinitum".to_string()]);
             assert_eq!(active_after_renew.len(), 2);
         }

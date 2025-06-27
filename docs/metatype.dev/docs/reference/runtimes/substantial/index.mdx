@@ -64,7 +64,7 @@ One simple example of such function is when you want to wait for a given amount 
 Any agent (Typegate node) that picks the workflow, will **replay** it, the cycle repeats until the actual current time is greater or equal to the end time.
 
 ```typescript
-await ctx.sleep(24 * 3600 * 1000); // 1 day
+ctx.sleep(24 * 3600 * 1000); // 1 day
 ```
 
 - **Save**
@@ -90,7 +90,7 @@ const result = await ctx.save(() => sendEmail());
 
 :::info Notes
 
-- Only JSON-compliant values can be persisted. The execution will throw otherwise.
+- Only JSON-serializable values can be persisted. The execution will throw otherwise.
 - Make sure to not rely on changing outside references inside a save call, best is to always expect a replay.
 
 ```typescript
@@ -170,6 +170,122 @@ await ctx.ensure(() => secret == "top_secret");
 When a workflow is started, a run is created and Substantial will provide you a `run_id` to uniquely identify it.
 
 You can send an event or abort an ongoing run from its `run_id`.
+
+### Debugging your workflow
+
+#### Logging
+
+Under the context object, there is a `logger` namespace that you can use to emit event logs.
+
+```ts
+ctx.logger.info("Will start a sleep");
+const startTime = await ctx.save(() => Date.now());
+
+ctx.logger.warn("Started at", new Date());
+ctx.sleep(5000);
+ctx.logger.warn("Ended at", new Date());
+
+const diff = await ctx.save(() => Date.now() - startTime);
+if (diff < 0) {
+  // Always make sure that branches are deterministic accross replays
+  ctx.logger.error("Time went backwards");
+  throw new Error("Time travel");
+}
+```
+
+:::info Notes
+
+- Logger arguments must be JSON-serializable.
+- Similarly to save calls, any path leading to a logger function call must be deterministic.
+
+```ts
+// BAD
+if (Math.random() < 0.5) {
+  // Path is not deterministic
+  ctx.logger.info("Lucky!");
+}
+
+// GOOD
+// The solution is to save any non-deterministic value first
+const isLucky = await ctx.save(() => Math.random() < 0.5);
+if (isLucky) {
+  ctx.logger.info("Lucky!");
+}
+```
+
+::::
+
+#### Debugging
+
+Substantial comes with a few utility functions that you can expose on your typegraph.
+
+You can check in real time the state of your workflows.
+
+```graphql
+query AwesomeStatusDebugger($worlflow: String!)
+  results_raw(name: $workflow) {
+    ongoing {
+      count
+      runs {
+        run_id
+        logs {
+          timestamp  # Time at which the log event was emitted
+          level  # One of "Info", "Warn" or "Error"
+          value  # A json string of an array of JSON objects
+        }
+      }
+    }
+
+    completed {
+      count
+      runs {
+        run_id
+        result {
+          status  # One of "COMPLETED", "COMPLETED_WITH_ERROR".
+          value  # Returned value or error by the workflow
+        }
+        logs {
+          timestamp
+          level
+          value
+        }
+      }
+    }
+  }
+```
+
+This endpoint can be exposed with `queryResultsRaw` or `queryResults` (if you want to enforce the return type shape).
+
+<SDKTabs>
+    <TabItem value="python">
+
+```python
+g.expose(
+  # ..
+  results=sub.query_results( # if you want to enforce the return type
+      t.either([t.integer(), t.string()]).rename("ResultOrError")
+  ),
+  results_raw=sub.query_results_raw(), # if you do not care about the return type
+)
+```
+
+    </TabItem>
+    <TabItem value="typescript">
+
+```typescript
+g.expose({
+  // ..
+  results = sub.queryResults(
+    // if you want to enforce the return type
+    t.either([t.integer(), t.string()]).rename("ResultOrError"),
+  ),
+  results_raw = sub.queryResultsRaw(), // if you do not care about the return type
+});
+```
+
+    </TabItem>
+
+</SDKTabs>
 
 ### Advanced Filters
 
