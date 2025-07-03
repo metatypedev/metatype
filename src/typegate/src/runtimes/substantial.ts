@@ -289,8 +289,6 @@ export class SubstantialRuntime extends Runtime {
         `Start request "${workflowName}" received: new run "${runId}" should be scheduled.`,
       );
       await this.agent.schedule({
-        backend: this.backend,
-        queue: this.queue,
         run_id: runId,
         schedule,
         operation: {
@@ -336,6 +334,10 @@ export class SubstantialRuntime extends Runtime {
             });
           }
         }
+
+        // if (!hasStoppedAtLeastOnce) {
+        //   console.log(run);
+        // }
 
         logs.sort((la, lb) => la.timestamp.localeCompare(lb.timestamp));
 
@@ -392,8 +394,6 @@ export class SubstantialRuntime extends Runtime {
         if (currRunId) {
           const schedule = new Date().toJSON();
           await this.agent.schedule({
-            backend: this.backend,
-            queue: this.queue,
             run_id: currRunId,
             schedule,
             operation: {
@@ -422,8 +422,6 @@ export class SubstantialRuntime extends Runtime {
       const schedule = new Date().toJSON();
 
       await this.agent.schedule({
-        backend: this.backend,
-        queue: this.queue,
         run_id,
         schedule,
         operation: {

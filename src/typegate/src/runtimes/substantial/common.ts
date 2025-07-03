@@ -82,6 +82,7 @@ const validInterrupts = [
   "WAIT_RECEIVE_EVENT",
   "WAIT_HANDLE_EVENT",
   "WAIT_ENSURE_VALUE",
+  "EXPLICIT_REPLAY",
 ] as const;
 
 type InterruptType = (typeof validInterrupts)[number];
@@ -107,6 +108,16 @@ export class Interrupt extends Error {
 
   static Variant(kind: InterruptType, cause?: unknown) {
     return new Interrupt(kind, cause);
+  }
+
+  static ensure(maybeInterrupt: string) {
+    if (
+      !validInterrupts.includes(
+        maybeInterrupt as typeof validInterrupts[number],
+      )
+    ) {
+      throw new Error(`"${maybeInterrupt}" is not a valid interrupt`);
+    }
   }
 }
 

@@ -3,7 +3,6 @@
 
 import { Meta } from "../../../engine/runtime.js";
 import type {
-  AddScheduleInput,
   Backend,
   NextRun,
   Operation,
@@ -17,6 +16,7 @@ import type { EventHandler } from "../patterns/worker_manager/types.ts";
 import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
   checkOperationHasBeenScheduled,
+  Interrupt,
   type InterruptEvent,
   runHasStopped,
   type WorkflowCompletionEvent,
@@ -62,8 +62,14 @@ export class Agent {
     this.hearbeatInterval = new BlockingInterval();
   }
 
-  async schedule(input: AddScheduleInput) {
-    await Meta.substantial.storeAddSchedule(input);
+  async schedule(
+    input: { schedule: string; run_id: string; operation: Operation },
+  ) {
+    await Meta.substantial.storeAddSchedule({
+      backend: this.backend,
+      queue: this.queue,
+      ...input,
+    });
   }
 
   async log(runId: string, schedule: string, content: unknown) {
@@ -118,6 +124,14 @@ export class Agent {
 
     this.pollInterval.start(1000 * this.config.pollIntervalSec, async () => {
       try {
+        // const dups = Object.entries(dupStops).filter(([k, v]) => v > 1);
+        // if (dups.length > 0) {
+        //   console.log(
+        //     "dups out count",
+        //     dups,
+        //     dups.length,
+        //   );
+        // }
         await this.#nextIteration();
       } catch (err) {
         this.logger.error(err);
@@ -331,7 +345,7 @@ export class Agent {
 
     if (run.operations.length == 0) {
       // This should not be possible since gql { start(..) } => writes a Start event on the backend
-      throw new Error(`Invalid state: no scheduled operation on the backend`);
+      throw new Error("Invalid state: no scheduled operation on the backend");
     }
 
     const first = run.operations[0];
@@ -339,7 +353,7 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${
+        `Invalid state: first item in the operation list is not a Start, got "${
           JSON.stringify(
             first,
           )
@@ -369,6 +383,15 @@ export class Agent {
           this.mustLockRunIds.set(next.run_id, new Date());
         });
     } catch (err) {
+      // Fixes schedule skip when the worker cannot be started (e.g. request for job timeout when there are too few workers)
+      // This closes the current schedule, then add a new schedule
+      await this.#workflowHandleInterrupts(workflow.name, run.run_id, {
+        interrupt: "EXPLICIT_REPLAY",
+        run: run,
+        schedule: schedDef.schedule,
+        type: "INTERRUPT",
+      });
+
       throw err;
     } finally {
       if (run.operations.length == 1) {
@@ -422,7 +445,6 @@ export class Agent {
           );
           return;
         case "INTERRUPT":
-          // TODO unknown interrupt
           await this.#workflowHandleInterrupts(workflowName, runId, event);
           break;
       }
@@ -440,10 +462,10 @@ export class Agent {
   ) {
     this.workerManager.deallocateWorker(workflowName, runId); // !
 
+    Interrupt.ensure(interrupt);
     this.logger.debug(`Interrupt "${workflowName}": ${interrupt}"`);
 
     // TODO: make all of these transactional
-
     this.logger.info(`Persist records for "${workflowName}": ${interrupt}"`);
     const _run = await Meta.substantial.storePersistRun({
       backend: this.backend,
@@ -481,7 +503,6 @@ export class Agent {
     event: WorkflowCompletionEvent,
   ) {
     this.workerManager.deallocateWorker(workflowName, runId);
-
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(

@@ -56,7 +56,7 @@ export async function saveAndSleepExample(ctx: Context) {
 
   // +- ~5s
   ctx.logger.warn("Will sleep");
-  ctx.sleep(5000);
+  ctx.sleep(5 * 1000);
   ctx.logger.info("Finished sleeping");
   return sum;
 }
