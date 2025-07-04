@@ -124,14 +124,6 @@ export class Agent {
 
     this.pollInterval.start(1000 * this.config.pollIntervalSec, async () => {
       try {
-        // const dups = Object.entries(dupStops).filter(([k, v]) => v > 1);
-        // if (dups.length > 0) {
-        //   console.log(
-        //     "dups out count",
-        //     dups,
-        //     dups.length,
-        //   );
-        // }
         await this.#nextIteration();
       } catch (err) {
         this.logger.error(err);
@@ -184,7 +176,6 @@ export class Agent {
       );
 
       while (requests.length > 0) {
-        // this.logger.warn(`Run workflow ${JSON.stringify(next)}`);
         const next = requests.shift();
         if (next) {
           try {
@@ -383,8 +374,9 @@ export class Agent {
           this.mustLockRunIds.set(next.run_id, new Date());
         });
     } catch (err) {
-      // Fixes schedule skip when the worker cannot be started (e.g. request for job timeout when there are too few workers)
-      // This closes the current schedule, then add a new schedule
+      // Fixes schedule skip when the worker cannot be started
+      // (e.g. request for job timeout when there are too few workers)
+      // This closes the current schedule, then adds a new schedule
       await this.#workflowHandleInterrupts(workflow.name, run.run_id, {
         interrupt: "EXPLICIT_REPLAY",
         run: run,
