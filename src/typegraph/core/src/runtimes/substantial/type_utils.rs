@@ -16,10 +16,20 @@ pub fn results_op_results_ty(out: u32) -> Result<crate::types::TypeId> {
         .prop("value", t::optional(out.into()).build()?)
         .build()?;
 
+    let logs = t::list(
+        t::struct_()
+            .prop("timestamp", t::string().build()?)
+            .prop("level", t::string().build()?)
+            .prop("value", t::string().format("json").build()?)
+            .build()?,
+    )
+    .build()?;
+
     let ongoing_runs = t::list(
         t::struct_()
             .prop("run_id", t::string().build()?)
             .prop("started_at", t::string().build()?)
+            .prop("logs", logs)
             .build()?,
     )
     .build()?;
@@ -30,6 +40,7 @@ pub fn results_op_results_ty(out: u32) -> Result<crate::types::TypeId> {
             .prop("started_at", t::string().build()?)
             .prop("ended_at", t::string().build()?)
             .prop("result", result)
+            .prop("logs", logs)
             .build()?,
     )
     .build()?;

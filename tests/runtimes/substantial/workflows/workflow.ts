@@ -14,14 +14,14 @@ export const eventsAndExceptionExample: Workflow<string> = async (
 ) => {
   const { to } = ctx.kwargs;
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
-  await ctx.logger.info("Will send to", to);
-  await ctx.logger.warn("Will now wait on an event");
+  ctx.logger.info("Will send to", to);
+  ctx.logger.warn("Will now wait on an event");
 
   // This will wait until a `confirmation` event is sent to THIS workflow
   const confirmation = ctx.receive<boolean>("confirmation");
 
   if (!confirmation) {
-    await ctx.logger.error("Denial", to);
+    ctx.logger.error("Denial", to);
     throw new Error(`${to} has denied the subscription`);
   }
 
@@ -55,7 +55,9 @@ export async function saveAndSleepExample(ctx: Context) {
   });
 
   // +- ~5s
-  ctx.sleep(5000);
+  ctx.logger.warn("Will sleep");
+  ctx.sleep(5 * 1000);
+  ctx.logger.info("Finished sleeping");
   return sum;
 }
 

@@ -44,7 +44,15 @@ pub enum SavedValue {
     },
 }
 
-/// Bridge between protobuf types to Typescript
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(tag = "type")]
+pub enum LogLevel {
+    Warn,
+    Info,
+    Error,
+}
+
+/// Bridge between protobuf types and Typescript
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type")]
 pub enum OperationEvent {
@@ -66,6 +74,11 @@ pub enum OperationEvent {
     },
     Start {
         kwargs: HashMap<String, serde_json::Value>,
+    },
+    Log {
+        id: u32,
+        payload: serde_json::Value,
+        level: LogLevel,
     },
     Compensate,
 }
@@ -257,10 +270,20 @@ impl TryFrom<Event> for Operation {
                         },
                     });
                 }
+                Of::Log(log) => {
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Log {
+                            id: log.id,
+                            payload: serde_json::from_str(&log.json_payload)?,
+                            level: log.level.try_into()?,
+                        },
+                    })
+                }
             }
         }
 
-        bail!("cannot convert from event {:?}", event)
+        bail!("Fatal: cannot convert from event {:?}", event)
     }
 }
 
@@ -269,7 +292,7 @@ impl TryFrom<Operation> for Event {
     fn try_from(operation: Operation) -> Result<Event> {
         use crate::protocol::events::event::Of;
         use crate::protocol::events::save::Of::{Failed, Resolved, Retry};
-        use crate::protocol::events::{stop, Event, Save, Send, Sleep, Start, Stop};
+        use crate::protocol::events::{stop, Event, Log, Save, Send, Sleep, Start, Stop};
 
         let at = to_timestamp(&operation.at);
 
@@ -377,6 +400,20 @@ impl TryFrom<Operation> for Event {
                     ..Default::default()
                 })
             }
+            OperationEvent::Log { id, payload, level } => {
+                let log = Log {
+                    id,
+                    json_payload: serde_json::to_string(&payload)?,
+                    level: level.into(),
+                    ..Default::default()
+                };
+
+                Ok(Event {
+                    at: MessageField::some(at),
+                    of: Some(Of::Log(log)),
+                    ..Default::default()
+                })
+            }
             OperationEvent::Compensate => {
                 unimplemented!()
             }
@@ -440,6 +477,28 @@ impl TryFrom<MetadataEvent> for Metadata {
                 }),
             }),
             ..Default::default()
+        })
+    }
+}
+
+impl From<LogLevel> for u32 {
+    fn from(value: LogLevel) -> Self {
+        match value {
+            LogLevel::Info => 0,
+            LogLevel::Warn => 5,
+            LogLevel::Error => 10,
+        }
+    }
+}
+
+impl TryFrom<u32> for LogLevel {
+    type Error = anyhow::Error;
+    fn try_from(value: u32) -> anyhow::Result<Self> {
+        Ok(match value {
+            0 => LogLevel::Info,
+            5 => LogLevel::Warn,
+            10 => LogLevel::Error,
+            _ => anyhow::bail!("Unknown log level {value:?}"),
         })
     }
 }

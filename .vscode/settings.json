@@ -29,6 +29,7 @@
   "rust-analyzer.cargo.allTargets": true,
   "rust-analyzer.check.features": "all",
   "rust-analyzer.check.allTargets": true,
+  "rust-analyzer.cachePriming.enable": false,
   "editor.wordWrap": "on",
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter",
@@ -38,7 +39,7 @@
     }
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "denoland.vscode-deno"
   },
   "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
     "cockroachdb",

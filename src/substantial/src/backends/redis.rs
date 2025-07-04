@@ -131,7 +131,7 @@ impl super::BackendStore for RedisBackend {
             let q_key = self.key(&["schedules", &queue])?; // priority queue
 
             let non_prefixed_sched_ref = schedule.to_rfc3339();
-            let sched_score = 1.0 / (schedule.timestamp() as f64);
+            let sched_score = -1.0 * schedule.timestamp() as f64;
             let sched_key = self.key(&[&non_prefixed_sched_ref, &run_id])?;
             let sched_ref = self.key(&["ref_", &run_id, &non_prefixed_sched_ref])?;
 
