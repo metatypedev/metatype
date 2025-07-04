@@ -1,12 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+// CopyrightjMetatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import type { TypegateConfigBase } from "../../../config.ts";
 import {
   OAuth2Client,
   type OAuth2ClientConfig,
   type Tokens,
 } from "oauth2_client";
+// deno-lint-ignore no-external-import
+import { randomBytes } from "node:crypto";
 import { randomUUID, type TypegateCryptoKeys } from "../../../crypto.ts";
 import type { AdditionalAuthParams, JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
@@ -19,7 +24,10 @@ import {
 import { Protocol } from "./protocol.ts";
 import type { Auth } from "../../../typegraph/types.ts";
 import { Type } from "../../../typegraph/type_node.ts";
-import { ComputeStage } from "../../../engine/query_engine.ts";
+import {
+  ComputeStage,
+  type QueryEngine,
+} from "../../../engine/query_engine.ts";
 import * as ast from "graphql/ast";
 import {
   generateValidator,
@@ -27,6 +35,7 @@ import {
 } from "../../../engine/typecheck/input.ts";
 import type { TokenMiddlewareOutput } from "./protocol.ts";
 import { jsonError } from "../../responses.ts";
+import * as z from "zod";
 
 const logger = getLogger(import.meta);
 
@@ -60,10 +69,7 @@ class AuthProfiler {
     });
   }
 
-  async transform(
-    profile: any,
-    request: Request,
-  ) {
+  async transform(request: Request, profile?: any, scope?: string) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -72,8 +78,9 @@ class AuthProfiler {
     const validatorOutput = generateValidator(tg, funcNode.output);
 
     const input = {
-      ...profile,
+      ...(profile ?? {}),
       _: {
+        scope: scope?.split(" "),
         info: {
           url: new URL(request.url),
           headers: Object.fromEntries(request.headers.entries()),
@@ -83,11 +90,7 @@ class AuthProfiler {
     validatorInputWeak(input);
 
     // Note: this assumes func is a simple t.func(inp, out, mat)
-    const stages = await runtime.materialize(
-      this.getComputeStage(),
-      [],
-      true,
-    );
+    const stages = await runtime.materialize(this.getComputeStage(), [], true);
     const resolver = stages.pop()?.props.resolver;
     if (typeof resolver != "function") {
       throw Error(
@@ -107,6 +110,19 @@ export type Oauth2AuthConfig = Pick<
   "jwt_max_duration_sec" | "jwt_refresh_duration_sec"
 >;
 
+export type Oauth2Client = {
+  id_secret: string;
+  redirect_uri_secret: string;
+};
+
+const oauthQuerySchema = z.object({
+  client_id: z.string(),
+  redirect_uri: z.string(),
+  state: z.string(),
+  code_challenge: z.string(),
+  code_challenge_method: z.literal("S256"),
+});
+
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
@@ -119,9 +135,15 @@ export class OAuth2Auth extends Protocol {
     const clientSecret = secretManager.secretOrFail(
       `${authName}_CLIENT_SECRET`,
     );
-    const { authorize_url, access_url, scopes, profile_url, profiler } =
-      auth.auth_data;
-    const clientData = {
+    const {
+      authorize_url,
+      access_url,
+      scopes,
+      profile_url,
+      profiler,
+      clients,
+    } = auth.auth_data;
+    const providerData = {
       clientId,
       clientSecret,
       authorizationEndpointUri: authorize_url as string,
@@ -131,6 +153,19 @@ export class OAuth2Auth extends Protocol {
       },
     };
 
+    const clientsMap = new Map(
+      (clients as Oauth2Client[]).map(
+        ({ id_secret: id, redirect_uri_secret: redirect_uri }) => [
+          secretManager.secretOrFail(id),
+          secretManager.secretOrFail(redirect_uri),
+        ],
+      ),
+    );
+
+    if (clientsMap.size === 0) {
+      throw new Error("At least one OAuth2 client must be configured");
+    }
+
     const { jwt_max_duration_sec, jwt_refresh_duration_sec } =
       authParameters.tg.typegate.config.base;
     const config = { jwt_max_duration_sec, jwt_refresh_duration_sec };
@@ -139,15 +174,13 @@ export class OAuth2Auth extends Protocol {
       new OAuth2Auth(
         typegraphName,
         auth.name,
-        clientData,
+        providerData,
         profile_url as string | null,
         profiler !== undefined
-          ? new AuthProfiler(
-            authParameters,
-            profiler as number,
-          )
+          ? new AuthProfiler(authParameters, profiler as number)
           : null,
         authParameters.tg.typegate.cryptoKeys,
+        clientsMap,
         config,
       ),
     );
@@ -160,12 +193,16 @@ export class OAuth2Auth extends Protocol {
     private profileUrl: string | null,
     private authProfiler: AuthProfiler | null,
     private cryptoKeys: TypegateCryptoKeys,
+    private clientsMap: Map<string, string>,
     private config: Oauth2AuthConfig,
   ) {
     super(typegraphName);
   }
 
-  override async authMiddleware(request: Request): Promise<Response> {
+  override async authMiddleware(
+    request: Request,
+    engine: QueryEngine,
+  ): Promise<Response> {
     const url = new URL(request.url);
     const base = `${url.protocol}//${url.host}`;
     const typegraphPath = `/${this.typegraphName}`;
@@ -176,24 +213,41 @@ export class OAuth2Auth extends Protocol {
     });
     const query = Object.fromEntries(url.searchParams.entries());
 
-    // callback
+    // callback;
     if (query.code && query.state) {
       try {
-        const { state, codeVerifier, userRedirectUri } =
-          await getEncryptedCookie(
-            request.headers,
-            this.typegraphName,
-            this.cryptoKeys,
-          );
-        const tokens = await client.code.getToken(url, { state, codeVerifier });
-        const token = await this.createJWT(tokens, request);
-        const headers = await setEncryptedSessionCookie(
-          url.hostname,
+        const state = await getEncryptedCookie(
+          request.headers,
           this.typegraphName,
-          { token, redirectUri: userRedirectUri },
           this.cryptoKeys,
         );
-        headers.set("location", userRedirectUri as string);
+        const tokens = await client.code.getToken(url, {
+          state: state.provider.state,
+          codeVerifier: state.provider.codeVerifier,
+        });
+        const profile = await this.fetchProfile(tokens);
+        const code = randomBytes(32).toString("base64url");
+        const redirectUri = new URL(state.client.redirectUri);
+
+        const payload = {
+          profile,
+          provider: this.authName,
+          state: state.client,
+        };
+
+        await engine.tg.typegate.redis?.set(
+          `code:${code}`,
+          JSON.stringify(payload),
+          { ex: 600 }, // 10 minutes
+        );
+
+        redirectUri.searchParams.append("code", code);
+        redirectUri.searchParams.append("state", state.client.state);
+
+        const headers = new Headers();
+
+        headers.set("location", redirectUri.toString());
+
         return new Response(null, {
           status: 302,
           headers,
@@ -215,47 +269,68 @@ export class OAuth2Auth extends Protocol {
     }
 
     // initiate
-    const userRedirectUri = query.redirect_uri ?? request.headers.get("origin");
-    if (userRedirectUri) {
-      const state = randomUUID();
-      const { codeVerifier, uri } = await client.code.getAuthorizationUri({
-        state,
-      });
-      const loginState = {
-        state,
-        codeVerifier,
-        userRedirectUri,
-      };
-      const headers = await setEncryptedSessionCookie(
-        url.hostname,
-        this.typegraphName,
-        loginState,
-        this.cryptoKeys,
-      );
-      headers.set("location", uri.toString());
-      return new Response(null, {
-        status: 302,
-        headers,
+    try {
+      oauthQuerySchema.parse(query);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const messages = err.errors.map(
+          (e) => `${e.path.join(".")}: ${e.message}`,
+        );
+        return jsonError({ message: messages.join(", "), status: 400 });
+      }
+    }
+
+    const userRedirectUri = this.clientsMap.get(query.client_id);
+
+    if (query.redirect_uri !== userRedirectUri) {
+      return jsonError({
+        message: "invalid redirect_uri parameter",
+        status: 400,
       });
     }
 
-    return jsonError({
-      message: "missing origin or redirect_uri query parameter",
-      status: 400,
+    const state = randomUUID();
+    const { codeVerifier, uri } = await client.code.getAuthorizationUri({
+      state,
+    });
+    const loginState = {
+      provider: {
+        state,
+        codeVerifier,
+      },
+      client: {
+        id: query.client_id,
+        state: query.state,
+        redirectUri: query.redirect_uri,
+        codeChallenge: query.code_challenge,
+        method: query.code_challenge_method,
+      },
+    };
+    const headers = await setEncryptedSessionCookie(
+      url.hostname,
+      this.typegraphName,
+      loginState,
+      this.cryptoKeys,
+    );
+
+    headers.set("location", uri.toString());
+
+    return new Response(null, {
+      status: 302,
+      headers,
     });
   }
 
   async tokenMiddleware(
     token: string,
-    request: Request,
+    _request: Request,
   ): Promise<TokenMiddlewareOutput> {
-    const url = new URL(request.url);
-    const typegraphPath = `/${this.typegraphName}`;
-    const client = new OAuth2Client({
-      ...this.clientData,
-      redirectUri:
-        `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
-    });
+    // const url = new URL(request.url);
+    // const typegraphPath = `/${this.typegraphName}`;
+    // const client = new OAuth2Client({
+    //   ...this.clientData,
+    //   redirectUri: `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
+    // });
 
     if (!token) {
       return {
@@ -275,27 +350,12 @@ export class OAuth2Auth extends Protocol {
       };
     }
 
-    const { refreshToken, ...claims } = jwt;
+    const { ...claims } = jwt;
     if (isJwtExpired(jwt)) {
-      let newClaims: Tokens;
-      try {
-        newClaims = await client.refreshToken.refresh(refreshToken);
-      } catch (e) {
-        logger.error("XXX error refreshing oauth token {}", {
-          err: e,
-          clientData: this.clientData,
-        });
-        return {
-          claims: {},
-          nextToken: "", // clear
-          error: `could not refresh expired token: ${e}`,
-        };
-      }
-      const token = await this.createJWT(newClaims, request);
       return {
         claims,
-        nextToken: token, // update
-        error: null,
+        nextToken: "",
+        error: "access token expired",
       };
     }
 
@@ -306,10 +366,7 @@ export class OAuth2Auth extends Protocol {
     };
   }
 
-  private async getProfile(
-    token: Tokens,
-    request: Request,
-  ): Promise<null | Record<string, unknown>> {
+  private async fetchProfile(token: Tokens) {
     if (!this.profileUrl) {
       return null;
     }
@@ -320,45 +377,46 @@ export class OAuth2Auth extends Protocol {
       const url = this.profileUrl.replace(`${verb}@`, "");
       const res = await fetch(url, {
         headers: {
-          "Accept": "application/json",
-          "authorization": `${token.tokenType} ${token.accessToken}`,
+          Accept: "application/json",
+          authorization: `${token.tokenType} ${token.accessToken}`,
         },
       });
-      let profile = await res.json();
 
-      if (this.authProfiler) {
-        profile = await this.authProfiler!.transform(profile, request);
-      }
-
-      return profile;
+      return res.json();
     } catch (e) {
       throw new Error(`failed to fetch profile: ${e}`);
     }
   }
 
-  private async createJWT(
-    token: Tokens,
+  async createJWT(
     request: Request,
-  ): Promise<string> {
-    const profile = await this.getProfile(token, request);
-    const payload: JWTClaims = {
+    profile?: Record<string, unknown>,
+    scope?: string,
+  ) {
+    if (this.authProfiler) {
+      profile = await this.authProfiler!.transform(request, profile, scope);
+    }
+
+    const payload = {
       provider: this.authName,
-      accessToken: token.accessToken,
-      refreshToken: await this.cryptoKeys.encrypt(token.refreshToken as string),
-      refreshAt: Math.floor(
-        new Date().valueOf() / 1000 +
-          (token.expiresIn ?? this.config.jwt_refresh_duration_sec),
-      ),
-      scope: token.scope,
       profile,
     };
-    return await this.cryptoKeys.signJWT(
+    const access_token = await this.cryptoKeys.signJWT(
       payload,
       this.config.jwt_max_duration_sec,
     );
+    const refresh_token = randomBytes(32).toString("base64url");
+
+    return {
+      token_type: "Bearer",
+      access_token,
+      refresh_token,
+      expires_in: this.config.jwt_max_duration_sec,
+      scope: scope ?? null,
+    };
   }
 }
 
 function isJwtExpired(jwt: JWTClaims): boolean {
-  return new Date().valueOf() / 1000 > jwt.refreshAt;
+  return new Date().valueOf() / 1000 > jwt.exp;
 }
