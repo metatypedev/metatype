@@ -379,7 +379,7 @@ export class Agent {
       // This closes the current schedule, then adds a new schedule
       await this.#workflowHandleInterrupts(workflow.name, run.run_id, {
         interrupt: "EXPLICIT_REPLAY",
-        run: run,
+        run,
         schedule: schedDef.schedule,
         type: "INTERRUPT",
       });
