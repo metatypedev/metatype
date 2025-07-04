@@ -6,6 +6,7 @@ import type {
   AddScheduleInput,
   Backend,
   NextRun,
+  Operation,
   ReadOrCloseScheduleInput,
   Run,
 } from "../../../engine/runtime.js";
@@ -15,12 +16,13 @@ import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
 import type { EventHandler } from "../patterns/worker_manager/types.ts";
 import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
 import {
-  appendIfOngoing,
+  checkOperationHasBeenScheduled,
   type InterruptEvent,
+  runHasStopped,
   type WorkflowCompletionEvent,
   type WorkflowEvent,
-} from "./types.ts";
-import { WorkerManager } from "./workflow_worker_manager.ts";
+} from "./common.ts";
+import { BlockingInterval, WorkerManager } from "./workflow_worker_manager.ts";
 
 export interface StdKwargs {
   taskContext: TaskContext;
@@ -42,8 +44,10 @@ export interface AgentConfig {
 export class Agent {
   workerManager = new WorkerManager();
   workflows: Array<WorkflowDescription> = [];
-  pollIntervalHandle?: number;
+  pollInterval: BlockingInterval;
+  hearbeatInterval: BlockingInterval;
   logger: Logger;
+  mustLockRunIds: Map<string, Date>;
 
   constructor(
     public hostcallCtx: HostCallCtx,
@@ -52,6 +56,10 @@ export class Agent {
     private config: AgentConfig,
   ) {
     this.logger = getLoggerByAddress(import.meta, "substantial");
+    this.mustLockRunIds = new Map();
+
+    this.pollInterval = new BlockingInterval();
+    this.hearbeatInterval = new BlockingInterval();
   }
 
   async schedule(input: AddScheduleInput) {
@@ -101,25 +109,40 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${workflows
-        .map(({ name }) => name)
-        .join(", ")}`,
+      `Initializing agent to handle ${
+        workflows
+          .map(({ name }) => name)
+          .join(", ")
+      }`,
     );
 
-    this.pollIntervalHandle = setInterval(async () => {
+    this.pollInterval.start(1000 * this.config.pollIntervalSec, async () => {
       try {
         await this.#nextIteration();
       } catch (err) {
         this.logger.error(err);
       }
-    }, 1000 * this.config.pollIntervalSec);
+    });
+
+    this.hearbeatInterval.start(
+      // Must be smaller than lease lifespan to mitigate
+      // expired lease in the middle of an iteration
+      1000 * this.config.leaseLifespanSec / 2,
+      async () => {
+        try {
+          await this.#renewLeases();
+        } catch (err) {
+          this.logger.error(err);
+        }
+      },
+    );
   }
 
   async stop() {
     await this.workerManager.deinit();
-    if (this.pollIntervalHandle !== undefined) {
-      clearInterval(this.pollIntervalHandle);
-    }
+    // TODO: how are we so sure that deinit == worker doing no more work
+    await this.pollInterval.kill();
+    await this.hearbeatInterval.kill();
   }
 
   async #nextIteration() {
@@ -228,6 +251,44 @@ export class Agent {
     return next;
   }
 
+  async #renewLeases() {
+    // WARN:
+    // There is a subtle race condition that might arise!
+    // The renewal interval tick time must be smaller than the lease lifetime so we need to ensure
+    // that in the middle of an iteration/a concrete run, the lease does not expire.
+    // FIXME: This hearbeat approach does not solve it but rather mitigate it from happening often
+    // In an ideal scenario tick time -> 0 is best
+
+    const durationMs = 1000 * this.config.leaseLifespanSec;
+    const boundaryMs = durationMs / 3;
+
+    for (const [runId, time] of this.mustLockRunIds) {
+      const isRunning = this.workerManager.isOngoing(runId);
+      const isAboutToExpire =
+        Date.now() >= time.getTime() + durationMs - boundaryMs;
+
+      if (isRunning && isAboutToExpire) {
+        this.logger.info(`Renew lease ${runId}, worker is still active`);
+
+        await Meta.substantial.agentRenewLease({
+          backend: this.backend,
+          lease_seconds: this.config.leaseLifespanSec,
+          run_id: runId,
+        });
+      }
+
+      if (!isRunning) {
+        this.mustLockRunIds.delete(runId);
+        this.logger.info(`Remove lease ${runId}`);
+        await Meta.substantial.agentRemoveLease({
+          backend: this.backend,
+          lease_seconds: this.config.leaseLifespanSec,
+          run_id: runId,
+        });
+      }
+    }
+  }
+
   async #replay(next: NextRun, workflow: WorkflowDescription) {
     const { run } = await Meta.substantial.storeCreateOrGetRun({
       backend: this.backend,
@@ -242,9 +303,12 @@ export class Agent {
     } satisfies ReadOrCloseScheduleInput;
     const newEventOp = await Meta.substantial.storeReadSchedule(schedDef);
 
-    if (checkIfRunHasStopped(run)) {
+    validateRunIntegrity(run);
+
+    if (runHasStopped(run)) {
       // This may occur if an event is sent but the underlying run already completed
       // Or does not exist.
+
       this.logger.warn(
         `Run ${next.run_id} has already stopped, closing schedule`,
       );
@@ -252,8 +316,17 @@ export class Agent {
       return;
     }
 
+    if (newEventOp && checkOperationHasBeenScheduled(run, newEventOp)) {
+      // Also if the scheduled event is already in the log but has not been closed (e.g. a crash before closing it)
+      this.logger.warn(
+        `Discarding already persisted schedule "${schedDef.schedule}" (${schedDef.run_id}), closing it might have been interrupted after a well-timed crash`,
+      );
+      await Meta.substantial.storeCloseSchedule(schedDef);
+      return;
+    }
+
     if (newEventOp) {
-      appendIfOngoing(run, newEventOp);
+      run.operations.push(newEventOp);
     }
 
     if (run.operations.length == 0) {
@@ -266,9 +339,11 @@ export class Agent {
       // A consequence of the above, a workflow is always triggered by gql { start(..) }
       // This can also occur if an event is sent from gql under a runId that is not valid (e.g. due to typo)
       this.logger.warn(
-        `First item in the operation list is not a Start, got "${JSON.stringify(
-          first,
-        )}" instead. Closing the underlying schedule.`,
+        `First item in the operation list is not a Start, got "${
+          JSON.stringify(
+            first,
+          )
+        }" instead. Closing the underlying schedule.`,
       );
 
       await Meta.substantial.storeCloseSchedule(schedDef);
@@ -291,6 +366,7 @@ export class Agent {
             next.run_id,
             this.#eventResultHandlerFor(workflow.name, next.run_id),
           );
+          this.mustLockRunIds.set(next.run_id, new Date());
         });
     } catch (err) {
       throw err;
@@ -396,13 +472,6 @@ export class Agent {
       run_id: runId,
       schedule: newSchedule,
     });
-
-    this.logger.info(`Renew lease ${runId}`);
-    await Meta.substantial.agentRenewLease({
-      backend: this.backend,
-      lease_seconds: this.config.leaseLifespanSec,
-      run_id: runId,
-    });
   }
 
   async #workflowHandleGracefullCompletion(
@@ -416,9 +485,11 @@ export class Agent {
     const result = event.type == "SUCCESS" ? event.result : event.error;
 
     this.logger.info(
-      `gracefull completion of "${runId}" (${event.type}): ${JSON.stringify(
-        result,
-      )} started at "${startedAt}"`,
+      `gracefull completion of "${runId}" (${event.type}): ${
+        JSON.stringify(
+          result,
+        )
+      } started at "${startedAt}"`,
     );
 
     this.logger.info(`Append Stop ${runId}`);
@@ -426,7 +497,7 @@ export class Agent {
 
     // Note: run is a one-time value, thus can be mutated
 
-    appendIfOngoing(event.run, {
+    const stopSched = {
       at: new Date().toJSON(),
       event: {
         type: "Stop",
@@ -434,7 +505,13 @@ export class Agent {
           [rustResult]: result,
         } as unknown,
       },
-    });
+    } satisfies Operation;
+    const discardSchedule = runHasStopped(event.run) ||
+      checkOperationHasBeenScheduled(event.run, stopSched);
+
+    if (!discardSchedule) {
+      event.run.operations.push(stopSched);
+    }
 
     this.logger.info(
       `Persist finalized records for "${workflowName}": ${result}" and closing everything..`,
@@ -457,23 +534,26 @@ export class Agent {
       run_id: runId,
       lease_seconds: this.config.leaseLifespanSec,
     });
+
+    this.mustLockRunIds.delete(runId);
   }
 }
 
-function checkIfRunHasStopped(run: Run) {
+function prettyRun(run: Run) {
+  return JSON.stringify(
+    run.operations.map(({ event, at }) => ({ type: event.type, at })),
+  );
+}
+
+function validateRunIntegrity(run: Run) {
   const logger = getLoggerByAddress(import.meta, "substantial");
 
   let life = 0;
-  let hasStopped = false;
 
   for (const op of run.operations) {
     if (op.event.type == "Start") {
       if (life >= 1) {
-        logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
-        );
+        logger.error(`bad logs: ${prettyRun(run)}`);
 
         throw new Error(
           `"${run.run_id}" has potentially corrupted logs, another run occured yet previous has not stopped`,
@@ -481,14 +561,9 @@ function checkIfRunHasStopped(run: Run) {
       }
 
       life += 1;
-      hasStopped = false;
     } else if (op.event.type == "Stop") {
       if (life <= 0) {
-        logger.error(
-          `bad logs: ${JSON.stringify(
-            run.operations.map(({ event }) => event.type),
-          )}`,
-        );
+        logger.error(`bad logs: ${prettyRun(run)}`);
 
         throw new Error(
           `"${run.run_id}" has potentitally corrupted logs, attempted stopping already closed run, or run with a missing Start`,
@@ -496,9 +571,6 @@ function checkIfRunHasStopped(run: Run) {
       }
 
       life -= 1;
-      hasStopped = true;
     }
   }
-
-  return hasStopped;
 }
