@@ -4,7 +4,6 @@
 use crate::runtimes::prisma::context::PrismaContext;
 use crate::runtimes::prisma::model::Property;
 use crate::t::{self, TypeBuilder};
-use crate::types::Named as _;
 use crate::{errors::Result, types::TypeId};
 
 use super::TypeGen;
@@ -13,11 +12,7 @@ pub struct Take;
 
 impl TypeGen for Take {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        t::integer()
-            .x_min(0)
-            .build()?
-            .named(self.name(context)?)
-            .map(|t| t.id())
+        t::integer().x_min(0).build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -29,7 +24,7 @@ pub struct Skip;
 
 impl TypeGen for Skip {
     fn generate(&self, context: &PrismaContext) -> Result<TypeId> {
-        t::integer().min(0).build_named(self.name(context)?)
+        t::integer().min(0).build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -52,7 +47,7 @@ impl TypeGen for Distinct {
             })
             .collect();
 
-        t::listx(t::string().enum_(cols)).build_named(self.name(context)?)
+        t::listx(t::string().enum_(cols)).build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -89,7 +84,7 @@ impl TypeGen for Cursor {
             let variant = t::struct_().prop(k, id).build()?;
             variants.push(variant)
         }
-        t::union(variants).build_named(self.name(context)?)
+        t::union(variants).build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {

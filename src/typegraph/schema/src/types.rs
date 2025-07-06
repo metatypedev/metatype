@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 
 use anyhow::Result;
 use indexmap::IndexMap;
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::hash::Hash;
@@ -61,6 +62,7 @@ pub enum Injection {
 
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct TypeNodeBase {
     pub title: String,
     #[serde(default)]
@@ -78,18 +80,18 @@ pub struct OptionalTypeData<Id = TypeId> {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct FloatTypeData {
-    pub minimum: Option<f64>,
-    pub maximum: Option<f64>,
-    pub exclusive_minimum: Option<f64>,
-    pub exclusive_maximum: Option<f64>,
-    pub multiple_of: Option<f64>,
+    pub minimum: Option<NotNan<f64>>,
+    pub maximum: Option<NotNan<f64>>,
+    pub exclusive_minimum: Option<NotNan<f64>>,
+    pub exclusive_maximum: Option<NotNan<f64>>,
+    pub multiple_of: Option<NotNan<f64>>,
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerTypeData {
     // we use i32 as GraphQL spec only support 32-bit integers (Int)
@@ -100,7 +102,7 @@ pub struct IntegerTypeData {
     pub multiple_of: Option<i32>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Hash)]
 #[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
     Uuid,
@@ -132,7 +134,7 @@ impl core::fmt::Display for StringFormat {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct StringTypeData {
     pub min_length: Option<u32>,
@@ -142,7 +144,7 @@ pub struct StringTypeData {
 }
 
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct FileTypeData {
     pub min_size: Option<u32>,

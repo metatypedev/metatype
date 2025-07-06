@@ -7,6 +7,7 @@ use std::rc::Rc;
 use super::Type;
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::typegraph::NameSource;
 use crate::types::{TypeDef, TypeDefExt as _, TypeId};
 use serde::{Deserialize, Serialize};
 use tg_schema::Injection;
@@ -78,6 +79,7 @@ pub struct NamedTypeRef {
     pub id: TypeId,
     pub name: Rc<str>,
     pub target: Box<Type>,
+    pub name_source: NameSource,
 }
 
 #[derive(Clone, Debug)]
@@ -110,6 +112,7 @@ pub struct IndirectRefBuilder {
 pub struct NamedRefBuilder {
     pub name: Rc<str>,
     target: Type,
+    name_source: NameSource,
 }
 
 pub enum FlatTypeRefTarget {
@@ -207,11 +210,12 @@ impl TypeRef {
             attributes: attributes.into_iter().map(Rc::new).collect(),
         })
     }
-    pub fn named(name: impl Into<String>, target: Type) -> TypeRefBuilder {
+    pub fn named(name: impl Into<String>, target: Type, name_source: NameSource) -> TypeRefBuilder {
         let name: String = name.into();
         TypeRefBuilder::Named(NamedRefBuilder {
             name: name.into(),
             target,
+            name_source,
         })
     }
 }
@@ -238,6 +242,7 @@ impl TypeRefBuilder {
                 id,
                 name: builder.name,
                 target: Box::new(builder.target),
+                name_source: builder.name_source,
             }),
         }
     }
@@ -370,7 +375,7 @@ impl FindAttribute for RefAttrs {
 }
 
 pub trait Named {
-    fn named(self, name: impl Into<String>) -> Result<TypeRef>;
+    fn named(self, name: impl Into<String>, name_source: NameSource) -> Result<TypeRef>;
 }
 
 impl<T> Named for T
@@ -378,7 +383,7 @@ where
     T: TryInto<Type>,
     crate::errors::TgError: From<<T as TryInto<Type>>::Error>,
 {
-    fn named(self, name: impl Into<String>) -> Result<TypeRef> {
-        TypeRef::named(name, self.try_into()?).register()
+    fn named(self, name: impl Into<String>, name_source: NameSource) -> Result<TypeRef> {
+        TypeRef::named(name, self.try_into()?, name_source).register()
     }
 }

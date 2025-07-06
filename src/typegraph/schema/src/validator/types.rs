@@ -174,31 +174,31 @@ impl EnsureSubtypeOf<FloatTypeData> for IntegerTypeData {
     ) {
         ensure_subtype_of_for_min(
             self.minimum.map(|m| m as f64),
-            other.minimum,
+            other.minimum.map(|m| m.into_inner()),
             "minimum",
             errors,
         );
         ensure_subtype_of_for_max(
             self.maximum.map(|m| m as f64),
-            other.maximum,
+            other.maximum.map(|n| n.into_inner()),
             "maximum",
             errors,
         );
         ensure_subtype_of_for_min(
             self.exclusive_minimum.map(|m| m as f64),
-            other.exclusive_minimum,
+            other.exclusive_minimum.map(|n| n.into_inner()),
             "exclusive_minimum",
             errors,
         );
         ensure_subtype_of_for_max(
             self.exclusive_maximum.map(|m| m as f64),
-            other.exclusive_maximum,
+            other.exclusive_maximum.map(|n| n.into_inner()),
             "exclusive_maximum",
             errors,
         );
         ensure_subtype_of_for_multiple_of(
             self.multiple_of.map(|m| m as f64),
-            other.multiple_of,
+            other.multiple_of.map(|n| n.into_inner()),
             "multiple_of",
             errors,
         );

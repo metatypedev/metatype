@@ -13,16 +13,16 @@ use tg_schema::{
     StringFormat, TypeNode, Typegraph,
 };
 
-use crate::errors::TgError;
+use crate::{errors::TgError, typegraph::NameSource};
 
-pub struct NamingProcessor {
-    pub user_named: HashSet<u32>,
+pub struct NamingProcessor<'un> {
+    pub named_types: &'un HashMap<u32, NameSource>,
 }
-impl super::PostProcessor for NamingProcessor {
+impl super::PostProcessor for NamingProcessor<'_> {
     fn postprocess(self, tg: &mut tg_schema::Typegraph) -> Result<(), crate::errors::TgError> {
         let cx = VisitContext {
             tg,
-            user_named: self.user_named,
+            named_types: self.named_types.keys().cloned().collect(),
         };
 
         let TypeNode::Object {
@@ -64,9 +64,9 @@ impl super::PostProcessor for NamingProcessor {
     }
 }
 
-struct VisitContext<'a> {
-    tg: &'a Typegraph,
-    user_named: HashSet<u32>,
+struct VisitContext<'tg> {
+    tg: &'tg Typegraph,
+    named_types: HashSet<u32>,
 }
 struct VisitCollector {
     named_types: HashMap<u32, Rc<str>>,
@@ -262,7 +262,7 @@ fn collect_ref_info(
     id: u32,
     visited: &mut HashSet<u32>,
 ) -> anyhow::Result<()> {
-    if cx.user_named.contains(&id) || visited.contains(&id) {
+    if cx.named_types.contains(&id) || visited.contains(&id) {
         return Ok(());
     }
 
@@ -320,7 +320,7 @@ fn collect_ref_info(
 
 fn gen_name(cx: &VisitContext, acc: &mut VisitCollector, id: u32, ty_name: &str) -> Rc<str> {
     let node = &cx.tg.types[id as usize];
-    let name: Rc<str> = if cx.user_named.contains(&id) {
+    let name: Rc<str> = if cx.named_types.contains(&id) {
         node.base().title.clone().into()
     } else {
         macro_rules! join_if_ok {

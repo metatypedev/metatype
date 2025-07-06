@@ -15,7 +15,7 @@ impl<T: TypeGen> TypeGen for CompleteFilter<T> {
         let inner = context.generate(&self.0)?;
         // TODO and, or ???
         t::optionalx(t::unionx![inner, t::struct_().prop("not", inner)])
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
     }
 
     fn name(&self, context: &PrismaContext) -> Result<String> {
@@ -32,7 +32,7 @@ impl TypeGen for BooleanFilter {
             t::struct_().propx("equals", t::boolean())?,
             t::struct_().propx("not", t::boolean())?,
         ]
-        .build_named(self.name(context)?)
+        .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -74,7 +74,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("_min", base),
                 t::struct_().prop("_max", base),
             ]
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
         } else {
             let type_id = match self.number_type {
                 NumberType::Integer => t::integer().build()?,
@@ -95,7 +95,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("in", list_type_id),
                 t::struct_().prop("notIn", list_type_id),
             ]
-            .build_named(self.name(context)?)
+            .build_named_p(self.name(context)?)
         }
     }
 
@@ -137,7 +137,7 @@ impl TypeGen for StringFilter {
                 .prop("endsWith", opt_type_id)
                 .min(1),
         ]
-        .build_named(self.name(context)?)
+        .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -164,7 +164,7 @@ impl TypeGen for ScalarListFilter {
             // TODO "isSet": mongo only
             t::struct_().propx("equals", t::list(self.0))?,
         ]
-        .build_named(self.name(context)?)
+        .build_named_p(self.name(context)?)
     }
 
     fn name(&self, _context: &PrismaContext) -> Result<String> {
@@ -336,5 +336,5 @@ fn gen_aggregate_filter<P, F: Fn(P) -> (String, NumberType)>(
         );
     }
 
-    builder.build_named(name)
+    builder.build_named_p(name)
 }

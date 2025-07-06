@@ -19,7 +19,7 @@ use crate::{
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::hash::Hasher as _;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -48,6 +48,13 @@ struct RuntimeContexts {
     prisma_typegen_cache: Rc<RefCell<HashMap<String, TypeId>>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NameSource {
+    User,
+    PrismaTypeGen,
+    Substantial,
+}
+
 #[derive(Default)]
 pub struct TypegraphContext {
     name: String,
@@ -60,7 +67,7 @@ pub struct TypegraphContext {
     mapping: IdMapping,
     runtime_contexts: RuntimeContexts,
     saved_store_state: Option<SavedState>,
-    user_named_types: HashSet<u32>,
+    named_types: HashMap<u32, NameSource>,
 }
 
 thread_local! {
@@ -235,11 +242,27 @@ pub fn serialize(params: SerializeParams) -> Result<(String, Vec<SdkArtifact>)> 
 
     // dedup_types(&mut tg);
 
+    tracing::info!("postprocessing typegraph...");
+
     TypegraphPostProcessor::new(params).postprocess(&mut tg)?;
     NamingProcessor {
-        user_named: ctx.user_named_types,
+        named_types: &ctx.named_types,
     }
     .postprocess(&mut tg)?;
+
+    tracing::info!("optimizing typegraph...");
+
+    let tg = tg_optimize::OptimizeOptions::default()
+        .preserve(
+            ctx.named_types
+                .iter()
+                .filter_map(|(idx, s)| match s {
+                    NameSource::User => Some(*idx),
+                    _ => None,
+                })
+                .collect(),
+        )
+        .optimize(tg.into());
 
     let artifacts = tg
         .meta
@@ -367,12 +390,17 @@ impl TypegraphContext {
         // we remove the name before hashing if it's not
         // user named
         let xdef = type_id.as_xdef()?;
-        let is_user_named = if let Some(name) = xdef.name.as_deref() {
-            Store::is_user_named(name).unwrap_or(false)
-        } else {
-            false
-        };
-        let xdef = type_id.as_xdef()?;
+        let name_source =
+            xdef.name
+                .as_deref()
+                .and_then(Store::get_type_by_name)
+                .map(|named_type| {
+                    if named_type.name_source == NameSource::User {
+                        NameSource::User
+                    } else {
+                        NameSource::PrismaTypeGen
+                    }
+                });
         let hash = self.hash_type(type_id)?;
 
         match self.mapping.hash_to_type.entry(hash) {
@@ -391,8 +419,8 @@ impl TypegraphContext {
                 let type_node = xdef.type_def.clone().convert(self, xdef)?;
 
                 self.types[idx] = Some(type_node);
-                if is_user_named {
-                    self.user_named_types.insert(idx as u32);
+                if let Some(name_source) = name_source {
+                    self.named_types.insert(idx as u32, name_source);
                 }
 
                 Ok((idx as u32).into())

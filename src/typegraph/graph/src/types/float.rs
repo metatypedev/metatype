@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::interlude::*;
+use ordered_float::NotNan;
 
 #[derive(Debug)]
 pub struct FloatType {
     pub base: TypeBase,
-    pub minimum: Option<f64>,
-    pub maximum: Option<f64>,
-    pub exclusive_minimum: Option<f64>,
-    pub exclusive_maximum: Option<f64>,
-    pub multiple_of: Option<f64>,
+    pub minimum: Option<NotNan<f64>>,
+    pub maximum: Option<NotNan<f64>>,
+    pub exclusive_minimum: Option<NotNan<f64>>,
+    pub exclusive_maximum: Option<NotNan<f64>>,
+    pub multiple_of: Option<NotNan<f64>>,
 }
 
 impl TypeNode for Arc<FloatType> {

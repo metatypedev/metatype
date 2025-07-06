@@ -7,9 +7,11 @@ use crate::sdk::core::{
     Handler, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeList, TypeOptional, TypeString,
     TypeStruct, TypeUnion,
 };
+use crate::typegraph::NameSource;
 use crate::types::RefAttr;
 use crate::types::TypeRefBuilder;
 use crate::types::{Named as _, TypeId, TypeRef};
+use ordered_float::NotNan;
 
 #[cfg(test)]
 use tg_schema::{Injection, InjectionData, SingleValue};
@@ -21,8 +23,21 @@ pub trait TypeBuilder {
         Ok(optional(self.build()?))
     }
 
+    fn build_named_p(&self, name: impl Into<String>) -> Result<TypeId> {
+        Ok(self.build()?.named(name, NameSource::PrismaTypeGen)?.id())
+    }
+    fn build_named_subs(&self, name: impl Into<String>) -> Result<TypeId> {
+        Ok(self.build()?.named(name, NameSource::Substantial)?.id())
+    }
+
+    #[allow(unused)]
+    fn build_named_s(&self, name: impl Into<String>, name_source: NameSource) -> Result<TypeId> {
+        Ok(self.build()?.named(name, name_source)?.id())
+    }
+
+    #[allow(unused)]
     fn build_named(&self, name: impl Into<String>) -> Result<TypeId> {
-        Ok(self.build()?.named(name)?.id())
+        Ok(self.build()?.named(name, NameSource::User)?.id())
     }
 
     #[cfg(test)]
@@ -168,25 +183,25 @@ impl Default for TypeFloat {
 impl FloatBuilder {
     #[allow(dead_code)]
     pub fn min(mut self, min: f64) -> Self {
-        self.data.min = Some(min);
+        self.data.min = Some(NotNan::new(min).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn max(mut self, max: f64) -> Self {
-        self.data.max = Some(max);
+        self.data.max = Some(NotNan::new(max).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn x_min(mut self, min: f64) -> Self {
-        self.data.exclusive_minimum = Some(min);
+        self.data.exclusive_minimum = Some(NotNan::new(min).unwrap());
         self
     }
 
     #[allow(dead_code)]
     pub fn x_max(mut self, max: f64) -> Self {
-        self.data.exclusive_maximum = Some(max);
+        self.data.exclusive_maximum = Some(NotNan::new(max).unwrap());
         self
     }
 }

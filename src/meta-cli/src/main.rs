@@ -111,8 +111,13 @@ fn main() -> Result<()> {
                     .unwrap_or_log()
             });
 
-            if let Err(err) = runner.block_on(upgrade_check()) {
-                warn!("cannot check for update: {err}");
+            let upgrade = std::env::var("MCLI_NO_UPGRADE_CHECK")
+                .map(|v| v == "1")
+                .unwrap_or(false);
+            if upgrade {
+                if let Err(err) = runner.block_on(upgrade_check()) {
+                    warn!("cannot check for update: {err}");
+                }
             }
 
             runner.block_on(async move {

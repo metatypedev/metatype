@@ -27,7 +27,7 @@ impl ExtendedTypeDef {
         hasher: &mut crate::conversion::hash::Hasher,
         tg: &mut TypegraphContext,
     ) -> Result<()> {
-        if let Some(name) = self.name.as_deref() {
+        if let Some(name) = self.name.as_ref() {
             "named".hash(hasher);
             name.hash(hasher);
             return Ok(());

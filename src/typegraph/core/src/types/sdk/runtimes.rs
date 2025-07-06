@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::core::{FuncParams, MaterializerId, RuntimeId, TypeId};
+#[allow(unused)]
+use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 
 pub type Idempotency = bool;

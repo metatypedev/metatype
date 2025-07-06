@@ -20,8 +20,6 @@ use std::rc::Rc;
 use std::{cell::RefCell, collections::HashMap};
 use tg_schema::runtimes::deno::PredefinedFunctionMatData;
 
-const PLACEHOLDER_TYPE_SUFFIX: &str = "_____PLACEHOLDER_____";
-
 pub type Policy = Rc<CorePolicy>;
 
 /// As all the store entries are append only, we can set a restore point
@@ -49,7 +47,7 @@ pub struct Store {
     pub types: Vec<Type>,
     // the bool indicates weather the name was from
     // user or generated placeholder (false)
-    pub type_by_names: IndexMap<Rc<str>, (NamedTypeRef, bool)>,
+    pub type_by_names: IndexMap<Rc<str>, NamedTypeRef>,
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
@@ -148,7 +146,7 @@ impl Store {
     }
 
     pub fn get_type_by_name(name: &str) -> Option<NamedTypeRef> {
-        with_store(|s| s.type_by_names.get(name).map(|id| id.0.clone()))
+        with_store(|s| s.type_by_names.get(name).cloned())
     }
 
     pub fn register_type_ref(builder: TypeRefBuilder) -> Result<TypeRef> {
@@ -162,34 +160,13 @@ impl Store {
         // allow the ref system to work
         match &type_ref {
             TypeRef::Named(name_ref) => {
-                let (type_ref, name_ref, name, user_named) =
-                    if name_ref.name.ends_with(PLACEHOLDER_TYPE_SUFFIX) {
-                        let name = name_ref.name.strip_suffix(PLACEHOLDER_TYPE_SUFFIX).unwrap();
-                        let name_ref = NamedTypeRef {
-                            id: name_ref.id,
-                            name: name.into(),
-                            target: name_ref.target.clone(),
-                        };
-                        (
-                            TypeRef::Named(name_ref.clone()),
-                            name_ref,
-                            name.to_string().into(),
-                            false,
-                        )
-                    } else {
-                        (
-                            type_ref.clone(),
-                            name_ref.clone(),
-                            name_ref.name.clone(),
-                            true,
-                        )
-                    };
                 let res = type_ref.clone();
+                let type_ref = type_ref.clone();
                 with_store_mut(move |s| -> Result<()> {
                     s.types.push(Type::Ref(type_ref));
                     Ok(())
                 })?;
-                Self::register_type_name(name, name_ref, user_named)?;
+                Self::register_type_name(name_ref.clone())?;
                 Ok(res)
             }
             _ => {
@@ -239,24 +216,14 @@ impl Store {
         // }
     }
 
-    pub fn register_type_name(
-        name: Rc<str>,
-        name_ref: NamedTypeRef,
-        user_named: bool,
-    ) -> Result<()> {
+    pub fn register_type_name(name_ref: NamedTypeRef) -> Result<()> {
         with_store_mut(move |s| -> Result<()> {
-            if s.type_by_names.contains_key(&name) {
+            let name = &name_ref.name;
+            if s.type_by_names.contains_key(name) {
                 return Err(format!("type with name {:?} already exists", name).into());
             }
-            s.type_by_names.insert(name, (name_ref, user_named));
+            s.type_by_names.insert(name.clone(), name_ref);
             Ok(())
-        })
-    }
-
-    pub fn is_user_named(name: &str) -> Option<bool> {
-        with_store(|s| {
-            let (_id, user_named) = s.type_by_names.get(name)?;
-            Some(*user_named)
         })
     }
 
@@ -428,7 +395,7 @@ impl Store {
 
 /// Generate a pub fn for asserting/unwrapping a Type as a specific TypeDef variant
 /// e.g.: `as_variant!(Struct)` gives
-/// ```rust
+/// ```ignore
 /// pub fn as_struct(&self) -> Result<Rc<Struct>> {
 ///     match self.as_type()? {
 ///         Type::Def(TypeDef::Struct(inner)) => Ok(inner),
