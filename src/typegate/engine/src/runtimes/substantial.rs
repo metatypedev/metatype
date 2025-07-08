@@ -10,7 +10,9 @@ use dashmap::DashMap;
 use deno_core::OpState;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
-    converters::{MetadataEvent, Operation, Run},
+    converters::MetadataEvent,
+    run::Operation,
+    run::Run,
 };
 use tg_schema::runtimes::substantial::SubstantialBackend;
 
@@ -523,5 +525,23 @@ pub async fn op_sub_metadata_enumerate_all_children(
 
     backend
         .enumerate_all_children(input.parent_run_id.clone())
+        .map_err(OpErr::map())
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ToCompare {
+    pub old: Run,
+    pub new: Run,
+}
+
+#[deno_core::op2(async)]
+#[serde]
+pub async fn op_sub_run_ensure_determinism(
+    _state: Rc<RefCell<OpState>>,
+    #[serde] input: ToCompare,
+) -> Result<(), OpErr> {
+    input
+        .old
+        .check_against_new(&input.new)
         .map_err(OpErr::map())
 }

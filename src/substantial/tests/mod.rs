@@ -3,14 +3,16 @@
 
 #[cfg(test)]
 mod tests {
-    use std::{collections::HashMap, fmt::Debug, path::PathBuf, thread::sleep, time::Duration};
+    use std::{collections::HashMap, path::PathBuf, thread::sleep, time::Duration};
 
+    use anyhow::Ok;
     use chrono::{DateTime, Utc};
     use redis::Script;
     use serde_json::json;
     use substantial::{
         backends::{fs::FsBackend, redis::RedisBackend, Backend},
-        converters::{MetadataEvent, Operation, OperationEvent, Run},
+        converters::MetadataEvent,
+        run::{Operation, OperationEvent, Run},
     };
     use substantial::{
         backends::{memory::MemoryBackend, BackendStore},
@@ -48,7 +50,7 @@ mod tests {
         let mut original_run = Run::new(run_id.clone());
         original_run.operations.push(Operation {
             at: DateTime::<Utc>::default().to_utc(),
-            event: substantial::converters::OperationEvent::Start {
+            event: substantial::run::OperationEvent::Start {
                 kwargs: serde_json::from_value(json!({
                     "some": { "nested": { "json": 1234 } },
                 }))
@@ -65,15 +67,8 @@ mod tests {
         let mut from_fs_run = Run::new(run_id);
         from_fs_run.recover_from(&fs_backend).unwrap();
 
-        assert_eq!(
-            into_comparable(&original_run),
-            into_comparable(&from_mem_run)
-        );
-
-        assert_eq!(
-            into_comparable(&from_mem_run),
-            into_comparable(&from_fs_run)
-        );
+        debug_assert_eq!(original_run, from_mem_run);
+        debug_assert_eq!(from_mem_run, from_fs_run);
     }
 
     #[test]
@@ -136,7 +131,7 @@ mod tests {
             let mut original_run = Run::new(run_id.clone());
             original_run.operations.push(Operation {
                 at: DateTime::<Utc>::default().to_utc(),
-                event: substantial::converters::OperationEvent::Start {
+                event: substantial::run::OperationEvent::Start {
                     kwargs: serde_json::from_value(json!({
                         "some": { "nested": { "json": 1234 } },
                     }))
@@ -147,10 +142,7 @@ mod tests {
 
             let mut recovered_run = Run::new(run_id.clone());
             recovered_run.recover_from(backend.as_ref()).unwrap();
-            assert_eq!(
-                into_comparable(&original_run),
-                into_comparable(&recovered_run),
-            );
+            debug_assert_eq!(original_run, recovered_run);
 
             // log metadata
             backend
@@ -176,11 +168,7 @@ mod tests {
                 .read_schedule(queue.clone(), run_id.clone(), schedule)
                 .unwrap();
             let rec_operation: Operation = schedule.unwrap().try_into().unwrap();
-            assert_eq!(
-                into_comparable(&orig_operation),
-                into_comparable(&rec_operation),
-                "original vs persisted "
-            );
+            debug_assert_eq!(orig_operation, rec_operation, "original vs persisted ");
 
             // leased exclude logic
             let next_run = backend
@@ -323,8 +311,85 @@ mod tests {
         }
     }
 
-    fn into_comparable<T: Debug>(value: &T) -> String {
-        format!("{value:?}")
+    #[test]
+    fn test_non_determinism() {
+        let run_id = "abc".to_owned();
+        let mut run = Run::new(run_id);
+        run.operations.push(Operation {
+            at: DateTime::<Utc>::default().to_utc(),
+            event: substantial::run::OperationEvent::Start {
+                kwargs: serde_json::from_value(json!({ "a": 1234 })).unwrap(),
+            },
+        });
+        run.operations.push(Operation {
+            at: DateTime::<Utc>::default().to_utc(),
+            event: substantial::run::OperationEvent::Save {
+                id: 1,
+                value: substantial::run::SavedValue::Resolved {
+                    payload: json!("version 1"),
+                },
+            },
+        });
+
+        let mut legit_new_run = run.clone();
+        legit_new_run.operations.push(Operation {
+            at: DateTime::<Utc>::default().to_utc(),
+            event: substantial::run::OperationEvent::Send {
+                event_name: "pay".to_owned(),
+                value: json!({"amount": 1234}),
+            },
+        });
+
+        debug_assert_eq!(
+            run.check_against_new(&legit_new_run)
+                .map_err(|e| e.to_string()),
+            std::result::Result::Ok(())
+        );
+
+        // Emuate bad timestamp
+        let mut bad_timestamp = legit_new_run.clone();
+        bad_timestamp.operations[1].at += Duration::from_millis(1);
+        debug_assert_eq!(
+            run.check_against_new(&bad_timestamp).map_err(|e| e.to_string()),
+            std::result::Result::Err(
+                "Workflow run is not deterministic after comparing Save(id=1) (old) and Save(id=1) (new): Schedule timestamp does not match"
+                .to_owned()
+            )
+        );
+
+        // Emulate shorter run (e.g. lines were removed in the new version or are no longer reachable)
+        let mut shorter_run = legit_new_run.clone();
+        shorter_run.operations.pop();
+        shorter_run.operations.pop();
+        debug_assert_eq!(
+            run.check_against_new(&shorter_run)
+                .map_err(|e| e.to_string()),
+            std::result::Result::Err(
+                "Run logs are matching up to the event Save(id=1), the provided run is older"
+                    .to_owned()
+            )
+        );
+
+        // Emulate bad path in the middle
+        let mut new_bad_path_inserted = legit_new_run.clone();
+        new_bad_path_inserted.operations.insert(
+            1,
+            Operation {
+                at: DateTime::<Utc>::default().to_utc(),
+                event: substantial::run::OperationEvent::Send {
+                    event_name: "pay".to_owned(),
+                    value: json!({"amount": 1234}),
+                },
+            },
+        );
+
+        debug_assert_eq!(
+            run.check_against_new(&new_bad_path_inserted).map_err(|e| e.to_string()),
+            std::result::Result::Err(
+                "Workflow run is not deterministic after comparing Save(id=1) (old) and Send(event_name=\"pay\") (new): Events do not match"
+                .to_owned()
+            )
+        );
     }
 
     fn link_children_rec(

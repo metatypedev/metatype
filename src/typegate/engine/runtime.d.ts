@@ -81,6 +81,9 @@ export type MetaNS = {
     metadataEnumerateAllChildren: (
       inp: EnumerateAllChildrenInput,
     ) => Promise<Array<string>>;
+    runEnsureDeterminism: (
+      inp: ToCompare,
+    ) => Promise<void>;
   };
 
   py_validation: {
@@ -425,4 +428,9 @@ export interface WriteParentChildLinkInput {
 export interface EnumerateAllChildrenInput {
   backend: Backend;
   parent_run_id: string;
+}
+
+export interface ToCompare {
+  old: Run;
+  new: Run;
 }
