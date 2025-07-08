@@ -126,10 +126,6 @@ impl Run {
         self.operations.clear()
     }
 
-    pub fn reset(&mut self) {
-        self.operations = vec![];
-    }
-
     /// Try to recover from dups such as
     ///
     /// ```ignore
@@ -161,6 +157,7 @@ impl Run {
 
         self.operations = operations;
     }
+
     pub fn check_against_new(&self, run: &Run) -> Result<()> {
         let old_ops = &self.operations;
         let new_ops = &run.operations;
@@ -208,7 +205,7 @@ impl OperationEvent {
             }
             OperationEvent::Save { id, .. } => format!("Save(id={id})"),
             OperationEvent::Send { event_name, .. } => format!("Send(event_name={event_name:?})"),
-            OperationEvent::Stop { .. } => format!("Stop"),
+            OperationEvent::Stop { .. } => "Stop".to_owned(),
             OperationEvent::Start { kwargs } => format!(
                 "Start(kwargs = {{{}}})",
                 kwargs
@@ -226,7 +223,7 @@ impl OperationEvent {
                     LogLevel::Error => "Error",
                 }
             ),
-            OperationEvent::Compensate => format!("Compensate"),
+            OperationEvent::Compensate => "Compensate".to_owned(),
         }
     }
 }

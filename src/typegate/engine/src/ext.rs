@@ -60,6 +60,7 @@ deno_core::extension!(
         substantial::op_sub_metadata_write_parent_child_link,
         substantial::op_sub_metadata_enumerate_all_children,
         substantial::op_sub_run_ensure_determinism,
+        substantial::op_sub_strategy_retry,
         py_validation::op_validate,
 
         // FIXME(yohe): this test broke and has proven difficult to fix

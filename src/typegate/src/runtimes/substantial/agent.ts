@@ -111,18 +111,6 @@ export class Agent {
     return run;
   }
 
-  async checkDeterminism(runId: string, newRun: Run) {
-    const { run: oldRun } = await Meta.substantial.storeCreateOrGetRun({
-      backend: this.backend,
-      run_id: runId,
-    });
-
-    await Meta.substantial.runEnsureDeterminism({
-      old: oldRun,
-      new: newRun,
-    });
-  }
-
   start(workflows: Array<WorkflowDescription>) {
     this.workflows = workflows;
 
@@ -436,10 +424,6 @@ export class Agent {
         }
         case "SUCCESS":
         case "FAIL":
-          //           this.logger.info(
-          //   `Checking finalized records for "${workflowName}"...`,
-          // );
-          // await this.checkDeterminism(runId, event.run);
           await this.#workflowHandleGracefullCompletion(
             startedAt,
             workflowName,

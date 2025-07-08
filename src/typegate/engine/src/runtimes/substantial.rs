@@ -10,9 +10,9 @@ use dashmap::DashMap;
 use deno_core::OpState;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
+    backoff::{RetryConfig, RetryStrategy, Strategy},
     converters::MetadataEvent,
-    run::Operation,
-    run::Run,
+    run::{Operation, Run},
 };
 use tg_schema::runtimes::substantial::SubstantialBackend;
 
@@ -534,14 +534,32 @@ pub struct ToCompare {
     pub new: Run,
 }
 
-#[deno_core::op2(async)]
+#[deno_core::op2]
 #[serde]
-pub async fn op_sub_run_ensure_determinism(
+pub fn op_sub_run_ensure_determinism(
     _state: Rc<RefCell<OpState>>,
     #[serde] input: ToCompare,
 ) -> Result<(), OpErr> {
     input
         .old
         .check_against_new(&input.new)
+        .map_err(OpErr::map())
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RetryStrategyInput {
+    config: RetryConfig,
+    strategy: Strategy,
+    retries: f64,
+}
+
+#[deno_core::op2]
+pub fn op_sub_strategy_retry(
+    _state: Rc<RefCell<OpState>>,
+    #[serde] input: RetryStrategyInput,
+) -> Result<f64, OpErr> {
+    RetryStrategy::new(input.config)
+        .map_err(OpErr::map())?
+        .eval(input.strategy, input.retries)
         .map_err(OpErr::map())
 }

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { Meta, type Strategy } from "../../../engine/runtime.js";
 import type { HostcallPump } from "../../worker_utils.ts";
 import {
   Interrupt,
@@ -16,6 +17,7 @@ import {
 export class Context {
   private id = 0;
   private logId = 0;
+  private oldRun: Run;
   public kwargs = {};
   logger: SubLogger;
 
@@ -25,6 +27,7 @@ export class Context {
   ) {
     this.kwargs = getKwargsCopy(run);
     this.logger = new SubLogger(this);
+    this.oldRun = deepClone(run);
   }
 
   #nextId() {
@@ -39,13 +42,13 @@ export class Context {
 
   #appendOp(op: OperationEvent) {
     if (!runHasStopped(this.run)) {
-      // console.log(
-      //   "Append context",
-      //   op.type,
-      //   this.run.operations.map((o) => o.event.type),
-      // );
       this.run.operations.push({ at: new Date().toJSON(), event: op });
     }
+
+    Meta.substantial.runEnsureDeterminism({
+      old: this.oldRun,
+      new: this.run,
+    });
   }
 
   appendLogMessage(level: LogLevel, serializableArgs: Array<unknown>) {
@@ -112,14 +115,16 @@ export class Context {
         currRetryCount < option.retry.maxRetries
       ) {
         const { retry } = option;
-        const strategy = new RetryStrategy(
-          retry.maxRetries,
-          retry.minBackoffMs,
-          retry.maxBackoffMs,
-        );
+        const delayMs = Meta.substantial.strategyRetry({
+          config: {
+            max_retries: retry.maxRetries,
+            min_backoff_ms: retry.minBackoffMs,
+            max_backoff_ms: retry.maxBackoffMs,
+          },
+          strategy: { type: retry.strategy ?? "linear" },
+          retries: Math.max(retry.maxRetries - currRetryCount, 0),
+        });
 
-        const retriesLeft = Math.max(retry.maxRetries - currRetryCount, 0);
-        const delayMs = strategy.eval(retry.strategy ?? "linear", retriesLeft);
         const waitUntilAsMs = new Date().getTime() + delayMs;
 
         this.#appendOp({
@@ -244,7 +249,7 @@ export class Context {
   }
 }
 
-export type Workflow<O> = (ctx: Context) => Promise<O>;
+type Workflow<O> = (ctx: Context) => Promise<O>;
 
 interface SerializableWorkflowHandle {
   runId?: string;
@@ -253,7 +258,7 @@ interface SerializableWorkflowHandle {
   kwargs: unknown;
 }
 
-export class ChildWorkflowHandle {
+class ChildWorkflowHandle {
   constructor(
     private ctx: Context,
     public handleDef: SerializableWorkflowHandle,
@@ -364,89 +369,6 @@ export class ChildWorkflowHandle {
   }
 }
 
-// TODO: move all of these into substantial lib once Meta can be used inside workers
-// ```rust
-// #[serde(....)]
-// pub enum RetryStrategy { Linear {...}, Exp { ... }}
-// impl RetryStrategy { pub fn eval(&self, retries_left: i8) { .. }}
-//
-// ```
-
-type Strategy = "linear";
-
-interface SaveOption {
-  timeoutMs?: number;
-  retry?: {
-    strategy?: Strategy; // TODO: add more
-    minBackoffMs: number;
-    maxBackoffMs: number;
-    maxRetries: number;
-  };
-}
-
-function failAfter(ms: number): Promise<never> {
-  return new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(Error("Save timed out"));
-    }, ms);
-  });
-}
-
-class RetryStrategy {
-  minBackoffMs?: number;
-  maxBackoffMs?: number;
-  maxRetries: number;
-
-  constructor(
-    maxRetries: number,
-    minBackoffMs?: number,
-    maxBackoffMs?: number,
-  ) {
-    this.maxRetries = maxRetries;
-    this.minBackoffMs = minBackoffMs;
-    this.maxBackoffMs = maxBackoffMs;
-
-    if (this.maxRetries < 1) {
-      throw new Error("maxRetries < 1");
-    }
-
-    const low = this.minBackoffMs;
-    const high = this.maxBackoffMs;
-
-    if (low && high) {
-      if (low >= high) {
-        throw new Error("minBackoffMs >= maxBackoffMs");
-      }
-      if (low < 0) {
-        throw new Error("minBackoffMs < 0");
-      }
-    } else if (low && high == undefined) {
-      this.maxBackoffMs = low + 10;
-    } else if (low == undefined && high) {
-      this.minBackoffMs = Math.max(0, high - 10);
-    }
-  }
-
-  eval(strategy: Strategy, retriesLeft: number) {
-    switch (strategy) {
-      case "linear":
-        return this.#linear(retriesLeft);
-      // TODO: add more
-      default:
-        throw new Error(`Unknown strategy "${strategy}" provided`);
-    }
-  }
-
-  #linear(retriesLeft: number): number {
-    if (retriesLeft <= 0) {
-      throw new Error("retries left <= 0");
-    }
-
-    const dt = (this.maxBackoffMs ?? 0) - (this.minBackoffMs ?? 0);
-    return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
-  }
-}
-
 class SubLogger {
   constructor(private ctx: Context) {}
 
@@ -490,6 +412,24 @@ class SubLogger {
   error(...payload: unknown[]) {
     this.#log({ type: "Error" }, ...payload);
   }
+}
+
+interface SaveOption {
+  timeoutMs?: number;
+  retry?: {
+    strategy?: Strategy["type"];
+    minBackoffMs: number;
+    maxBackoffMs: number;
+    maxRetries: number;
+  };
+}
+
+function failAfter(ms: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(Error("Save timed out"));
+    }, ms);
+  });
 }
 
 function getKwargsCopy(run: Run): Record<string, unknown> {
