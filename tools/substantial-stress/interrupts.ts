@@ -17,7 +17,7 @@ const sleepWorkflow = new WorkflowClient(tgUrl, "saveAndSleepExample", {
 const initCompleted = await sleepWorkflow.countCompleted();
 const initOngoing = await sleepWorkflow.countOngoing();
 
-const amount = 100;
+const amount = 1000;
 for (let i = 0; i < amount; i += 1) {
   await sleepWorkflow.start({
     a: 1234,

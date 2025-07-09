@@ -61,6 +61,24 @@ export async function saveAndSleepExample(ctx: Context) {
   return sum;
 }
 
+export async function nonDeterministic(ctx: Context) {
+  const now = Date.now();
+  const then = await ctx.save(() => now);
+  const delta = now - then;
+
+  if (delta == 0) {
+    const value = await ctx.save(() => "one");
+    ctx.logger.warn("branch 1: first replay", value);
+  } else {
+    const value = await ctx.save(() => "two");
+    ctx.logger.info("branch 2: other replays", value);
+  }
+
+  ctx.logger.info("before ensure", delta);
+  await ctx.ensure(() => delta > 123);
+  ctx.logger.info("after ensure", delta);
+}
+
 export async function retryExample(ctx: Context) {
   const { fail, timeout } = ctx.kwargs;
   const retryRet = await ctx.save(

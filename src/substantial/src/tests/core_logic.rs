@@ -350,23 +350,18 @@ fn test_non_determinism() {
     debug_assert_eq!(
             run.check_against_new(&bad_timestamp).map_err(|e| e.to_string()),
             std::result::Result::Err(
-                "Workflow run is not deterministic after comparing Save(id=1) (old) and Save(id=1) (new): Schedule timestamp does not match"
+                "Workflow run is not deterministic: failed comparing Save(id=1) (old) and Save(id=1) (new), Schedule timestamp does not match"
                 .to_owned()
             )
         );
 
-    // Emulate shorter run (e.g. lines were removed in the new version or are no longer reachable)
+    // Emulate comparing with an ongoing run (partial or has more events than old)
     let mut shorter_run = legit_new_run.clone();
     shorter_run.operations.pop();
-    shorter_run.operations.pop();
-    debug_assert_eq!(
-        run.check_against_new(&shorter_run)
-            .map_err(|e| e.to_string()),
-        std::result::Result::Err(
-            "Run logs are matching up to the event Save(id=1), the provided run is older"
-                .to_owned()
-        )
-    );
+    assert!(run
+        .check_against_new(&shorter_run)
+        .map_err(|e| e.to_string())
+        .is_ok());
 
     // Emulate bad path in the middle
     let mut new_bad_path_inserted = legit_new_run.clone();
@@ -384,7 +379,7 @@ fn test_non_determinism() {
     debug_assert_eq!(
         run.check_against_new(&new_bad_path_inserted).map_err(|e| e.to_string()),
         std::result::Result::Err(
-            "Workflow run is not deterministic after comparing Save(id=1) (old) and Send(event_name=\"pay\") (new): Events do not match"
+            "Workflow run is not deterministic: failed comparing Save(id=1) (old) and Send(event_name=\"pay\") (new), Events do not match"
             .to_owned()
         )
     );

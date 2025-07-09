@@ -6,7 +6,10 @@ use crate::{backends::Backend, protocol::events::Records};
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::{DefaultHasher, Hash, Hasher},
+};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(tag = "type")]
@@ -146,7 +149,7 @@ impl Run {
         let mut seen_operations = HashSet::new();
 
         for operation in &self.operations {
-            let key = (operation.at, operation.event.safe_to_string());
+            let key = operation.as_key();
             if seen_operations.contains(&key) {
                 continue;
             }
@@ -175,22 +178,12 @@ impl Run {
 
             if !issues.is_empty() {
                 bail!(
-                    "Workflow run is not deterministic after comparing {} (old) and {} (new): {}",
+                    "Workflow run is not deterministic: failed comparing {} (old) and {} (new), {}",
                     old.event.safe_to_string(),
                     new.event.safe_to_string(),
                     issues.join(", ")
                 );
             }
-        }
-
-        if old_ops.len() > new_ops.len() {
-            bail!(
-                "Run logs are matching up to {}, the provided run is older",
-                self.operations
-                    .last()
-                    .map(|last| format!("the event {}", last.event.safe_to_string(),))
-                    .unwrap_or_else(|| "0 event".to_string())
-            )
         }
 
         Ok(())
@@ -203,7 +196,20 @@ impl OperationEvent {
             OperationEvent::Sleep { id, start, end } => {
                 format!("Sleep(id={id}, start={start}, end={end})")
             }
-            OperationEvent::Save { id, .. } => format!("Save(id={id})"),
+            OperationEvent::Save { id, value } => {
+                format!(
+                    "Save(id={}, value={})",
+                    id,
+                    match value {
+                        SavedValue::Retry {
+                            counter,
+                            wait_until,
+                        } => format!("Retry({}, {})", counter, wait_until),
+                        SavedValue::Resolved { .. } => "Payload".to_owned(),
+                        SavedValue::Failed { .. } => "Failed".to_owned(),
+                    }
+                )
+            }
             OperationEvent::Send { event_name, .. } => format!("Send(event_name={event_name:?})"),
             OperationEvent::Stop { .. } => "Stop".to_owned(),
             OperationEvent::Start { kwargs } => format!(
@@ -225,5 +231,13 @@ impl OperationEvent {
             ),
             OperationEvent::Compensate => "Compensate".to_owned(),
         }
+    }
+}
+
+impl Operation {
+    pub fn as_key(&self) -> String {
+        let mut hasher = DefaultHasher::new();
+        (self.at, self.event.safe_to_string()).hash(&mut hasher);
+        hasher.finish().to_string()
     }
 }
