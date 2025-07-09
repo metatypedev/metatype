@@ -350,7 +350,7 @@ fn test_non_determinism() {
     debug_assert_eq!(
             run.check_against_new(&bad_timestamp).map_err(|e| e.to_string()),
             std::result::Result::Err(
-                "Workflow run is not deterministic: failed comparing Save(id=1) (old) and Save(id=1) (new), Schedule timestamp does not match"
+                "Workflow run is not deterministic: failed comparing Save(id=1, value=Payload) (old) and Save(id=1, value=Payload) (new), Schedule timestamp does not match"
                 .to_owned()
             )
         );
@@ -379,7 +379,7 @@ fn test_non_determinism() {
     debug_assert_eq!(
         run.check_against_new(&new_bad_path_inserted).map_err(|e| e.to_string()),
         std::result::Result::Err(
-            "Workflow run is not deterministic: failed comparing Save(id=1) (old) and Send(event_name=\"pay\") (new), Events do not match"
+            "Workflow run is not deterministic: failed comparing Save(id=1, value=Payload) (old) and Send(event_name=\"pay\") (new), Events do not match"
             .to_owned()
         )
     );
