@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
+  basicNonDeterministicTestTemplate,
   basicTestTemplate,
   childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
@@ -50,3 +51,10 @@ childWorkflowTestTemplate(
   },
   redisCleanup(SUB_REDIS),
 );
+
+basicNonDeterministicTestTemplate("redis", {
+  delays: {
+    awaitSleepCompleteSec: 10,
+  },
+  secrets: { SUB_REDIS },
+}, redisCleanup(SUB_REDIS));

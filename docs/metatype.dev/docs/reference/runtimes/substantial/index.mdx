@@ -561,3 +561,98 @@ typegraph(
     </TabItem>
 
 </SDKTabs>
+
+## Versioning
+
+There is no dedicated versioning scheme in Substantial. However, you can still manage versioning using existing features when applying incremental changes to a workflow.
+
+Assume the following workflow:
+
+```ts
+import { checkStatus, getAmountById, sendEmail, pay } from "./payroll.ts";
+
+export function payEmployee(ctx: Context) {
+  const { id } = ctx.kwargs;
+
+  let period = 0;
+  while (true) {
+    const isStillEmployed = await ctx.save(() => checkStatus(id));
+    if (!isStillEmployed) {
+      break;
+    }
+
+    const amount = await ctx.save(() => getAmountById(id));
+    await ctx.save(() => pay(id, amount));
+    await ctx.save(() => sendEmail(id));
+    period += 1;
+
+    ctx.logger.info(`Period ${period}: paid ${amount}`);
+    ctx.sleep(30 /*days*/ * 24 * 3600 * 1000);
+  }
+
+  ctx.logger.info(`Workflow terminated for Employee #${id}`);
+}
+```
+
+Now, suppose you want to change the sleep interval from 30 days to 15 days for future runs.
+Reconciling this change with already-running workflows can be challenging.
+
+### Method 1: Abort or wait on all ongoing workflows, then start new ones
+
+This works if your infrastructure lets you safely abort a workflow and restart it, or if your domain logic allows this approach.
+
+In our example, this strategy is feasible only if all employees are paid in sync. Otherwise, you’d need to ensure you only abort at the end of a payroll cycle.
+
+```diff
+-    ctx.sleep(30/*days*/ * 24 * 3600 * 1000);
++    ctx.sleep(15/*days*/ * 24 * 3600 * 1000);
+```
+
+- ✅ Simple, but requires coordination.
+
+### Method 2: Create a new workflow under a new name
+
+Instead of modifying the existing workflow, keep it as-is and introduce a new one with the updated logic.
+
+Then, switch over to the new workflow in your orchestration layer. Optionally, you can abort old ones after they finish.
+
+```ts
+export function payEmployee(ctx: Context) {
+  // old logic
+}
+
+export function payEmployee15Days(ctx: Context) {
+  // new logic
+}
+```
+
+- ✅ Clean separation, allows for drastically different logic.
+- ⚠️ You may need to update callers or orchestration logic.
+
+### Method 3: Add conditional logic for new behavior
+
+This approach lets you keep the same workflow name but use branching logic based on a versioning flag (e.g., an optional cycle in ctx.kwargs).
+
+It's especially useful when you have many interconnected workflows and don’t want to change references or workflow names.
+
+```ts
+export function payEmployee(ctx: Context) {
+  const { id, cycle } = ctx.kwargs; // 'cycle' is new
+  // ..
+  while (true) {
+    // ..
+
+    if (!cycle) {
+      ctx.sleep(30 * 24 * 3600 * 1000); // legacy default
+    } else {
+      ctx.sleep(cycle * 24 * 3600 * 1000); // new logic
+    }
+  }
+  // ..
+}
+```
+
+You can start new workflows with `cycle` set to `15`, while old ones follow the legacy path.
+
+- ✅ Backwards-compatible and centralizes logic.
+- ⚠️ Still requires external coordination to eventually abort the old instances.

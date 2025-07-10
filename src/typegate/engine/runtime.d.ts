@@ -81,6 +81,12 @@ export type MetaNS = {
     metadataEnumerateAllChildren: (
       inp: EnumerateAllChildrenInput,
     ) => Promise<Array<string>>;
+    runEnsureDeterminism: (
+      inp: ToCompare,
+    ) => void;
+    strategyRetry: (
+      inp: RetryStrategyInput,
+    ) => number;
   };
 
   py_validation: {
@@ -425,4 +431,23 @@ export interface WriteParentChildLinkInput {
 export interface EnumerateAllChildrenInput {
   backend: Backend;
   parent_run_id: string;
+}
+
+export interface ToCompare {
+  old: Run;
+  new: Run;
+}
+
+export interface RetryConfig {
+  min_backoff_ms?: number;
+  max_backoff_ms?: number;
+  max_retries: number;
+}
+
+export type Strategy = { type: "linear" };
+
+export interface RetryStrategyInput {
+  config: RetryConfig;
+  strategy: Strategy;
+  retries: number;
 }

@@ -1,11 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{HashMap, HashSet};
-
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Utc};
-
 use protobuf::{
     well_known_types::{
         struct_::{self, Struct},
@@ -14,167 +11,15 @@ use protobuf::{
     MessageField,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::{
-    backends::Backend,
     protocol::{
-        events::{Event, Records, SaveFailed, SaveResolved, SaveRetry},
+        events::{Event, SaveFailed, SaveResolved, SaveRetry},
         metadata::{metadata::Of, Error, Info, Metadata},
     },
+    run::{LogLevel, Operation, OperationEvent, RunResult, SavedValue},
 };
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum RunResult {
-    Ok(serde_json::Value),
-    Err(serde_json::Value),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum SavedValue {
-    Retry {
-        counter: i32,
-        wait_until: DateTime<Utc>,
-    },
-    Resolved {
-        payload: serde_json::Value,
-    },
-    Failed {
-        err: serde_json::Value,
-    },
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum LogLevel {
-    Warn,
-    Info,
-    Error,
-}
-
-/// Bridge between protobuf types and Typescript
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum OperationEvent {
-    Sleep {
-        id: u32,
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
-    },
-    Save {
-        id: u32,
-        value: SavedValue,
-    },
-    Send {
-        event_name: String,
-        value: serde_json::Value,
-    },
-    Stop {
-        result: Option<RunResult>,
-    },
-    Start {
-        kwargs: HashMap<String, serde_json::Value>,
-    },
-    Log {
-        id: u32,
-        payload: serde_json::Value,
-        level: LogLevel,
-    },
-    Compensate,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Operation {
-    pub at: DateTime<Utc>,
-    pub event: OperationEvent,
-}
-
-/// A Run is a set of operations
-///
-/// Each operation is produced from the workflow execution
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Run {
-    pub run_id: String,
-    pub operations: Vec<Operation>,
-}
-
-impl Run {
-    pub fn new(run_id: String) -> Self {
-        Self {
-            run_id,
-            operations: vec![],
-        }
-    }
-
-    pub fn recover_from(&mut self, backend: &dyn Backend) -> Result<()> {
-        if let Some(records) = backend.read_events(self.run_id.clone())? {
-            let operations = records
-                .events
-                .into_iter()
-                .map(|event| event.try_into())
-                .collect::<Result<Vec<Operation>>>()
-                .with_context(|| {
-                    format!("Recovering operations from backend for {}", self.run_id)
-                })?;
-            self.operations = operations;
-            self.compact();
-        }
-
-        Ok(())
-    }
-
-    pub fn persist_into(&mut self, backend: &dyn Backend) -> Result<()> {
-        self.compact();
-
-        let mut records = Records::new();
-        records.events = self
-            .operations
-            .clone()
-            .into_iter()
-            .map(|op| op.try_into())
-            .collect::<Result<_>>()?;
-        backend.write_events(self.run_id.clone(), records)?;
-        Ok(())
-    }
-
-    pub fn clear(&mut self) {
-        self.operations.clear()
-    }
-
-    pub fn reset(&mut self) {
-        self.operations = vec![];
-    }
-
-    /// Try to recover from dups such as
-    ///
-    /// ```ignore
-    ///  [Start Start ...] or
-    ///  [... Stop Stop] or
-    ///  [ .... Event X Event X ... ]
-    /// ```
-    ///
-    /// These dups can occur when we crash at a given timing
-    /// and the underlying event of the appointed schedule was not closed.
-    /// The engine will happily append onto the operation log,
-    /// we throw by default but realistically we can recover.
-    ///
-    /// WARN: undesirable side effects can still happen if we crash before saving the Saved results.
-    ///
-    pub fn compact(&mut self) {
-        let mut operations = Vec::new();
-        let mut dup_schedules = HashSet::new();
-        for operation in &self.operations {
-            if dup_schedules.contains(&operation.at) {
-                continue;
-            }
-
-            operations.push(operation.clone());
-            dup_schedules.insert(operation.at);
-        }
-
-        self.operations = operations;
-    }
-}
 
 impl TryFrom<Event> for Operation {
     type Error = anyhow::Error;

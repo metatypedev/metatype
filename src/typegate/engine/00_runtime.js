@@ -78,6 +78,8 @@ const Meta = {
     metadataEnumerateAllChildren: getOp(
       "op_sub_metadata_enumerate_all_children",
     ),
+    runEnsureDeterminism: getOp("op_sub_run_ensure_determinism"),
+    strategyRetry: getOp("op_sub_strategy_retry"),
   },
   grpc: {
     register: getOp("op_grpc_register"),

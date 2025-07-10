@@ -799,6 +799,118 @@ export function inputMutationTemplate(
   );
 }
 
+export function basicNonDeterministicTestTemplate(
+  backendName: BackendName,
+  {
+    delays,
+    secrets,
+    only = false,
+  }: TestTemplateOptionsX<"awaitSleepCompleteSec">,
+  cleanup?: MetaTestCleanupFn,
+) {
+  Meta.test(
+    {
+      name: `Non-deterministic workflow (${backendName})`,
+      only,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine("runtimes/substantial/substantial.py", {
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
+      });
+
+      let currentRunId: string | null = null;
+      await t.should(
+        `start nonDeterministic workflow and return its run id (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              start_non_deterministic(kwargs: {})
+            }
+          `
+            .expectBody((body) => {
+              currentRunId = body.data?.start_non_deterministic! as string;
+              assertExists(
+                currentRunId,
+                "Run id was not returned when workflow was started",
+              );
+            })
+            .on(e);
+        },
+      );
+
+      await sleep(delays.awaitSleepCompleteSec * 1000);
+
+      await t.should(
+        `complete nonDeterministic workflow with an error (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              results_raw(name: "nonDeterministic") {
+                ongoing {
+                  count
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
+                    logs {
+                      # timestamp
+                      level
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          `
+            .expectData({
+              results_raw: {
+                ongoing: {
+                  count: 0,
+                },
+                completed: {
+                  count: 1,
+                  runs: [
+                    {
+                      run_id: currentRunId,
+                      result: {
+                        status: "COMPLETED_WITH_ERROR",
+                        value: JSON.stringify(
+                          "Workflow run is not deterministic: failed comparing Log(id=1, level=Warn) (old) and Log(id=1, level=Info) (new), Events do not match, Schedule timestamp does not match",
+                        ),
+                      },
+                      logs: [
+                        {
+                          level: "Info",
+                          value: JSON.stringify([
+                            "branch 2: other replays",
+                            "one",
+                          ]),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            })
+            .on(e);
+        },
+      );
+    },
+  );
+}
+
 // TODO:
 // mock a very basic http server in another process that counts the number of request made by a workflow
 // This will allow..
