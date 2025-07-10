@@ -12,7 +12,7 @@ import {
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context,
 ) => {
-  const { to } = ctx.kwargs;
+  const { to } = ctx.kwargs as { to: string };
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
   ctx.logger.info("Will send to", to);
   ctx.logger.warn("Will now wait on an event");
@@ -136,7 +136,7 @@ export const secretsExample: Workflow<void> = (_, { secrets }) => {
 };
 
 export async function accidentalInputMutation(ctx: Context) {
-  const { items } = ctx.kwargs;
+  const { items } = ctx.kwargs as { items: Array<{ innerField: string }> };
 
   const copy = [];
 
@@ -145,7 +145,7 @@ export async function accidentalInputMutation(ctx: Context) {
   while (items.length >= 1) {
     const front = items.shift();
 
-    if (front.innerField == mutValue) {
+    if (front?.innerField == mutValue) {
       // Should throw on shallow clones
       throw new Error(
         `actual kwargs was mutated after interrupts: copy ${
