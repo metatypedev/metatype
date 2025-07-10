@@ -24,12 +24,9 @@ import {
 } from "./substantial/agent.ts";
 import { closestWord } from "../utils.ts";
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
-import {
-  applyFilter,
-  type ExecutionStatus,
-  type Expr,
-} from "./substantial/filter_utils.ts";
+import { applyFilter, type Expr } from "./substantial/filter_utils.ts";
 import { createTaskId } from "./patterns/worker_manager/mod.ts";
+import type { ExecutionStatus } from "./substantial/common.ts";
 
 const logger = getLogger(import.meta);
 

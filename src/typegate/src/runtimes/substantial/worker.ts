@@ -8,7 +8,7 @@ import {
   Interrupt,
   type WorkflowEvent,
   type WorkflowMessage,
-} from "./types.ts";
+} from "./common.ts";
 
 let runCtx: Context | undefined;
 const hostcallPump = new HostcallPump();
