@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
-
-// @ts-nocheck: Deno file
-
+export { sophon } from "@ghjk/ts";
+import { file, stdDeps } from "@ghjk/ts";
+import { sedLock } from "@ghjk/ts/std/sedLock.ts";
+import * as ports from "@ghjk/ports_wip";
 import {
   CURRENT_VERSION,
   LATEST_PRE_RELEASE_VERSION,
   LATEST_RELEASE_VERSION,
 } from "./tools/consts.ts";
-import { file, ports, sedLock, semver, stdDeps } from "./tools/deps.ts";
 import { validateVersions } from "./tools/tasks/lock.ts";
 import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
@@ -17,7 +17,6 @@ const ghjk = file({
   defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",
   tasks,
 });
-export const sophon = ghjk.sophon;
 const { env, task } = ghjk;
 
 env("main")
@@ -40,7 +39,14 @@ env("main")
 env("_rust").install(
   // use rustup for the actual toolchain
   ports.protoc({ version: "v28.2" }),
-  ports.cmake()[0],
+  ports.pipi({ packageName: "cmake" })[0],
+  // ports.cargobi({
+  //   crateName: "sccache",
+  //   locked: true,
+  //   version: "0.10.0"
+  // }),
+  // FIXME: sccache doesn't like ghjk installed
+  // rustc
   // installs.rust_stable,
 );
 

@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
 export function hello({ name }: { name: string }) {
-    return `Hello ${name}`;
+  return `Hello ${name}`;
 }

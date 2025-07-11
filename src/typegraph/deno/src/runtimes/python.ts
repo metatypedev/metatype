@@ -6,7 +6,7 @@ import { runtimes } from "../sdk.ts";
 import type { Effect } from "../gen/runtimes.ts";
 import { type Materializer, Runtime } from "./mod.ts";
 import { fx } from "../index.ts";
-import { resolveModuleParams, type ModuleImport } from "../utils/module.ts";
+import { type ModuleImport, resolveModuleParams } from "../utils/module.ts";
 
 export { Module as PythonModule } from "../utils/module.ts";
 

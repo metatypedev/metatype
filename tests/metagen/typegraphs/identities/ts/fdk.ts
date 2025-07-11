@@ -981,7 +981,7 @@ const nodeMetas = {
   scalar() {
     return {};
   },
-  
+
   RsProxyPrimitives(): NodeMeta {
     return {
       ...nodeMetas.Primitives(),
@@ -1230,7 +1230,6 @@ export type Primitives = {
 };
 export type PrimitivesStrString = string;
 export type PrimitivesEnumStringEnum =
-
   | "wan"
   | "tew"
   | "tree";
@@ -1253,7 +1252,10 @@ export type Composites = {
   union: CompositesUnionUnion;
   list: CompositesListPrimitivesStrStringList;
 };
-export type CompositesOptPrimitivesStrStringOptional = (PrimitivesStrString) | null | undefined;
+export type CompositesOptPrimitivesStrStringOptional =
+  | (PrimitivesStrString)
+  | null
+  | undefined;
 export type CompositesEitherEither =
   | (Primitives)
   | (Branch2);
@@ -1267,7 +1269,6 @@ export type CompositesUnionUnion =
   | (StringEmail25);
 export type Branch4 = Array<CompositesUnionUnionT0StringEnum>;
 export type CompositesUnionUnionT0StringEnum =
-
   | "grey"
   | "beige";
 export type StringEmail25 = string;
@@ -1296,7 +1297,10 @@ export type Branch33B = {
   phantom3b?: CompositesOptPrimitivesStrStringOptional;
   to2?: Cycles1To2Cycles2Optional;
 };
-export type Cycles1List3Cycles1List3Cycles3ListOptional = (Cycles1List3Cycles3List) | null | undefined;
+export type Cycles1List3Cycles1List3Cycles3ListOptional =
+  | (Cycles1List3Cycles3List)
+  | null
+  | undefined;
 export type Cycles1List3Cycles3List = Array<Cycles3>;
 export type SimpleCycles1Args = {
   data: SimpleCycles1;
@@ -1305,17 +1309,26 @@ export type SimpleCycles1 = {
   phantom1?: CompositesOptPrimitivesStrStringOptional;
   to2?: SimpleCycles1To2SimpleCycles2Optional;
 };
-export type SimpleCycles1To2SimpleCycles2Optional = (SimpleCycles2) | null | undefined;
+export type SimpleCycles1To2SimpleCycles2Optional =
+  | (SimpleCycles2)
+  | null
+  | undefined;
 export type SimpleCycles2 = {
   phantom2?: CompositesOptPrimitivesStrStringOptional;
   to3?: SimpleCycles2To3SimpleCycles3Optional;
 };
-export type SimpleCycles2To3SimpleCycles3Optional = (SimpleCycles3) | null | undefined;
+export type SimpleCycles2To3SimpleCycles3Optional =
+  | (SimpleCycles3)
+  | null
+  | undefined;
 export type SimpleCycles3 = {
   phantom3?: CompositesOptPrimitivesStrStringOptional;
   to1?: SimpleCycles3To1SimpleCycles1Optional;
 };
-export type SimpleCycles3To1SimpleCycles1Optional = (SimpleCycles1) | null | undefined;
+export type SimpleCycles3To1SimpleCycles1Optional =
+  | (SimpleCycles1)
+  | null
+  | undefined;
 export type PrimitivesSelections = {
   _?: SelectionFlags;
   str?: ScalarSelectNoArgs;
@@ -1399,8 +1412,11 @@ export class QueryGraph extends _QueryGraphBase {
       "branch33B": "branch33B!",
     });
   }
-            
-  pyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+
+  pyPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "py_primitives": [args, select] },
       [["py_primitives", nodeMetas.PyPrimitives]],
@@ -1408,7 +1424,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  pyComposites(args: CompositesArgs | PlaceholderArgs<CompositesArgs>, select: CompositesSelections): QueryNode<Composites> {
+  pyComposites(
+    args: CompositesArgs | PlaceholderArgs<CompositesArgs>,
+    select: CompositesSelections,
+  ): QueryNode<Composites> {
     const inner = _selectionToNodeSet(
       { "py_composites": [args, select] },
       [["py_composites", nodeMetas.PyComposites]],
@@ -1416,7 +1435,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  pyCycles(args: Cycles1Args | PlaceholderArgs<Cycles1Args>, select: Cycles1Selections): QueryNode<Cycles1> {
+  pyCycles(
+    args: Cycles1Args | PlaceholderArgs<Cycles1Args>,
+    select: Cycles1Selections,
+  ): QueryNode<Cycles1> {
     const inner = _selectionToNodeSet(
       { "py_cycles": [args, select] },
       [["py_cycles", nodeMetas.PyCycles]],
@@ -1424,7 +1446,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  pySimpleCycles(args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>, select: SimpleCycles1Selections): QueryNode<SimpleCycles1> {
+  pySimpleCycles(
+    args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>,
+    select: SimpleCycles1Selections,
+  ): QueryNode<SimpleCycles1> {
     const inner = _selectionToNodeSet(
       { "py_simple_cycles": [args, select] },
       [["py_simple_cycles", nodeMetas.PySimpleCycles]],
@@ -1432,7 +1457,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  pyProxyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+  pyProxyPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "py_proxy_primitives": [args, select] },
       [["py_proxy_primitives", nodeMetas.PyProxyPrimitives]],
@@ -1440,7 +1468,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  tsPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+  tsPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "ts_primitives": [args, select] },
       [["ts_primitives", nodeMetas.TsPrimitives]],
@@ -1448,7 +1479,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  tsComposites(args: CompositesArgs | PlaceholderArgs<CompositesArgs>, select: CompositesSelections): QueryNode<Composites> {
+  tsComposites(
+    args: CompositesArgs | PlaceholderArgs<CompositesArgs>,
+    select: CompositesSelections,
+  ): QueryNode<Composites> {
     const inner = _selectionToNodeSet(
       { "ts_composites": [args, select] },
       [["ts_composites", nodeMetas.TsComposites]],
@@ -1456,7 +1490,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  tsCycles(args: Cycles1Args | PlaceholderArgs<Cycles1Args>, select: Cycles1Selections): QueryNode<Cycles1> {
+  tsCycles(
+    args: Cycles1Args | PlaceholderArgs<Cycles1Args>,
+    select: Cycles1Selections,
+  ): QueryNode<Cycles1> {
     const inner = _selectionToNodeSet(
       { "ts_cycles": [args, select] },
       [["ts_cycles", nodeMetas.TsCycles]],
@@ -1464,7 +1501,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  tsSimpleCycles(args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>, select: SimpleCycles1Selections): QueryNode<SimpleCycles1> {
+  tsSimpleCycles(
+    args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>,
+    select: SimpleCycles1Selections,
+  ): QueryNode<SimpleCycles1> {
     const inner = _selectionToNodeSet(
       { "ts_simple_cycles": [args, select] },
       [["ts_simple_cycles", nodeMetas.TsSimpleCycles]],
@@ -1472,7 +1512,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  tsProxyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+  tsProxyPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "ts_proxy_primitives": [args, select] },
       [["ts_proxy_primitives", nodeMetas.TsProxyPrimitives]],
@@ -1480,7 +1523,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  rsPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+  rsPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "rs_primitives": [args, select] },
       [["rs_primitives", nodeMetas.RsPrimitives]],
@@ -1488,7 +1534,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  rsComposites(args: CompositesArgs | PlaceholderArgs<CompositesArgs>, select: CompositesSelections): QueryNode<Composites> {
+  rsComposites(
+    args: CompositesArgs | PlaceholderArgs<CompositesArgs>,
+    select: CompositesSelections,
+  ): QueryNode<Composites> {
     const inner = _selectionToNodeSet(
       { "rs_composites": [args, select] },
       [["rs_composites", nodeMetas.RsComposites]],
@@ -1496,7 +1545,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  rsCycles(args: Cycles1Args | PlaceholderArgs<Cycles1Args>, select: Cycles1Selections): QueryNode<Cycles1> {
+  rsCycles(
+    args: Cycles1Args | PlaceholderArgs<Cycles1Args>,
+    select: Cycles1Selections,
+  ): QueryNode<Cycles1> {
     const inner = _selectionToNodeSet(
       { "rs_cycles": [args, select] },
       [["rs_cycles", nodeMetas.RsCycles]],
@@ -1504,7 +1556,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  rsSimpleCycles(args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>, select: SimpleCycles1Selections): QueryNode<SimpleCycles1> {
+  rsSimpleCycles(
+    args: SimpleCycles1Args | PlaceholderArgs<SimpleCycles1Args>,
+    select: SimpleCycles1Selections,
+  ): QueryNode<SimpleCycles1> {
     const inner = _selectionToNodeSet(
       { "rs_simple_cycles": [args, select] },
       [["rs_simple_cycles", nodeMetas.RsSimpleCycles]],
@@ -1512,7 +1567,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  rsProxyPrimitives(args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>, select: PrimitivesSelections): QueryNode<Primitives> {
+  rsProxyPrimitives(
+    args: PrimitivesArgs | PlaceholderArgs<PrimitivesArgs>,
+    select: PrimitivesSelections,
+  ): QueryNode<Primitives> {
     const inner = _selectionToNodeSet(
       { "rs_proxy_primitives": [args, select] },
       [["rs_proxy_primitives", nodeMetas.RsProxyPrimitives]],

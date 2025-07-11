@@ -55,7 +55,9 @@ export function serializeGenericInjection(
   throw new Error(`source must be one of ${allowed.join(", ")}`);
 }
 
-export function serializeStaticInjection(value: InjectionValue<unknown>): string {
+export function serializeStaticInjection(
+  value: InjectionValue<unknown>,
+): string {
   return serializeInjection("static", value, (x: unknown) => JSON.stringify(x));
 }
 

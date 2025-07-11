@@ -306,7 +306,8 @@ Meta.test(
 
 Meta.test(
   {
-    name: "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
+    name:
+      "PythonRuntime - Python SDK: typegraph with no artifacts in sync mode",
     sanitizeOps: false,
     syncConfig,
     async setup() {
@@ -384,7 +385,8 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Python - Python SDK: typegraph with duplicate artifact uploads in sync mode",
+    name:
+      "Python - Python SDK: typegraph with duplicate artifact uploads in sync mode",
     sanitizeOps: false,
     syncConfig,
     async setup() {
@@ -418,7 +420,8 @@ Meta.test(
 
 Meta.test(
   {
-    name: "Python Runtime - TS SDK: typegraph with duplicate artifact uploads in sync mode",
+    name:
+      "Python Runtime - TS SDK: typegraph with duplicate artifact uploads in sync mode",
     sanitizeOps: false,
     syncConfig,
     async setup() {

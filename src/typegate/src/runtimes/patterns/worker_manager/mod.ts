@@ -97,9 +97,11 @@ export class BaseWorkerManager<
     if (activeTaskNames.length > 0) {
       if (options.destroy) {
         logger.warn(
-          `destroying workers for tasks ${activeTaskNames
-            .map((w) => `"${w}"`)
-            .join(", ")}`,
+          `destroying workers for tasks ${
+            activeTaskNames
+              .map((w) => `"${w}"`)
+              .join(", ")
+          }`,
         );
       }
 

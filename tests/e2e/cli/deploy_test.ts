@@ -244,7 +244,7 @@ Meta.test(
     await t.should("fail on dirty repo", async () => {
       await t.shell(["bash", "-c", "touch README.md"]);
       await assertRejects(() =>
-        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"]),
+        t.meta(["deploy", ...nodeConfigs, "-f", "prisma.py"])
       );
     });
 

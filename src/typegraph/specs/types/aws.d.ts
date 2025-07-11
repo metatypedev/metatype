@@ -42,13 +42,13 @@ type s3_upload = (runtime: RuntimeId, bucket: string) => MaterializerId;
 type s3_upload_all = (runtime: RuntimeId, bucket: string) => MaterializerId;
 
 export type {
-  S3RuntimeData,
-  S3PresignGetParams,
-  S3PresignPutParams,
   register_s3_runtime,
+  s3_list,
   s3_presign_get,
   s3_presign_put,
-  s3_list,
   s3_upload,
   s3_upload_all,
+  S3PresignGetParams,
+  S3PresignPutParams,
+  S3RuntimeData,
 };

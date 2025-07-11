@@ -67,14 +67,22 @@ class PythonCodeGenerator extends TypeDefProcessor {
 ${props.map((p) => "    " + p).join("\n")}
 
     def __init__(self, ${props.join(", ")}, **kwargs):
-        super().__init__(${def.props.map((p) => p.name + "=" + p.name)}, **kwargs)`;
+        super().__init__(${
+      def.props.map((p) => p.name + "=" + p.name)
+    }, **kwargs)`;
   }
 
   override formatUnionTypeDef(def: UnionTypeDef) {
     const variants = def.variants
       .map(
         ({ tag, value }) =>
-          `    ${value ? `t.TypedDict("${def.ident}${toPascalCase(tag)}", {"${tag}": ${value}})` : `t.Literal["${tag}"]`},`,
+          `    ${
+            value
+              ? `t.TypedDict("${def.ident}${
+                toPascalCase(tag)
+              }", {"${tag}": ${value}})`
+              : `t.Literal["${tag}"]`
+          },`,
       )
       .join("\n");
 
@@ -104,12 +112,18 @@ ${variants}
 
     return `def ${def.ident}(${params}) -> ${def.ret}:
     class RequestType(BaseModel):
-${def.params.map((p) => `        ${p.name}: ${p.optional ? `t.Optional[${p.type}]` : p.type}`).join("\n")}
+${
+      def.params.map((p) =>
+        `        ${p.name}: ${p.optional ? `t.Optional[${p.type}]` : p.type}`
+      ).join("\n")
+    }
 
     class ReturnType(BaseModel):
         value: ${def.ret}
 
-    req = RequestType(${def.params.map(({ name }) => `${name}=${name}`).join(", ")})
+    req = RequestType(${
+      def.params.map(({ name }) => `${name}=${name}`).join(", ")
+    })
     res = rpc_request("${def.ident}", req.model_dump())
     ret = ReturnType(value=res)
 

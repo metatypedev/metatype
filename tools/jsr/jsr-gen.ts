@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { CURRENT_VERSION, SDK_PACKAGE_NAME_TS } from "../consts.ts";
-import { $, expandGlob, join } from "../deps.ts";
+import { expandGlob, join } from "../deps.ts";
+import { $ } from "@ghjk/ts";
 import { copyFilesAt } from "../utils.ts";
 import { removeExtension } from "../utils.ts";
 import { denoSdkDir, fromRoot, srcDir } from "./common.ts";

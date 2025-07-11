@@ -24,8 +24,8 @@
  */
 
 import type { CommandChild } from "@david/dax";
+import { $ } from "@ghjk/ts";
 import {
-  $,
   ctrlc,
   cyan,
   Fuse,

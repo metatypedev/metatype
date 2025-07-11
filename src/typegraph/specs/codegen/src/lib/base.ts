@@ -82,12 +82,13 @@ abstract class TypeDefProcessor {
     const { ident, value } = def;
     const valueType = value.type;
 
-    if (valueType === "type_identifier" || valueType == "predefined_type")
+    if (valueType === "type_identifier" || valueType == "predefined_type") {
       this.visitAliasType(ident, value);
-    else if (valueType === "object_type") this.visitRecordType(ident, value);
+    } else if (valueType === "object_type") this.visitRecordType(ident, value);
     else if (valueType === "union_type") this.visitUnionType(ident, value);
-    else if (valueType === "function_type")
+    else if (valueType === "function_type") {
       this.visitFunctionType(ident, value);
+    }
   }
 
   visitAliasType(ident: SyntaxNode, value: SyntaxNode) {
@@ -263,11 +264,11 @@ abstract class TypeDefProcessor {
 }
 
 export type {
-  TypeDef,
   AliasTypeDef,
-  RecordTypeDef,
-  UnionTypeDef,
   FuncDef,
+  RecordTypeDef,
+  TypeDef,
   TypeDefSource,
+  UnionTypeDef,
 };
 export { TypeDefProcessor };
