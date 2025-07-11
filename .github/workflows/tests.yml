@@ -153,17 +153,15 @@ jobs:
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
           echo $PATH && which componentize-py
           which python3
-          which componentize-py
+          which componentize-py | xargs cat
           which componentize-py | xargs realpath
           which componentize-py | xargs realpath | xargs dirname
-          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa || true
-          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs ls -lsa || true
-          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname | xargs ls -lsa || true
-          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname | xargs dirname | xargs ls -lsa || true
-          which componentize-py | xargs cat
+          ls -lsa $(which componentize-py | xargs realpath | xargs dirname)
+          ls -lsa $(which componentize-py | xargs realpath | xargs dirname | xargs dirname)
+          ls -lsa $(which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname)
+          ls -lsa $(which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname | xargs dirname)
           python3 --help
           componentize-py --help
-          which componentize-py | xargs dirname | xargs ls -lsa
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
