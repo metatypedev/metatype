@@ -156,10 +156,10 @@ jobs:
           which componentize-py | xargs cat
           which componentize-py | xargs realpath
           which componentize-py | xargs realpath | xargs dirname
-          ls -lsa $(dirname "$(realpath $(which componentize-py))") || true
-          ls -lsa $(dirname $(dirname "$(realpath $(which componentize-py))")) || true
-          ls -lsa $(dirname $(dirname $(dirname "$(realpath $(which componentize-py))"))) || true
-          ls -lsa $(dirname $(dirname $(dirname $(dirname "$(realpath $(which componentize-py))")))) || true
+          ls -lsa "$(dirname "$(realpath "$(which componentize-py)")")" || true
+          ls -lsa "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")")" || true
           python3 --help
           componentize-py --help
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
