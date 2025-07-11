@@ -139,7 +139,6 @@ jobs:
         with:
           # temporary fix
           cache-key-prefix: ${{ matrix.os }}
-          cache-disable: true
       - if: ${{ matrix.cross }}
         env:
           # arguments for our custom cross.Dockerfile
@@ -157,7 +156,10 @@ jobs:
           which componentize-py
           which componentize-py | xargs realpath
           which componentize-py | xargs realpath | xargs dirname
-          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa
+          which componentize-py | xargs realpath | xargs dirname | xargs ls -lsa || true
+          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs ls -lsa || true
+          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname | xargs ls -lsa || true
+          which componentize-py | xargs realpath | xargs dirname | xargs dirname | xargs dirname | xargs dirname | xargs ls -lsa || true
           which componentize-py | xargs cat
           python3 --help
           componentize-py --help
