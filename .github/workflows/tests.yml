@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # GHJK_LOG: "debug"
+  GHJK_LOG: "debug"
   GHJK_VERSION: "v0.3.1-rc.1"
   GHJK_ENV: "ci"
   # RUST_BACKTRACE: "full"
@@ -151,8 +151,18 @@ jobs:
           set -eux
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
+          echo $PATH && which componentize-py
+          which python3
+          which componentize-py | xargs cat
+          which componentize-py | xargs realpath
+          which componentize-py | xargs realpath | xargs dirname
+          ls -lsa "$(dirname "$(realpath "$(which componentize-py)")")" || true
+          ls -lsa "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")")" || true
           python3 --help
           componentize-py --help
+          cat "$(which componentize-py)"
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
