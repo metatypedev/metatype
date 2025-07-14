@@ -1,10 +1,10 @@
 {
   "imports": {
-    "@ghjk/ts/": "https://raw.githubusercontent.com/metatypedev/ghjk/a518e49ffe637f1596cb1a4f8686abd77f6e2348/src/ghjk_ts/",
-    "@ghjk/ts": "https://raw.githubusercontent.com/metatypedev/ghjk/a518e49ffe637f1596cb1a4f8686abd77f6e2348/src/ghjk_ts/mod.ts",
-    "@ghjk/ports_wip": "https://raw.githubusercontent.com/metatypedev/ghjk/a518e49ffe637f1596cb1a4f8686abd77f6e2348/ports/mod.ts",
-    "@ghjk/ports_wip/": "https://raw.githubusercontent.com/metatypedev/ghjk/a518e49ffe637f1596cb1a4f8686abd77f6e2348/ports/",
-    "@ghjk/utils": "https://raw.githubusercontent.com/metatypedev/ghjk/a518e49ffe637f1596cb1a4f8686abd77f6e2348/src/deno_utils/mod.ts",
+    "@ghjk/ts/": "https://raw.githubusercontent.com/metatypedev/ghjk/04e8ee244d4f1aacfaacd82d476f7bc8fdc7f453/src/ghjk_ts/",
+    "@ghjk/ts": "https://raw.githubusercontent.com/metatypedev/ghjk/04e8ee244d4f1aacfaacd82d476f7bc8fdc7f453/src/ghjk_ts/mod.ts",
+    "@ghjk/ports_wip": "https://raw.githubusercontent.com/metatypedev/ghjk/04e8ee244d4f1aacfaacd82d476f7bc8fdc7f453/ports/mod.ts",
+    "@ghjk/ports_wip/": "https://raw.githubusercontent.com/metatypedev/ghjk/04e8ee244d4f1aacfaacd82d476f7bc8fdc7f453/ports/",
+    "@ghjk/utils": "https://raw.githubusercontent.com/metatypedev/ghjk/04e8ee244d4f1aacfaacd82d476f7bc8fdc7f453/src/deno_utils/mod.ts",
     "@david/dax": "jsr:@david/dax@0.41.0",
     "@sinonjs/fake-timers": "npm:@sinonjs/fake-timers@13.0.5",
     "@std/archive/": "jsr:/@std/archive@^0.225.0/",
