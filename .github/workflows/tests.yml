@@ -151,15 +151,6 @@ jobs:
           set -eux
           . .ghjk/envs/$GHJK_ENV/activate.sh
           ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
-          echo $PATH && which componentize-py
-          which python3
-          which componentize-py | xargs cat
-          which componentize-py | xargs realpath
-          which componentize-py | xargs realpath | xargs dirname
-          ls -lsa "$(dirname "$(realpath "$(which componentize-py)")")" || true
-          ls -lsa "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")" || true
-          ls -lsa "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")" || true
-          ls -lsa "$(dirname "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")")" || true
           python3 --help
           componentize-py --help
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
@@ -328,6 +319,8 @@ jobs:
             tests/metagen/typegraphs/metagen.ts \
             src/typegraph/deno/src/*.ts \
             tools/*.ts
+
+          ls -lsa
 
           deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
 
