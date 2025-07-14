@@ -137,7 +137,7 @@ ghjk x # more test tasks are availaible
 ghjk x dev-compose # shutdown all envs
 ```
 
-There are many more developer scripts in the `dev` folder, however most of them should only be needed for advanced tasks.
+There are many more developer scripts in the `tools` folder, however most of them should only be needed for advanced tasks.
 
 #### Commit Messages
 
