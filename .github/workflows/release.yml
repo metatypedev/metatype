@@ -34,7 +34,13 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: kenji-miyake/setup-git-cliff@v2
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      
+      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
+      - run: ghjk envs cook
+
       - shell: bash
         run: |
           VERSION=$(ghjk x version-print)
@@ -52,7 +58,7 @@ jobs:
           makeLatest: true
           bodyFile: "CHANGE.md"
           discussionCategory: "Announcements"
-          prerelease: ${{ contains(steps.latest-tag.outputs.tag, 'dev') || contains(steps.latest-tag.outputs.tag, 'alpha') }}
+          prerelease: ${{ contains(steps.latest-tag.outputs.tag, 'dev') || contains(steps.latest-tag.outputs.tag, 'rc') }}
 
   pub-meta-cli:
     needs:
@@ -97,7 +103,11 @@ jobs:
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
+      - run: ghjk envs cook
+
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
@@ -172,7 +182,13 @@ jobs:
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.7
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      
+      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
+      - run: ghjk envs cook
+
       - shell: bash
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
@@ -305,7 +321,13 @@ jobs:
           fetch-depth: 0
       - uses: dsherret/rust-toolchain-file@v1
       - uses: kenji-miyake/setup-git-cliff@v2
-      - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      
+      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
+      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
+      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
+      - run: ghjk envs cook
+
       - id: bump
         run: |
           ghjk x version-bump prerelease

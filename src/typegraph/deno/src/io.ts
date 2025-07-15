@@ -36,7 +36,7 @@ export const rpcNotify = (
   method: RpcNotificationMethod,
   // deno-lint-ignore no-explicit-any
   params: any = null,
-) => {
+): void => {
   const message = JSON.stringify({
     jsonrpc: JSONRPC_VERSION,
     method,
@@ -119,8 +119,8 @@ export interface DeployData {
 }
 
 export const rpc = {
-  getDeployTarget: () => rpcRequest("GetDeployTarget") as DeployTarget,
-  getDeployData: (typegraph: string) =>
+  getDeployTarget: (): DeployTarget => rpcRequest("GetDeployTarget") as DeployTarget,
+  getDeployData: (typegraph: string): DeployData =>
     rpcRequest<DeployData, { typegraph: string }>(
       "GetDeployData",
       { typegraph },

@@ -2,7 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { HostcallPump } from "../../worker_utils.ts";
-import { appendIfOngoing, Interrupt, OperationEvent, Run } from "./types.ts";
+import {
+  Interrupt,
+  type OperationEvent,
+  type Run,
+  runHasStopped,
+} from "./common.ts";
 
 // const isTest = Deno.env.get("DENO_TESTING") === "true";
 // const testBaseUrl = Deno.env.get("TEST_OVERRIDE_GQL_ORIGIN");
@@ -28,7 +33,14 @@ export class Context {
   }
 
   #appendOp(op: OperationEvent) {
-    appendIfOngoing(this.run, { at: new Date().toJSON(), event: op });
+    if (!runHasStopped(this.run)) {
+      // console.log(
+      //   "Append context",
+      //   op.type,
+      //   this.run.operations.map((o) => o.event.type),
+      // );
+      this.run.operations.push({ at: new Date().toJSON(), event: op });
+    }
   }
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {

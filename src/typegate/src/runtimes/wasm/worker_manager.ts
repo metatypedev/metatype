@@ -3,16 +3,16 @@
 
 import { globalConfig } from "../../config.ts";
 import { getLogger } from "../../log.ts";
-import { WitOpArgs } from "../../types.ts";
+import type { WitOpArgs } from "../../types.ts";
 import { WasmWorker } from "../patterns/worker_manager/wasm.ts";
 import {
   BaseWorkerManager,
   createTaskId,
 } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
-import { TaskId } from "../patterns/worker_manager/types.ts";
-import { hostcall, HostCallCtx } from "../wit_wire/hostcall.ts";
-import { TaskSpec, WasmEvent, WasmMessage } from "./types.ts";
+import type { TaskId } from "../patterns/worker_manager/types.ts";
+import { hostcall, type HostCallCtx } from "../wit_wire/hostcall.ts";
+import type { TaskSpec, WasmEvent, WasmMessage } from "./types.ts";
 
 const logger = getLogger(import.meta, "WARN");
 

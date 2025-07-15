@@ -5,7 +5,7 @@ import { connect, type Redis, type RedisConnectOptions } from "redis";
 import type { QueryEngine } from "../engine/query_engine.ts";
 // FIXME: replace with Promise.withDeferred
 // (yohe): tried to repalce this but it broke in an inscrutable way
-import { Deferred, deferred } from "@std/async_old/deferred.ts";
+import { type Deferred, deferred } from "@std/async_old/deferred.ts";
 
 // keys: tokens, latest
 // args: n

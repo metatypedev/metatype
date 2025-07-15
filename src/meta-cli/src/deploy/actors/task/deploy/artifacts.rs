@@ -32,7 +32,7 @@ pub struct ArtifactUploader<'a> {
     pub typegraph_path: String,
 }
 
-impl<'a> ArtifactUploader<'a> {
+impl ArtifactUploader<'_> {
     pub async fn upload_artifacts(self, artifacts: &[Artifact]) -> Result<()> {
         let artifact_metas = self.get_artifact_metas(artifacts);
         let upload_tokens = self.get_upload_tokens(&artifact_metas).await?;

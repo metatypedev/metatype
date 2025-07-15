@@ -4,8 +4,8 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { connect, parseURL } from "redis";
 import { gql, Meta, sleep } from "../../utils/mod.ts";
-import { MetaTestCleanupFn } from "test-utils/test.ts";
-import { Expr } from "@metatype/typegate/runtimes/substantial/filter_utils.ts";
+import type { MetaTestCleanupFn } from "test-utils/test.ts";
+import type { Expr } from "@metatype/typegate/runtimes/substantial/filter_utils.ts";
 
 export type BackendName = "fs" | "memory" | "redis";
 

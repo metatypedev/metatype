@@ -17,7 +17,7 @@ import {
   REDIS_REF_COUNTER,
   resolveS3Key,
 } from "@metatype/typegate/typegate/artifacts/shared.ts";
-import { MetaTest } from "../utils/test.ts";
+import type { MetaTest } from "../utils/test.ts";
 
 const syncConfig = {
   redis: {
@@ -215,8 +215,10 @@ Meta.test(`Missing artifact`, async (t) => {
     try {
       await t.engine("runtimes/deno/inexisting_dep.py");
       assert(false, "should have thrown");
-    } catch (e) {
-      assertStringIncludes(e.message, "no artifacts found for dependency");
+    } catch (err) {
+      assertStringIncludes(err instanceof Error ? err.message : `${err}`,
+        "no artifacts found for dependency",
+      );
     }
   });
 });

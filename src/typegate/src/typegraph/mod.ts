@@ -39,7 +39,7 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import type { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
-import randomizeRecursively, { GeneratorNode } from "../runtimes/random.ts";
+import randomizeRecursively, { type GeneratorNode } from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 import { getLogger } from "../log.ts";

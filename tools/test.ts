@@ -151,7 +151,7 @@ export async function testE2e(args: {
     CLICOLOR_FORCE: "1",
     // RUST_LOG: "trace",
     RUST_LOG:
-      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off,typegate=trace",
+      "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
     RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",
@@ -168,6 +168,7 @@ export async function testE2e(args: {
     // NOTE: ordering of the variables is important as we want the
     // `meta` build to be resolved before any system meta builds
     PATH: `${wd.join(`target/${profile}`).toString()}:${Deno.env.get("PATH")}`,
+    // AWS_REQUEST_CHECKSUM_CALCULATION: 'WHEN_REQURED'
   };
 
   if (await wd.join(".venv").exists()) {
@@ -188,7 +189,7 @@ export async function testE2e(args: {
   }
 
   const xtask = wd.join(`target/${profile}/xtask`);
-  const denoConfig = wd.join("tests/deno.jsonc");
+  const denoConfig = wd.join("deno.jsonc");
 
   function createRun(testFile: string, streamed: boolean): Run {
     const start = Date.now();

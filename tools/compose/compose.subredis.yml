@@ -1,8 +1,18 @@
 services:
   subredis:
+    user: root
     image: bitnami/redis:7.0
     restart: unless-stopped
     ports:
       - "6380:6379"
     environment:
       REDIS_PASSWORD: password
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:subredis:6379:0:password
+    ports:
+      - "6390:8081"

@@ -39,7 +39,6 @@ import {
   ApplyFromStatic,
   type InheritDef,
 } from "./typegraph.ts";
-import { log } from "./io.ts";
 
 export type PolicySpec =
   | Policy

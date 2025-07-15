@@ -1,13 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { Agent } from "./agent.ts";
-
-export type ExecutionStatus =
-  | "COMPLETED"
-  | "COMPLETED_WITH_ERROR"
-  | "ONGOING"
-  | "UNKNOWN";
+import type { Agent } from "./agent.ts";
+import type { ExecutionStatus } from "./common.ts";
 
 type KVHelper<T extends string[], V> = {
   // should be a union type but it is not very helpful with autocomplete

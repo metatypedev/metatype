@@ -18,7 +18,7 @@ pub struct InjectionValidationContext<'a> {
     pub validator: &'a ValidatorContext<'a>,
 }
 
-impl<'a> InjectionValidationContext<'a> {
+impl InjectionValidationContext<'_> {
     fn get_path(&self, path: &[String]) -> Vec<PathSegment> {
         let mut res = self.fn_path.clone();
         res.push(PathSegment {

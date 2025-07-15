@@ -11,7 +11,7 @@ import * as ast from "graphql/ast";
 import type { Materializer, WasmRuntimeData } from "../typegraph/types.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { getLogger, type Logger } from "../log.ts";
-import { TypeGraphDS } from "../typegraph/mod.ts";
+import type { TypeGraphDS } from "../typegraph/mod.ts";
 
 const logger = getLogger(import.meta);
 

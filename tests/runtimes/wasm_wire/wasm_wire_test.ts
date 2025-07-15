@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 import { gql, Meta } from "test-utils/mod.ts";
 import { assert, assertEquals } from "@std/assert";
-import { MetaTest } from "../../utils/test.ts";
+import type { MetaTest } from "../../utils/test.ts";
 
 Meta.test(
   {

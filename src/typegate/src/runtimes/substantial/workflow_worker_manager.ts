@@ -3,12 +3,12 @@
 
 import { globalConfig } from "../../config.ts";
 import { getLogger } from "../../log.ts";
-import { TaskContext } from "../deno/shared_types.ts";
+import type { TaskContext } from "../deno/shared_types.ts";
 import { DenoWorker } from "../patterns/worker_manager/deno.ts";
 import { BaseWorkerManager } from "../patterns/worker_manager/mod.ts";
 import { WorkerPool } from "../patterns/worker_manager/pooling.ts";
-import { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
-import { Run, WorkflowEvent, WorkflowMessage } from "./types.ts";
+import type { EventHandler, TaskId } from "../patterns/worker_manager/types.ts";
+import type { Run, WorkflowEvent, WorkflowMessage } from "./common.ts";
 
 const logger = getLogger(import.meta, "WARN");
 
@@ -103,5 +103,54 @@ export class WorkerManager
         internal: internalTCtx,
       },
     });
+  }
+}
+
+/**
+ * This has the same purpose as setInterval.
+ *
+ * The issue with async handler in a setInterval is that it does not await on what's inside,
+ * we still have a risk of two functions running at the same time when the current iteration is not instant.
+ *
+ * This approach ensures that the current one finishes before next iteration starts.
+ */
+export class BlockingInterval {
+  #killed = false;
+  #running = false;
+
+  #runningResolver?: () => void;
+
+  async start(delayMs: number, handler: () => Promise<void> | void) {
+    if (this.#running) {
+      throw new Error("Interval already running");
+    }
+
+    this.#killed = false;
+    this.#running = true;
+
+    while (!this.#killed) {
+      await handler();
+
+      if (this.#killed) {
+        break;
+      }
+
+      await new Promise((res) => setTimeout(res, delayMs));
+    }
+
+    this.#running = false;
+    this.#runningResolver?.();
+  }
+
+  async kill() {
+    this.#killed = true;
+
+    if (this.#running) {
+      await new Promise<void>((res) => {
+        this.#runningResolver = res;
+      });
+
+      this.#runningResolver = undefined;
+    }
   }
 }

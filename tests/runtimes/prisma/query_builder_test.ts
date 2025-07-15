@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { assertEquals } from "@std/assert";
-import { PrismaRuntime } from "@metatype/typegate/runtimes/prisma/prisma.ts";
+import type { PrismaRuntime } from "@metatype/typegate/runtimes/prisma/prisma.ts";
 import { gql, Meta } from "test-utils/mod.ts";
 import { dropSchema, randomPGConnStr } from "test-utils/database.ts";
 

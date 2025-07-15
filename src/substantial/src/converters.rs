@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Utc};
@@ -104,12 +104,15 @@ impl Run {
                     format!("Recovering operations from backend for {}", self.run_id)
                 })?;
             self.operations = operations;
+            self.compact();
         }
 
         Ok(())
     }
 
-    pub fn persist_into(&self, backend: &dyn Backend) -> Result<()> {
+    pub fn persist_into(&mut self, backend: &dyn Backend) -> Result<()> {
+        self.compact();
+
         let mut records = Records::new();
         records.events = self
             .operations
@@ -127,6 +130,36 @@ impl Run {
 
     pub fn reset(&mut self) {
         self.operations = vec![];
+    }
+
+    /// Try to recover from dups such as
+    ///
+    /// ```ignore
+    ///  [Start Start ...] or
+    ///  [... Stop Stop] or
+    ///  [ .... Event X Event X ... ]
+    /// ```
+    ///
+    /// These dups can occur when we crash at a given timing
+    /// and the underlying event of the appointed schedule was not closed.
+    /// The engine will happily append onto the operation log,
+    /// we throw by default but realistically we can recover.
+    ///
+    /// WARN: undesirable side effects can still happen if we crash before saving the Saved results.
+    ///
+    pub fn compact(&mut self) {
+        let mut operations = Vec::new();
+        let mut dup_schedules = HashSet::new();
+        for operation in &self.operations {
+            if dup_schedules.contains(&operation.at) {
+                continue;
+            }
+
+            operations.push(operation.clone());
+            dup_schedules.insert(operation.at);
+        }
+
+        self.operations = operations;
     }
 }
 

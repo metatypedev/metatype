@@ -4,17 +4,17 @@
 import { SystemTypegraph } from "@metatype/typegate/system_typegraphs.ts";
 import { dirname, join } from "@std/path";
 import { newTempDir, testDir } from "./dir.ts";
-import { shell, ShellOptions } from "./shell.ts";
+import { shell, type ShellOptions } from "./shell.ts";
 import { assertSnapshot } from "@std/testing/snapshot";
-import { type SnapshotOptions } from "@std/testing/snapshot";
+import type { SnapshotOptions } from "@std/testing/snapshot";
 import { assertEquals, assertNotEquals } from "@std/assert";
-import { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
+import type { QueryEngine } from "@metatype/typegate/engine/query_engine.ts";
 import { Typegate } from "@metatype/typegate/typegate/mod.ts";
 import { createMetaCli } from "./meta.ts";
 import {
   defaultTypegateConfigBase,
   getTypegateConfig,
-  SyncConfig,
+  type SyncConfig,
 } from "@metatype/typegate/config.ts";
 // until deno supports it...
 import { AsyncDisposableStack } from "dispose";
@@ -300,7 +300,7 @@ export class MetaTest {
   ): Promise<void> {
     try {
       fn();
-    } catch (e) {
+    } catch (e: any) {
       return await this.assertSnapshot(e.message, options);
     }
     throw new Error("Assertion failure: function did not throw");

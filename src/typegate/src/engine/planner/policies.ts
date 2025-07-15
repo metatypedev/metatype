@@ -25,7 +25,7 @@ import {
 } from "../../typegraph/type_node.ts";
 import { BadContext } from "../../errors.ts";
 
-export type PolicyResolverOutput = "DENY" | "ALLOW" | "PASS" | (unknown & {});
+export type PolicyResolverOutput = "DENY" | "ALLOW" | "PASS" | (unknown & any);
 type GetResolverResult = (
   polIdx: PolicyIdx,
   effect: EffectType,

@@ -68,6 +68,12 @@ async fn run_typegate_async(cmd: Typegate) -> Result<()> {
 fn run_typegate(cmd: Typegate) -> Result<()> {
     use crate::deploy::actors::task_manager::signal_handler::listen_signals_in_the_background;
 
+    typegate_engine::mt_deno::deno::util::v8::init_v8_flags(
+        &[],
+        &[],
+        typegate_engine::mt_deno::deno::util::v8::get_v8_flags_from_env(),
+    );
+
     let runtime = typegate_engine::runtime();
     listen_signals_in_the_background();
     runtime.block_on(async { run_typegate_async(cmd).await })?;

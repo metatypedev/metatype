@@ -29,6 +29,7 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
                 .map(|p| PathBuf::from(&p))
                 .expect("invalid TMP_DIR");
             let root = tmp_dir.join("substantial").join("fs_backend");
+            tracing::debug!("Fs Backend root directory {root:?}");
 
             Ok(Rc::new(FsBackend::new(root).get()))
         }
@@ -40,24 +41,25 @@ fn init_backend(kind: &SubstantialBackend) -> Result<Rc<dyn Backend>> {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct CreateOrGetInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 #[serde(crate = "serde")]
 pub struct CreateOrGetOutput {
     pub run: Run,
 }
 
+#[tracing::instrument(/*ret, */level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_store_create_or_get_run(
     state: Rc<RefCell<OpState>>,
     #[serde] input: CreateOrGetInput,
-) -> Result<CreateOrGetOutput> {
+) -> Result<CreateOrGetOutput, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -66,42 +68,50 @@ pub async fn op_sub_store_create_or_get_run(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
     let mut run = Run::new(input.run_id);
-    run.recover_from(backend.as_ref())?;
+    run.recover_from(backend.as_ref()).map_err(OpErr::map())?;
 
     Ok(CreateOrGetOutput { run })
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PersistRunInput {
     pub run: Run,
     pub backend: SubstantialBackend,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[string]
 pub async fn op_sub_store_persist_run(
     state: Rc<RefCell<OpState>>,
     #[serde] input: PersistRunInput,
-) -> Result<String> {
+) -> Result<String, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
     };
 
+    let mut input = input.clone();
+
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    input.run.persist_into(backend.as_ref())?;
+    input
+        .run
+        .persist_into(backend.as_ref())
+        .map_err(OpErr::map())?;
 
     Ok(input.run.run_id)
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AddScheduleInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -110,11 +120,12 @@ pub struct AddScheduleInput {
     pub operation: Option<Operation>,
 }
 
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 pub async fn op_sub_store_add_schedule(
     state: Rc<RefCell<OpState>>,
     #[serde] input: AddScheduleInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -123,17 +134,20 @@ pub async fn op_sub_store_add_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.add_schedule(
-        input.queue.clone(),
-        input.run_id.clone(),
-        input.schedule,
-        input.operation.map(|op| op.try_into()).transpose()?,
-    )
+    backend
+        .add_schedule(
+            input.queue.clone(),
+            input.run_id.clone(),
+            input.schedule,
+            input.operation.map(|op| op.try_into()).transpose()?,
+        )
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadOrCloseScheduleInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -141,12 +155,13 @@ pub struct ReadOrCloseScheduleInput {
     pub schedule: DateTime<Utc>,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_store_read_schedule(
     state: Rc<RefCell<OpState>>,
     #[serde] input: ReadOrCloseScheduleInput,
-) -> Result<Option<Operation>> {
+) -> Result<Option<Operation>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -155,20 +170,26 @@ pub async fn op_sub_store_read_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    match backend.read_schedule(input.queue.clone(), input.run_id.clone(), input.schedule) {
-        Ok(opt_event) => opt_event.map(|event| event.try_into()).transpose(),
+    match backend
+        .read_schedule(input.queue.clone(), input.run_id.clone(), input.schedule)
+        .map_err(OpErr::map())
+    {
+        Ok(opt_event) => opt_event
+            .map(|event| event.try_into().map_err(OpErr::map()))
+            .transpose(),
         Err(e) => Err(e),
     }
 }
 
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
-#[serde]
 pub async fn op_sub_store_close_schedule(
     state: Rc<RefCell<OpState>>,
     #[serde] input: ReadOrCloseScheduleInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -177,24 +198,28 @@ pub async fn op_sub_store_close_schedule(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.close_schedule(input.queue.clone(), input.run_id.clone(), input.schedule)
+    backend
+        .close_schedule(input.queue.clone(), input.run_id.clone(), input.schedule)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct NextRunInput {
     pub backend: SubstantialBackend,
     pub queue: String,
     pub exclude: Vec<String>,
 }
 
+// #[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_next_run(
     state: Rc<RefCell<OpState>>,
     #[serde] input: NextRunInput,
-) -> Result<Option<NextRun>> {
+) -> Result<Option<NextRun>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -203,23 +228,27 @@ pub async fn op_sub_agent_next_run(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.next_run(input.queue.clone(), input.exclude)
+    backend
+        .next_run(input.queue.clone(), input.exclude)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ActiveLeaseInput {
     pub backend: SubstantialBackend,
     pub lease_seconds: u32,
 }
 
+// #[tracing::instrument(/*ret,*/ level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_agent_active_leases(
     state: Rc<RefCell<OpState>>,
     #[serde] input: ActiveLeaseInput,
-) -> Result<Vec<String>> {
+) -> Result<Vec<String>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -228,23 +257,27 @@ pub async fn op_sub_agent_active_leases(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.active_leases(input.lease_seconds)
+    backend
+        .active_leases(input.lease_seconds)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct LeaseInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
     pub lease_seconds: u32,
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 pub async fn op_sub_agent_acquire_lease(
     state: Rc<RefCell<OpState>>,
     #[serde] input: LeaseInput,
-) -> Result<bool> {
+) -> Result<bool, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -253,16 +286,20 @@ pub async fn op_sub_agent_acquire_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.acquire_lease(input.run_id.clone(), input.lease_seconds)
+    backend
+        .acquire_lease(input.run_id.clone(), input.lease_seconds)
+        .map_err(OpErr::map())
 }
 
+#[tracing::instrument(ret, level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
 pub async fn op_sub_agent_renew_lease(
     state: Rc<RefCell<OpState>>,
     #[serde] input: LeaseInput,
-) -> Result<bool> {
+) -> Result<bool, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -271,16 +308,21 @@ pub async fn op_sub_agent_renew_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.renew_lease(input.run_id.clone(), input.lease_seconds)
+    backend
+        .renew_lease(input.run_id.clone(), input.lease_seconds)
+        .map_err(OpErr::map())
 }
 
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
+#[serde]
 pub async fn op_sub_agent_remove_lease(
     state: Rc<RefCell<OpState>>,
     #[serde] input: LeaseInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -289,23 +331,27 @@ pub async fn op_sub_agent_remove_lease(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.remove_lease(input.run_id.clone(), input.lease_seconds)
+    backend
+        .remove_lease(input.run_id.clone(), input.lease_seconds)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadAllMetadataInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
 }
 
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_all(
     state: Rc<RefCell<OpState>>,
     #[serde] input: ReadAllMetadataInput,
-) -> Result<Vec<MetadataEvent>> {
+) -> Result<Vec<MetadataEvent>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -314,16 +360,20 @@ pub async fn op_sub_metadata_read_all(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    let metadatas = backend.read_all_metadata(input.run_id)?;
+    let metadatas = backend
+        .read_all_metadata(input.run_id)
+        .map_err(OpErr::map())?;
     metadatas
         .into_iter()
         .map(|proto| proto.try_into())
         .collect::<Result<Vec<_>>>()
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct AppendMetadataInput {
     pub backend: SubstantialBackend,
     pub run_id: String,
@@ -331,11 +381,13 @@ pub struct AppendMetadataInput {
     pub content: serde_json::Value,
 }
 
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
+#[serde]
 pub async fn op_sub_metadata_append(
     state: Rc<RefCell<OpState>>,
     #[serde] input: AppendMetadataInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -344,27 +396,32 @@ pub async fn op_sub_metadata_append(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.append_metadata(
-        input.run_id.clone(),
-        input.schedule,
-        serde_json::to_string(&input.content)?,
-    )
+    backend
+        .append_metadata(
+            input.run_id.clone(),
+            input.schedule,
+            serde_json::to_string(&input.content).map_err(OpErr::map())?,
+        )
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct WriteLinkInput {
     pub backend: SubstantialBackend,
     pub workflow_name: String,
     pub run_id: String,
 }
 
+#[tracing::instrument(level = "debug", skip(state, input))]
 #[deno_core::op2(async)]
+#[serde]
 pub async fn op_sub_metadata_write_workflow_link(
     state: Rc<RefCell<OpState>>,
     #[serde] input: WriteLinkInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -373,23 +430,27 @@ pub async fn op_sub_metadata_write_workflow_link(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.write_workflow_link(input.workflow_name.clone(), input.run_id)
+    backend
+        .write_workflow_link(input.workflow_name.clone(), input.run_id)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ReadWorkflowLinkInput {
     pub backend: SubstantialBackend,
     pub workflow_name: String,
 }
 
+// #[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_read_workflow_links(
     state: Rc<RefCell<OpState>>,
     #[serde] input: ReadWorkflowLinkInput,
-) -> Result<Vec<String>> {
+) -> Result<Vec<String>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -398,23 +459,28 @@ pub async fn op_sub_metadata_read_workflow_links(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.read_workflow_links(input.workflow_name)
+    backend
+        .read_workflow_links(input.workflow_name)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct WriteParentChildLinkInput {
     pub backend: SubstantialBackend,
     pub parent_run_id: String,
     pub child_run_id: String,
 }
 
+// #[tracing::instrument(level = "debug", skip(state))]
 #[deno_core::op2(async)]
+#[serde]
 pub async fn op_sub_metadata_write_parent_child_link(
     state: Rc<RefCell<OpState>>,
     #[serde] input: WriteParentChildLinkInput,
-) -> Result<()> {
+) -> Result<(), OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -423,23 +489,27 @@ pub async fn op_sub_metadata_write_parent_child_link(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.write_parent_child_link(input.parent_run_id.clone(), input.child_run_id)
+    backend
+        .write_parent_child_link(input.parent_run_id.clone(), input.child_run_id)
+        .map_err(OpErr::map())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct EnumerateAllChildrenInput {
     pub backend: SubstantialBackend,
     pub parent_run_id: String,
 }
 
+// #[tracing::instrument(ret, level = "debug", skip(state))]
 #[deno_core::op2(async)]
 #[serde]
 pub async fn op_sub_metadata_enumerate_all_children(
     state: Rc<RefCell<OpState>>,
     #[serde] input: EnumerateAllChildrenInput,
-) -> Result<Vec<String>> {
+) -> Result<Vec<String>, OpErr> {
     let ctx = {
         let state = state.borrow();
         state.borrow::<Ctx>().clone()
@@ -448,7 +518,10 @@ pub async fn op_sub_metadata_enumerate_all_children(
     let backend = ctx
         .backends
         .entry(input.backend.as_key())
-        .or_try_insert_with(|| init_backend(&input.backend))?;
+        .or_try_insert_with(|| init_backend(&input.backend))
+        .map_err(OpErr::map())?;
 
-    backend.enumerate_all_children(input.parent_run_id.clone())
+    backend
+        .enumerate_all_children(input.parent_run_id.clone())
+        .map_err(OpErr::map())
 }
