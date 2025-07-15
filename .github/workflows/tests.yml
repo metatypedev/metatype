@@ -337,9 +337,8 @@ jobs:
 
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example
-      - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.lcov
-          fail_ci_if_error: true
+      # - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }} uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./coverage.lcov
+      #     fail_ci_if_error: true
