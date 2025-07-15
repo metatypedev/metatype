@@ -332,7 +332,8 @@ jobs:
 
           ls -lsa
 
-          deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
+          # FIXME: coverage dir is not being generated
+          # deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
 
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example
