@@ -39,7 +39,9 @@ import type {
 import { InternalAuth } from "../services/auth/protocols/internal.ts";
 import type { Protocol } from "../services/auth/protocols/protocol.ts";
 import { initRuntime } from "../runtimes/mod.ts";
-import randomizeRecursively, { type GeneratorNode } from "../runtimes/random.ts";
+import randomizeRecursively, {
+  type GeneratorNode,
+} from "../runtimes/random.ts";
 import type { Typegate } from "../typegate/mod.ts";
 import { TypeUtils } from "./utils.ts";
 import { getLogger } from "../log.ts";
@@ -213,7 +215,7 @@ export class TypeGraph implements AsyncDisposable {
       return {};
     };
 
-    const { denoRuntimeIdx, runtimeReferences, denoRuntime } = runtimeRefData
+    const { denoRuntimeIdx, runtimeReferences, denoRuntime } = runtimeRefData;
 
     // this is not the best implementation for auth function
     // however, it is the simplest one for now
@@ -544,22 +546,22 @@ export function prepareRuntimeReferences(
   return async (
     typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
-  )=> {
+  ) => {
     const typegraphName = TypeGraph.formatName(typegraph);
     const { runtimes } = typegraph;
     const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
     ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
-  
+
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {
         if (runtime.name in staticReference) {
           return staticReference[runtime.name];
         }
-  
+
         const materializers = typegraph.materializers.filter(
           (mat) => mat.runtime === idx,
         );
-  
+
         logger.info("initializing runtime {}", { name: runtime.name });
         return initRuntime(runtime.name, {
           typegate,
@@ -577,5 +579,5 @@ export function prepareRuntimeReferences(
       denoRuntimeIdx,
       denoRuntime: runtimeReferences[denoRuntimeIdx],
     };
-  }
+  };
 }

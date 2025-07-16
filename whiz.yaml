@@ -57,7 +57,7 @@ setup:
     - src/typegraph/python/pyproject.toml
     - docs/metatype.dev/package.json
   env:
-    GHJK_VERSION: "v0.2.2"
+    GHJK_VERSION: "v0.3.1-rc.2"
   command: |
     set -e
     curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh |  bash

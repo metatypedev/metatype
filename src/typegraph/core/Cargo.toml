@@ -3,6 +3,12 @@ name = "typegraph_core"
 version = "0.5.1-rc.4"
 edition = "2021"
 
+# this allows us to exclude the rust files
+# from the dockerfile while keeping the Cargo.toml
+# for cargo chef. Useful to improve cache hit in docker
+[lib]
+path = "src/lib.rs"
+
 [dependencies]
 # common.workspace = true
 tg_schema.workspace = true

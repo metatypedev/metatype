@@ -6,7 +6,7 @@ import { getLogger } from "../../log.ts";
 // deno-lint-ignore no-external-import
 import { createHash } from "node:crypto";
 import type { TypegateCryptoKeys } from "../../crypto.ts";
-import { S3, S3Client, GetObjectCommand } from "aws-sdk/client-s3";
+import { GetObjectCommand, S3, S3Client } from "aws-sdk/client-s3";
 import type {
   ArtifactPersistence,
   RefCounter,
@@ -152,7 +152,9 @@ class SharedArtifactPersistence implements ArtifactPersistence {
       Bucket: this.s3Bucket,
       Key: resolveS3Key(this.s3Bucket, hash),
     });
-    const presignedUrl = await getSignedUrl(this.s3, command, { expiresIn: 3600 });
+    const presignedUrl = await getSignedUrl(this.s3, command, {
+      expiresIn: 3600,
+    });
 
     // Fetch using presigned URL
     const response = await fetch(presignedUrl);

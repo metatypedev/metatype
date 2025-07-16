@@ -1,3 +1,5 @@
+# TODO: cache rust crate downloads
+
 name: test suite
 run-name: test suite for ${{ github.event.pull_request.title || github.ref }}
 on:
@@ -27,11 +29,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # GHJK_LOG: "debug"
-  GHJK_VERSION: "v0.2.2"
+  GHJK_LOG: "debug"
+  GHJK_VERSION: "v0.3.1-rc.2"
   GHJK_ENV: "ci"
-  RUST_BACKTRACE: "full"
-  DENO_DIR: deno-dir
+  # RUST_BACKTRACE: "full"
+  # FIXME: deno dir caching
+  # DENO_DIR: deno-dir
   # used by ghjk
   # TODO: add logic to setup-ghjk
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -86,16 +89,12 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
 
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
-      - shell: bash
-        run: |
           sudo apt update && sudo apt install -y --no-install-recommends libclang-dev clang
 
           ghjk x install-ts
@@ -135,27 +134,35 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
-
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      #   with:
-      #     # temporary fix
-      #     cache-key-prefix: ${{ matrix.os }}
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+        with:
+          # temporary fix
+          cache-key-prefix: ${{ matrix.os }}
       - if: ${{ matrix.cross }}
-        shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           cross check --locked --all-features --all-targets --target ${{ matrix.target }}
       - if: ${{ matrix.cross != true }}
-        shell: bash
         run: |
+          set -eux
+          . .ghjk/envs/$GHJK_ENV/activate.sh
+          ls -lsa .ghjk/envs/$GHJK_ENV/shims/bin
+          echo $PATH && which componentize-py
+          which python3
+          which componentize-py | xargs cat
+          which componentize-py | xargs realpath
+          which componentize-py | xargs realpath | xargs dirname
+          ls -lsa "$(dirname "$(realpath "$(which componentize-py)")")" || true
+          ls -lsa "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")" || true
+          ls -lsa "$(dirname "$(dirname "$(dirname "$(dirname "$(realpath "$(which componentize-py)")")")")")" || true
+          python3 --help
+          componentize-py --help
+          cat "$(which componentize-py)"
           cargo check --locked --all-features --all-targets --target ${{ matrix.target }}
 
   test-website:
@@ -170,19 +177,14 @@ jobs:
       #     path: ${{ env.DENO_DIR }}
       #     key: deno-mac-${{ hashFiles('**/deno.lock') }}
 
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
-      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - name: Cache .venv dir
         uses: actions/cache@v4
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock', '.ghjk/lock.json') }}
-      - shell: bash
-        run: |
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x install-py
           source .venv/bin/activate
 
@@ -263,7 +265,7 @@ jobs:
         name: Setup sccache secrets
         run: echo "RUSTC_WRAPPER=sccache" >> $GITHUB_ENV
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: mozilla-actions/sccache-action@v0.0.7
+        uses: mozilla-actions/sccache-action@v0.0.9
       # - name: Cache deno dir
       #  uses: actions/cache@v4
       #  with:
@@ -280,24 +282,15 @@ jobs:
       - run: |
           sudo apt update
           sudo apt install -y --no-install-recommends zstd
-
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      #   with:
-      #     cache-disable: true
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "~/.local/bin" >> $GITHUB_PATH
-      - run: echo "BASH_ENV=~/.local/share/ghjk/env.sh" >> $GITHUB_ENV
-      - run: ghjk envs cook
-
-      - shell: bash
-        run: |
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - run: |
           # the big run
           set -x
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
-          # we don't want bash sub shells to do ghjk_reload
-          # TODO: consider disabling ghjk_reload on non-interactive shells
-          # by default
-          unset BASH_ENV
+          # log the process tree very 5 second
+          # super verbose as it will include shell args (cargo shell args are really long)
+          # while true; do ps -eo pid,ppid,%mem,rss,cmd --sort=ppid --forest; echo "----"; sleep 10; done &
 
           ghjk x install-sys | bash
           ghjk x install-py
@@ -337,13 +330,15 @@ jobs:
             src/typegraph/deno/src/*.ts \
             tools/*.ts
 
-          deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
+          ls -lsa
+
+          # FIXME: coverage dir is not being generated
+          # deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
 
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example
-      - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.lcov
-          fail_ci_if_error: true
+      # - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }} uses: codecov/codecov-action@v5
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./coverage.lcov
+      #     fail_ci_if_error: true
