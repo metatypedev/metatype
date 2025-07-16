@@ -4,29 +4,42 @@
 !tools/tasks/
 !tools/LICENSE-MPL-2.0.md
 
-!src/common
+!examples/typegraphs/metagen/rs/Cargo.toml
+!tests/metagen/typegraphs/identities/rs/Cargo.toml
+!tests/metagen/typegraphs/sample/rs/Cargo.toml
+!tests/metagen/typegraphs/sample/rs_upload/Cargo.toml
+!tests/runtimes/wasm_reflected/rust/Cargo.toml
+!tests/runtimes/wasm_wire/rust/Cargo.toml
 !src/meta-cli/Cargo.toml
 !src/metagen/Cargo.toml
-!src/metagen/src/fdk_rust/static/Cargo.toml
+!src/typegate_api/Cargo.toml
+!src/metagen/src/fdk_rs/static/Cargo.toml
 !src/metagen-client-rs/Cargo.toml
 !src/metagen/src/client_rs/static/Cargo.toml
+!src/typegraph/core/Cargo.toml
+!src/typegraph/graph/Cargo.toml
+!src/xtask/Cargo.toml
+
 !src/mt_deno
 !src/pyrt_wit_wire
 !src/substantial/
 !src/typegate/
-!src/typegraph/core/
+!src/typegraph/schema/
+!src/utils/archive/
+!src/utils/grpc/
 !src/wit/
-!src/xtask/Cargo.toml
 
 !examples/deno.jsonc
 !src/typegraph/deno/deno.json
 !tests/deno.jsonc
 !src/typegraph/specs/codegen/deno.jsonc
+!.ghjk/deno.jsonc
 
 !deno.jsonc
 !deno.lock
 !import_map.json
 
 !ghjk.ts
+!.ghjk/lock.json
 !Cargo.toml
 !Cargo.lock

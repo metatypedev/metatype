@@ -91,8 +91,8 @@ export class WaitQueueWithTimeout<W> implements WaitQueue<W> {
 
   #updateTimer() {
     if (this.#queue.length > 0) {
-      const timeoutMs =
-        this.#queue[0].addedAt + this.#waitTimeoutMs - Date.now();
+      const timeoutMs = this.#queue[0].addedAt + this.#waitTimeoutMs -
+        Date.now();
       if (timeoutMs <= 0) {
         this.#cancelNextEntry();
         this.#updateTimer();
@@ -220,9 +220,11 @@ export class WorkerPool<
 
   clear() {
     logger.warn(
-      `destroying idle workers: ${this.#idleWorkers
-        .map((w) => `"${w.id}"`)
-        .join(", ")}`,
+      `destroying idle workers: ${
+        this.#idleWorkers
+          .map((w) => `"${w.id}"`)
+          .join(", ")
+      }`,
     );
     this.#idleWorkers.forEach((worker) => worker.destroy());
     this.#idleWorkers = [];

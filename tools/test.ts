@@ -24,8 +24,8 @@
  */
 
 import type { CommandChild } from "@david/dax";
+import { $ } from "@ghjk/ts";
 import {
-  $,
   ctrlc,
   cyan,
   Fuse,
@@ -191,6 +191,9 @@ export async function testE2e(args: {
   const xtask = wd.join(`target/${profile}/xtask`);
   const denoConfig = wd.join("deno.jsonc");
 
+  console.log({
+    flags,
+  });
   function createRun(testFile: string, streamed: boolean): Run {
     const start = Date.now();
     const outputOption = streamed ? "inherit" : "piped";
