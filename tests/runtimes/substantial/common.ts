@@ -100,6 +100,13 @@ export function basicTestTemplate(
                 }
                 completed {
                   count
+                  runs {
+                    logs {
+                      timestamp
+                      level
+                      value
+                    }
+                  }
                 }
               }
             }
@@ -110,7 +117,7 @@ export function basicTestTemplate(
                   count: 1,
                   runs: [{ run_id: currentRunId }],
                 },
-                completed: { count: 0 },
+                completed: { count: 0, runs: [] },
               },
             })
             .on(e);
@@ -136,6 +143,11 @@ export function basicTestTemplate(
                       status
                       value
                     }
+                    logs {
+                      # timestamp
+                      level
+                      value
+                    }
                   }
                 }
               }
@@ -152,6 +164,16 @@ export function basicTestTemplate(
                     {
                       run_id: currentRunId,
                       result: { status: "COMPLETED", value: 30 },
+                      logs: [
+                        {
+                          level: "Warn",
+                          value: JSON.stringify(["Will sleep"]),
+                        },
+                        {
+                          level: "Info",
+                          value: JSON.stringify(["Finished sleeping"]),
+                        },
+                      ],
                     },
                   ],
                 },
