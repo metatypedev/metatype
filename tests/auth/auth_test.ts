@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { assertEquals, assertStringIncludes, assert } from "@std/assert";
+import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { execute, gql, Meta } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";

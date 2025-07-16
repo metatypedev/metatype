@@ -35,9 +35,11 @@ typegraph(
 
     const deno = new DenoRuntime();
     const host = getEnvOrDefault("TG_URL", "http://localhost:7890");
-    const url = `${host}/iam-provider/auth/github?redirect_uri=${encodeURIComponent(
-      host,
-    )}`;
+    const url = `${host}/iam-provider/auth/github?redirect_uri=${
+      encodeURIComponent(
+        host,
+      )
+    }`;
 
     g.expose(
       {
@@ -47,7 +49,8 @@ typegraph(
           t.struct({}),
           t.struct({ username: t.string() }).optional(),
           {
-            code: "(_, { context }) => Object.keys(context).length === 0 ? null : context",
+            code:
+              "(_, { context }) => Object.keys(context).length === 0 ? null : context",
           },
         ),
       },

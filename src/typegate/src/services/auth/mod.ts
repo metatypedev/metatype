@@ -129,7 +129,8 @@ export async function handleAuth(
       .filter(([name]) => name !== internalAuthName)
       .map(([name, _auth]) => ({
         name,
-        uri: `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
+        uri:
+          `${url.protocol}//${url.host}/${engine.name}/auth/${name}?redirect_uri=${origin}`,
       }));
     return jsonOk({ data: providers });
   }

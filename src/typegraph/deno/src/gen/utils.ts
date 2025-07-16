@@ -38,6 +38,17 @@ export type FdkOutput = {
   overwrite: boolean
 }
 
+export type Oauth2Client = {
+  idSecret: string
+  redirectUriSecret: string
+}
+
+export type BaseOauth2Params = {
+  provider: string
+  scopes: string
+  clients: Oauth2Client[]
+}
+
 export function reduceb(super_type_id: TypeId, entries: ReduceEntry[]): TypeId {
   return rpcRequest("reduceb", { super_type_id, entries });
 }
@@ -54,20 +65,20 @@ export function addRawAuth(data: string): number {
   return rpcRequest("add_raw_auth", { data });
 }
 
-export function oauth2(service_name: string, scopes: string): string {
-  return rpcRequest("oauth2", { service_name, scopes });
+export function oauth2(params: BaseOauth2Params): string {
+  return rpcRequest("oauth2", { params });
 }
 
-export function oauth2WithoutProfiler(service_name: string, scopes: string): string {
-  return rpcRequest("oauth2_without_profiler", { service_name, scopes });
+export function oauth2WithoutProfiler(params: BaseOauth2Params): string {
+  return rpcRequest("oauth2_without_profiler", { params });
 }
 
-export function oauth2WithExtendedProfiler(service_name: string, scopes: string, extension: string): string {
-  return rpcRequest("oauth2_with_extended_profiler", { service_name, scopes, extension });
+export function oauth2WithExtendedProfiler(params: BaseOauth2Params, extension: string): string {
+  return rpcRequest("oauth2_with_extended_profiler", { params, extension });
 }
 
-export function oauth2WithCustomProfiler(service_name: string, scopes: string, profiler: TypeId): string {
-  return rpcRequest("oauth2_with_custom_profiler", { service_name, scopes, profiler });
+export function oauth2WithCustomProfiler(params: BaseOauth2Params, profiler: TypeId): string {
+  return rpcRequest("oauth2_with_custom_profiler", { params, profiler });
 }
 
 export function gqlDeployQuery(params: QueryDeployParams): string {

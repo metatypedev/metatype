@@ -81,8 +81,9 @@ function envsAsConfig() {
 }
 
 function argsAsConfig() {
-  return mapKeys(parseArgs(Deno.args) as Record<string, unknown>, (k) =>
-    k.toLocaleLowerCase().replace("-", "_"),
+  return mapKeys(
+    parseArgs(Deno.args) as Record<string, unknown>,
+    (k) => k.toLocaleLowerCase().replace("-", "_"),
   );
 }
 
