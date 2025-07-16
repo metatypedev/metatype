@@ -4,10 +4,10 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { execute, gql, Meta } from "../../utils/mod.ts";
 import {
-  S3Client,
   CreateBucketCommand,
   DeleteObjectsCommand,
   ListObjectsCommand,
+  S3Client,
 } from "aws-sdk/client-s3";
 
 const HOST = "http://localhost:9000";
@@ -37,16 +37,16 @@ async function initBucket() {
     const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
     const res = await client.send(listCommand);
 
-      if (res.Contents != null) {
-        const deleteCommand = new DeleteObjectsCommand({
-          Bucket: "bucket",
-          Delete: {
-            Objects: res.Contents.map(({ Key }) => ({ Key })),
-          },
-        });
-        await client.send(deleteCommand);
-      }
-    }   
+    if (res.Contents != null) {
+      const deleteCommand = new DeleteObjectsCommand({
+        Bucket: "bucket",
+        Delete: {
+          Objects: res.Contents.map(({ Key }) => ({ Key })),
+        },
+      });
+      await client.send(deleteCommand);
+    }
+  }
 }
 
 Meta.test("s3 typegraphs", async (t) => {

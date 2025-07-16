@@ -112,7 +112,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
     for (let i = 0; i < all.length; i += 2) {
       history.push({
         name: all[i],
-        payload: all[i+1]
+        payload: all[i + 1],
       });
     }
 
@@ -141,7 +141,7 @@ export class RedisReplicatedMap<T> implements AsyncDisposable {
       this.memory.set(name, engine);
     }
     logger.debug("history load end");
- 
+
     return lastId;
   }
 

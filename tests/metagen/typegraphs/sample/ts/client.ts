@@ -903,7 +903,7 @@ const nodeMetas = {
   scalar() {
     return {};
   },
-  
+
   RootIdentityUpdateFn(): NodeMeta {
     return {
       ...nodeMetas.RootIdentityFnInput(),
@@ -952,7 +952,10 @@ const nodeMetas = {
     return {
       subNodes: [
         ["value", nodeMetas.scalar],
-        ["nested", nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct],
+        [
+          "nested",
+          nodeMetas.RootNestedCompositeFnOutputCompositeStructNestedStruct,
+        ],
       ],
     };
   },
@@ -1094,7 +1097,8 @@ export type RootMixedUnionFnOutput =
 export type RootNestedCompositeFnOutput = {
   scalar: number;
   composite: RootNestedCompositeFnOutputCompositeStruct;
-  list: RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
+  list:
+    RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList;
 };
 export type RootNestedCompositeFnOutputCompositeStruct = {
   value: number;
@@ -1103,7 +1107,8 @@ export type RootNestedCompositeFnOutputCompositeStruct = {
 export type RootNestedCompositeFnOutputCompositeStructNestedStruct = {
   inner: number;
 };
-export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList = Array<RootNestedCompositeFnOutputListStruct>;
+export type RootNestedCompositeFnOutputListRootNestedCompositeFnOutputListStructList =
+  Array<RootNestedCompositeFnOutputListStruct>;
 export type RootNestedCompositeFnOutputListStruct = {
   value: number;
 };
@@ -1130,13 +1135,17 @@ export type RootMixedUnionFnOutputSelections = {
 export type RootNestedCompositeFnOutputSelections = {
   _?: SelectionFlags;
   scalar?: ScalarSelectNoArgs;
-  composite?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructSelections>;
+  composite?: CompositeSelectNoArgs<
+    RootNestedCompositeFnOutputCompositeStructSelections
+  >;
   list?: CompositeSelectNoArgs<RootNestedCompositeFnOutputListStructSelections>;
 };
 export type RootNestedCompositeFnOutputCompositeStructSelections = {
   _?: SelectionFlags;
   value?: ScalarSelectNoArgs;
-  nested?: CompositeSelectNoArgs<RootNestedCompositeFnOutputCompositeStructNestedStructSelections>;
+  nested?: CompositeSelectNoArgs<
+    RootNestedCompositeFnOutputCompositeStructNestedStructSelections
+  >;
 };
 export type RootNestedCompositeFnOutputCompositeStructNestedStructSelections = {
   _?: SelectionFlags;
@@ -1161,7 +1170,7 @@ export class QueryGraph extends _QueryGraphBase {
       "user": "user!",
     });
   }
-            
+
   getUser(select: UserSelections): QueryNode<User> {
     const inner = _selectionToNodeSet(
       { "getUser": select },
@@ -1202,7 +1211,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner);
   }
-  compositeArgs(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: PostSelections): MutationNode<Post> {
+  compositeArgs(
+    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
+    select: PostSelections,
+  ): MutationNode<Post> {
     const inner = _selectionToNodeSet(
       { "compositeArgs": [args, select] },
       [["compositeArgs", nodeMetas.RootCompositeArgsFn]],
@@ -1210,7 +1222,9 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner);
   }
-  scalarUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>): QueryNode<RootScalarUnionFnOutput> {
+  scalarUnion(
+    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
+  ): QueryNode<RootScalarUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "scalarUnion": args },
       [["scalarUnion", nodeMetas.RootScalarUnionFn]],
@@ -1218,7 +1232,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  compositeUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootCompositeUnionFnOutputSelections): QueryNode<RootCompositeUnionFnOutput> {
+  compositeUnion(
+    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
+    select: RootCompositeUnionFnOutputSelections,
+  ): QueryNode<RootCompositeUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "compositeUnion": [args, select] },
       [["compositeUnion", nodeMetas.RootCompositeUnionFn]],
@@ -1226,7 +1243,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  mixedUnion(args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>, select: RootMixedUnionFnOutputSelections): QueryNode<RootMixedUnionFnOutput> {
+  mixedUnion(
+    args: RootCompositeArgsFnInput | PlaceholderArgs<RootCompositeArgsFnInput>,
+    select: RootMixedUnionFnOutputSelections,
+  ): QueryNode<RootMixedUnionFnOutput> {
     const inner = _selectionToNodeSet(
       { "mixedUnion": [args, select] },
       [["mixedUnion", nodeMetas.RootMixedUnionFn]],
@@ -1234,7 +1254,9 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  nestedComposite(select: RootNestedCompositeFnOutputSelections): QueryNode<RootNestedCompositeFnOutput> {
+  nestedComposite(
+    select: RootNestedCompositeFnOutputSelections,
+  ): QueryNode<RootNestedCompositeFnOutput> {
     const inner = _selectionToNodeSet(
       { "nestedComposite": select },
       [["nestedComposite", nodeMetas.RootNestedCompositeFn]],
@@ -1242,7 +1264,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  identity(args: RootIdentityFnInput | PlaceholderArgs<RootIdentityFnInput>, select: RootIdentityFnInputSelections): QueryNode<RootIdentityFnInput> {
+  identity(
+    args: RootIdentityFnInput | PlaceholderArgs<RootIdentityFnInput>,
+    select: RootIdentityFnInputSelections,
+  ): QueryNode<RootIdentityFnInput> {
     const inner = _selectionToNodeSet(
       { "identity": [args, select] },
       [["identity", nodeMetas.RootIdentityFn]],
@@ -1250,7 +1275,10 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new QueryNode(inner);
   }
-  identityUpdate(args: RootIdentityFnInput | PlaceholderArgs<RootIdentityFnInput>, select: RootIdentityFnInputSelections): MutationNode<RootIdentityFnInput> {
+  identityUpdate(
+    args: RootIdentityFnInput | PlaceholderArgs<RootIdentityFnInput>,
+    select: RootIdentityFnInputSelections,
+  ): MutationNode<RootIdentityFnInput> {
     const inner = _selectionToNodeSet(
       { "identityUpdate": [args, select] },
       [["identityUpdate", nodeMetas.RootIdentityUpdateFn]],

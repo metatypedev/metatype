@@ -356,9 +356,9 @@ Meta.test("Auth", async (t) => {
         context: {
           provider: "github",
           profile: {
-            id: 123
-          }
-        }
+            id: 123,
+          },
+        },
       })
       .on(e);
   });

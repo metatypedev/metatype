@@ -5,7 +5,7 @@ ARG DISTROLESS_TAG=debug-nonroot
 
 #
 # must match distroless debian version
-FROM rust:${RUST_VERSION}-slim-bullseye AS base
+FROM rust:${RUST_VERSION}-slim-bookworm AS base
 
 WORKDIR /app
 
@@ -52,15 +52,20 @@ RUN set -eux; \
     ; \
     apt clean autoclean; apt autoremove --yes; rm -rf /var/lib/{apt,dpkg,cache,log}/;
 
-ARG GHJK_VERSION=v0.2.2
+ARG GHJK_VERSION=v0.3.1-rc.2
 RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
-    | GHJK_INSTALL_EXE_DIR=/usr/bin sh
+    | GHJK_INSTALL_EXE_DIR=/usr/bin VERSION=$GHJK_VERSION sh
 
 COPY tools/ tools/
-COPY ghjk.ts .
+COPY ghjk.ts import_map.json .
+RUN mkdir .ghjk && cat <<EOF > .ghjk/deno.jsonc
+{
+  "importMap": "../import_map.json",
+}
+EOF
 ENV GHJK_ENV=oci
 ENV GHJK_ACTIVATE=.ghjk/envs/$GHJK_ENV/activate.sh
-RUN ghjk envs cook
+RUN GHJK_LOG=debug ghjk envs cook
 
 SHELL ["/bin/sh", "-c", ". ${GHJK_ACTIVATE} && sh -c \"$*\"", "sh"]
 
@@ -104,7 +109,7 @@ RUN chmod +x /tini \
     && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
 
 #
-FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} AS prd
+FROM gcr.io/distroless/cc-debian12:${DISTROLESS_TAG} AS prd
 
 SHELL ["/busybox/sh", "-c"]
 
@@ -129,6 +134,7 @@ COPY --from=builder /app/src/typegraph/deno/deno.json ./src/typegraph/deno/
 COPY --from=builder /app/src/typegraph/specs/codegen/deno.jsonc ./src/typegraph/specs/codegen/
 COPY --from=builder /app/tests/deno.jsonc ./tests/
 COPY --from=builder /app/examples/deno.jsonc ./examples/
+COPY --from=builder /app/.ghjk/deno.jsonc ./.ghjk/
 COPY tools/LICENSE-MPL-2.0.md LICENSE.md
 
 # writeable

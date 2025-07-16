@@ -903,7 +903,7 @@ const nodeMetas = {
   scalar() {
     return {};
   },
-  
+
   RootUploadManyFn(): NodeMeta {
     return {
       ...nodeMetas.scalar(),
@@ -911,7 +911,7 @@ const nodeMetas = {
         files: "root_uploadMany_fn_input_files_file_bf9b7_list",
         prefix: "root_uploadMany_fn_input_prefix_string_25e51_optional",
       },
-      inputFiles: [[".files","[]"]],
+      inputFiles: [[".files", "[]"]],
     };
   },
   RootUploadFn(): NodeMeta {
@@ -930,12 +930,18 @@ export type RootUploadFnInput = {
   path?: RootUploadFnInputPathString25e51Optional;
 };
 export type FileBf9b7 = File;
-export type RootUploadFnInputPathString25e51Optional = (string) | null | undefined;
+export type RootUploadFnInputPathString25e51Optional =
+  | (string)
+  | null
+  | undefined;
 export type RootUploadManyFnInput = {
   prefix?: RootUploadManyFnInputPrefixString25e51Optional;
   files: RootUploadManyFnInputFilesFileBf9b7List;
 };
-export type RootUploadManyFnInputPrefixString25e51Optional = (string) | null | undefined;
+export type RootUploadManyFnInputPrefixString25e51Optional =
+  | (string)
+  | null
+  | undefined;
 export type RootUploadManyFnInputFilesFileBf9b7List = Array<FileBf9b7>;
 export type RootUploadFnOutput = boolean;
 
@@ -948,8 +954,10 @@ export class QueryGraph extends _QueryGraphBase {
       "root_uploadMany_fn_input_files_file_bf9b7_list": "[file_bf9b7!]!",
     });
   }
-            
-  upload(args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>): MutationNode<RootUploadFnOutput> {
+
+  upload(
+    args: RootUploadFnInput | PlaceholderArgs<RootUploadFnInput>,
+  ): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "upload": args },
       [["upload", nodeMetas.RootUploadFn]],
@@ -957,7 +965,9 @@ export class QueryGraph extends _QueryGraphBase {
     )[0];
     return new MutationNode(inner);
   }
-  uploadMany(args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>): MutationNode<RootUploadFnOutput> {
+  uploadMany(
+    args: RootUploadManyFnInput | PlaceholderArgs<RootUploadManyFnInput>,
+  ): MutationNode<RootUploadFnOutput> {
     const inner = _selectionToNodeSet(
       { "uploadMany": args },
       [["uploadMany", nodeMetas.RootUploadManyFn]],

@@ -32,4 +32,4 @@ function getCodeGenerator(target: string) {
   if (target === "rust-rpc") return new RustRpcCodeGenerator();
 }
 
-export { getTypeDefSources, getCodeGenerator };
+export { getCodeGenerator, getTypeDefSources };

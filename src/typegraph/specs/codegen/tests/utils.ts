@@ -31,4 +31,4 @@ const importCase = `
   import { Foo, Bar } from "./foobar.ts";
 `;
 
-export { typeAliasCase, recordCase, unionCase, funcCase, importCase };
+export { funcCase, importCase, recordCase, typeAliasCase, unionCase };

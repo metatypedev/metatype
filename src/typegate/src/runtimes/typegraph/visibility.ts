@@ -3,7 +3,11 @@
 
 import type { TypegateConfigBase } from "../../config.ts";
 import type { TypeGraphDS } from "../../typegraph/mod.ts";
-import { type ObjectNode, Type, type TypeNode } from "../../typegraph/type_node.ts";
+import {
+  type ObjectNode,
+  Type,
+  type TypeNode,
+} from "../../typegraph/type_node.ts";
 import {
   getChildTypes,
   type TypeVisitorMap,

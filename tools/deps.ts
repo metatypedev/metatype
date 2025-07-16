@@ -4,27 +4,6 @@
 // FIXME: we can't use the import map in ghjk so we must
 // rely on a deps.ts
 
-export { file } from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/mod.ts";
-export * from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/mod.ts";
-export * as ports from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/ports/mod.ts";
-export {
-  std_url,
-  zod,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/deps/common.ts";
-export {
-  copyLock,
-  sedLock,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/std.ts";
-export {
-  downloadFile,
-  objectHash,
-} from "https://raw.githubusercontent.com/metatypedev/ghjk/v0.2.2/utils/mod.ts";
-// export * from "../../ghjk/mod.ts";
-// export * as ports from "../../ghjk/ports/mod.ts";
-// export * as utils from "../../ghjk/utils/mod.ts";
-// export { std_url, zod } from "../../ghjk/deps/common.ts";
-// export { copyLock, sedLock } from "../../ghjk/std.ts";
-
 // TODO: move to import map
 export {
   basename,

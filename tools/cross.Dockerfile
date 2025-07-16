@@ -36,14 +36,19 @@ RUN set -eux \
    unzip
 
 ENV GHJK_SHARE_DIR=/ghjk
-ARG GHJK_VERSION=v0.2.2
+ARG GHJK_VERSION=v0.3.1-rc.2
 RUN curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh \
-   | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash sh 
+   | GHJK_INSTALL_EXE_DIR=/usr/bin GHJK_INSTALL_HOOK_SHELLS=bash VERSION=$GHJK_VERSION sh 
 
 WORKDIR /app
 
 COPY tools/ tools/
-COPY ghjk.ts .
+COPY ghjk.ts import_map.json .
+RUN mkdir .ghjk && cat <<EOF > .ghjk/deno.jsonc
+{
+  "importMap": "../import_map.json",
+}
+EOF
 # we don't use the oci env since mold breaks builds for aarch64 linux
 ENV GHJK_ENV=_rust
 RUN ghjk envs cook

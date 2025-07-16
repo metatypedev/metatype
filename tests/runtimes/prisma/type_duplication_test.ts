@@ -16,7 +16,7 @@ Meta.test("serialization size test", async (mt) => {
   const tg: TypeGraphDS = JSON.parse(
     raw,
   );
-  console.log({size, length: tg.types.length});
+  console.log({ size, length: tg.types.length });
   assert(
     tg.types.length < 30_000,
     `typegraph has too many types: ${tg.types.length}`,
