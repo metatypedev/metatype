@@ -4,6 +4,7 @@
 import type { HostcallPump } from "../../worker_utils.ts";
 import {
   Interrupt,
+  type LogLevel,
   type OperationEvent,
   type Run,
   runHasStopped,
@@ -14,6 +15,7 @@ import {
 
 export class Context {
   private id = 0;
+  private logId = 0;
   public kwargs = {};
   logger: SubLogger;
 
@@ -26,10 +28,13 @@ export class Context {
   }
 
   #nextId() {
-    // IDEA: this scheme does not account the step provided
-    // Different args => potentially different step (notably for Save)
     this.id += 1;
     return this.id;
+  }
+
+  #nextLogId() {
+    this.logId += 1;
+    return this.logId;
   }
 
   #appendOp(op: OperationEvent) {
@@ -41,6 +46,22 @@ export class Context {
       // );
       this.run.operations.push({ at: new Date().toJSON(), event: op });
     }
+  }
+
+  appendLogMessage(level: LogLevel, serializableArgs: Array<unknown>) {
+    const id = this.#nextLogId();
+    for (const { event } of this.run.operations) {
+      if (event.type == "Log" && id == event.id) {
+        return;
+      }
+    }
+
+    this.#appendOp({
+      type: "Log",
+      id,
+      level,
+      payload: serializableArgs,
+    });
   }
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
@@ -429,49 +450,45 @@ class RetryStrategy {
 class SubLogger {
   constructor(private ctx: Context) {}
 
-  async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
-    await this.ctx.save(() => {
-      const prefix = `[${kind.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
-      switch (kind) {
-        case "warn": {
-          console.warn(prefix, ...args);
-          break;
-        }
-        case "error": {
-          console.error(prefix, ...args);
-          break;
-        }
-        default: {
-          console.info(prefix, ...args);
-          break;
-        }
+  #log(kind: LogLevel, ...args: unknown[]) {
+    const prefix = `[${kind.type.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
+    switch (kind.type) {
+      case "Warn": {
+        console.warn(prefix, ...args);
+        break;
       }
+      case "Error": {
+        console.error(prefix, ...args);
+        break;
+      }
+      default: {
+        console.info(prefix, ...args);
+        break;
+      }
+    }
 
-      const message = args.map((arg) => {
-        try {
-          const json = JSON.stringify(arg);
-          // Functions are omitted,
-          // For example, JSON.stringify(() => 1234) => undefined (no throw)
-          return json === undefined ? String(arg) : json;
-        } catch (_) {
-          return String(arg);
-        }
-      }).join(" ");
-
-      return `${prefix}: ${message}`;
+    const safeArgs = args.map((arg) => {
+      try {
+        const json = JSON.stringify(arg);
+        return json === undefined ? String(arg) : deepClone(arg);
+      } catch (_) {
+        return String(arg);
+      }
     });
+
+    this.ctx.appendLogMessage(kind, safeArgs);
   }
 
-  async warn(...payload: unknown[]) {
-    await this.#log("warn", ...payload);
+  warn(...payload: unknown[]) {
+    this.#log({ type: "Warn" }, ...payload);
   }
 
-  async info(...payload: unknown[]) {
-    await this.#log("info", ...payload);
+  info(...payload: unknown[]) {
+    this.#log({ type: "Info" }, ...payload);
   }
 
-  async error(...payload: unknown[]) {
-    await this.#log("error", ...payload);
+  error(...payload: unknown[]) {
+    this.#log({ type: "Error" }, ...payload);
   }
 }
 

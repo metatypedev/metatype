@@ -305,6 +305,11 @@ export type Backend =
     connection_string: string;
   };
 
+export type LogLevel =
+  | { type: "Info" }
+  | { type: "Warn" }
+  | { type: "Error" };
+
 export type OperationEvent =
   | { type: "Sleep"; id: number; start: string; end: string }
   | {
@@ -318,6 +323,7 @@ export type OperationEvent =
   | { type: "Send"; event_name: string; value: unknown }
   | { type: "Stop"; result: unknown }
   | { type: "Start"; kwargs: Record<string, unknown> }
+  | { type: "Log"; id: number; payload: unknown; level: LogLevel }
   | { type: "Compensate" };
 
 export type Operation = { at: string; event: OperationEvent };
