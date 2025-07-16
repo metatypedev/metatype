@@ -8,7 +8,8 @@
     @apply relative inline-block cursor-pointer font-medium;
   }
   .tooltip > span {
-    @apply absolute top-10 p-2 bg-slate-600 text-white rounded-md hidden w-[300px] -left-[150px] text-2xl z-10 font-normal;
+    @apply absolute top-10 p-2 bg-slate-600 text-white rounded-md hidden
+      w-[300px] -left-[150px] text-2xl z-10 font-normal;
   }
   strong {
     @apply font-semibold;

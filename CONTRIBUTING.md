@@ -101,7 +101,7 @@ You can install it using the following instructions.
 
 ```bash
 # install ghjk
-GHJK_VERSION="v0.2.2"
+GHJK_VERSION="v0.3.1-rc.2"
 GHJK_INSTALL_HOOK_SHELLS=bash # add more shells if needed
 curl -fsSL https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh | sh
 bash # re-open your shells to have the hooks register
@@ -137,7 +137,7 @@ ghjk x # more test tasks are availaible
 ghjk x dev-compose # shutdown all envs
 ```
 
-There are many more developer scripts in the `dev` folder, however most of them should only be needed for advanced tasks.
+There are many more developer scripts in the `tools` folder, however most of them should only be needed for advanced tasks.
 
 #### Commit Messages
 

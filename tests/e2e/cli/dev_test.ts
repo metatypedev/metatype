@@ -4,8 +4,15 @@
 import { Meta, sleep } from "test-utils/mod.ts";
 import type { gql as _gql } from "test-utils/mod.ts";
 import type { join as _join, resolve as _resolve } from "@std/path";
-import { assert, assertEquals, type assertRejects as _assertRejects } from "@std/assert";
-import type { randomSchema as _randomSchema, reset as _reset } from "test-utils/database.ts";
+import {
+  assert,
+  assertEquals,
+  type assertRejects as _assertRejects,
+} from "@std/assert";
+import type {
+  randomSchema as _randomSchema,
+  reset as _reset,
+} from "test-utils/database.ts";
 import { TestModule } from "test-utils/test_module.ts";
 import { $ } from "@david/dax";
 import {

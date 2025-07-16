@@ -48,7 +48,7 @@ function getTypeDefs(root: SyntaxNode) {
   return typeDefQuery
     .matches(root)
     .map(({ captures }) =>
-      Object.fromEntries(captures.map(({ name, node }) => [name, node])),
+      Object.fromEntries(captures.map(({ name, node }) => [name, node]))
     ) as TypeDefMatch[];
 }
 
@@ -64,4 +64,4 @@ function getImports(root: SyntaxNode) {
 }
 
 export type { TypeDefMatch, TypeImport };
-export { getTypeDefs, getImports, parseTypeScript };
+export { getImports, getTypeDefs, parseTypeScript };

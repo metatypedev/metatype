@@ -118,7 +118,7 @@ Meta.test(
             .on(e);
           i += 1;
         }
-  
+
         let pos = theList.length - 1;
         for (const _ of theList) {
           await gql`mutation {
@@ -134,7 +134,7 @@ Meta.test(
 
           pos -= 1;
         }
-      } catch(err) {
+      } catch (err) {
         throw err;
       } finally {
         await gql`mutation { 

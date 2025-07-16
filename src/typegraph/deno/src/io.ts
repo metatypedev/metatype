@@ -119,7 +119,8 @@ export interface DeployData {
 }
 
 export const rpc = {
-  getDeployTarget: (): DeployTarget => rpcRequest("GetDeployTarget") as DeployTarget,
+  getDeployTarget: (): DeployTarget =>
+    rpcRequest("GetDeployTarget") as DeployTarget,
   getDeployData: (typegraph: string): DeployData =>
     rpcRequest<DeployData, { typegraph: string }>(
       "GetDeployData",
