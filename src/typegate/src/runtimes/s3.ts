@@ -164,25 +164,31 @@ export class S3Runtime extends Runtime {
               ContentLength: file.size,
               ContentType: file.type,
             };
-            this.logger.info(`s3 upload: getting presigned URL for ${JSON.stringify(input)}`);
+            this.logger.info(
+              `s3 upload: getting presigned URL for ${JSON.stringify(input)}`,
+            );
             const command = new PutObjectCommand(input);
-            const presignedUrl = await getSignedUrl(this.client, command, { expiresIn: 60 });
-            
+            const presignedUrl = await getSignedUrl(this.client, command, {
+              expiresIn: 60,
+            });
+
             // Upload using fetch
             this.logger.info(`s3 upload: uploading to presigned URL`);
             const response = await fetch(presignedUrl, {
-              method: 'PUT',
+              method: "PUT",
               body: file,
               headers: {
-                'Content-Type': file.type,
-                'Content-Length': file.size.toString(),
+                "Content-Type": file.type,
+                "Content-Length": file.size.toString(),
               },
             });
             const body = await response.text();
             if (!response.ok) {
-              throw new Error(`Failed to upload file: ${response.statusText}: ${body}`);
+              throw new Error(
+                `Failed to upload file: ${response.statusText}: ${body}`,
+              );
             }
-            
+
             this.logger.info("s3 upload: successful");
             return true;
           });
@@ -206,25 +212,33 @@ export class S3Runtime extends Runtime {
                 ContentLength: file.size,
                 ContentType: file.type,
               };
-              this.logger.info(`s3 upload ${i}: getting presigned URL for ${JSON.stringify(input)}`);
+              this.logger.info(
+                `s3 upload ${i}: getting presigned URL for ${
+                  JSON.stringify(input)
+                }`,
+              );
               const command = new PutObjectCommand(input);
-              const presignedUrl = await getSignedUrl(this.client, command, { expiresIn: 60 });
-              
+              const presignedUrl = await getSignedUrl(this.client, command, {
+                expiresIn: 60,
+              });
+
               // Upload using fetch
               this.logger.info(`s3 upload ${i}: uploading to presigned URL`);
               const response = await fetch(presignedUrl, {
-                method: 'PUT',
+                method: "PUT",
                 body: file,
                 headers: {
-                  'Content-Type': file.type,
-                  'Content-Length': file.size.toString(),
+                  "Content-Type": file.type,
+                  "Content-Length": file.size.toString(),
                 },
               });
               const body = await response.text();
               if (!response.ok) {
-                throw new Error(`Failed to upload file ${file.name}: ${response.statusText}: ${body}`);
+                throw new Error(
+                  `Failed to upload file ${file.name}: ${response.statusText}: ${body}`,
+                );
               }
-              
+
               this.logger.info(`s3 upload ${i}: successful`);
             }));
 

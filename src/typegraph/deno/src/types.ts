@@ -44,18 +44,20 @@ export type PolicySpec =
   | Policy
   | PolicyPerEffectObject
   | {
-      none: Policy;
-      create: Policy;
-      update: Policy;
-      delete: Policy;
-    };
+    none: Policy;
+    create: Policy;
+    update: Policy;
+    delete: Policy;
+  };
 
 export type Simplified<T> = Omit<T, "of">;
 
-export type SimplifiedNumericData<T> = { enumeration?: number[] } & Omit<
-  T,
-  "enumeration"
->;
+export type SimplifiedNumericData<T> =
+  & { enumeration?: number[] }
+  & Omit<
+    T,
+    "enumeration"
+  >;
 
 export function getPolicyChain(
   policy: PolicySpec[] | PolicySpec,

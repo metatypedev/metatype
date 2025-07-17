@@ -4,7 +4,7 @@
 import type { QueryEngine } from "../../../engine/query_engine.ts";
 
 export { validate } from "./validate.ts";
-export { take } from "./take.ts";
+export { token } from "./token.ts";
 
 export type RouteParams = {
   request: Request;

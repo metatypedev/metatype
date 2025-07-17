@@ -366,7 +366,7 @@ export class PrismaRuntime extends Runtime {
             ...(field.props.parent?.id() ?? "")
               .split(".")
               .filter((str) => str.length)
-              .map(str => parentToResolver.get(str)!)
+              .map((str) => parentToResolver.get(str)!)
               .filter(Boolean),
           ],
           resolver,

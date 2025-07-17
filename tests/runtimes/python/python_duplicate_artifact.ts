@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { Policy, t, typegraph } from "@typegraph/sdk";
-import { PythonRuntime, PythonModule } from "@typegraph/sdk/runtimes/python";
+import { PythonModule, PythonRuntime } from "@typegraph/sdk/runtimes/python";
 
 const tpe = t.struct({
   a: t.string(),

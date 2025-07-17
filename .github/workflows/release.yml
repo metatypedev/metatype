@@ -18,7 +18,7 @@ on:
       - v*
 
 env:
-  GHJK_VERSION: "v0.2.2"
+  GHJK_VERSION: "v0.3.1-rc.2"
   GHJK_ENV: "ci"
   REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
   DOCKER_BUILD_NO_SUMMARY: true
@@ -34,15 +34,10 @@ jobs:
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: kenji-miyake/setup-git-cliff@v2
-      
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
-      - shell: bash
-        run: |
           VERSION=$(ghjk x version-print)
           if [[ "${{ steps.latest-tag.outputs.tag }}" != "v$VERSION" ]]; then
             echo "Tag ${{ steps.latest-tag.outputs.tag }} does not match code version v$VERSION, stopping."
@@ -94,20 +89,16 @@ jobs:
           #   target: x86_64-unknown-linux-musl
           #   suffix: ""
           #   cross: false
-          - os: ubuntu-22.04
+          - os: ubuntu-22.04-arm
             target: aarch64-unknown-linux-gnu
             suffix: ""
-            cross: true
+            cross: false
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
-
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
@@ -119,11 +110,11 @@ jobs:
           rustup target add ${{ matrix.target }}
       # we use cross for building on this platform
       - if: ${{ matrix.cross }}
-        shell: bash
         env:
           # arguments for our custom cross.Dockerfile
           CROSS_BUILD_OPTS: "--build-arg 'CROSS_TARGET=${{ matrix.target }}'"
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
 
           cargo install cross
 
@@ -135,8 +126,8 @@ jobs:
           tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
       - if: ${{ matrix.cross != true }}
-        shell: bash
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           cargo build --release --locked --package meta-cli --target ${{ matrix.target }} --features typegate --verbose
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
@@ -146,7 +137,6 @@ jobs:
           cd target/${{ matrix.target }}/release/
           tar czvf ../../../meta-cli-thin-${{ steps.latest-tag.outputs.tag }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
           cd ../../../
-      # fat meta-cli is not avail for arm64 linux (waiting on arm64 linux machines for Gh CI)
       - if: ${{ matrix.cross != true }}
         uses: svenstaro/upload-release-action@v2
         with:
@@ -173,7 +163,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
-      id-token: write # The OIDC ID token is used for authentication with JSR.    
+      id-token: write # The OIDC ID token is used for authentication with JSR.
     steps:
       - uses: actions/checkout@v4
         with:
@@ -182,20 +172,15 @@ jobs:
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
       - uses: mozilla-actions/sccache-action@v0.0.7
-      
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
 
-      - shell: bash
-        env:
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
+      - env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           WASM_FILE: target/release/typegraph_core.wasm
           OVERWRITE: ${{ github.event_name == 'workflow_dispatch' && inputs.ovewriteArtifacts }}
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x install-ts
           ghjk x install-py
           source .venv/bin/activate
@@ -319,17 +304,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: dsherret/rust-toolchain-file@v1
       - uses: kenji-miyake/setup-git-cliff@v2
-      
-      # - uses: metatypedev/setup-ghjk@318209a9d215f70716a4ac89dbeb9653a2deb8bc
-      - run: curl -fsSL "https://raw.githubusercontent.com/metatypedev/ghjk/$GHJK_VERSION/install.sh" | bash
-      - run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - run: echo "BASH_ENV=$HOME/.local/share/ghjk/env.sh" >> "$GITHUB_ENV"
-      - run: ghjk envs cook
 
+      - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - id: bump
         run: |
+          . .ghjk/envs/$GHJK_ENV/activate.sh
           ghjk x version-bump prerelease
           echo "version=$(ghjk x version-print)" >> $GITHUB_OUTPUT
           git cliff --output CHANGELOG.md
@@ -345,7 +325,7 @@ jobs:
           body: "Automatic suggested bump"
           base: main
           # since PRs created from workflows won't have actions run
-          # on them, we create it as a draft PR 
+          # on them, we create it as a draft PR
           # the actions will then run when it's readied for review
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
           draft: "always-true"

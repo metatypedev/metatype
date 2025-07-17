@@ -19,7 +19,7 @@ import type { TypegateConfig } from "./config/types.ts";
 export type { SyncConfigX as SyncConfig, TypegateConfig, TypegateConfigBase };
 
 async function getHostname() {
-  const envHostname = Deno.env.get("HOSTNAME")
+  const envHostname = Deno.env.get("HOSTNAME");
   if (envHostname) {
     return envHostname;
   }
@@ -29,9 +29,7 @@ async function getHostname() {
     }).output();
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
-    console.debug(
-      `Not hostname binary found, unable to resolve hostname`,
-    );
+    console.debug(`Not hostname binary found, unable to resolve hostname`);
     return "UNKNOWN_HOSTNAME";
   }
 }
@@ -62,8 +60,8 @@ export const defaultTypegateConfigBase = {
   timer_max_timeout_ms: 3_000,
   timer_destroy_resources: true,
   timer_policy_eval_retries: 1,
-  jwt_max_duration_sec: 3600 * 24 * 30,
-  jwt_refresh_duration_sec: 60 * 5,
+  jwt_max_duration_sec: 60 * 5,
+  jwt_refresh_duration_sec: 3600 * 24 * 30,
   redis_url_queue_expire_sec: 60 * 5, // 5 minutes
   substantial_poll_interval_sec: 1,
   substantial_lease_lifespan_sec: 2,
@@ -89,20 +87,22 @@ function argsAsConfig() {
   );
 }
 
-export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
-  const { hostname, port, password, pathname } = raw.redis_url;
+export function resolveRedisURL(redisUrl: URL) {
+  const { hostname, port, password, pathname } = redisUrl;
   const redisDb = parseInt(pathname.slice(1));
   if (isNaN(redisDb)) {
     console.error(`Invalid redis db: ${pathname}`);
     throw new Error(`Invalid redis db: ${pathname}`);
   }
-  const redis = {
+  return {
     hostname,
     port,
     ...(password.length > 0 ? { password } : {}),
     db: redisDb,
   };
+}
 
+export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   const s3 = {
     endpoint: raw.s3_host.href,
     region: raw.s3_region,
@@ -114,10 +114,10 @@ export function transformSyncConfig(raw: SyncConfig): SyncConfigX {
   };
 
   return {
-    redis,
+    redis: resolveRedisURL(raw.redis_url),
     s3,
     s3Bucket: raw.s3_bucket,
-    forceRemove: raw.force_remove
+    forceRemove: raw.force_remove,
   };
 }
 

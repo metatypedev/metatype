@@ -5,6 +5,9 @@
     "exclude": ["!src/gen", "!LICENSE.md", "!README.md"]
   },
   "lint": {
+    "exclude": [
+      "./src/gen"
+    ],
     "rules": {
       "exclude": ["no-external-import"]
     }

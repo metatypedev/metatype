@@ -10,7 +10,9 @@ use dashmap::DashMap;
 use deno_core::OpState;
 use substantial::{
     backends::{fs::FsBackend, memory::MemoryBackend, redis::RedisBackend, Backend, NextRun},
-    converters::{MetadataEvent, Operation, Run},
+    backoff::{RetryConfig, RetryStrategy, Strategy},
+    converters::MetadataEvent,
+    run::{Operation, Run},
 };
 use tg_schema::runtimes::substantial::SubstantialBackend;
 
@@ -523,5 +525,41 @@ pub async fn op_sub_metadata_enumerate_all_children(
 
     backend
         .enumerate_all_children(input.parent_run_id.clone())
+        .map_err(OpErr::map())
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ToCompare {
+    pub old: Run,
+    pub new: Run,
+}
+
+#[deno_core::op2]
+#[serde]
+pub fn op_sub_run_ensure_determinism(
+    _state: Rc<RefCell<OpState>>,
+    #[serde] input: ToCompare,
+) -> Result<(), OpErr> {
+    input
+        .old
+        .check_against_new(&input.new)
+        .map_err(OpErr::map())
+}
+
+#[derive(Deserialize, Debug)]
+pub struct RetryStrategyInput {
+    config: RetryConfig,
+    strategy: Strategy,
+    retries: f64,
+}
+
+#[deno_core::op2]
+pub fn op_sub_strategy_retry(
+    _state: Rc<RefCell<OpState>>,
+    #[serde] input: RetryStrategyInput,
+) -> Result<f64, OpErr> {
+    RetryStrategy::new(input.config)
+        .map_err(OpErr::map())?
+        .eval(input.strategy, input.retries)
         .map_err(OpErr::map())
 }

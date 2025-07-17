@@ -4,8 +4,9 @@
 export const CURRENT_VERSION = "0.5.1-rc.5";
 export const LATEST_RELEASE_VERSION = "0.5.0";
 export const LATEST_PRE_RELEASE_VERSION = "0.5.1-rc.2";
-export const GHJK_VERSION = "v0.2.2";
-export const GHJK_ACTION_VERSION = "318209a9d215f70716a4ac89dbeb9653a2deb8bc";
+export const GHJK_VERSION = "v0.3.1-rc.2";
+export const GHJK_REPO_VERSION = GHJK_VERSION;
+export const GHJK_ACTION_VERSION = "b4ab7287a841fd5f8a4117f3efc14131c7ec62e1";
 export const RUST_VERSION = "1.85.0";
 export const DENO_VERSION = "2.2.4";
 export const WASMTIME_VERSION = "25.0.2";
@@ -13,7 +14,7 @@ export const WASMTIME_PY_VERSION = "25.0.0";
 export const TYPEGRAPH_VERSION = "0.0.4";
 export const PRISMA_VERSION = "5.20.0";
 export const SDK_PACKAGE_NAME_TS = "@typegraph/sdk";
-export const PYTHON_VERSION = "3.9.19";
+export const PYTHON_VERSION = "3.9.23";
 export const TAGLINE =
   `Declarative API development platform. Build backend components with WASM, Typescript and Python, no matter where and how your (legacy) systems are.` as string;
 
@@ -22,6 +23,12 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   ".github/**/*.yml": [
     ['(  GHJK_VERSION: ").+(")', GHJK_VERSION],
     [/([\s-]+uses:\s+metatypedev\/setup-ghjk@).+()/, GHJK_ACTION_VERSION],
+  ],
+  "import_map.json": [
+    [
+      /(https:\/\/raw.githubusercontent.com\/metatypedev\/ghjk\/)[^\/]+(\/.+)/,
+      GHJK_REPO_VERSION,
+    ],
   ],
   "tests/**/*.snap": [
     [/(\s*static\s*MT_VERSION:\s*&str\s*=\s*").+(";)/, CURRENT_VERSION],
@@ -50,7 +57,6 @@ export const sedLockLines: Record<string, [string | RegExp, string][]> = {
   "src/typegraph/deno/deno.json": [
     [/(\s*"version"\s*:\s*").+(",?)/, CURRENT_VERSION],
   ],
-  "tools/deps.ts": [[/(.*\/metatypedev\/ghjk\/)[^\/]*(\/.*)/, GHJK_VERSION]],
   "tools/cross.Dockerfile": [["(ARG GHJK_VERSION=).*()", GHJK_VERSION]],
   "tools/Dockerfile": [
     ["(ARG DENO_VERSION=).*()", DENO_VERSION],

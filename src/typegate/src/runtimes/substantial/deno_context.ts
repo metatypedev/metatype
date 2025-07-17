@@ -1,9 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import {
+  Meta,
+  type Operation,
+  type Strategy,
+} from "../../../engine/runtime.js";
 import type { HostcallPump } from "../../worker_utils.ts";
 import {
   Interrupt,
+  type LogLevel,
   type OperationEvent,
   type Run,
   runHasStopped,
@@ -14,44 +20,75 @@ import {
 
 export class Context {
   private id = 0;
+  private logId = 0;
+  private newRun: Run;
   public kwargs = {};
   logger: SubLogger;
 
   constructor(
-    private run: Run,
+    private oldRun: Run,
     public gql: ReturnType<HostcallPump["newHandler"]>["gql"],
   ) {
-    this.kwargs = getKwargsCopy(run);
+    this.kwargs = getKwargsCopyFrom(oldRun);
     this.logger = new SubLogger(this);
+    this.newRun = this.#initNewRun(oldRun);
+  }
+
+  #initNewRun(oldRun: Run) {
+    const run = deepClone(oldRun);
+    if (runHasStopped(run)) {
+      return run;
+    }
+
+    run.operations = run.operations.filter(({ event }) =>
+      event.type == "Start"
+    );
+
+    return run;
   }
 
   #nextId() {
-    // IDEA: this scheme does not account the step provided
-    // Different args => potentially different step (notably for Save)
     this.id += 1;
     return this.id;
   }
 
-  #appendOp(op: OperationEvent) {
-    if (!runHasStopped(this.run)) {
-      // console.log(
-      //   "Append context",
-      //   op.type,
-      //   this.run.operations.map((o) => o.event.type),
-      // );
-      this.run.operations.push({ at: new Date().toJSON(), event: op });
+  #nextLogId() {
+    this.logId += 1;
+    return this.logId;
+  }
+
+  #appendOp(op: Operation) {
+    if (!runHasStopped(this.newRun)) {
+      this.newRun.operations.push(op);
     }
+
+    Meta.substantial.runEnsureDeterminism({
+      old: this.oldRun,
+      new: this.newRun,
+    });
+  }
+
+  #appendOpNow(op: OperationEvent) {
+    this.#appendOp({
+      at: new Date().toJSON(),
+      event: op,
+    });
   }
 
   async save<T>(fn: () => T | Promise<T>, option?: SaveOption) {
     const id = this.#nextId();
 
     let currRetryCount = 1;
-    for (const { event } of this.run.operations) {
+    for (const operation of this.oldRun.operations) {
+      const { event } = operation;
       if (event.type == "Save" && id == event.id) {
+        this.#appendOp(operation);
+
         if (event.value.type == "Resolved") {
           return event.value.payload;
-        } else if (event.value.type == "Retry") {
+        }
+
+        if (event.value.type == "Retry") {
           const delay = new Date(event.value.wait_until);
           if (delay.getTime() > new Date().getTime()) {
             // Too soon!
@@ -75,7 +112,7 @@ export class Context {
       }
 
       const clonedResult = deepClone(result ?? null);
-      this.#appendOp({
+      this.#appendOpNow({
         type: "Save",
         id,
         value: {
@@ -91,17 +128,19 @@ export class Context {
         currRetryCount < option.retry.maxRetries
       ) {
         const { retry } = option;
-        const strategy = new RetryStrategy(
-          retry.maxRetries,
-          retry.minBackoffMs,
-          retry.maxBackoffMs,
-        );
+        const delayMs = Meta.substantial.strategyRetry({
+          config: {
+            max_retries: retry.maxRetries,
+            min_backoff_ms: retry.minBackoffMs,
+            max_backoff_ms: retry.maxBackoffMs,
+          },
+          strategy: { type: retry.strategy ?? "linear" },
+          retries: Math.max(retry.maxRetries - currRetryCount, 0),
+        });
 
-        const retriesLeft = Math.max(retry.maxRetries - currRetryCount, 0);
-        const delayMs = strategy.eval(retry.strategy ?? "linear", retriesLeft);
         const waitUntilAsMs = new Date().getTime() + delayMs;
 
-        this.#appendOp({
+        this.#appendOpNow({
           type: "Save",
           id,
           value: {
@@ -113,7 +152,7 @@ export class Context {
 
         throw Interrupt.Variant("SAVE_RETRY");
       } else {
-        this.#appendOp({
+        this.#appendOpNow({
           type: "Save",
           id,
           value: {
@@ -132,8 +171,10 @@ export class Context {
 
   sleep(durationMs: number) {
     const id = this.#nextId();
-    for (const { event } of this.run.operations) {
+    for (const operation of this.oldRun.operations) {
+      const { event } = operation;
       if (event.type == "Sleep" && id == event.id) {
+        this.#appendOp(operation);
         const end = new Date(event.end);
         if (end.getTime() <= new Date().getTime()) {
           return;
@@ -145,7 +186,7 @@ export class Context {
 
     const start = new Date();
     const end = new Date(start.getTime() + durationMs);
-    this.#appendOp({
+    this.#appendOpNow({
       type: "Sleep",
       id,
       start: start.toJSON(),
@@ -154,21 +195,24 @@ export class Context {
     throw Interrupt.Variant("SLEEP");
   }
 
-  getRun() {
-    return this.run;
+  getOldRunCopy() {
+    return deepClone(this.oldRun);
   }
 
-  appendEvent(event_name: string, payload: unknown) {
-    this.#appendOp({
-      type: "Send",
-      event_name,
-      value: payload,
-    });
+  getNewRunCopy() {
+    return deepClone(this.newRun);
+  }
+
+  getRunId() {
+    return this.newRun.run_id;
   }
 
   receive(eventName: string) {
-    for (const { event } of this.run.operations) {
+    for (const operation of this.oldRun.operations) {
+      const { event } = operation;
       if (event.type == "Send" && event.event_name == eventName) {
+        // The corresponding append is on agent.ts
+        this.#appendOp(operation);
         return event.value;
       }
     }
@@ -180,7 +224,7 @@ export class Context {
     eventName: string,
     fn: (received: unknown) => unknown | Promise<unknown>,
   ) {
-    for (const { event } of this.run.operations) {
+    for (const { event } of this.oldRun.operations) {
       if (event.type == "Send" && event.event_name == eventName) {
         const payload = event.value;
         return await this.save(async () => await fn(payload));
@@ -221,9 +265,55 @@ export class Context {
     }
     return new ChildWorkflowHandle(this, handleDef);
   }
+
+  log(kind: LogLevel, ...args: unknown[]) {
+    const id = this.#nextLogId();
+
+    for (const operation of this.oldRun.operations) {
+      const { event } = operation;
+      if (
+        event.type == "Log" && id == event.id && kind.type == event.level.type
+      ) {
+        this.#appendOp(operation);
+        return;
+      }
+    }
+
+    const prefix = `[${kind.type.toUpperCase()}: ${this.newRun.run_id}]`;
+    switch (kind.type) {
+      case "Warn": {
+        console.warn(prefix, ...args);
+        break;
+      }
+      case "Error": {
+        console.error(prefix, ...args);
+        break;
+      }
+      default: {
+        console.info(prefix, ...args);
+        break;
+      }
+    }
+
+    const safeArgs = args.map((arg) => {
+      try {
+        const json = JSON.stringify(arg);
+        return json === undefined ? String(arg) : deepClone(arg);
+      } catch (_) {
+        return String(arg);
+      }
+    });
+
+    this.#appendOpNow({
+      type: "Log",
+      id,
+      level: kind,
+      payload: safeArgs,
+    });
+  }
 }
 
-export type Workflow<O> = (ctx: Context) => Promise<O>;
+type Workflow<O> = (ctx: Context) => Promise<O>;
 
 interface SerializableWorkflowHandle {
   runId?: string;
@@ -232,7 +322,7 @@ interface SerializableWorkflowHandle {
   kwargs: unknown;
 }
 
-export class ChildWorkflowHandle {
+class ChildWorkflowHandle {
   constructor(
     private ctx: Context,
     public handleDef: SerializableWorkflowHandle,
@@ -256,7 +346,7 @@ export class ChildWorkflowHandle {
         _sub_internal_link_parent_child(parent_run_id: $parent_run_id, child_run_id: $child_run_id)
       }
     `.run({
-      parent_run_id: this.ctx.getRun().run_id,
+      parent_run_id: this.ctx.getRunId(),
       child_run_id: this.handleDef.runId!,
     });
 
@@ -343,20 +433,26 @@ export class ChildWorkflowHandle {
   }
 }
 
-// TODO: move all of these into substantial lib once Meta can be used inside workers
-// ```rust
-// #[serde(....)]
-// pub enum RetryStrategy { Linear {...}, Exp { ... }}
-// impl RetryStrategy { pub fn eval(&self, retries_left: i8) { .. }}
-//
-// ```
+class SubLogger {
+  constructor(private ctx: Context) {}
 
-type Strategy = "linear";
+  warn(...payload: unknown[]) {
+    this.ctx.log({ type: "Warn" }, ...payload);
+  }
+
+  info(...payload: unknown[]) {
+    this.ctx.log({ type: "Info" }, ...payload);
+  }
+
+  error(...payload: unknown[]) {
+    this.ctx.log({ type: "Error" }, ...payload);
+  }
+}
 
 interface SaveOption {
   timeoutMs?: number;
   retry?: {
-    strategy?: Strategy; // TODO: add more
+    strategy?: Strategy["type"];
     minBackoffMs: number;
     maxBackoffMs: number;
     maxRetries: number;
@@ -371,111 +467,7 @@ function failAfter(ms: number): Promise<never> {
   });
 }
 
-class RetryStrategy {
-  minBackoffMs?: number;
-  maxBackoffMs?: number;
-  maxRetries: number;
-
-  constructor(
-    maxRetries: number,
-    minBackoffMs?: number,
-    maxBackoffMs?: number,
-  ) {
-    this.maxRetries = maxRetries;
-    this.minBackoffMs = minBackoffMs;
-    this.maxBackoffMs = maxBackoffMs;
-
-    if (this.maxRetries < 1) {
-      throw new Error("maxRetries < 1");
-    }
-
-    const low = this.minBackoffMs;
-    const high = this.maxBackoffMs;
-
-    if (low && high) {
-      if (low >= high) {
-        throw new Error("minBackoffMs >= maxBackoffMs");
-      }
-      if (low < 0) {
-        throw new Error("minBackoffMs < 0");
-      }
-    } else if (low && high == undefined) {
-      this.maxBackoffMs = low + 10;
-    } else if (low == undefined && high) {
-      this.minBackoffMs = Math.max(0, high - 10);
-    }
-  }
-
-  eval(strategy: Strategy, retriesLeft: number) {
-    switch (strategy) {
-      case "linear":
-        return this.#linear(retriesLeft);
-      // TODO: add more
-      default:
-        throw new Error(`Unknown strategy "${strategy}" provided`);
-    }
-  }
-
-  #linear(retriesLeft: number): number {
-    if (retriesLeft <= 0) {
-      throw new Error("retries left <= 0");
-    }
-
-    const dt = (this.maxBackoffMs ?? 0) - (this.minBackoffMs ?? 0);
-    return Math.floor(((this.maxRetries - retriesLeft) * dt) / this.maxRetries);
-  }
-}
-
-class SubLogger {
-  constructor(private ctx: Context) {}
-
-  async #log(kind: "warn" | "error" | "info", ...args: unknown[]) {
-    await this.ctx.save(() => {
-      const prefix = `[${kind.toUpperCase()}: ${this.ctx.getRun().run_id}]`;
-      switch (kind) {
-        case "warn": {
-          console.warn(prefix, ...args);
-          break;
-        }
-        case "error": {
-          console.error(prefix, ...args);
-          break;
-        }
-        default: {
-          console.info(prefix, ...args);
-          break;
-        }
-      }
-
-      const message = args.map((arg) => {
-        try {
-          const json = JSON.stringify(arg);
-          // Functions are omitted,
-          // For example, JSON.stringify(() => 1234) => undefined (no throw)
-          return json === undefined ? String(arg) : json;
-        } catch (_) {
-          return String(arg);
-        }
-      }).join(" ");
-
-      return `${prefix}: ${message}`;
-    });
-  }
-
-  async warn(...payload: unknown[]) {
-    await this.#log("warn", ...payload);
-  }
-
-  async info(...payload: unknown[]) {
-    await this.#log("info", ...payload);
-  }
-
-  async error(...payload: unknown[]) {
-    await this.#log("error", ...payload);
-  }
-}
-
-function getKwargsCopy(run: Run): Record<string, unknown> {
+function getKwargsCopyFrom(run: Run): Record<string, unknown> {
   const first = run.operations.at(0);
   if (!first) {
     throw new Error(

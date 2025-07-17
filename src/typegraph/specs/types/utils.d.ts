@@ -35,6 +35,17 @@ type FdkOutput = {
   overwrite: boolean;
 };
 
+type Oauth2Client = {
+  id_secret: string;
+  redirect_uri_secret: string;
+};
+
+type BaseOauth2Params = {
+  provider: string;
+  scopes: string;
+  clients: Oauth2Client[];
+};
+
 type reduceb = (super_type_id: TypeId, entries: ReduceEntry[]) => TypeId;
 
 type add_graphql_endpoint = (graphql: string) => UInt;
@@ -43,19 +54,17 @@ type add_auth = (data: Auth) => UInt;
 
 type add_raw_auth = (data: string) => UInt;
 
-type oauth2 = (service_name: string, scopes: string) => string;
+type oauth2 = (params: BaseOauth2Params) => string;
 
-type oauth2_without_profiler = (service_name: string, scopes: string) => string;
+type oauth2_without_profiler = (params: BaseOauth2Params) => string;
 
 type oauth2_with_extended_profiler = (
-  service_name: string,
-  scopes: string,
+  params: BaseOauth2Params,
   extension: string,
 ) => string;
 
 type oauth2_with_custom_profiler = (
-  service_name: string,
-  scopes: string,
+  params: BaseOauth2Params,
   profiler: TypeId,
 ) => string;
 
@@ -70,23 +79,23 @@ type metagen_exec = (config: FdkConfig) => FdkOutput[];
 type metagen_write_files = (items: FdkOutput[], typegraph_dir: string) => void;
 
 export type {
-  ReduceEntry,
-  AuthProtocol,
+  add_auth,
+  add_graphql_endpoint,
+  add_raw_auth,
   Auth,
-  QueryDeployParams,
+  AuthProtocol,
   FdkConfig,
   FdkOutput,
-  reduceb,
-  add_graphql_endpoint,
-  add_auth,
-  add_raw_auth,
-  oauth2,
-  oauth2_without_profiler,
-  oauth2_with_extended_profiler,
-  oauth2_with_custom_profiler,
   gql_deploy_query,
-  gql_remove_query,
   gql_ping_query,
+  gql_remove_query,
   metagen_exec,
   metagen_write_files,
+  oauth2,
+  oauth2_with_custom_profiler,
+  oauth2_with_extended_profiler,
+  oauth2_without_profiler,
+  QueryDeployParams,
+  reduceb,
+  ReduceEntry,
 };

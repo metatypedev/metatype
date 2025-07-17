@@ -92,7 +92,8 @@ export const typegateConfigBaseSchema = z.object({
       if (bytes.length != 64) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
+          message:
+            `Base64 contains ${bytes.length} instead of 64 bytes (use openssl rand -base64 64 | tr -d '\n')`,
         });
       }
       return bytes;
@@ -104,12 +105,17 @@ export const typegateConfigBaseSchema = z.object({
   tmp_dir: z.string(),
   jwt_max_duration_sec: z.coerce.number().positive(),
   jwt_refresh_duration_sec: z.coerce.number().positive(),
+  redis_url: z
+    .string()
+    .url()
+    .optional()
+    .transform<URL | undefined>((val) => (val ? new URL(val) : undefined)),
   /**
    * Time in seconds in which a URL expires after being pushed to Redis
    */
   redis_url_queue_expire_sec: z.coerce.number().positive(),
   /** Rate at which new schedules are read */
-  substantial_poll_interval_sec: z.coerce.number().positive().min(0.5).max(60),
+  substantial_poll_interval_sec: z.coerce.number().positive().min(0.05).max(60),
   /** Lease duration associated to a run_id */
   substantial_lease_lifespan_sec: z.coerce.number().positive().min(1),
   /** Maximum amount of new acquired replay requests per tick */

@@ -3,14 +3,14 @@
 
 import type { Context } from "../imports/common_types.ts";
 
-function apply(pkg: string, oldVersion: string, newVersion: string) {
+function apply(pkg: string, oldVersion: number, newVersion: number) {
   console.info(
     `Updating ${pkg} v${oldVersion} => ${pkg} v${newVersion}: applied`,
   );
 }
 
 export async function bumpPackage(ctx: Context) {
-  const { name, version } = ctx.kwargs;
+  const { name, version } = ctx.kwargs as { name: string; version: number };
   const newVersion = await ctx.save(() => version + 1);
   await ctx.save(() => apply(name, version, newVersion));
 
@@ -20,7 +20,9 @@ export async function bumpPackage(ctx: Context) {
 }
 
 export async function bumpAll(ctx: Context) {
-  const { packages } = ctx.kwargs;
+  const { packages } = ctx.kwargs as {
+    packages: Array<Record<string, number>>;
+  };
 
   // step 1: always save when starting a child as it produces effects
   // (preferably per start, which is not the case here)

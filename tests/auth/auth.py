@@ -22,7 +22,7 @@ def auth(g: Graph):
     )
     with_token = deno.policy(
         "with_token",
-        "(_args, { context }) => { return !!context.accessToken ? 'ALLOW' : 'DENY'; }",
+        "(_args, { context }) => { return !!context.profile.id ? 'ALLOW' : 'DENY'; }",
     )
 
     x = t.struct({"x": t.integer()})
@@ -33,18 +33,19 @@ def auth(g: Graph):
     # python runtime
     g.auth(
         Auth.oauth2(
-            name="github",
-            authorize_url="https://github.com/login/oauth/authorize",
-            access_url="https://github.com/login/oauth/access_token",
-            # https://docs.github.com/en/rest/reference/users?apiVersion=2022-11-28#get-the-authenticated-user
-            profile_url="https://api.github.com/user",
-            # profiler="(p) => ({id: p.id})",
+            provider="github",
+            clients=[
+                {
+                    "id_secret": "TEST_CLIENT_ID",
+                    "redirect_uri_secret": "TEST_REDIRECT_URI",
+                }
+            ],
             profiler=python.from_lambda(
                 t.struct({"id": t.integer()}),
                 t.struct({"id": t.integer()}),
                 lambda p: {"id": p["id"]},
             ),
-            scopes="openid profile email",
+            scopes=["openid", "profile", "email"],
         )
     )
 

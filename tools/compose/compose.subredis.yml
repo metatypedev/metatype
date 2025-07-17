@@ -1,6 +1,6 @@
 services:
   subredis:
-    user: root
+    # user: root
     image: bitnami/redis:7.0
     restart: unless-stopped
     ports:

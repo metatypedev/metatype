@@ -6,10 +6,27 @@
 // TODO: merge these
 export type Workflow<O> = (ctx: Context, ctx2: TaskCtx) => Promise<O>;
 
-export interface SerializableWorkflowHandle {
+type SerializablePrimitive =
+  | string
+  | number
+  | boolean
+  | null
+  | void // coerce to null
+  | undefined; // coerce to null
+
+type JSONValue = SerializablePrimitive | JSONObject | Array<JSONValue>;
+
+interface JSONObject {
+  [key: string]: JSONValue;
+  // | ((...args: JSONValue[]) => JSONValue | Promise<JSONValue>); // skipped
+}
+
+type Serializable<T> = T extends JSONValue ? T : never;
+
+export interface SerializableWorkflowHandle extends JSONObject {
   runId?: string;
   name: string;
-  kwargs: unknown;
+  kwargs: JSONObject;
 }
 
 export interface ChildWorkflowHandle {
@@ -21,7 +38,7 @@ export interface ChildWorkflowHandle {
 }
 
 export interface Context {
-  kwargs: any;
+  kwargs: JSONObject;
   gql: (
     query: readonly string[],
     ...args: unknown[]
@@ -31,12 +48,15 @@ export interface Context {
     ) => Promise<Record<string, unknown>>;
   };
   sleep: (ms: number) => void;
-  save<T>(fn: () => T | Promise<T>, option?: SaveOption): Promise<T>;
+  save<T>(
+    fn: () => Serializable<T> | Promise<Serializable<T>>,
+    option?: SaveOption,
+  ): Promise<Serializable<T>>;
   receive<O>(eventName: string): O;
   handle<I, O>(
     eventName: string,
-    fn: (received: I) => O | Promise<O>,
-  ): Promise<O>;
+    fn: (received: I) => Serializable<O> | Promise<Serializable<O>>,
+  ): Promise<Serializable<O>>;
   ensure(conditionFn: () => boolean | Promise<boolean>): Promise<true>;
 
   startChildWorkflow<O>(
@@ -47,13 +67,13 @@ export interface Context {
     handleDef: SerializableWorkflowHandle,
   ): ChildWorkflowHandle;
 
-  logger: SubLogger
+  logger: SubLogger;
 }
 
 interface SubLogger {
-  warn: (...args: unknown[]) => Promise<void>;
-  info: (...args: unknown[]) => Promise<void>;
-  error: (...args: unknown[]) => Promise<void>;
+  warn: (...args: JSONValue[]) => void;
+  info: (...args: JSONValue[]) => void;
+  error: (...args: JSONValue[]) => void;
 }
 
 export type TaskCtx = {

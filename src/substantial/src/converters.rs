@@ -1,11 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{HashMap, HashSet};
-
 use anyhow::{bail, Context, Ok, Result};
 use chrono::{DateTime, Utc};
-
 use protobuf::{
     well_known_types::{
         struct_::{self, Struct},
@@ -14,154 +11,15 @@ use protobuf::{
     MessageField,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::{
-    backends::Backend,
     protocol::{
-        events::{Event, Records, SaveFailed, SaveResolved, SaveRetry},
+        events::{Event, SaveFailed, SaveResolved, SaveRetry},
         metadata::{metadata::Of, Error, Info, Metadata},
     },
+    run::{LogLevel, Operation, OperationEvent, RunResult, SavedValue},
 };
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub enum RunResult {
-    Ok(serde_json::Value),
-    Err(serde_json::Value),
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum SavedValue {
-    Retry {
-        counter: i32,
-        wait_until: DateTime<Utc>,
-    },
-    Resolved {
-        payload: serde_json::Value,
-    },
-    Failed {
-        err: serde_json::Value,
-    },
-}
-
-/// Bridge between protobuf types to Typescript
-#[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(tag = "type")]
-pub enum OperationEvent {
-    Sleep {
-        id: u32,
-        start: DateTime<Utc>,
-        end: DateTime<Utc>,
-    },
-    Save {
-        id: u32,
-        value: SavedValue,
-    },
-    Send {
-        event_name: String,
-        value: serde_json::Value,
-    },
-    Stop {
-        result: Option<RunResult>,
-    },
-    Start {
-        kwargs: HashMap<String, serde_json::Value>,
-    },
-    Compensate,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Operation {
-    pub at: DateTime<Utc>,
-    pub event: OperationEvent,
-}
-
-/// A Run is a set of operations
-///
-/// Each operation is produced from the workflow execution
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Run {
-    pub run_id: String,
-    pub operations: Vec<Operation>,
-}
-
-impl Run {
-    pub fn new(run_id: String) -> Self {
-        Self {
-            run_id,
-            operations: vec![],
-        }
-    }
-
-    pub fn recover_from(&mut self, backend: &dyn Backend) -> Result<()> {
-        if let Some(records) = backend.read_events(self.run_id.clone())? {
-            let operations = records
-                .events
-                .into_iter()
-                .map(|event| event.try_into())
-                .collect::<Result<Vec<Operation>>>()
-                .with_context(|| {
-                    format!("Recovering operations from backend for {}", self.run_id)
-                })?;
-            self.operations = operations;
-            self.compact();
-        }
-
-        Ok(())
-    }
-
-    pub fn persist_into(&mut self, backend: &dyn Backend) -> Result<()> {
-        self.compact();
-
-        let mut records = Records::new();
-        records.events = self
-            .operations
-            .clone()
-            .into_iter()
-            .map(|op| op.try_into())
-            .collect::<Result<_>>()?;
-        backend.write_events(self.run_id.clone(), records)?;
-        Ok(())
-    }
-
-    pub fn clear(&mut self) {
-        self.operations.clear()
-    }
-
-    pub fn reset(&mut self) {
-        self.operations = vec![];
-    }
-
-    /// Try to recover from dups such as
-    ///
-    /// ```ignore
-    ///  [Start Start ...] or
-    ///  [... Stop Stop] or
-    ///  [ .... Event X Event X ... ]
-    /// ```
-    ///
-    /// These dups can occur when we crash at a given timing
-    /// and the underlying event of the appointed schedule was not closed.
-    /// The engine will happily append onto the operation log,
-    /// we throw by default but realistically we can recover.
-    ///
-    /// WARN: undesirable side effects can still happen if we crash before saving the Saved results.
-    ///
-    pub fn compact(&mut self) {
-        let mut operations = Vec::new();
-        let mut dup_schedules = HashSet::new();
-        for operation in &self.operations {
-            if dup_schedules.contains(&operation.at) {
-                continue;
-            }
-
-            operations.push(operation.clone());
-            dup_schedules.insert(operation.at);
-        }
-
-        self.operations = operations;
-    }
-}
 
 impl TryFrom<Event> for Operation {
     type Error = anyhow::Error;
@@ -257,10 +115,20 @@ impl TryFrom<Event> for Operation {
                         },
                     });
                 }
+                Of::Log(log) => {
+                    return Ok(Operation {
+                        at,
+                        event: OperationEvent::Log {
+                            id: log.id,
+                            payload: serde_json::from_str(&log.json_payload)?,
+                            level: log.level.try_into()?,
+                        },
+                    })
+                }
             }
         }
 
-        bail!("cannot convert from event {:?}", event)
+        bail!("Fatal: cannot convert from event {:?}", event)
     }
 }
 
@@ -269,7 +137,7 @@ impl TryFrom<Operation> for Event {
     fn try_from(operation: Operation) -> Result<Event> {
         use crate::protocol::events::event::Of;
         use crate::protocol::events::save::Of::{Failed, Resolved, Retry};
-        use crate::protocol::events::{stop, Event, Save, Send, Sleep, Start, Stop};
+        use crate::protocol::events::{stop, Event, Log, Save, Send, Sleep, Start, Stop};
 
         let at = to_timestamp(&operation.at);
 
@@ -377,6 +245,20 @@ impl TryFrom<Operation> for Event {
                     ..Default::default()
                 })
             }
+            OperationEvent::Log { id, payload, level } => {
+                let log = Log {
+                    id,
+                    json_payload: serde_json::to_string(&payload)?,
+                    level: level.into(),
+                    ..Default::default()
+                };
+
+                Ok(Event {
+                    at: MessageField::some(at),
+                    of: Some(Of::Log(log)),
+                    ..Default::default()
+                })
+            }
             OperationEvent::Compensate => {
                 unimplemented!()
             }
@@ -440,6 +322,28 @@ impl TryFrom<MetadataEvent> for Metadata {
                 }),
             }),
             ..Default::default()
+        })
+    }
+}
+
+impl From<LogLevel> for u32 {
+    fn from(value: LogLevel) -> Self {
+        match value {
+            LogLevel::Info => 0,
+            LogLevel::Warn => 5,
+            LogLevel::Error => 10,
+        }
+    }
+}
+
+impl TryFrom<u32> for LogLevel {
+    type Error = anyhow::Error;
+    fn try_from(value: u32) -> anyhow::Result<Self> {
+        Ok(match value {
+            0 => LogLevel::Info,
+            5 => LogLevel::Warn,
+            10 => LogLevel::Error,
+            _ => anyhow::bail!("Unknown log level {value:?}"),
         })
     }
 }

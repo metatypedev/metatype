@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::t::{self, TypeBuilder};
-use crate::types::TypeId;
+use crate::types::{sdk::utils::Oauth2Client, TypeId};
 use crate::utils::Oauth2Params;
 
 use super::OAuth2Profiler;
@@ -34,13 +34,15 @@ enum ProfilerSource {
 pub struct Oauth2Builder {
     scopes: String,
     profiler_source: ProfilerSource,
+    clients: Vec<Oauth2Client>,
 }
 
 impl Oauth2Builder {
-    pub fn new(scopes: String) -> Self {
+    pub fn new(scopes: String, clients: Vec<Oauth2Client>) -> Self {
         Self {
             scopes,
             profiler_source: ProfilerSource::Default,
+            clients,
         }
     }
 
@@ -83,6 +85,7 @@ impl Oauth2Builder {
             authorize_url,
             access_url,
             profile_url,
+            clients: &self.clients,
         };
 
         params.try_into()
