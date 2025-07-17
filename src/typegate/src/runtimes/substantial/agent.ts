@@ -495,7 +495,8 @@ export class Agent {
     event: WorkflowCompletionEvent,
   ) {
     this.workerManager.deallocateWorker(workflowName, runId);
-    const result = event.type == "SUCCESS" ? event.result : event.error;
+    const result = (event.type == "SUCCESS" ? event.result : event.error) ??
+      null;
 
     this.logger.info(
       `gracefull completion of "${runId}" (${event.type}): ${

@@ -31,6 +31,7 @@ def substantial(g: Graph):
                 "retryExample",
                 "secretsExample",
                 "accidentalInputMutation",
+                "nonDeterministic",
             ]
         )
         .build()
@@ -83,5 +84,9 @@ def substantial(g: Graph):
                 }
             )
         ).reduce({"name": "accidentalInputMutation"}),
+        # non-deterministic
+        start_non_deterministic=sub.start(t.struct({})).reduce(
+            {"name": "nonDeterministic"}
+        ),
         **sub.internals(),
     )

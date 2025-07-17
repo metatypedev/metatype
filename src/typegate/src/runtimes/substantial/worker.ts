@@ -60,7 +60,7 @@ self.onmessage = async function (event: MessageEvent<WorkflowMessage>) {
             {
               type: "SUCCESS",
               result: wfResult,
-              run: runCtx!.getRun(),
+              run: runCtx!.getNewRunCopy(),
               schedule,
             } satisfies WorkflowEvent,
           );
@@ -72,7 +72,7 @@ self.onmessage = async function (event: MessageEvent<WorkflowMessage>) {
               {
                 type: "INTERRUPT",
                 interrupt,
-                run: runCtx!.getRun(),
+                run: runCtx!.getNewRunCopy(),
                 schedule,
               } satisfies WorkflowEvent,
             );
@@ -84,7 +84,7 @@ self.onmessage = async function (event: MessageEvent<WorkflowMessage>) {
                 exception: wfException instanceof Error
                   ? wfException
                   : undefined,
-                run: runCtx!.getRun(),
+                run: runCtx!.getNewRunCopy(),
                 schedule,
               } satisfies WorkflowEvent,
             );

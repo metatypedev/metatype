@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import {
+  basicNonDeterministicTestTemplate,
   basicTestTemplate,
   childWorkflowTestTemplate,
   concurrentWorkflowTestTemplate,
@@ -38,5 +39,11 @@ concurrentWorkflowTestTemplate("memory", {
 retrySaveTestTemplate("memory", {
   delays: {
     awaitCompleteAll: 17,
+  },
+});
+
+basicNonDeterministicTestTemplate("memory", {
+  delays: {
+    awaitSleepCompleteSec: 10,
   },
 });

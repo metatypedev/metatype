@@ -12,7 +12,7 @@ import {
 export const eventsAndExceptionExample: Workflow<string> = async (
   ctx: Context,
 ) => {
-  const { to } = ctx.kwargs;
+  const { to } = ctx.kwargs as { to: string };
   const messageDialog = await ctx.save(() => sendSubscriptionEmail(to));
   ctx.logger.info("Will send to", to);
   ctx.logger.warn("Will now wait on an event");
@@ -59,6 +59,24 @@ export async function saveAndSleepExample(ctx: Context) {
   ctx.sleep(5 * 1000);
   ctx.logger.info("Finished sleeping");
   return sum;
+}
+
+export async function nonDeterministic(ctx: Context) {
+  const now = Date.now();
+  const then = await ctx.save(() => now);
+  const delta = now - then;
+
+  if (delta == 0) {
+    const value = await ctx.save(() => "one");
+    ctx.logger.warn("branch 1: first replay", value);
+  } else {
+    const value = await ctx.save(() => "two");
+    ctx.logger.info("branch 2: other replays", value);
+  }
+
+  ctx.logger.info("before ensure", delta);
+  await ctx.ensure(() => delta > 123);
+  ctx.logger.info("after ensure", delta);
 }
 
 export async function retryExample(ctx: Context) {
@@ -118,7 +136,7 @@ export const secretsExample: Workflow<void> = (_, { secrets }) => {
 };
 
 export async function accidentalInputMutation(ctx: Context) {
-  const { items } = ctx.kwargs;
+  const { items } = ctx.kwargs as { items: Array<{ innerField: string }> };
 
   const copy = [];
 
@@ -127,7 +145,7 @@ export async function accidentalInputMutation(ctx: Context) {
   while (items.length >= 1) {
     const front = items.shift();
 
-    if (front.innerField == mutValue) {
+    if (front?.innerField == mutValue) {
       // Should throw on shallow clones
       throw new Error(
         `actual kwargs was mutated after interrupts: copy ${
