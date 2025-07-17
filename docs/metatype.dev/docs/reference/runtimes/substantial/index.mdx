@@ -241,7 +241,7 @@ query AwesomeStatusDebugger($worlflow: String!)
       runs {
         run_id
         result {
-          status  # One of "COMPLETED", "COMPLETED_WITH_ERROR".
+          status  # One of "COMPLETED", "COMPLETED_WITH_ERROR"
           value  # Returned value or error by the workflow
         }
         logs {
@@ -601,7 +601,7 @@ Reconciling this change with already-running workflows can be challenging.
 
 This works if your infrastructure lets you safely abort a workflow and restart it, or if your domain logic allows this approach.
 
-In our example, this strategy is feasible only if all employees are paid in sync. Otherwise, you’d need to ensure you only abort at the end of a payroll cycle.
+In our example, this strategy is feasible only if all employees are paid in sync. Otherwise, you'd need to ensure you only abort at the end of a payroll cycle.
 
 ```diff
 -    ctx.sleep(30/*days*/ * 24 * 3600 * 1000);
@@ -631,9 +631,9 @@ export function payEmployee15Days(ctx: Context) {
 
 ### Method 3: Add conditional logic for new behavior
 
-This approach lets you keep the same workflow name but use branching logic based on a versioning flag (e.g., an optional cycle in ctx.kwargs).
+This approach lets you keep the same workflow name but use branching logic based on a versioning flag (e.g., an optional `cycle` in `ctx.kwargs`).
 
-It's especially useful when you have many interconnected workflows and don’t want to change references or workflow names.
+It's especially useful when you have many interconnected workflows and don't want to change references or workflow names.
 
 ```ts
 export function payEmployee(ctx: Context) {
@@ -654,5 +654,41 @@ export function payEmployee(ctx: Context) {
 
 You can start new workflows with `cycle` set to `15`, while old ones follow the legacy path.
 
-- ✅ Backwards-compatible and centralizes logic.
+- ✅ Backwards-compatible and centralized logic.
 - ⚠️ Still requires external coordination to eventually abort the old instances.
+
+### Method 4: Add conditional logic with an external trigger
+
+This is very similar to the previous method, the key difference being the source of the flag that decides the branch to pick.
+
+In this setup, you control the code path from an external trigger.
+
+```ts
+export function payEmployee(ctx: Context) {
+  // ..
+  while (true) {
+    // ..
+
+    // Function that calls an external service
+    const version = await ctx.save(() => getVersion());
+    switch (version) {
+      case "15-days-patch-v1":
+        ctx.sleep(15 /*days*/ * 24 * 3600 * 1000);
+        break;
+
+      // You can add new conditions incrementally
+      // with potentially drastically different logic
+      // ..
+
+      default:
+        ctx.sleep(30 /*days*/ * 24 * 3600 * 1000);
+    }
+  }
+  // ..
+}
+```
+
+This is especially useful because the workflow will simply use the new delay on the next cycle, automatically, without any need to migrate, and without breaking the event log.
+
+- ✅ All benefits from the previous methods, resilient to incremental changes.
+- ⚠️ The approach of needing an external service to inform the workflow itself, can get messy when the workflow complexifies.
