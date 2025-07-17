@@ -16,7 +16,10 @@ use crate::types::type_ref::InjectionTree;
 use crate::types::type_ref::OverrideInjections;
 
 use crate::sdk::core::TypeId as CoreTypeId;
-use crate::sdk::utils::{Auth as SdkAuth, FdkConfig, FdkOutput, QueryDeployParams, ReduceEntry};
+use crate::sdk::utils::{
+    Auth as SdkAuth, BaseOauth2Params, FdkConfig, FdkOutput, Oauth2Client, QueryDeployParams,
+    ReduceEntry,
+};
 use crate::types::TypeId;
 use std::path::Path;
 
@@ -35,6 +38,7 @@ struct Oauth2Params<'a> {
     scopes: &'a str,
     profile_url: Option<&'a str>,
     profiler: Option<TypeId>,
+    clients: &'a [Oauth2Client],
 }
 
 impl TryFrom<Oauth2Params<'_>> for String {
@@ -49,6 +53,7 @@ impl TryFrom<Oauth2Params<'_>> for String {
                 .profiler
                 .map(|p| p.into())
                 .unwrap_or(serde_json::Value::Null),
+            "clients": serde_json::to_value(value.clients).unwrap(),
         });
 
         let ret = serde_json::to_string(&Auth {
@@ -84,34 +89,32 @@ impl crate::sdk::utils::Handler for crate::Lib {
         Store::add_raw_auth(raw_auth)
     }
 
-    fn oauth2(service_name: String, scopes: String) -> Result<String> {
-        Oauth2Builder::new(scopes).build(named_provider(&service_name)?)
+    fn oauth2(params: BaseOauth2Params) -> Result<String> {
+        Oauth2Builder::new(params.scopes, params.clients).build(named_provider(&params.provider)?)
     }
 
-    fn oauth2_without_profiler(service_name: String, scopes: String) -> Result<String> {
-        Oauth2Builder::new(scopes)
+    fn oauth2_without_profiler(params: BaseOauth2Params) -> Result<String> {
+        Oauth2Builder::new(params.scopes, params.clients)
             .no_profiler()
-            .build(named_provider(&service_name)?)
+            .build(named_provider(&params.provider)?)
     }
 
     fn oauth2_with_extended_profiler(
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         extension: String,
     ) -> Result<String> {
-        Oauth2Builder::new(scopes)
+        Oauth2Builder::new(params.scopes, params.clients)
             .with_extended_profiler(extension)
-            .build(named_provider(&service_name)?)
+            .build(named_provider(&params.provider)?)
     }
 
     fn oauth2_with_custom_profiler(
-        service_name: String,
-        scopes: String,
+        params: BaseOauth2Params,
         profiler: CoreTypeId,
     ) -> Result<String> {
-        Oauth2Builder::new(scopes)
+        Oauth2Builder::new(params.scopes, params.clients)
             .with_profiler(profiler.into())
-            .build(named_provider(&service_name)?)
+            .build(named_provider(&params.provider)?)
     }
 
     fn gql_deploy_query(params: QueryDeployParams) -> Result<String> {

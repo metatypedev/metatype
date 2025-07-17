@@ -4,6 +4,7 @@
 import { RawAuth } from "./typegraph.ts";
 import { type Auth as Auth_, sdkUtils } from "./sdk.ts";
 import type * as t from "./types.ts";
+import type { Oauth2Client } from "./gen/utils.ts";
 
 export type StdOauth2Profiler =
   | { profiler: "default" }
@@ -28,6 +29,30 @@ export function extendedProfiler(extension: any): StdOauth2Profiler {
 export function customProfiler(func: t.Typedef): StdOauth2Profiler {
   return { profiler: "custom", id: func._id };
 }
+
+type OAuthProvider =
+  | "digitalocean"
+  | "discord"
+  | "dropbox"
+  | "facebook"
+  | "github"
+  | "gitlab"
+  | "google"
+  | "instagram"
+  | "linkedin"
+  | "microsoft"
+  | "reddit"
+  | "slack"
+  | "stackexchange"
+  | "twitter";
+
+type OAuthParams = {
+  provider: OAuthProvider;
+  scopes: string[];
+  type?: "oidc";
+  profiler?: StdOauth2Profiler;
+  clients: Oauth2Client[];
+};
 
 export class Auth {
   static jwt(name: string, format: string, algorithmParams?: object): Auth_ {
@@ -62,104 +87,31 @@ export class Auth {
     };
   }
 
-  private static stdOauth2(
-    provider: string,
-    scopes: string,
-    profiler: StdOauth2Profiler,
-  ): RawAuth {
+  static oauth2(params: OAuthParams): RawAuth {
+    const scopes = params.scopes.join(" ");
+    const profiler = params.profiler ?? defaultProfiler();
+    const baseParams = {
+      provider: params.provider,
+      clients: params.clients,
+      scopes,
+    };
+
     switch (profiler.profiler) {
       case "none":
-        return new RawAuth(sdkUtils.oauth2WithoutProfiler(provider, scopes));
+        return new RawAuth(sdkUtils.oauth2WithoutProfiler(baseParams));
       case "extended":
         return new RawAuth(
           sdkUtils.oauth2WithExtendedProfiler(
-            provider,
-            scopes,
+            baseParams,
             JSON.stringify(profiler.extension),
           ),
         );
       case "custom":
         return new RawAuth(
-          sdkUtils.oauth2WithCustomProfiler(provider, scopes, profiler.id),
+          sdkUtils.oauth2WithCustomProfiler(baseParams, profiler.id),
         );
       default:
-        return new RawAuth(sdkUtils.oauth2(provider, scopes));
+        return new RawAuth(sdkUtils.oauth2(baseParams));
     }
-  }
-
-  static oauth2Digitalocean(
-    scopes: string,
-    profiler?: StdOauth2Profiler,
-  ): RawAuth {
-    return Auth.stdOauth2(
-      "digitalocean",
-      scopes,
-      profiler ?? defaultProfiler(),
-    );
-  }
-
-  static oauth2Discord(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("discord", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Dropbox(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("dropbox", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Facebook(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("facebook", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Github(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("github", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Gitlab(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("gitlab", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Google(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("google", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Instagram(
-    scopes: string,
-    profiler?: StdOauth2Profiler,
-  ): RawAuth {
-    return Auth.stdOauth2("instagram", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Linkedin(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("linkedin", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Microsoft(
-    scopes: string,
-    profiler?: StdOauth2Profiler,
-  ): RawAuth {
-    return Auth.stdOauth2("microsoft", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Reddit(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("reddit", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Slack(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("slack", scopes, profiler ?? defaultProfiler());
-  }
-
-  static oauth2Stackexchange(
-    scopes: string,
-    profiler?: StdOauth2Profiler,
-  ): RawAuth {
-    return Auth.stdOauth2(
-      "stackexchange",
-      scopes,
-      profiler ?? defaultProfiler(),
-    );
-  }
-
-  static oauth2Twitter(scopes: string, profiler?: StdOauth2Profiler): RawAuth {
-    return Auth.stdOauth2("twitter", scopes, profiler ?? defaultProfiler());
   }
 }

@@ -48,7 +48,18 @@ def homepage(g: Graph):
     )
 
     # out of the box authenfication support
-    g.auth(Auth.oauth2_github("openid email"))
+    g.auth(
+        Auth.oauth2(
+            provider="github",
+            scopes=["openid", "email"],
+            clients=[
+                {
+                    "id_secret": "APP_CLIENT_ID",
+                    "redirect_uri_secret": "APP_REDIRECT_URI",
+                }
+            ],
+        )
+    )
 
     # expose part of the graph for queries
     g.expose(
