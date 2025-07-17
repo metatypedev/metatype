@@ -21,7 +21,15 @@ typegraph(
     cors: { allowOrigin: ["https://metatype.dev", "http://localhost:3000"] },
   },
   (g) => {
-    g.auth(Auth.oauth2Github("openid profile email"));
+    g.auth(
+      Auth.oauth2({
+        provider: "github",
+        scopes: ["openid", "profile", "email"],
+        clients: [
+          { idSecret: "APP_CLIENT_ID", redirectUriSecret: "APP_REDIRECT_URI" },
+        ],
+      }),
+    );
 
     const pub = Policy.public();
 

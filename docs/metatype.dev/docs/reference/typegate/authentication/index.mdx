@@ -1,5 +1,4 @@
 import TGExample from "@site/src/components/TGExample";
-import OAuth2 from "./oauth2";
 
 # Authentication
 
@@ -77,25 +76,56 @@ Most of the time, the OAuth2 is managed by your identity provider and relies on 
 | Header     | `Authorization: Bearer token`                                                          |
 | Context    | `{ content_from_your_idp }`                                                            |
 
-### Take flow
+The OAuth2 authorization system requires you to have a redis instance configured for the typegate to store states. See [configuration](#typegate-configuration) for more details.
 
-1. Redirect the user to `https://[typegate].metatype.cloud/[typegraph]/auth/[authentication]?redirect_uri=https://your-website.com/login` and the OAuth2 starts for the user
+### Token flow
 
-2. When the user has completed the flow, the typegate will redirect the user to `https://your-website.com/login` and you can "take" the token from the typegate as follows. This can be only done once and is limited in time:
+The typegate uses [PKCE](https://www.oauth.com/oauth2-servers/pkce/authorization-request/) based authorization. The steps are the following:
+
+1. Redirect the user to `https://[typegate].metatype.cloud/[typegraph]/auth/[authentication] with the following search parameters:
+
+- `client_id`: The client id of your application defined in the typegraph
+- `redirect_uri`: The redirect URI of your application defined in the typegraph
+- `state`: A random string used to prevent CSRF
+- `code_challenge`: A hashed of the string used as a code verifier
+- `code_challenge_method`: Set to S256
+- `scope`: The scope of the token (optional)
+
+2. When the user has completed the flow, the typegate will redirect the user to `https://your-website.com/login` with an authorization `code` that you can exchange for a token from the typegate as follows. It is done by making a `POST` request to `https://[typegate].metatype.cloud/[typegraph]/auth/token` with the following body:
+
+- `code`: The authorization code from the typegate
+- `code_verifier`: The inital code verifier
+- `grant_type`: Set to `authorization_code`
+- `client_id`: The previous client id
+- `redirect_uri`: The previous redirect URI
 
 ```typescript
-const take = await fetch(
-  "https://[typegate].metatype.cloud/[typegraph]/auth/take",
+const claims = await fetch(
+  "https://[typegate].metatype.cloud/[typegraph]/auth/token",
   {
-    credentials: "include",
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      code: "code",
+      code_verifier: "code_verifier",
+      grant_type: "authorization_code",
+      client_id: "client_id",
+      redirect_uri: "redirect_uri",
+    }),
   },
 );
-const { token } = await take.json();
+const { token } = await claims.json();
 ```
 
-3. The token can then be used as JWT in the `Authorization` header of your requests, and the response of the typegate will contain a header `Next-Authorization`. When this header is present, the value should be used in follow-up calls (value will be empty if the authentication has expired).
+The returned token will have the following fields:
 
-<OAuth2 name="github" typegraph="oauth2-authentication" />
+- `access_token`: Used to make authentified requests
+- `refresh_token`: Used to get another token
+- `token_type`: Set to Bearer
+- `expires_in`: Expiration time
+- `scope`: The scope of the token
+
+3. The `access_token` can then be used as JWT in the `Authorization` header of your requests to make authentified calls.
 
 <TGExample
   typegraph="oauth2_authentication"
@@ -106,6 +136,27 @@ query={require("./oauth2.graphql")} headers={{
     Authorization: "Bearer your-token",
   }} tab="headers" />
 
+4. When the token is expired, you can claim another token by using your `refresh_token` by making a `POST` request to the token endpoint [https://[typegate].metatype.cloud/[typegraph]/auth/token] with the following body:
+
+- `grant_type`: Set to `refresh_token`
+- `refresh_token`: The previously received refresh token
+- `scope`: The new token scope (optional)
+
+```typescript
+const claims = await fetch(
+  "https://[typegate].metatype.cloud/[typegraph]/auth/token",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      grant_type: "refresh_token",
+      refresh_token: "refresh_token",
+    }),
+  },
+);
+const { token } = await claims.json();
+```
+
 ### OpenID Connect
 
 OpenID Connect is an authentication layer on top of OAuth2. It is used to verify the identity of the user and retrieve basic information about them. You can add `openid` to the OAuth2 scope and you will receive an `id_token` in the response. The `id_token` is a JWT that contains the user's information and is signed by the IdP.
@@ -114,9 +165,35 @@ OpenID Connect is an authentication layer on top of OAuth2. It is used to verify
 
 Frequent OAuth2 providers are embedded and can be directly used in the typegraph.
 
-```
-from typegraph.graph.auth import oauth2
-oauth2.github("openid profile email")
+```python
+from typegraph.graph.params import Auth
+
+Auth.oauth2(
+    provider="github",
+    scopes=["openid", "profile", "email"],
+    clients=[
+        {
+            "id_secret": "APP_CLIENT_ID",
+            "redirect_uri_secret": "APP_REDIRECT_URI",
+        }
+    ],
+)
+
 ```
 
-The whole list is available [here](https://github.com/metatypedev/metatype/blob/main/typegraph/python/typegraph/graph/auth/oauth2.py).
+The available providers are:
+
+- `digitalocean`
+- `discord`
+- `dropbox`
+- `facebook`
+- `github`
+- `gitlab`
+- `google`
+- `instagram`
+- `linkedin`
+- `microsoft`
+- `reddit`
+- `slack`
+- `stackexchange`
+- `twitter`

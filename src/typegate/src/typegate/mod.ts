@@ -48,9 +48,14 @@ import { typegraphIdSchema, TypegraphStore } from "../sync/typegraph.ts";
 import { createLocalArtifactStore } from "./artifacts/local.ts";
 import { createSharedArtifactStore } from "./artifacts/shared.ts";
 import { AsyncDisposableStack } from "dispose";
-import { globalConfig, type TypegateConfig } from "../config.ts";
+import {
+  globalConfig,
+  resolveRedisURL,
+  type TypegateConfig,
+} from "../config.ts";
 import { TypegateCryptoKeys } from "../crypto.ts";
 import type { DenoRuntime } from "../runtimes/deno/deno.ts";
+import { connect, type Redis } from "redis";
 
 const INTROSPECTION_JSON_STR = JSON.stringify(introspectionJson);
 
@@ -89,7 +94,6 @@ export class Typegate implements AsyncDisposable {
   ): Promise<Typegate> {
     const { sync: syncConfig } = config;
     const tmpDir = config.base.tmp_dir;
-
     const cryptoKeys = await TypegateCryptoKeys.init(config.base.tg_secret);
     if (syncConfig == null) {
       logger.warn("Entering no-sync mode...");
@@ -101,6 +105,15 @@ export class Typegate implements AsyncDisposable {
 
       const register = customRegister ?? new MemoryRegister();
       const artifactStore = await createLocalArtifactStore(tmpDir, cryptoKeys);
+      const redisConfig = config.base.redis_url &&
+        resolveRedisURL(config.base.redis_url);
+      const redis = redisConfig && (await connect(redisConfig));
+
+      if (redis) {
+        stack.defer(async () => {
+          await redis.quit();
+        });
+      }
 
       stack.use(register);
       stack.use(artifactStore);
@@ -112,6 +125,7 @@ export class Typegate implements AsyncDisposable {
         config,
         cryptoKeys,
         stack.move(),
+        redis,
       );
     } else {
       logger.info("Entering sync mode...");
@@ -121,10 +135,12 @@ export class Typegate implements AsyncDisposable {
 
       await using stack = new AsyncDisposableStack();
 
+      const redis = await connect(syncConfig.redis);
       const limiter = await RedisRateLimiter.init(syncConfig.redis);
       // stack.use(limiter);
       stack.defer(async () => {
         await limiter.terminate();
+        await redis.quit();
       });
 
       const artifactStore = await createSharedArtifactStore(
@@ -141,6 +157,7 @@ export class Typegate implements AsyncDisposable {
         config,
         cryptoKeys,
         stack.move(),
+        redis,
       );
 
       const typegraphStore = TypegraphStore.init(syncConfig, cryptoKeys);
@@ -195,6 +212,7 @@ export class Typegate implements AsyncDisposable {
     public readonly config: TypegateConfig, // TODO deep readonly??
     public cryptoKeys: TypegateCryptoKeys,
     private disposables: AsyncDisposableStack,
+    public redis?: Redis,
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
@@ -444,9 +462,7 @@ export class Typegate implements AsyncDisposable {
   ) {
     logger.warn(`Dropping "${name}": started`);
     const typegraphId = typegraphIdSchema.parse(JSON.parse(payload));
-    const [tg] = await typegraphStore.downloadTypegraph(
-      typegraphId,
-    );
+    const [tg] = await typegraphStore.downloadTypegraph(typegraphId);
     const artifacts = new Set(
       Object.values(tg.meta.artifacts).map((m) => m.hash),
     );
