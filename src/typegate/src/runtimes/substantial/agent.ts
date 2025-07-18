@@ -115,7 +115,7 @@ export class Agent {
     this.workflows = workflows;
 
     this.logger.warn(
-      `Initializing agent to handle ${
+      `initializing agent to handle ${
         workflows
           .map(({ name }) => name)
           .join(", ")

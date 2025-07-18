@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import type { Logger } from "@std/log";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 import type { TypeGraph } from "../../typegraph/mod.ts";
 import type {
@@ -24,6 +23,8 @@ import {
   Type,
 } from "../../typegraph/type_node.ts";
 import { BadContext } from "../../errors.ts";
+
+const logger = getLogger(import.meta);
 
 export type PolicyResolverOutput = "DENY" | "ALLOW" | "PASS" | (unknown & any);
 type GetResolverResult = (
@@ -159,14 +160,11 @@ export class OperationPolicies {
    * - `DENY`: throw an error and stopping everything
    */
   public async authorize(context: Context, info: Info, verbose: boolean) {
-    const logger = getLogger("policies");
-
     const outputCache = new Map<PolicyIdx, PolicyResolverOutput>();
     const getResolverResult = this.#createPolicyEvaluator(
       { context, info },
       outputCache,
       verbose,
-      logger,
     );
 
     const resolvedPolicyCachePerStage: Map<string, PolicyResolverOutput> =
@@ -262,21 +260,23 @@ export class OperationPolicies {
     partialResolverInput: { context: Context; info: Info },
     outputCache: Map<PolicyIdx, PolicyResolverOutput>,
     verbose: boolean,
-    logger: Logger,
   ): GetResolverResult {
     return async (
       polIdx: PolicyIdx,
       effect: EffectType,
     ): Promise<PolicyResolverOutput | undefined> => {
-      verbose &&
-        logger.info(
-          `checking policy '${
-            this.tg.policy(polIdx).name
-          }'[${polIdx}] with effect '${effect}'...`,
-        );
       if (outputCache.has(polIdx)) {
         const res = outputCache.get(polIdx);
-        verbose && logger.info(`> authorize[cached]: ${res}`);
+        verbose &&
+          logger.debug(
+            `policy cache hit`,
+            {
+              name: this.tg.policy(polIdx).name,
+              idx: polIdx,
+              effect,
+              result: res,
+            },
+          );
         return res;
       }
 
@@ -298,7 +298,16 @@ export class OperationPolicies {
         },
       })) as PolicyResolverOutput;
       outputCache.set(polIdx, res);
-      verbose && logger.info(`> authorize: ${res}`);
+      verbose &&
+        logger.debug(
+          `policy evaluated`,
+          {
+            name: this.tg.policy(polIdx).name,
+            idx: polIdx,
+            effect,
+            result: res,
+          },
+        );
       return res;
     };
   }

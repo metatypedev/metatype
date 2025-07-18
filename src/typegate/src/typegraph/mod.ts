@@ -562,7 +562,7 @@ export function prepareRuntimeReferences(
           (mat) => mat.runtime === idx,
         );
 
-        logger.info("initializing runtime {}", { name: runtime.name });
+        logger.info("initializing runtime", { name: runtime.name });
         return initRuntime(runtime.name, {
           typegate,
           typegraph,

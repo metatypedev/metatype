@@ -395,7 +395,7 @@ export class Typegate implements AsyncDisposable {
     const secretManager = new SecretManager(tgJson, secrets);
 
     const pushResponse = new PushResponse();
-    logger.info("Handling onPush hooks");
+    logger.debug("handling onPush hooks");
     const tg = await this.#handleOnPushHooks(
       tgJson,
       secretManager,
@@ -410,7 +410,7 @@ export class Typegate implements AsyncDisposable {
       };
     }
 
-    logger.info(`Initializing engine '${name}'`);
+    logger.info(`initializing engine`, { name });
     const engine = await this.initQueryEngine(
       tg,
       secretManager,
@@ -424,7 +424,7 @@ export class Typegate implements AsyncDisposable {
       ),
     );
 
-    logger.info(`Registering engine '${name}'`);
+    logger.info(`registering engine "${name}"`);
     await this.register.add(engine);
 
     const newArtifacts = new Set(

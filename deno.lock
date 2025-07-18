@@ -23,6 +23,7 @@
     "jsr:@std/fmt@0.221": "0.221.0",
     "jsr:@std/fmt@1": "1.0.8",
     "jsr:@std/fmt@^1.0.5": "1.0.8",
+    "jsr:@std/fmt@^1.0.8": "1.0.8",
     "jsr:@std/fs@0.221.0": "0.221.0",
     "jsr:@std/fs@^1.0.1": "1.0.18",
     "jsr:@std/fs@^1.0.11": "1.0.18",
@@ -58,6 +59,7 @@
     "npm:@sentry/node@7.70.0": "7.70.0",
     "npm:@sinonjs/fake-timers@13.0.5": "13.0.5",
     "npm:@types/node@*": "22.12.0",
+    "npm:@types/object-hash@*": "3.0.6",
     "npm:big.js@6.2.2": "6.2.2",
     "npm:chance@1.1.11": "1.1.11",
     "npm:ffi-rs@1.2.10": "1.2.10",
@@ -1293,6 +1295,9 @@
       "dependencies": [
         "undici-types"
       ]
+    },
+    "@types/object-hash@3.0.6": {
+      "integrity": "sha512-fOBV8C1FIu2ELinoILQ+ApxcUKz4ngq+IWUYrxSGjXzzjUALijilampwkMgEtJ+h2njAW3pi853QpzNVCHB73w=="
     },
     "@yuuang/ffi-rs-android-arm64@1.2.10": {
       "integrity": "sha512-jkYl/qJnhlY3sjhkDnerLfCqVpqrmKUruOy2WbYS9Lu8sRIDBEmuWx5JYSMtB7o9dLE4JY+8YhSPulhBTYbANw=="
@@ -3011,6 +3016,7 @@
       "jsr:@std/collections@^1.0.5",
       "jsr:@std/crypto@^1.0.2",
       "jsr:@std/encoding@^1.0.2",
+      "jsr:@std/fmt@^1.0.8",
       "jsr:@std/fs@^1.0.1",
       "jsr:@std/http@^1.0.3",
       "jsr:@std/io@~0.224.5",

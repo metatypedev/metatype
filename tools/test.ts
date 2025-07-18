@@ -152,7 +152,7 @@ export async function testE2e(args: {
     // RUST_LOG: "trace",
     RUST_LOG:
       "info,xtask=debug,meta=debug,deno=warn,swc_ecma_codegen=off,tracing::span=off",
-    RUST_SPANTRACE: "1",
+    // RUST_SPANTRACE: "1",
     // "RUST_BACKTRACE": "short",
     RUST_MIN_STACK: "8388608",
     LOG_LEVEL: "DEBUG,substantial=DEBUG",

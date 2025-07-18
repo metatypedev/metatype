@@ -97,7 +97,9 @@ export class PrismaRuntime extends Runtime {
       args.name,
       datamodel,
     );
-    logger.info(`registering prisma engine '${instance.name}': ${instance.id}`);
+    logger.debug(
+      `registering prisma engine '${instance.name}': ${instance.id}`,
+    );
     nativeVoid(
       await native.prisma_register_engine({
         engine_name: instance.id,
@@ -109,7 +111,7 @@ export class PrismaRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    this.logger.info(`unregistering prisma engine '${this.name}': ${this.id}`);
+    this.logger.debug(`unregistering prisma engine '${this.name}': ${this.id}`);
     nativeVoid(
       await native.prisma_unregister_engine({
         engine_name: this.id,
@@ -120,7 +122,7 @@ export class PrismaRuntime extends Runtime {
 
   async query(query: SingleQuery | BatchQuery) {
     const isBatchQuery = "batch" in query;
-    this.logger.info(
+    this.logger.debug(
       `prisma query on runtime '${this.name}': ${JSON.stringify(query)}`,
     );
     const { res } = nativeResult(
@@ -158,39 +160,6 @@ export class PrismaRuntime extends Runtime {
     return ret;
   }
 
-  #executeResolver(
-    q: GenQuery,
-    path: string[],
-    renames: Record<string, string>,
-  ): Resolver {
-    return async ({ _: { variables, context, effect, parent } }) => {
-      path[0] = renames[path[0]] ?? path[0];
-
-      const startTime = performance.now();
-      const generatedQuery = q({ variables, context, effect, parent });
-      const res = await this.query(generatedQuery);
-      const endTime = performance.now();
-      this.logger.debug(
-        `queried prisma in ${(endTime - startTime).toFixed(2)}ms`,
-      );
-
-      if (path[0] == "queryRaw") {
-        const rawRes = res[0];
-        return rawRes.queryRaw.rows.map(
-          (row: any[]) =>
-            Object.fromEntries(
-              row.map(
-                (val, idx) => [rawRes.queryRaw.columns[idx], val],
-              ),
-            ),
-        );
-      } else {
-        // FIXME: why do we only process the first item??
-        return path.reduce((r, field) => r[field], res[0]);
-      }
-    };
-  }
-
   static buildSelectionSet(stages: ComputeStage[]): SelectionSet {
     const selectionSet: SelectionSet = {};
     iterParentStages(stages, (stage, children) => {
@@ -208,10 +177,14 @@ export class PrismaRuntime extends Runtime {
     return selectionSet;
   }
 
-  buildQuery(stages: ComputeStage[]): [GenQuery, Record<string, string>] {
+  buildQuery(
+    stages: ComputeStage[],
+  ): [GenQuery, Record<string, string>, string[]] {
     const queries: ((p: ComputeArgParams) => SingleQuery)[] = [];
+    const order = [] as string[];
     const renames: Record<string, string> = {};
     iterParentStages(stages, (stage, children) => {
+      order.push(stage.id());
       const mat = stage.props.materializer;
       if (mat == null) {
         this.logger.error(
@@ -265,11 +238,15 @@ export class PrismaRuntime extends Runtime {
     });
 
     if (queries.length === 1) {
-      return [queries[0], renames];
+      return [queries[0], renames, order];
     } else {
-      return [(p) => ({
-        batch: queries.map((q) => q(p)),
-      }), renames];
+      return [
+        (p) => ({
+          batch: queries.map((q) => q(p)),
+        }),
+        renames,
+        order,
+      ];
     }
   }
 
@@ -278,75 +255,132 @@ export class PrismaRuntime extends Runtime {
     waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const path = stage.props.path;
-    const node = path[path.length - 1];
-    if (node == null) {
-      throw new Error("GraphQL cannot be used at the root of the typegraph");
-    }
-
-    const fields = [stage, ...Runtime.collectRelativeStages(stage, waitlist)];
-
-    const [queryFn, renames] = this.buildQuery(fields);
-
-    const queryStage = stage.withResolver(
-      this.#executeResolver(
-        queryFn,
-        stage.props.materializer?.data.path as string[] ??
-          [stage.props.node],
-        renames,
-      ),
-    );
-    const stagesMat: ComputeStage[] = [];
-    stagesMat.push(queryStage);
-
-    fields.shift();
-    // TODO renames
-
-    for (const field of fields) {
-      if (field.props.parent?.id() === stage.props.parent?.id()) {
-        const resolver: Resolver = ({
-          _: ctx,
-        }) => {
-          const { [queryStage.id()]: queryRes } = ctx;
-          const fieldName = field.props.path[field.props.path.length - 1];
-          const resolver = (queryRes as any)[0][fieldName];
-          const ret = typeof resolver === "function" ? resolver() : resolver;
-          return ret;
-        };
-        stagesMat.push(
-          new ComputeStage({
-            ...field.props,
-            dependencies: [...field.props.dependencies, queryStage.id()],
-            resolver,
-          }),
-        );
-      } else {
-        const resolver: Resolver = ({ _: { parent } }) => {
-          const resolver = parent[field.props.node];
-          const ret = typeof resolver === "function" ? resolver() : resolver;
-
-          // Prisma uses $type tag for formatted strings
-          // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
-          if (
-            typeof ret === "object" &&
-            !Array.isArray(ret) &&
-            ret !== null &&
-            "$type" in ret // !
-          ) {
-            return ret?.["value"] ?? ret;
-          }
-          return ret;
-        };
-        stagesMat.push(
-          new ComputeStage({
-            ...field.props,
-            dependencies: [...field.props.dependencies, queryStage.id()],
-            resolver,
-          }),
-        );
+    {
+      const path = stage.props.path;
+      const node = path[path.length - 1];
+      if (node == null) {
+        throw new Error("GraphQL cannot be used at the root of the typegraph");
       }
     }
 
+    const batchedStages = [
+      stage,
+      ...Runtime.collectRelativeStages(stage, waitlist),
+    ];
+    const batchedStageIds = new Set(batchedStages.map((stage) => stage.id()));
+    // only the stages that don't depend on other prisma stages
+    // are actual queries
+    const queries = batchedStages.filter(
+      (field) =>
+        field
+          .props
+          .dependencies
+          .every((dep) => !batchedStageIds.has(dep)),
+    );
+    const fields = batchedStages.filter(
+      (field) =>
+        field
+          .props
+          .dependencies
+          .some((dep) => batchedStageIds.has(dep)),
+    );
+
+    const [queryFn, renames, stageOrder] = this.buildQuery(batchedStages);
+
+    if (new Set(stageOrder).size != stageOrder.length) {
+      throw new Error("duplicate top stage ids");
+    }
+
+    const batchStage = new ComputeStage({
+      ...stage.props,
+      materializer: {
+        data: { operation: "batch" },
+        effect: stage.props.materializer!.effect,
+        name: "batch",
+        runtime: stage.props.materializer!.runtime,
+      },
+      operationName: "prisma_batch",
+      dependencies: [],
+      args: (x: any) => x,
+      node: "",
+      path: [`__prisma-batch-${crypto.randomUUID()}`],
+      rateCalls: false,
+      rateWeight: 0,
+      // FIXME: we're using the first stages effect here
+      // but this is wrong since the batch might mix different effects
+      // we're forced to do this since the typegate enforces similar effects across stages
+      // in a request
+      // effect: null,
+      resolver: async ({ _: { variables, context, effect, parent } }) => {
+        const startTime = performance.now();
+        const generatedQuery = queryFn({ variables, context, effect, parent });
+        const res = await this.query(generatedQuery);
+        const endTime = performance.now();
+        this.logger.debug(
+          `queried prisma in ${(endTime - startTime).toFixed(2)}ms`,
+        );
+        return res;
+      },
+    });
+    const stagesMat = [batchStage];
+
+    for (const preStage of queries) {
+      const stage = preStage.withResolver((args) => {
+        const path = stage.props.materializer?.data.path as string[] ??
+          [stage.props.node];
+
+        const { [batchStage.id()]: queryRes } = args._;
+        const res = queryRes as Record<string, any>[];
+        const renamedPath = [...path];
+        renamedPath[0] = renames[path[0]] ?? path[0];
+
+        // FIXME: I don't understand what rsults in these these two forms
+        // the non-nested form is only seen on the injection_test where
+        // a nested func is used
+        const myRes = Array.isArray(res[0])
+          ? res[0][stageOrder.indexOf(stage.id())]
+          : res[stageOrder.indexOf(stage.id())];
+
+        if (renamedPath[0] == "queryRaw") {
+          return myRes.queryRaw.rows.map(
+            (row: any[]) =>
+              Object.fromEntries(
+                row.map(
+                  (val, idx) => [myRes.queryRaw.columns[idx], val],
+                ),
+              ),
+          );
+        }
+        return renamedPath.reduce((r, field) => r[field], myRes);
+      }, [
+        ...preStage.props.dependencies,
+        batchStage.id(),
+      ]);
+      stagesMat.push(stage);
+    }
+
+    // TODO renames
+    for (const field of fields) {
+      const resolver: Resolver = ({ _: { parent } }) => {
+        const resolver = parent[field.props.node];
+        const ret = typeof resolver === "function" ? resolver() : resolver;
+
+        // Prisma uses $type tag for formatted strings
+        // eg. `createAt: { "$type": "DateTime", value: "2023-12-05T14:10:21.840Z" }`
+        if (
+          typeof ret === "object" &&
+          !Array.isArray(ret) &&
+          ret !== null &&
+          "$type" in ret // !
+        ) {
+          return ret?.["value"] ?? ret;
+        }
+        return ret;
+      };
+      stagesMat.push(
+        field.withResolver(resolver),
+      );
+    }
     return stagesMat;
   }
 }

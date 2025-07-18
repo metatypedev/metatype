@@ -313,7 +313,7 @@ jobs:
           ghjk x test-rust
           ghjk x test-codegen
 
-          ghjk x test-e2e -- --coverage=coverage
+          ghjk x test-e2e -- -- --coverage=coverage
 
           # FIXME: required due to https://github.com/denoland/deno/issues/21621#issuecomment-1887870712
           deno cache --config src/typegate/deno.jsonc \
@@ -332,13 +332,13 @@ jobs:
 
           ls -lsa
 
-          # FIXME: coverage dir is not being generated
-          # deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
+          deno coverage --unstable-worker-options --unstable-net ./coverage --lcov > coverage.lcov
 
       # we need secrets for coverage so we skip if not avail
       # this applies to dedpendabot PRs for example
-      # - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }} uses: codecov/codecov-action@v5
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./coverage.lcov
-      #     fail_ci_if_error: true
+      - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.lcov
+          fail_ci_if_error: true

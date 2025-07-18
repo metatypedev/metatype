@@ -8,7 +8,7 @@ import { Meta } from "../../../engine/runtime.js";
 //
 // const logger = getLogger(import.meta);
 
-const METATYPE_VERSION = "0.5.1-rc.4";
+const METATYPE_VERSION = "0.5.1-rc.5";
 
 export class WitWireHandle {
   static async init(params: {

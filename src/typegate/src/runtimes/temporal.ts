@@ -93,8 +93,7 @@ export class TemporalRuntime extends Runtime {
       if (name === "signal_workflow") {
         const { signal_name } = stage.props.materializer?.data ?? {};
         return async ({ workflow_id, run_id, args }) => {
-          this.logger.info("workflow signal");
-          this.logger.debug(`workflow signal: ${JSON.stringify(args)}`);
+          this.logger.debug(`workflow signal`, { args, workflow_id, run_id });
           nativeVoid(
             await native.temporal_workflow_signal({
               client_id,
@@ -105,7 +104,7 @@ export class TemporalRuntime extends Runtime {
               request_id: null,
             }),
           );
-          this.logger.info("workflow signal: success");
+          this.logger.info("workflow signaled", { args, workflow_id, run_id });
           return true;
         };
       }
@@ -114,8 +113,7 @@ export class TemporalRuntime extends Runtime {
         const { query_type } = stage.props.materializer?.data ?? {};
 
         return async ({ workflow_id, run_id, args }) => {
-          this.logger.info("workflow query");
-          this.logger.debug(`workflow query: ${JSON.stringify(args)}`);
+          this.logger.debug(`workflow query`, { args });
           const { data } = nativeResult(
             await native.temporal_workflow_query({
               client_id,
@@ -125,11 +123,7 @@ export class TemporalRuntime extends Runtime {
               query_type: query_type as string,
             }),
           );
-
-          this.logger.info("workflow query: success");
-          this.logger.debug(`workflow query: result: ${JSON.stringify(data)}`);
-
-          logger.debug(Deno.inspect({ data, args }));
+          this.logger.debug(`workflow query success `, { args, data });
           const out = JSON.parse(data[0]);
           return out;
         };
@@ -137,10 +131,7 @@ export class TemporalRuntime extends Runtime {
 
       if (name === "describe_workflow") {
         return async ({ workflow_id, run_id }) => {
-          this.logger.info("workflow describe");
-          this.logger.debug(
-            `workflow describe: workflow=${workflow_id}, run=${run_id}`,
-          );
+          this.logger.debug("workflow describe", { workflow_id, run_id });
           const res = nativeResult(
             await native.temporal_workflow_describe({
               client_id,
@@ -148,8 +139,7 @@ export class TemporalRuntime extends Runtime {
               run_id: run_id as string,
             }),
           );
-          this.logger.info("workflow describe: success");
-          this.logger.info(`workflow describe: ${JSON.stringify(res)}`);
+          this.logger.info(`workflow describe`, { res, workflow_id, run_id });
 
           return res;
         };

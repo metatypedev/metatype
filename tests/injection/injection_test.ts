@@ -189,7 +189,9 @@ mf.mock("POST@/api/graphql", async (req) => {
   });
 });
 
-Meta.test("Injection from/into graphql", async (t) => {
+Meta.test({
+  name: "Injection from/into graphql",
+}, async (t) => {
   await dropSchema(schemaName);
   const e = await t.engine("injection/injection.py", {
     secrets: { TEST_VAR: "3", POSTGRES },

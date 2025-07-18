@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ConsoleHandler, type LevelName, Logger } from "@std/log";
+import * as std_log from "@std/log";
+export { Logger } from "@std/log";
+import * as std_fmt_colors from "@std/fmt/colors";
 import { basename, dirname, extname } from "@std/path";
 import {
   ADDRESSED_DEFAULT_LEVEL,
@@ -35,34 +37,107 @@ if (!sharedConfig.rust_log) {
   }
 }
 
-const consoleHandler = new ConsoleHandler(
-  sharedConfig.log_level?.default ?? MAIN_DEFAULT_LEVEL,
-  {
-    formatter: (log) => {
-      let msg = log.msg;
-      for (const arg of log.args) {
-        msg = msg.replace(
-          "{}",
-          typeof arg === "string" ? arg : JSON.stringify(arg),
-        );
-      }
-      return `${log.datetime.toISOString()} [${log.levelName} ${log.loggerName}] ${msg}`;
-    },
-  },
-);
+function formatter(lr: std_log.LogRecord) {
+  const loggerName = lr.loggerName !== "default" ? " " + lr.loggerName : "";
+  let msg =
+    `${lr.datetime.toISOString()} [${lr.levelName}${loggerName}] ${lr.msg}`;
 
-const loggers = new Map<string, Logger>();
-const defaultLogger = new Logger("default", "NOTSET", {
-  handlers: [consoleHandler],
-});
+  lr.args.forEach((arg, _index) => {
+    msg += `, ${
+      Deno.inspect(arg, {
+        colors: isColorfulTty(),
+        depth: 10,
+        strAbbreviateSize: 1024,
+        iterableLimit: 1000,
+        breakLength: Infinity,
+      })
+    }`;
+  });
+
+  return msg;
+}
+
+class ConsoleErrHandler extends std_log.BaseHandler {
+  constructor(
+    levelName: std_log.LevelName,
+    options: std_log.BaseHandlerOptions = { formatter },
+  ) {
+    super(levelName, options);
+  }
+  override log(msg: string): void {
+    // deno-lint-ignore no-console
+    console.log(msg);
+  }
+  override format(logRecord: std_log.LogRecord): string {
+    let msg = super.format(logRecord);
+
+    switch (logRecord.level) {
+      case std_log.LogLevels.INFO:
+        msg = std_fmt_colors.blue(msg);
+        break;
+      case std_log.LogLevels.WARN:
+        msg = std_fmt_colors.yellow(msg);
+        break;
+      case std_log.LogLevels.ERROR:
+        msg = std_fmt_colors.red(msg);
+        break;
+      case std_log.LogLevels.CRITICAL:
+        msg = std_fmt_colors.bold(std_fmt_colors.red(msg));
+        break;
+      case std_log.LogLevels.DEBUG:
+        msg = std_fmt_colors.dim(msg);
+        break;
+      default:
+        break;
+    }
+
+    return msg;
+  }
+}
+
+class TestConsoleErrHandler extends ConsoleErrHandler {
+  constructor(
+    public throwLevel: number,
+    levelName: std_log.LevelName,
+    options: std_log.BaseHandlerOptions = { formatter },
+  ) {
+    super(levelName, options);
+  }
+
+  override handle(lr: std_log.LogRecord): void {
+    if (lr.level >= this.throwLevel) {
+      throw new Error(`detected ${lr.levelName} log record:`, { cause: lr });
+    }
+    super.handle(lr);
+  }
+}
+
+const panicLevelName = Deno.env.get("META_LOG_PANIC_LEVEL");
+const consoleHandler = panicLevelName
+  ? new TestConsoleErrHandler(
+    std_log.getLevelByName(
+      panicLevelName.toUpperCase() as std_log.LevelName,
+    ),
+    sharedConfig.log_level?.default ?? MAIN_DEFAULT_LEVEL,
+  )
+  : new ConsoleErrHandler(
+    sharedConfig.log_level?.default ?? MAIN_DEFAULT_LEVEL,
+  );
+
+const loggers = new Map<string, std_log.Logger>([
+  // the default logger
+  [
+    "",
+    new std_log.Logger("default", "NOTSET", {
+      handlers: [consoleHandler],
+    }),
+  ],
+]);
 
 export function getLogger(
-  name: ImportMeta | string | null = null,
-  levelName: LevelName = "NOTSET",
-): Logger {
-  if (!name) {
-    return defaultLogger;
-  }
+  name: ImportMeta | string = self.name, // use name of worker by default
+  levelName: std_log.LevelName = "NOTSET",
+): std_log.Logger {
   if (typeof name === "object") {
     const bname = basename(name.url);
     const dname = basename(dirname(name.url));
@@ -70,14 +145,16 @@ export function getLogger(
   }
   let logger = loggers.get(name);
   if (!logger) {
-    logger = new Logger(name, levelName, { handlers: [consoleHandler] });
+    logger = new std_log.Logger(name, levelName, {
+      handlers: [consoleHandler],
+    });
     loggers.set(name, logger);
   }
   return logger;
 }
 
 export function getLoggerByAddress(
-  name: ImportMeta | string | null = null,
+  name: ImportMeta | string = self.name,
   address: string,
 ) {
   const levelForAddress = sharedConfig?.log_level?.[address];
@@ -87,4 +164,26 @@ export function getLoggerByAddress(
     : getLogger(name, ADDRESSED_DEFAULT_LEVEL);
 }
 
-export { Logger };
+let colorEnvFlagSet = false;
+Deno.permissions.query({
+  name: "env",
+  variable: "CLICOLOR_FORCE",
+})
+  // do the check lazily to improve starts
+  .then((perm) => {
+    if (perm.state == "granted") {
+      const val = Deno.env.get("CLICOLOR_FORCE");
+      colorEnvFlagSet = !!val && val != "0" && val != "false";
+    }
+  });
+
+export function isColorfulTty(outFile = Deno.stderr) {
+  if (colorEnvFlagSet) {
+    return true;
+  }
+  if (outFile.isTerminal()) {
+    const { columns } = Deno.consoleSize();
+    return columns > 0;
+  }
+  return false;
+}
