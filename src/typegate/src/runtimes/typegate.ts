@@ -171,7 +171,7 @@ export class TypeGateRuntime extends Runtime {
   };
 
   addTypegraph: Resolver = async ({ fromString, secrets, targetVersion }) => {
-    logger.info("Adding typegraph");
+    logger.debug("adding new typegraph...");
     if (
       !semver.greaterOrEqual(
         semver.parse(targetVersion),

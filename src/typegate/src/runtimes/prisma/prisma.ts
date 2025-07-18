@@ -97,7 +97,9 @@ export class PrismaRuntime extends Runtime {
       args.name,
       datamodel,
     );
-    logger.info(`registering prisma engine '${instance.name}': ${instance.id}`);
+    logger.debug(
+      `registering prisma engine '${instance.name}': ${instance.id}`,
+    );
     nativeVoid(
       await native.prisma_register_engine({
         engine_name: instance.id,
@@ -109,7 +111,7 @@ export class PrismaRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    this.logger.info(`unregistering prisma engine '${this.name}': ${this.id}`);
+    this.logger.debug(`unregistering prisma engine '${this.name}': ${this.id}`);
     nativeVoid(
       await native.prisma_unregister_engine({
         engine_name: this.id,
@@ -120,7 +122,7 @@ export class PrismaRuntime extends Runtime {
 
   async query(query: SingleQuery | BatchQuery) {
     const isBatchQuery = "batch" in query;
-    this.logger.info(
+    this.logger.debug(
       `prisma query on runtime '${this.name}': ${JSON.stringify(query)}`,
     );
     const { res } = nativeResult(
@@ -265,11 +267,22 @@ export class PrismaRuntime extends Runtime {
       stage,
       ...Runtime.collectRelativeStages(stage, waitlist),
     ];
+    const batchedStageIds = new Set(batchedStages.map((stage) => stage.id()));
+    // only the stages that don't depend on other prisma stages
+    // are actual queries
     const queries = batchedStages.filter(
-      (field) => !field.props.dependencies.length,
+      (field) =>
+        field
+          .props
+          .dependencies
+          .every((dep) => !batchedStageIds.has(dep)),
     );
     const fields = batchedStages.filter(
-      (field) => field.props.dependencies.length,
+      (field) =>
+        field
+          .props
+          .dependencies
+          .some((dep) => batchedStageIds.has(dep)),
     );
 
     const [queryFn, renames, stageOrder] = this.buildQuery(batchedStages);
@@ -290,12 +303,14 @@ export class PrismaRuntime extends Runtime {
       dependencies: [],
       args: (x: any) => x,
       node: "",
-      path: [crypto.randomUUID()],
-      batcher: (x) => x,
+      path: [`__prisma-batch-${crypto.randomUUID()}`],
       rateCalls: false,
       rateWeight: 0,
-      effect: null,
-      // ...stage.props,
+      // FIXME: we're using the first stages effect here
+      // but this is wrong since the batch might mix different effects
+      // we're forced to do this since the typegate enforces similar effects across stages
+      // in a request
+      // effect: null,
       resolver: async ({ _: { variables, context, effect, parent } }) => {
         const startTime = performance.now();
         const generatedQuery = queryFn({ variables, context, effect, parent });
@@ -309,17 +324,22 @@ export class PrismaRuntime extends Runtime {
     });
     const stagesMat = [batchStage];
 
-    const parentToResolver = new Map<string, string>();
     for (const preStage of queries) {
       const stage = preStage.withResolver((args) => {
         const path = stage.props.materializer?.data.path as string[] ??
           [stage.props.node];
 
         const { [batchStage.id()]: queryRes } = args._;
-        const res = queryRes as Record<string, any>[][];
+        const res = queryRes as Record<string, any>[];
         const renamedPath = [...path];
         renamedPath[0] = renames[path[0]] ?? path[0];
-        const myRes = res[0][stageOrder.indexOf(stage.id())];
+
+        // FIXME: I don't understand what rsults in these these two forms
+        // the non-nested form is only seen on the injection_test where
+        // a nested func is used
+        const myRes = Array.isArray(res[0])
+          ? res[0][stageOrder.indexOf(stage.id())]
+          : res[stageOrder.indexOf(stage.id())];
 
         if (renamedPath[0] == "queryRaw") {
           return myRes.queryRaw.rows.map(
@@ -336,7 +356,6 @@ export class PrismaRuntime extends Runtime {
         ...preStage.props.dependencies,
         batchStage.id(),
       ]);
-      parentToResolver.set(stage.id(), stage.id());
       stagesMat.push(stage);
     }
 
@@ -359,21 +378,9 @@ export class PrismaRuntime extends Runtime {
         return ret;
       };
       stagesMat.push(
-        new ComputeStage({
-          ...field.props,
-          dependencies: [
-            ...field.props.dependencies,
-            ...(field.props.parent?.id() ?? "")
-              .split(".")
-              .filter((str) => str.length)
-              .map((str) => parentToResolver.get(str)!)
-              .filter(Boolean),
-          ],
-          resolver,
-        }),
+        field.withResolver(resolver),
       );
     }
-
     return stagesMat;
   }
 }

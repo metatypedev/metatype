@@ -56,14 +56,12 @@ export class GraphQLRuntime extends Runtime {
       const vars = { ...variables, ...args };
       const q = query(vars);
       // TODO: filter variables - only include forwarded variables
-      logger.info(`remote graphql: ${q}`);
-      logger.debug(` -- with variables: ${JSON.stringify(vars)}`);
+      logger.info(`remote graphql`, { query: q, variables: vars });
       const ret = await gq(this.endpoint, q, vars);
       if (ret.errors) {
         logger.error(ret.errors);
         throw new Error(`From remote graphql: ${ret.errors[0].message}`);
       }
-      logger.info("remote graphql: successful");
       return path.reduce((r, field) => r[field], ret.data);
     };
   }
@@ -71,7 +69,7 @@ export class GraphQLRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
@@ -85,12 +83,6 @@ export class GraphQLRuntime extends Runtime {
       : OperationTypeNode.MUTATION;
 
     const query = this.buildQuery(fields, operationType, renames);
-
-    verbose &&
-      logger.debug(
-        "remote graphql: {}",
-        typeof query === "string" ? query : " with inlined vars",
-      );
 
     const path = stage.props.path;
 

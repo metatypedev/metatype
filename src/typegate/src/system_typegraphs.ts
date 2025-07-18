@@ -11,7 +11,7 @@ import { getLogger } from "./log.ts";
 import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import type { Typegate } from "./typegate/mod.ts";
 
-const logger = getLogger();
+const logger = getLogger(import.meta);
 
 const NAME_PREFIX = "typegate/";
 

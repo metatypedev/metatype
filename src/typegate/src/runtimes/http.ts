@@ -169,9 +169,18 @@ export class HTTPRuntime extends Runtime {
 
       if (res.status >= 400) {
         this.logger.warn(
-          `${pathname} - ${searchParams} - ${body} => ${res.status} : ${
-            Deno.inspect({ res, options, args, bodyFields, hasBody, method })
-          }`,
+          `request failed with ${res.status} `,
+          {
+            pathname,
+            searchParams,
+            body,
+            res,
+            options,
+            args,
+            bodyFields,
+            hasBody,
+            method,
+          },
         );
         // TODO: only if return type is optional
       }

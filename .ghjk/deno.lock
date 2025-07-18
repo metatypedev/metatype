@@ -1441,6 +1441,7 @@
       "jsr:@std/collections@^1.0.5",
       "jsr:@std/crypto@^1.0.2",
       "jsr:@std/encoding@^1.0.2",
+      "jsr:@std/fmt@^1.0.8",
       "jsr:@std/fs@^1.0.1",
       "jsr:@std/http@^1.0.3",
       "jsr:@std/io@~0.224.5",

@@ -1,2 +1,3 @@
 def say_hello(x: any):
-    return f"Hello {x["name"]}"
+    name = x["name"]
+    return f"Hello {name}"

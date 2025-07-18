@@ -26,7 +26,7 @@ export class ArtifactService {
 
     if (operation === "prepare-upload") {
       if (request.method !== "POST") {
-        logger.warn("Method not allowed: {}", request.method);
+        logger.warn("Method not allowed", request.method);
         return jsonError({
           message: `method not allowed: ${request.method}`,
           status: 405,
@@ -37,7 +37,7 @@ export class ArtifactService {
       try {
         metaList = prepareUploadBodySchema.parse(await request.json());
       } catch (error: any) {
-        logger.error("Failed to parse data: {}", error);
+        logger.error("Failed to parse data", error);
         return jsonError({
           message: `invalid request body: ${error.message}`,
           status: 400,
@@ -56,12 +56,12 @@ export class ArtifactService {
     }
 
     if (operation) {
-      logger.warn("not found: {} {}", request.method, url.toString());
+      logger.warn("not found", request.method, url.toString());
       return jsonError({ message: "not found", status: 404 });
     }
 
     if (request.method !== "POST") {
-      logger.warn("Method not allowed: {}", request.method);
+      logger.warn("Method not allowed", request.method);
       return jsonError({
         message: `method not allowed: ${request.method}`,
         status: 405,
@@ -112,7 +112,7 @@ export class ArtifactService {
     const hash = await this.store.persistence.save(stream, meta.sizeInBytes);
     if (hash !== meta.hash) {
       await this.store.persistence.delete(hash);
-      logger.warn("hash mismatch: {} {}", hash, meta.hash);
+      logger.warn("hash mismatch", hash, meta.hash);
       return jsonError({ message: "hash mismatch", status: 403 });
     }
 

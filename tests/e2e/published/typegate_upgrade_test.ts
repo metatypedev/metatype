@@ -124,7 +124,7 @@ Meta.test(
       return !line.includes(`typegate ready on :${port}`);
     });
     stdout.readWhile((line) => {
-      const match = line.match(/Initializing engine '(.+)'/);
+      const match = line.match(/initializing engine '(.+)'/);
       if (match) {
         typegraphs.push(match[1]);
       }

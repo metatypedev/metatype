@@ -57,11 +57,7 @@ export class BaseError extends Error {
   toResponse(headers: Headers = new Headers(), graphqlFormat = true): Response {
     const type = this.#type ?? this.constructor.name;
     logger.error(
-      "{}[{}:{}]: {}",
-      type,
-      this.kind,
-      this.module ?? "",
-      this.message,
+      `${type}[${this.kind}:${this.module ?? ""}]: ${this.message}`,
     );
     if (globalConfig.debug) {
       logger.error(this.stack);

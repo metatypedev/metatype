@@ -81,10 +81,6 @@ export async function handleGraphQLHelper(
     );
     const verbose = !isIntrospection;
 
-    if (verbose) {
-      logger.info("op: {}", operationName);
-    }
-
     const startTime = performance.now();
     const [plan, cacheHit] = await engine.getPlan(
       unwrappedOperation,
@@ -106,15 +102,12 @@ export async function handleGraphQLHelper(
     const computeTime = performance.now();
 
     if (verbose) {
-      logger.info(
-        `${cacheHit ? "fetched" : "planned"}  in ${
+      logger.debug(
+        `${cacheHit ? "fetched plan from cache" : "generated plan"} in ${
           (
             planTime - startTime
           ).toFixed(2)
-        }ms`,
-      );
-      logger.info(
-        `computed in ${(computeTime - planTime).toFixed(2)}ms`,
+        }ms, computed in ${(computeTime - planTime).toFixed(2)}ms`,
       );
     }
 
@@ -134,12 +127,11 @@ export async function handleGraphQLHelper(
         headers,
       });
     } else {
-      logger.error(`request err: ${Deno.inspect(err)}`);
-      if (err.cause) {
-        logger.error(
-          Deno.inspect(err.cause, { strAbbreviateSize: 1024, depth: 10 }),
-        );
-      }
+      logger.error(
+        `request err`,
+        err,
+        err.cause ? { cause: err.cause } : undefined,
+      );
       return jsonError({ status: 400, message: err.message, headers });
     }
   }

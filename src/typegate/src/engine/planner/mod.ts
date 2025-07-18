@@ -160,7 +160,8 @@ export class Planner {
       const stages: ComputeStage[] = [];
 
       this.verbose &&
-        logger.debug(`${this.tg.root.title} {}`, {
+        logger.debug(`planning stages`, {
+          tgName: this.tg.root.title,
           name,
           args: args.map((n) => n.name?.value),
           selection: selection.map((n) => n.name?.value),

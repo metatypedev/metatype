@@ -219,12 +219,10 @@ export class WorkerPool<
   }
 
   clear() {
-    logger.warn(
-      `destroying idle workers: ${
-        this.#idleWorkers
-          .map((w) => `"${w.id}"`)
-          .join(", ")
-      }`,
+    logger.info(
+      `destroying idle workers`,
+      this.#idleWorkers
+        .map((w) => `"${w.id}"`),
     );
     this.#idleWorkers.forEach((worker) => worker.destroy());
     this.#idleWorkers = [];

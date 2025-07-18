@@ -17,7 +17,7 @@ import { init_runtimes } from "./runtimes/mod.ts";
 const logger = getLogger(import.meta);
 
 try {
-  logger.debug(Deno.inspect(globalConfig));
+  logger.debug("loaded config", globalConfig);
   logger.info(`typegate v${globalConfig.version} starting`);
 
   Sentry.init({
@@ -39,7 +39,7 @@ try {
 
   addEventListener("unhandledrejection", (err) => {
     Sentry.captureException(err);
-    logger.error(Deno.inspect(err));
+    logger.error("unhandledrejection", err);
     err.preventDefault();
   });
 
@@ -64,6 +64,6 @@ try {
 
   await server.finished;
 } catch (err) {
-  logger.error(Deno.inspect(err));
-  throw err;
+  logger.error("server error", err);
+  Deno.exit(1);
 }

@@ -24,6 +24,7 @@ import {
   type termProcess as _termProcess,
 } from "../../utils/process.ts";
 import { workspaceDir } from "../../utils/dir.ts";
+import { fileURLToPath } from "node:url";
 
 const m = new TestModule(import.meta);
 
@@ -321,6 +322,7 @@ const expectedDeployed = [
   ["prisma-runtime.ts", "prisma-runtime"],
   ["prisma.ts", "roadmap-prisma"],
   ["programmable-api-gateway.ts", "programmable-api-gateway"],
+  ["python.ts", "python"],
   ["quick-start-project.ts", "quick-start-project"],
   ["random-field.ts", "random-field"],
   ["rate.ts", "rate"],
@@ -339,6 +341,9 @@ Meta.test(
   async (t) => {
     await $`bash build.sh`.cwd(examplesDir.join("typegraphs/metagen/rs"));
 
+    console.log({
+      examplesDir,
+    });
     const metadev = new Deno.Command("meta-full", {
       cwd: examplesDir.toString(),
       args: [
@@ -346,7 +351,7 @@ Meta.test(
         `--main-url`,
         import.meta.resolve("../../../src/typegate/src/main.ts"),
         `--import-map-url`,
-        import.meta.resolve("../../../import_map.json"),
+        fileURLToPath(import.meta.resolve("../../../import_map.json")),
         `--gate=http://localhost:0`,
       ],
       stdout: "piped",
@@ -361,7 +366,7 @@ Meta.test(
 
     const deployed: [string, string][] = [];
 
-    console.log(new Date());
+    console.log(new Date(), "waiting for dev test");
     stdout.readWhile((line) => {
       console.log("meta-full dev>", line);
       return true;
