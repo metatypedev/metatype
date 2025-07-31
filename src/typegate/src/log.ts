@@ -125,7 +125,6 @@ const consoleHandler = panicLevelName
   );
 
 const loggers = new Map<string, std_log.Logger>([
-  // the default logger
   [
     "",
     new std_log.Logger("default", "NOTSET", {
@@ -136,7 +135,7 @@ const loggers = new Map<string, std_log.Logger>([
 
 export function getLogger(
   name: ImportMeta | string = self.name, // use name of worker by default
-  levelName: std_log.LevelName = "NOTSET",
+  levelName?: std_log.LevelName,
 ): std_log.Logger {
   if (typeof name === "object") {
     const bname = basename(name.url);
@@ -145,23 +144,13 @@ export function getLogger(
   }
   let logger = loggers.get(name);
   if (!logger) {
-    logger = new std_log.Logger(name, levelName, {
+    const level = sharedConfig.log_level?.[name] ?? levelName ?? "NOTSET";
+    logger = new std_log.Logger(name, level, {
       handlers: [consoleHandler],
     });
     loggers.set(name, logger);
   }
   return logger;
-}
-
-export function getLoggerByAddress(
-  name: ImportMeta | string = self.name,
-  address: string,
-) {
-  const levelForAddress = sharedConfig?.log_level?.[address];
-
-  return levelForAddress
-    ? getLogger(name, levelForAddress)
-    : getLogger(name, ADDRESSED_DEFAULT_LEVEL);
 }
 
 let colorEnvFlagSet = false;

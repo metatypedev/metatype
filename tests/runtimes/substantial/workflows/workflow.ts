@@ -28,6 +28,22 @@ export const eventsAndExceptionExample: Workflow<string> = async (
   return `${messageDialog}: confirmed!`;
 };
 
+export const multiReceive: Workflow<string> = (
+  ctx: Context,
+) => {
+  const msg1 = ctx.receive<string>("msg_bus");
+  if (msg1 != "uno") {
+    throw new Error("unexpected msg");
+  }
+  const msg2 = ctx.receive<string>("msg_bus");
+  if (msg2 != "duos") {
+    throw new Error("unexpected msg");
+  }
+  ctx.logger.info(msg1, msg2);
+
+  return Promise.resolve(`Success`);
+};
+
 export async function saveAndSleepExample(ctx: Context) {
   const { a, b } = ctx.kwargs;
   const newA = await ctx.save(() => queryThatTakesAWhile(a as number));
