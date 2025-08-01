@@ -10,7 +10,7 @@ import {
   type TypeMaterializer,
 } from "../typegraph/mod.ts";
 import { registerRuntime } from "./mod.ts";
-import { getLogger, getLoggerByAddress, type Logger } from "../log.ts";
+import { getLogger, type Logger } from "../log.ts";
 import * as ast from "graphql/ast";
 import { path } from "compress/deps.ts";
 import type { Artifact } from "../typegraph/types.ts";
@@ -85,7 +85,7 @@ export class SubstantialRuntime extends Runtime {
     private secrets: Record<string, string>,
   ) {
     super(typegraphName);
-    this.logger = getLoggerByAddress(import.meta, "substantial");
+    this.logger = getLogger(import.meta);
     this.backend = backend;
     this.queue = queue;
     this.agent = agent;

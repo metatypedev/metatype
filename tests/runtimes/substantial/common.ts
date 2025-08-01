@@ -184,6 +184,143 @@ export function basicTestTemplate(
       );
     },
   );
+  Meta.test(
+    {
+      name: `Multi Send events + interrupts (${backendName})`,
+      only,
+    },
+    async (t) => {
+      Deno.env.set("SUB_BACKEND", backendName);
+
+      cleanup && t.addCleanup(cleanup);
+
+      const e = await t.engine("runtimes/substantial/substantial.py", {
+        secrets: {
+          MY_SECRET: "Hello",
+          ...secrets,
+        },
+      });
+
+      let currentRunId: string | null = null;
+      await t.should(
+        `start multiReceive workflow and return its run id (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              start_multi
+            }
+          `
+            .expectBody((body) => {
+              currentRunId = body.data?.start_multi! as string;
+              assertExists(
+                currentRunId,
+                "Run id was not returned when workflow was started",
+              );
+            })
+            .on(e);
+        },
+      );
+
+      // Let interrupts to do their jobs for a bit
+      await sleep(10 * 1000); // including remote_add cost (about 1.5s)
+
+      await t.should(
+        `send first event to multiReceive workflow  (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              send_multi(
+                run_id: $run_id
+                event: { payload: "uno" }
+              )
+            }
+          `
+            .withVars({
+              run_id: currentRunId,
+            })
+            .expectData({
+              send_multi: currentRunId,
+            })
+            .on(e);
+        },
+      );
+      await t.should(
+        `send second event to multiReceive workflow  (${backendName})`,
+        async () => {
+          await gql`
+            mutation {
+              send_multi(
+                run_id: $run_id
+                event: { payload: "duos" }
+              )
+            }
+          `
+            .withVars({
+              run_id: currentRunId,
+            })
+            .expectData({
+              send_multi: currentRunId,
+            })
+            .on(e);
+        },
+      );
+
+      await sleep(delays.awaitSleepCompleteSec * 1000);
+
+      await t.should(
+        `complete multiReceive workflow (${backendName})`,
+        async () => {
+          await gql`
+            query {
+              results(name: "multiReceive") {
+                ongoing {
+                  count
+                }
+                completed {
+                  count
+                  runs {
+                    run_id
+                    result {
+                      status
+                      value
+                    }
+                    logs {
+                      # timestamp
+                      level
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          `
+            .expectData({
+              results: {
+                ongoing: {
+                  count: 0,
+                },
+                completed: {
+                  count: 1,
+                  runs: [
+                    {
+                      run_id: currentRunId,
+                      result: { status: "COMPLETED", value: "Success" },
+                      logs: [
+                        {
+                          level: "Info",
+                          value: JSON.stringify(["uno", "duos"]),
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+            })
+            .on(e);
+        },
+      );
+    },
+  );
 }
 
 export function concurrentWorkflowTestTemplate(

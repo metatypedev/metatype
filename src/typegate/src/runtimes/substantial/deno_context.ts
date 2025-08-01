@@ -208,9 +208,21 @@ export class Context {
   }
 
   receive(eventName: string) {
+    const seenEventTimestamps = new Set(...[
+      this.newRun.operations
+        .filter((op) =>
+          op.event.type == "Send" && op.event.event_name == eventName
+        )
+        .map((op) => op.at),
+    ]);
     for (const operation of this.oldRun.operations) {
       const { event } = operation;
-      if (event.type == "Send" && event.event_name == eventName) {
+      if (
+        event.type == "Send" &&
+        event.event_name == eventName &&
+        // skip the event if the new run has seen it
+        !seenEventTimestamps.has(operation.at)
+      ) {
         // The corresponding append is on agent.ts
         this.#appendOp(operation);
         return event.value;
@@ -224,9 +236,23 @@ export class Context {
     eventName: string,
     fn: (received: unknown) => unknown | Promise<unknown>,
   ) {
-    for (const { event } of this.oldRun.operations) {
-      if (event.type == "Send" && event.event_name == eventName) {
+    const seenEventTimestamps = new Set(...[
+      this.newRun.operations
+        .filter((op) =>
+          op.event.type == "Send" && op.event.event_name == eventName
+        )
+        .map((op) => op.at),
+    ]);
+    for (const operation of this.oldRun.operations) {
+      const { event } = operation;
+      if (
+        event.type == "Send" &&
+        event.event_name == eventName &&
+        // skip the event if the new run has seen it
+        !seenEventTimestamps.has(operation.at)
+      ) {
         const payload = event.value;
+        this.#appendOp(operation);
         return await this.save(async () => await fn(payload));
       }
     }

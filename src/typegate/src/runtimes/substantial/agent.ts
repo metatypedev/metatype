@@ -9,7 +9,7 @@ import type {
   ReadOrCloseScheduleInput,
   Run,
 } from "../../../engine/runtime.js";
-import { getLoggerByAddress, type Logger } from "../../log.ts";
+import { getLogger, type Logger } from "../../log.ts";
 import type { TaskContext } from "../deno/shared_types.ts";
 import { getTaskNameFromId } from "../patterns/worker_manager/mod.ts";
 import type { EventHandler } from "../patterns/worker_manager/types.ts";
@@ -55,7 +55,7 @@ export class Agent {
     private queue: string,
     private config: AgentConfig,
   ) {
-    this.logger = getLoggerByAddress(import.meta, "substantial");
+    this.logger = getLogger(import.meta);
     this.mustLockRunIds = new Map();
 
     this.pollInterval = new BlockingInterval();
@@ -560,7 +560,7 @@ function prettyRun(run: Run) {
 }
 
 function validateRunIntegrity(run: Run) {
-  const logger = getLoggerByAddress(import.meta, "substantial");
+  const logger = getLogger(import.meta);
 
   let life = 0;
 

@@ -286,7 +286,7 @@ export class Typegate implements AsyncDisposable {
       }
 
       if (!engineName || ignoreList.has(engineName)) {
-        logger.error("engine not found on request url {}", {
+        logger.error("engine not found on request url", {
           engineName,
           ignored: ignoreList.has(engineName),
           url: request.url,
@@ -296,7 +296,7 @@ export class Typegate implements AsyncDisposable {
 
       const engine = this.register.get(engineName);
       if (!engine) {
-        logger.error("engine not found for request {}", {
+        logger.error("engine not found for request", {
           engineName,
           url: request.url,
           engines: this.register.list().map((en) => en.name),

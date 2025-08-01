@@ -27,6 +27,7 @@ def substantial(g: Graph):
         .import_(
             [
                 "saveAndSleepExample",
+                "multiReceive",
                 "eventsAndExceptionExample",
                 "retryExample",
                 "secretsExample",
@@ -65,6 +66,11 @@ def substantial(g: Graph):
         ),
         send_confirmation=sub.send(t.boolean()).reduce(
             {"event": {"name": "confirmation", "payload": g.inherit()}}
+        ),
+        # receive
+        start_multi=sub.start(t.struct({})).reduce({"name": "multiReceive"}),
+        send_multi=sub.send(t.string()).reduce(
+            {"event": {"name": "msg_bus", "payload": g.inherit()}}
         ),
         # retry
         start_retry=sub.start(
