@@ -5,11 +5,7 @@ import * as std_log from "@std/log";
 export { Logger } from "@std/log";
 import * as std_fmt_colors from "@std/fmt/colors";
 import { basename, dirname, extname } from "@std/path";
-import {
-  ADDRESSED_DEFAULT_LEVEL,
-  MAIN_DEFAULT_LEVEL,
-  sharedConfig,
-} from "./config/shared.ts";
+import { MAIN_DEFAULT_LEVEL, sharedConfig } from "./config/shared.ts";
 
 // set rust log level is not explicit set
 if (!sharedConfig.rust_log) {

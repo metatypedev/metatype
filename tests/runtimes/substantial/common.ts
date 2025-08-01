@@ -207,11 +207,11 @@ export function basicTestTemplate(
         async () => {
           await gql`
             mutation {
-              start_mutli()
+              start_multi
             }
           `
             .expectBody((body) => {
-              currentRunId = body.data?.start_mutli! as string;
+              currentRunId = body.data?.start_multi! as string;
               assertExists(
                 currentRunId,
                 "Run id was not returned when workflow was started",
@@ -228,7 +228,7 @@ export function basicTestTemplate(
         `send first event to multiReceive workflow  (${backendName})`,
         async () => {
           await gql`
-            query {
+            mutation {
               send_multi(
                 run_id: $run_id
                 event: { payload: "uno" }
@@ -248,7 +248,7 @@ export function basicTestTemplate(
         `send second event to multiReceive workflow  (${backendName})`,
         async () => {
           await gql`
-            query {
+            mutation {
               send_multi(
                 run_id: $run_id
                 event: { payload: "duos" }

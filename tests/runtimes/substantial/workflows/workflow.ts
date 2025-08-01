@@ -28,14 +28,25 @@ export const eventsAndExceptionExample: Workflow<string> = async (
   return `${messageDialog}: confirmed!`;
 };
 
-export const multiReceive: Workflow<string> = (
+export const multiReceive: Workflow<string> = async (
   ctx: Context,
 ) => {
   const msg1 = ctx.receive<string>("msg_bus");
+  await ctx.save(() => {
+    console.log({
+      msg1,
+    });
+  });
   if (msg1 != "uno") {
     throw new Error("unexpected msg");
   }
   const msg2 = ctx.receive<string>("msg_bus");
+  await ctx.save(() => {
+    console.log({
+      msg1,
+      msg2,
+    });
+  });
   if (msg2 != "duos") {
     throw new Error("unexpected msg");
   }
