@@ -12,6 +12,7 @@ import {
 import { validateVersions } from "./tools/tasks/lock.ts";
 import installs from "./tools/installs.ts";
 import tasks from "./tools/tasks/mod.ts";
+import { semver } from "./tools/deps.ts";
 
 const ghjk = file({
   defaultEnv: Deno.env.get("CI") ? "ci" : Deno.env.get("OCI") ? "oci" : "dev",

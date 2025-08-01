@@ -69,7 +69,7 @@ class AuthProfiler {
     });
   }
 
-  async transform(request: Request, profile?: any, scope?: string) {
+  async transform(request: Request, clientId: string, profile?: any, scope?: string) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -79,8 +79,9 @@ class AuthProfiler {
 
     const input = {
       ...(profile ?? {}),
+      __clientId: clientId,
+      __scope: scope?.split(" "),
       _: {
-        scope: scope?.split(" "),
         info: {
           url: new URL(request.url),
           headers: Object.fromEntries(request.headers.entries()),
@@ -284,7 +285,7 @@ export class OAuth2Auth extends Protocol {
 
     if (query.redirect_uri !== userRedirectUri) {
       return jsonError({
-        message: "invalid redirect_uri parameter",
+        message: `invalid redirect_uri parameter: ${query.redirect_uri} !== ${userRedirectUri}`,
         status: 400,
       });
     }
@@ -390,11 +391,12 @@ export class OAuth2Auth extends Protocol {
 
   async createJWT(
     request: Request,
+    clientId: string,
     profile?: Record<string, unknown>,
     scope?: string,
   ) {
     if (this.authProfiler) {
-      profile = await this.authProfiler!.transform(request, profile, scope);
+      profile = await this.authProfiler!.transform(request, clientId, profile, scope);
     }
 
     const payload = {
