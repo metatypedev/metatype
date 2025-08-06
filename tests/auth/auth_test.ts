@@ -249,6 +249,7 @@ Meta.test(
       const body = JSON.stringify({
         grant_type: "refresh_token",
         refresh_token: nextRefreshToken,
+        client_id: appClientId
       });
       const req = new Request("http://typegate.local/test_auth/auth/token", {
         method: "post",

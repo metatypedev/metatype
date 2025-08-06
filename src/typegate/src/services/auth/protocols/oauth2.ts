@@ -69,7 +69,12 @@ class AuthProfiler {
     });
   }
 
-  async transform(request: Request, clientId: string, profile?: any, scope?: string) {
+  async transform(
+    request: Request,
+    clientId: string,
+    profile?: any,
+    scope?: string,
+  ) {
     const { tg, runtimeReferences } = this.authParameters;
     const funcNode = tg.type(this.funcIndex, Type.FUNCTION);
     const mat = tg.materializer(funcNode.materializer);
@@ -285,7 +290,8 @@ export class OAuth2Auth extends Protocol {
 
     if (query.redirect_uri !== userRedirectUri) {
       return jsonError({
-        message: `invalid redirect_uri parameter: ${query.redirect_uri} !== ${userRedirectUri}`,
+        message:
+          `invalid redirect_uri parameter: ${query.redirect_uri} !== ${userRedirectUri}`,
         status: 400,
       });
     }
@@ -396,7 +402,12 @@ export class OAuth2Auth extends Protocol {
     scope?: string,
   ) {
     if (this.authProfiler) {
-      profile = await this.authProfiler!.transform(request, clientId, profile, scope);
+      profile = await this.authProfiler!.transform(
+        request,
+        clientId,
+        profile,
+        scope,
+      );
     }
 
     const payload = {
