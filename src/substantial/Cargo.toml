@@ -12,4 +12,4 @@ uuid.workspace = true
 
 protobuf = "3.7.1"
 # pinned due to url
-redis = "=0.32.3"
+redis = "=0.32.4"
