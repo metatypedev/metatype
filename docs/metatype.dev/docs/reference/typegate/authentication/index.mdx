@@ -96,7 +96,7 @@ The typegate uses [PKCE](https://www.oauth.com/oauth2-servers/pkce/authorization
 - `code`: The authorization code from the typegate
 - `code_verifier`: The inital code verifier
 - `grant_type`: Set to `authorization_code`
-- `client_id`: The previous client id
+- `client_id`: The set client id
 - `redirect_uri`: The previous redirect URI
 
 ```typescript
@@ -140,6 +140,7 @@ query={require("./oauth2.graphql")} headers={{
 
 - `grant_type`: Set to `refresh_token`
 - `refresh_token`: The previously received refresh token
+- `client_id`: The set client id
 - `scope`: The new token scope (optional)
 
 ```typescript
@@ -151,6 +152,7 @@ const claims = await fetch(
     body: JSON.stringify({
       grant_type: "refresh_token",
       refresh_token: "refresh_token",
+      client_id: "client_id",
     }),
   },
 );

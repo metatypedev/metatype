@@ -25,6 +25,7 @@ const paramSchema = z.union([
     grant_type: z.literal("refresh_token"),
     refresh_token: z.string(),
     scope: z.string().optional(),
+    client_id: z.string(),
   }),
 ]);
 
@@ -106,7 +107,12 @@ export async function token(params: RouteParams) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const token = await auth.createJWT(request, profile, state.scope);
+      const token = await auth.createJWT(
+        request,
+        body.client_id,
+        profile,
+        state.scope,
+      );
 
       await redis.set(
         `refresh:${token.refresh_token}`,
@@ -139,7 +145,12 @@ export async function token(params: RouteParams) {
         throw new Error(`provider not found: ${provider}`);
       }
 
-      const newTokens = await auth.createJWT(request, profile, body.scope);
+      const newTokens = await auth.createJWT(
+        request,
+        body.client_id,
+        profile,
+        body.scope,
+      );
 
       await redis.set(`refresh:${newTokens.refresh_token}`, rawData, {
         ex: engine.tg.typegate.config.base.jwt_refresh_duration_sec,

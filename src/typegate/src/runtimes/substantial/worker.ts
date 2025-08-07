@@ -54,7 +54,9 @@ self.onmessage = async function (event: MessageEvent<WorkflowMessage>) {
         }).gql,
       );
 
-      workflowFn(runCtx, internal)
+      // wrap in async function to
+      // avoid sync+Promise.resolve footgun
+      (async () => await workflowFn(runCtx, internal))()
         .then((wfResult: unknown) => {
           self.postMessage(
             {
