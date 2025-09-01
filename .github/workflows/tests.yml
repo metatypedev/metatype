@@ -53,7 +53,7 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -83,7 +83,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID != '' }}
         name: Setup sccache secrets
@@ -128,7 +128,7 @@ jobs:
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dsherret/rust-toolchain-file@v1
       - if: ${{ env.AWS_ACCESS_KEY_ID  != '' }}
         name: Setup sccache secrets
@@ -170,7 +170,7 @@ jobs:
     if: ${{ needs.changes.outputs.website == 'true' && !(github.event_name == 'workflow_dispatch' && inputs.tmate_enabled) }}
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # - name: Cache deno dir
       #   uses: actions/cache@v4
       #   with:
@@ -204,7 +204,7 @@ jobs:
           - platform: linux/arm64
             runner: ubuntu-22.04-arm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
       - uses: scherermichael-oss/action-has-permission@master
         id: check
@@ -254,7 +254,7 @@ jobs:
       - custom-ubuntu-large
     timeout-minutes: 80
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup tmate session
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.tmate_enabled }}
         uses: mxschmitt/action-tmate@v3
