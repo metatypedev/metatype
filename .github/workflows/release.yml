@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: github.ref_type == 'tag' || ( github.event_name == 'workflow_dispatch' && inputs.checkBump )
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
@@ -94,7 +94,7 @@ jobs:
             suffix: ""
             cross: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       # some targets don't use cross so will require the deps in the host
@@ -104,7 +104,7 @@ jobs:
       - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
-      - uses: mozilla-actions/sccache-action@v0.0.7
+      - uses: mozilla-actions/sccache-action@v0.0.9
       - run: |
           # sometimes, dtolnay/rust-toolchain does not select the correct default target
           rustup target add ${{ matrix.target }}
@@ -165,13 +165,13 @@ jobs:
       contents: write
       id-token: write # The OIDC ID token is used for authentication with JSR.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
       - uses: dsherret/rust-toolchain-file@v1
-      - uses: mozilla-actions/sccache-action@v0.0.7
+      - uses: mozilla-actions/sccache-action@v0.0.9
 
       - uses: metatypedev/setup-ghjk@b4ab7287a841fd5f8a4117f3efc14131c7ec62e1
       - env:
@@ -234,7 +234,7 @@ jobs:
           - platform: linux/arm64
             runner: custom-macos
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -269,12 +269,12 @@ jobs:
     if: always() && needs.build-docker.result == 'success'
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: WyriHaximus/github-action-get-previous-tag@v1.4.0
         id: latest-tag
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: ./digests
           pattern: digests-*
@@ -301,7 +301,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: kenji-miyake/setup-git-cliff@v2
