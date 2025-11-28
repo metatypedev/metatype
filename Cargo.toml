@@ -151,7 +151,7 @@ env_logger = "=0.11.0"
 log = "0.4.22"         # FIXME: replace with tracing
 tracing = "0.1"
 # tracing core helper
-tracing-subscriber = { version = "0.3.19", features = [
+tracing-subscriber = { version = "0.3.20", features = [
   "env-filter",
   "parking_lot",
   "tracing-log",
