@@ -65,7 +65,7 @@
     "docusaurus-plugin-sass": "^0.2.5",
     "docusaurus-plugin-sentry": "^2.0.0",
     "docusaurus-tailwindcss": "^0.1.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.26.0",
     "eslint-config-prettier": "^9.1.0",
     "lunr": "^2.3.9",
     "posthog-docusaurus": "^2.0.0",
