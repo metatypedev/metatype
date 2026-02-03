@@ -199,7 +199,7 @@ schema-connector = { git = "https://github.com/metatypedev/prisma-engines", bran
 
 # grpc
 tonic = "0.12.3"
-bytes = "1.7.2"
+bytes = "1.11.1"
 protobuf = "3.6.0"
 protobuf-json-mapping = "3.6.0"
 proto-parser = { git = "https://github.com/metatypedev/proto-parser", branch = "main" }
