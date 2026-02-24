@@ -136,7 +136,7 @@ uuid = "1.10.0"
 rustpython-parser = "0.4.0"
 
 # wasm
-wasmtime = "25.0.2"
+wasmtime = "29.0.1"
 wasmtime-wasi = "25.0.2"
 wit-bindgen = "0.34"
 
