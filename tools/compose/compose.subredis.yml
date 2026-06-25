@@ -1,7 +1,7 @@
 services:
   subredis:
     # user: root
-    image: bitnami/redis:7.0
+    image: soldevelo/redis:7.0
     restart: unless-stopped
     ports:
       - "6380:6379"
